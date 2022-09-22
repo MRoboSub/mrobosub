@@ -1,0 +1,16 @@
+<package format="2">
+    <name>mrobosub_msgs</name>
+    <version>1.0.0</version>
+    <description>
+        all mrobosub custom message and service types
+    </description>
+    <maintainer email="michiganroboticsubmarine@gmail.com">Michigan Robotic Submarine</maintainer>
+    <license>BSD</license>
+
+
+    <buildtool_depend>catkin</buildtool_depend>
+    <build_depend>message_generation</build_depend>
+    <exec_depend>message_runtime</exec_depend>
+    <depend>std_msgs</depend>
+
+</package>
