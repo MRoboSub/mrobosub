@@ -1,0 +1,13 @@
+<package format="2">
+    <name>mrobosub</name>
+    <version>0.0.2</version>
+    <description>
+        metapackage for the mrobosub ros network
+    </description>
+    <maintainer email="michiganroboticsubmarine@gmail.com">Michigan Robotic Submarine</maintainer>
+    <license>BSD</license>
+
+    <export>
+        <metapackage />
+    </export>
+</package>
