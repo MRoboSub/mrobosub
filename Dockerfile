@@ -3,6 +3,8 @@ FROM osrf/ros:noetic-desktop
 # turtlebot3 packages, vim, screen
 RUN apt-get update && \
     apt-get install -y  python3-catkin-tools \
+                        python-is-python3 \
+                        python3-pip
                         git \
                         vim \
                         screen
