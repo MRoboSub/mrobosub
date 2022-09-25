@@ -12,7 +12,7 @@ class MotorTestNode:
 
     def __init__(self):
         rospy.init_node("motor_test")
-        self.pub = rospy.Publisher("motor", Int16MultiArray, queue_size=10)
+        self.pub = rospy.Publisher("/motor", Int16MultiArray, queue_size=10, latch=True)
         rospy.on_shutdown(self.stop)
     
     def run(self):
