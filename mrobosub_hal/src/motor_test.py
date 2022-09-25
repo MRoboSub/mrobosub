@@ -13,19 +13,19 @@ class MotorTestNode:
     def __init__(self):
         rospy.init_node("motor_test")
         self.pub = rospy.Publisher("/motor", Int16MultiArray, queue_size=10, latch=True)
+        self.rate = rospy.Rate(1 / self.MOTOR_TIME_S)
         rospy.on_shutdown(self.stop)
     
     def run(self):
-        rate = rospy.Rate(1 / self.MOTOR_TIME_S)
-        activeMotor = 0
+        active_motor = 0
 
-        while not rospy.is_shutdown() and activeMotor < self.NUM_MOTORS:  
+        while not rospy.is_shutdown() and active_motor < self.NUM_MOTORS:  
             msg = Int16MultiArray(data=[self.STOP_POWER] * self.NUM_MOTORS)
-            msg.data[activeMotor] = self.FORWARD_POWER
+            msg.data[active_motor] = self.FORWARD_POWER
             self.pub.publish(msg)
-            rate.sleep()
+            self.rate.sleep()
 
-            activeMotor += 1
+            active_motor += 1
         
         self.stop()
     
