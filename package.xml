@@ -6,6 +6,7 @@
     </description>
     <maintainer email="michiganroboticsubmarine@gmail.com">Michigan Robotic Submarine</maintainer>
     <license>BSD</license>
+    <buildtool_depend>catkin</buildtool_depend>
 
     <export>
         <metapackage />
