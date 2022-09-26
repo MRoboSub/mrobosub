@@ -21,17 +21,18 @@ class MotorTestNode:
 
         while not rospy.is_shutdown() and active_motor < self.NUM_MOTORS:  
             msg = Int16MultiArray(data=[self.STOP_POWER] * self.NUM_MOTORS)
-            msg.data[active_motor] = self.FORWARD_POWER
+            power = self.FORWARD_POWER
+            msg.data[active_motor] = power
+            print(f"Running motor {active_motor} at PWM {power}")
             self.pub.publish(msg)
             self.rate.sleep()
 
             active_motor += 1
-        
-        self.stop()
     
     def stop(self):
         msg = Int16MultiArray(data=[self.STOP_POWER] * self.NUM_MOTORS)
         self.pub.publish(msg)
+        print("Motor test complete")
 
 if __name__ == "__main__":
     node = MotorTestNode()

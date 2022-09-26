@@ -1,5 +1,5 @@
 <launch>
-    <node pkg="mrobosub_hal" type="motor_test.py" name="motor_test">
+    <node pkg="mrobosub_hal" type="motor_test.py" name="motor_test" output="screen">
     </node>
     
     <node pkg="rosserial_python" type="serial_node.py" name="serial_node">
