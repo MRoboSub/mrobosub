@@ -1,0 +1,34 @@
+# ---- main settings ---- #
+shell bash
+deflogin on
+startup_message off
+
+# ---- key bindings ---- #
+bind j focus down
+bind k focus up
+bind l focus right
+bind h focus left
+
+bind s split
+bind v split -v
+
+bind q quit
+bind o screen
+
+# ---- layout ---- #
+screen -t editor
+
+split -v
+focus right
+split
+
+screen -t debug //group
+screen -t debug_primary
+screen -t debug_secondary
+screen -t debug_tertiary
+
+focus down
+screen -t command //group
+screen -t command_primary
+screen -t command_secondary
+screen -t command_tertiary
