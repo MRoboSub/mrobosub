@@ -1,0 +1,3 @@
+float32 angle_h1h2
+float32 angle_h2h3
+float32 angle_h3h1

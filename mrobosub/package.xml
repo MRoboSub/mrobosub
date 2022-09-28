@@ -1,0 +1,22 @@
+<package format="2">
+    <name>mrobosub</name>
+    <version>0.0.2</version>
+    <description>
+        metapackage for the mrobosub ros network
+    </description>
+    <maintainer email="michiganroboticsubmarine@gmail.com">Michigan Robotic Submarine</maintainer>
+    <license>BSD</license>
+    <buildtool_depend>catkin</buildtool_depend>
+
+    <exec_depend>mrobosub_fcu</exec_depend>
+    <exec_depend>mrobosub_gnc</exec_depend>
+    <exec_depend>mrobosub_hal</exec_depend>
+    <exec_depend>mrobosub_localization</exec_depend>
+    <exec_depend>mrobosub_msgs</exec_depend>
+    <exec_depend>mrobosub_perception</exec_depend>
+    <exec_depend>mrobosub_planning</exec_depend>
+
+    <export>
+        <metapackage />
+    </export>
+</package>
