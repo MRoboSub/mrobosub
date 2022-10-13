@@ -12,7 +12,7 @@ public:
     struct QuadParams;
 
     Thruster(
-        int id, Pose pose, float min_neg_pwm, float min_pos_pwm, bool reversed, QuadParams quad_params, float drag=1.0
+        int id, Pose<double> pose, double min_neg_pwm, double min_pos_pwm, bool reversed, QuadParams quad_params, double drag=1.0
     ) : 
         pose(pose),
         id(id),
@@ -24,58 +24,37 @@ public:
         contribution(calculate_contribution(pose))
         { }
 
-    static Wrench calculate_contribution(const Pose &pose)
-    {
-        // TODO: figure out how to do this
+    Wrench<double> get_contribution() {
+        return contribution;
     }
 
-    float thrust_to_pwm(float thrust) {
-        // TODO: deadbanding
+    static Wrench<double> calculate_contribution(const Pose<double> &pose);
 
-        // Constant term minus thrust
-        // So that we can solve for f(x) = 0 rather than f(x) = thrust
-        float c = quad_params.c - thrust;
-        // Discriminant
-        float D = quad_params.b_sq - quad_params.a_4*c;
-
-        if(D < 0) return 0;
-
-        // TODO: verify
-        float pwm;
-        if(quad_params.b > 0) {
-            float z = -0.5*(quad_params.b + sqrt(D));
-            pwm = c / z;
-        } else {
-            float z = -0.5*(quad_params.b - sqrt(D));
-            pwm = z / quad_params.a;
-        }
-            
-        return int(round(pwm));
-    }
+    double thrust_to_pwm(double thrust);
 
     struct QuadParams { 
-        const float a;
-        const float b;
-        const float c;
+        const double a;
+        const double b;
+        const double c;
 
-        const float a_4;
-        const float b_sq;
+        const double a_4;
+        const double b_sq;
 
-        QuadParams(float a, float b, float c) :
+        QuadParams(double a, double b, double c) :
             a(a), b(b), c(c), a_4(4*a), b_sq(b*b) { } 
     };
 
 private:
     int id;
-    Pose pose;
-    float min_neg_pwm;
-    float min_pos_pwm;
+    Pose<double> pose;
+    double min_neg_pwm;
+    double min_pos_pwm;
     bool reversed;
-    float drag;
-    float max_pos_thrust;
-    float max_neg_thrust;
-    float min_pos_thrust;
-    float min_neg_thrust;
+    double drag;
+    double max_pos_thrust;
+    double max_neg_thrust;
+    double min_pos_thrust;
+    double min_neg_thrust;
     QuadParams quad_params;
-    Wrench contribution;
+    Wrench<double> contribution;
 };
