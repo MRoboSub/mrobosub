@@ -7,5 +7,6 @@ void ThrusterManager::calculate_thruster_matrices() {
         thrusts_to_screws.col(i) = thrusters[i].get_contribution().as_vector6();
     }
     
-    screw_to_thrusts = thrusts_to_screws.completeOrthogonalDecomposition().pseudoInverse();
+    //screw_to_thrusts = thrusts_to_screws.completeOrthogonalDecomposition().pseudoInverse();
+    thrusts_to_screws_decomp = thrusts_to_screws.completeOrthogonalDecomposition();
 }

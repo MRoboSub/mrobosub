@@ -40,8 +40,10 @@ private:
     // Eigen::Matrix<double, 3, Eigen::Dynamic> thrust_matrix;
     // Eigen::Matrix<double, 3, Eigen::Dynamic> torque_matrix;
 
-    Eigen::Matrix<double, NUM_DOF_AXES, Eigen::Dynamic> thrusts_to_screws;
-    Eigen::Matrix<double, Eigen::Dynamic, NUM_DOF_AXES> screw_to_thrusts;
+    using ThrusterMatrix_t = Eigen::Matrix<double, NUM_DOF_AXES, Eigen::Dynamic>;
+    ThrusterMatrix_t thrusts_to_screws;
+    Eigen::CompleteOrthogonalDecomposition<ThrusterMatrix_t> thrusts_to_screws_decomp;
+    //Eigen::Matrix<double, Eigen::Dynamic, NUM_DOF_AXES> screw_to_thrusts;
 
     Eigen::Quaterniond orientation; //orientation from sensor
     Eigen::Quaterniond measured_heading; // measured heading from sensor (heading_quat)
