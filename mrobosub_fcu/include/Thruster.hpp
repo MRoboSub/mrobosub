@@ -14,8 +14,8 @@ public:
     Thruster(
         int id, Pose<double> pose, double min_neg_pwm, double min_pos_pwm, bool reversed, QuadParams quad_params, double drag=1.0
     ) : 
-        pose(pose),
         id(id),
+        pose(pose),
         min_neg_pwm(min_neg_pwm),
         min_pos_pwm(min_pos_pwm),
         reversed(reversed),

@@ -28,8 +28,8 @@ public:
     Limits get_extrema(Axis axis, bool torque);
 
     Screw<double>& limit_desires(Screw<double> desires);
-    
 
+    std::vector<uint16_t> calculate_pwm_output(Screw<double> local_wrench);
 
 private:
     std::vector<Thruster> thrusters;
