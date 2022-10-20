@@ -17,19 +17,25 @@ struct Limits {
 
 class ThrusterManager {
 public:
-    ThrusterManager(std::vector<Thruster> thrusters) : thrusters(thrusters) {}
+    ThrusterManager(std::vector<Thruster> thrusters) : thrusters(thrusters) {
+        calculate_thruster_matrices();
+    }
     
-    std::vector<Thruster>& get_thrusters(){
+    std::vector<Thruster>& get_thrusters() {
         return thrusters;
     }
 
-    void calculate_thruster_matrices();
     void update_thruster(int i);
     Limits get_extrema(Axis axis, bool torque);
 
     Screw<double>& limit_desires(Screw<double> desires);
 
-    std::vector<uint16_t> calculate_pwm_output(Screw<double> local_wrench);
+    Eigen::VectorXd calculate_thrusts(Wrench<double> local_wrench);
+
+    /**
+     * Converts individual thruster PWMs to thrusts
+    */
+    std::vector<uint16_t> thrusts_to_pwms(Eigen::VectorXd thrusts);
 
 private:
     std::vector<Thruster> thrusters;
@@ -51,4 +57,8 @@ private:
     Eigen::Quaterniond absolute_heading; // multiply orientation transpose with heading for correction (spitz_to_sub_quat)
 
     void limit(Screw<double> desires, Screw<double> limits);
+    void calculate_thruster_matrices();
+
+    Eigen::VectorXd calculate_raw_thrusts(Wrench<double> local_wrench);
+    Eigen::VectorXd normalize_thrusts(Eigen::VectorXd raw_thrusts);
 };

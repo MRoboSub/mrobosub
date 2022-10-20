@@ -12,7 +12,9 @@ public:
     struct QuadParams;
 
     Thruster(
-        int id, Pose<double> pose, double min_neg_pwm, double min_pos_pwm, bool reversed, QuadParams quad_params, double drag=1.0
+        int id, Pose<double> pose,
+        double min_neg_pwm, double min_pos_pwm,
+        bool reversed, QuadParams quad_params, double drag=1.0
     ) : 
         id(id),
         pose(pose),
@@ -44,6 +46,9 @@ public:
             a(a), b(b), c(c), a_4(4*a), b_sq(b*b) { } 
     };
 
+    double get_max_pos_thrust();
+    double get_max_neg_thrust();
+
 private:
     int id;
     Pose<double> pose;
@@ -51,10 +56,10 @@ private:
     double min_pos_pwm;
     bool reversed;
     double drag;
-    double max_pos_thrust;
-    double max_neg_thrust;
-    double min_pos_thrust;
-    double min_neg_thrust;
+    double max_pos_thrust = 1;
+    double max_neg_thrust = -0.8;
+    double min_pos_thrust = 0;
+    double min_neg_thrust = 0;
     QuadParams quad_params;
     Wrench<double> contribution;
 };

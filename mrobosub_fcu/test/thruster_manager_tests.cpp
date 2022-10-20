@@ -7,20 +7,32 @@
 using namespace std;
 
 TEST(TestSuite, testCase1) {
+    Thruster::QuadParams params{1,1,1};
     ThrusterManager manager {
         {
-            {0, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, 1100, 1900, false, {1, 1, 1}}
+            {0, { 0.156,  0.111, 0.085, 0, 0,     -M_PI / 4}, 1100, 1900, false, params},
+            {1, { 0.156, -0.111, 0.085, 0, 0,      M_PI / 4}, 1100, 1900, false, params},
+            {2, {-0.156,  0.111, 0.085, 0, 0, -(3*M_PI) / 4}, 1100, 1900, false, params},
+            {3, {-0.156, -0.111, 0.085, 0, 0,  (3*M_PI) / 4}, 1100, 1900, false, params},
+            {4, { 0.120,  0.218,      0, 0,  M_PI / 2, 0   }, 1100, 1900, false, params},
+            {5, { 0.120, -0.218,      0, 0, -M_PI / 2, 0   }, 1100, 1900, false, params},
+            {6, {-0.120,  0.218,      0, 0, -M_PI / 2, 0   }, 1100, 1900, false, params},
+            {7, {-0.120, -0.218,      0, 0,  M_PI / 2, 0   }, 1100, 1900, false, params},
         }
     };
 
-    ASSERT_EQ(manager.get_thrusters().size(), 1);
-    manager.calculate_thruster_matrices();
+    //cout << manager.get_thrusters()[0].get_contribution().as_vector6() << endl;
+    //cout << manager.get_thrusters()[4].get_contribution().as_vector6() << endl;
 
-    auto out = manager.calculate_pwm_output(Screw<double>{5.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+    EXPECT_EQ(manager.get_thrusters().size(), 8);
 
-    ASSERT_EQ(out.size(), 1);
+    auto out = manager.calculate_thrusts(Wrench<double>{1, 0, 0, 0.0, 0.0, 1});
 
-    cout << "[          ] PWM[0] = " << out[0] << endl;
+    EXPECT_EQ(out.size(), 8);
+
+    for(size_t i = 0; i < out.size(); ++i) {
+        cout << "[          ] Thrusts[" << i << "] = " << out[i] << endl;
+    }
 }
 
 int main(int argc, char** argv) {

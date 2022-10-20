@@ -1,9 +1,26 @@
 #include "Thruster.hpp"
 
+#include <cmath>
+
 Wrench<double> Thruster::calculate_contribution(const Pose<double> &pose) {
     // TODO: figure out how to do this
 
-    return {};
+    // Note: roll should always be 0
+
+    // TODO: paramertize, make force
+    double thrust = 1;
+
+    Eigen::Vector3d forces;
+
+    double xy_force = thrust * cos(-pose.pitch());
+    forces[0] = xy_force * cos(pose.yaw());
+    forces[1] = xy_force * sin(pose.yaw());
+    forces[2] = thrust * sin(-pose.pitch());
+
+    // torques = forces x momement arms
+    Eigen::Vector3d torques = forces.cross(pose.linear());
+
+    return Wrench<double>{forces, torques};
 }
 
 double Thruster::thrust_to_pwm(double thrust) {
@@ -28,4 +45,12 @@ double Thruster::thrust_to_pwm(double thrust) {
     }
         
     return int(round(pwm));
+}
+
+double Thruster::get_max_pos_thrust() {
+    return max_pos_thrust;
+}
+
+double Thruster::get_max_neg_thrust() {
+    return max_neg_thrust;
 }

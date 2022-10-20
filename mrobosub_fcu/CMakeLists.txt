@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(mrobosub_fcu)
 
+# add_compile_options(-fsanitize=address)
+# add_link_options(-fsanitize=address)
+
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
@@ -112,7 +115,7 @@ include_directories(
 
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
-  src/Screw.cpp src/Thruster.cpp src/ThrusterManager.cpp
+  src/Thruster.cpp src/ThrusterManager.cpp
 )
 
 ## Add cmake target dependencies of the library
