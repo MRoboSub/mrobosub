@@ -9,13 +9,7 @@ void ThrusterManager::calculate_thruster_matrices() {
         thrusts_to_screws.col(i) = thrusters[i].get_contribution().as_vector6();
     }
     
-    //screw_to_thrusts = thrusts_to_screws.completeOrthogonalDecomposition().pseudoInverse();
     thrusts_to_screws_decomp = thrusts_to_screws.completeOrthogonalDecomposition();
-    //auto p = thrusts_to_screws_decomp.pseudoInverse();
-
-    // std::cout << thrusts_to_screws << std::endl;
-
-    // Eigen::FullPivLU<ThrusterMatrix_t> lu(thrusts_to_screws);
 }
 
 /**
@@ -57,12 +51,6 @@ Eigen::VectorXd ThrusterManager::normalize_thrusts(Eigen::VectorXd raw_thrusts)
 
 Eigen::VectorXd ThrusterManager::calculate_raw_thrusts(Wrench<double> local_wrench) {
     Eigen::VectorXd thrusts = thrusts_to_screws_decomp.solve(local_wrench.as_vector6());
-    
-    // std::vector<double> thrusts(sol.rows());
-
-    // for(size_t i = 0; i < sol.rows(); ++i) {
-    //     pwms[i] = thrusters[i].thrust_to_pwm(sol[i]);
-    // }
 
     return thrusts;
 }

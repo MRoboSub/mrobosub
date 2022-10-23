@@ -23,7 +23,7 @@ Wrench<double> Thruster::calculate_contribution(const Pose<double> &pose) {
     return Wrench<double>{forces, torques};
 }
 
-double Thruster::thrust_to_pwm(double thrust) {
+int Thruster::thrust_to_pwm(double thrust) {
     // TODO: deadbanding
 
     // Constant term minus thrust
@@ -32,7 +32,7 @@ double Thruster::thrust_to_pwm(double thrust) {
     // Discriminant
     double D = quad_params.b_sq - quad_params.a_4*c;
 
-    if(D < 0) return 0;
+    if (D < 0) return 0;
 
     // TODO: verify
     double pwm;
@@ -43,8 +43,31 @@ double Thruster::thrust_to_pwm(double thrust) {
         double z = -0.5*(quad_params.b - sqrt(D));
         pwm = z / quad_params.a;
     }
-        
-    return int(round(pwm));
+
+    return bound_pwm((int) round(pwm));
+}
+
+double Thruster::pwm_to_thrust(int pwm) {
+    if (pwm >= 0 && pwm < min_pos_pwm) {
+        return 0;
+    }
+    if (pwm <= 0 && pwm > min_neg_pwm) {
+        return 0;
+    }
+
+    return quad_params.a * pwm * pwm + quad_params.b * pwm + quad_params.c;
+}
+
+int Thruster::bound_pwm(int pwm) {
+    if (abs(pwm - zero_pwm) < epsilon) {
+        return zero_pwm;
+    }
+
+    if (pwm > min_pos_pwm || pwm < min_neg_pwm) {
+        return pwm;
+    }
+
+    return pwm > zero_pwm ? min_pos_pwm : min_neg_pwm;
 }
 
 double Thruster::get_max_pos_thrust() {

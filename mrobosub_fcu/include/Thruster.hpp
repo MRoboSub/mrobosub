@@ -12,12 +12,13 @@ public:
     struct QuadParams;
 
     Thruster(
-        int id, Pose<double> pose,
+        int id, Pose<double> pose, int epsilon, double zero_pwm,
         double min_neg_pwm, double min_pos_pwm,
         bool reversed, QuadParams quad_params, double drag=1.0
     ) : 
         id(id),
         pose(pose),
+        zero_pwm(zero_pwm),
         min_neg_pwm(min_neg_pwm),
         min_pos_pwm(min_pos_pwm),
         reversed(reversed),
@@ -32,7 +33,8 @@ public:
 
     static Wrench<double> calculate_contribution(const Pose<double> &pose);
 
-    double thrust_to_pwm(double thrust);
+    int thrust_to_pwm(double thrust);
+    double pwm_to_thrust(int pwm);
 
     struct QuadParams { 
         const double a;
@@ -52,8 +54,10 @@ public:
 private:
     int id;
     Pose<double> pose;
+    double zero_pwm;
     double min_neg_pwm;
     double min_pos_pwm;
+    int epsilon;
     bool reversed;
     double drag;
     double max_pos_thrust = 1;
@@ -62,4 +66,6 @@ private:
     double min_neg_thrust = 0;
     QuadParams quad_params;
     Wrench<double> contribution;
+
+    int Thruster::bound_pwm(int pwm);
 };
