@@ -1,38 +1,47 @@
-import rospy
-from std_msgs.msg import Float32
 from state_machine import *
 
 
-class ExampleContext(Context):
-    def __init__(self):
-        super().__init__('example')
+StartOutcome = make_outcome('Start')
+SubmergeOutcome = make_outcome('Submerge', at_target=False, timeout=False)
+TurnOutcome = make_outcome('Turn', at_target=False, timeout=False)
+StopOutcome = make_outcome('Stop', exit_with_timout=False)
 
-        def input_cb(msg):
-            self.input = msg.data
-        rospy.Subscriber('/input', Float32, input_cb)
-
-        self.output_pub = rospy.Publisher('/output', Float32, queue_size=1)
-
-
-InitSuccessful = make_outcome('InitSuccessful')
-FirstInputReceived = make_outcome('FirstInputReceived', val=0)
-StartupTimedOut = make_outcome('StartupTimedOut')
-WaitingForInput = make_outcome('WaitingForInput')
+SubmergeReachedDepth = make_outcome('SubmergedReachedDepth')
+SubmergeReachedDepth = make_outcome('SubmergedFailedReachedDepth')
+SubmergeReachedDepth = make_outcome('SubmergedReachedDepth')
 
 
-class Initialize(StateHandler):
-    def iteration(self, gbl):
-        return InitSuccessful()
+class StartHandler(StateHandler):
+    def iteration(self, gbl_ctx: Context):
+        pass
 
-class WaitForInput(StateHandler):
-    def __init__(self, _prev_outcome, _gbl):
-        self.begin_time = rospy.time()
 
-    def iteration(self, gbl):
-        if rospy.time() - self.begin_time > gbl.startup_wait_time:
-            return StartupTimedOut()
-        elif not gbl.input is None:
-            return FirstInputReceived(val=gbl.input)
-        else:
-            return WaitingForInput()
+class Submerge(State):
+    outcomes = [
+        Outcome('ReachedDepth'),
+    ]
 
+    def iteration(self):
+        pass
+
+
+class SubmergeHandler(StateHandler):
+    def iteration(self, gbl_ctx: Context):
+        pass
+
+
+class TurnHandler(StateHandler):
+    def iteration(self, gbl_ctx: Context):
+        pass
+
+
+class StopHandler(StateHandler):
+    def iteration(self, gbl_ctx: Context):
+        pass
+
+
+if __name__ == '__main__':
+    Start = State('Start', StartHandler)
+    Submerge = State('Submerge', SubmergeHandler)
+    Turn = State('Turn', TurnHandler)
+    Stop = State('Stop', StopHandler)
