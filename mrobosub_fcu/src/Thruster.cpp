@@ -8,7 +8,7 @@ Wrench<double> Thruster::calculate_contribution(const Pose<double> &pose) {
     // Note: roll should always be 0
 
     // TODO: paramertize, make force
-    double thrust = 1;
+    double thrust = max_pos_thrust;
 
     Eigen::Vector3d forces;
 
@@ -24,7 +24,7 @@ Wrench<double> Thruster::calculate_contribution(const Pose<double> &pose) {
 }
 
 int Thruster::thrust_to_pwm(double thrust) {
-    // TODO: deadbanding
+    QuadParams& quad_params = (thrust >= 0) ? pwm_fit.forward_quad_params : pwm_fit.reverse_quad_params;
 
     // Constant term minus thrust
     // So that we can solve for f(x) = 0 rather than f(x) = thrust
@@ -34,7 +34,6 @@ int Thruster::thrust_to_pwm(double thrust) {
 
     if (D < 0) return 0;
 
-    // TODO: verify
     double pwm;
     if(quad_params.b > 0) {
         double z = -0.5*(quad_params.b + sqrt(D));
@@ -48,12 +47,11 @@ int Thruster::thrust_to_pwm(double thrust) {
 }
 
 double Thruster::pwm_to_thrust(int pwm) {
-    if (pwm >= 0 && pwm < min_pos_pwm) {
+    if (pwm >= zero_pwm && pwm < min_pos_pwm || pwm <= zero_pwm && pwm > min_neg_pwm) {
         return 0;
     }
-    if (pwm <= 0 && pwm > min_neg_pwm) {
-        return 0;
-    }
+
+    QuadParams& quad_params = (pwm >= zero_pwm) ? pwm_fit.forward_quad_params : pwm_fit.reverse_quad_params;
 
     return quad_params.a * pwm * pwm + quad_params.b * pwm + quad_params.c;
 }

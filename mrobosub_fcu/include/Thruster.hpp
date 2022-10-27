@@ -10,20 +10,23 @@
 class Thruster {
 public:
     struct QuadParams;
+    struct PWMFit;
 
     Thruster(
         int id, Pose<double> pose, int epsilon, double zero_pwm,
-        double min_neg_pwm, double min_pos_pwm,
-        bool reversed, QuadParams quad_params, double drag=1.0
+        double min_neg_pwm, double min_pos_pwm, double max_neg_pwm, double max_pos_pwm,
+        bool reversed, PWMFit pwm_fit, double drag=1.0
     ) : 
         id(id),
         pose(pose),
         zero_pwm(zero_pwm),
         min_neg_pwm(min_neg_pwm),
         min_pos_pwm(min_pos_pwm),
+        max_neg_pwm(max_neg_pwm),
+        max_pos_pwm(max_pos_pwm),
         reversed(reversed),
         drag(drag),
-        quad_params(quad_params),
+        pwm_fit(pwm_fit),
         contribution(calculate_contribution(pose))
         { }
 
@@ -48,6 +51,12 @@ public:
             a(a), b(b), c(c), a_4(4*a), b_sq(b*b) { } 
     };
 
+    struct PWMFit {
+        double voltage;
+        QuadParams forward_quad_params;
+        QuadParams reverse_quad_params;
+    };
+
     double get_max_pos_thrust();
     double get_max_neg_thrust();
 
@@ -64,8 +73,8 @@ private:
     double max_neg_thrust = -0.8;
     double min_pos_thrust = 0;
     double min_neg_thrust = 0;
-    QuadParams quad_params;
+    PWMFit pwm_fit;
     Wrench<double> contribution;
 
-    int Thruster::bound_pwm(int pwm);
+    int bound_pwm(int pwm);
 };

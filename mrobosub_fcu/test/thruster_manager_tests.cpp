@@ -7,17 +7,17 @@
 using namespace std;
 
 TEST(TestSuite, testCase1) {
-    Thruster::QuadParams params{1,1,1};
+    Thruster::PWMFit params{1,{1,1,1},{1,1,1}};
     ThrusterManager manager {
         {
-            {0, { 0.156,  0.111, 0.085, 0, 0,     -M_PI / 4}, 1100, 1900, false, params},
-            {1, { 0.156, -0.111, 0.085, 0, 0,      M_PI / 4}, 1100, 1900, false, params},
-            {2, {-0.156,  0.111, 0.085, 0, 0, -(3*M_PI) / 4}, 1100, 1900, false, params},
-            {3, {-0.156, -0.111, 0.085, 0, 0,  (3*M_PI) / 4}, 1100, 1900, false, params},
-            {4, { 0.120,  0.218,      0, 0,  M_PI / 2, 0   }, 1100, 1900, false, params},
-            {5, { 0.120, -0.218,      0, 0, -M_PI / 2, 0   }, 1100, 1900, false, params},
-            {6, {-0.120,  0.218,      0, 0, -M_PI / 2, 0   }, 1100, 1900, false, params},
-            {7, {-0.120, -0.218,      0, 0,  M_PI / 2, 0   }, 1100, 1900, false, params},
+            {0, { 0.156,  0.111, 0.085, 0, 0,     -M_PI / 4}, 1, 1500, 1500-27, 1500+27, 1100, 1900, false, params},
+            {1, { 0.156, -0.111, 0.085, 0, 0,      M_PI / 4}, 1, 1500, 1500-27, 1500+27, 1100, 1900, false, params},
+            {2, {-0.156,  0.111, 0.085, 0, 0, -(3*M_PI) / 4}, 1, 1500, 1500-27, 1500+27, 1100, 1900, false, params},
+            {3, {-0.156, -0.111, 0.085, 0, 0,  (3*M_PI) / 4}, 1, 1500, 1500-27, 1500+27, 1100, 1900, false, params},
+            {4, { 0.120,  0.218,      0, 0,  M_PI / 2, 0   }, 1, 1500, 1500-27, 1500+27, 1100, 1900, false, params},
+            {5, { 0.120, -0.218,      0, 0, -M_PI / 2, 0   }, 1, 1500, 1500-27, 1500+27, 1100, 1900, false, params},
+            {6, {-0.120,  0.218,      0, 0, -M_PI / 2, 0   }, 1, 1500, 1500-27, 1500+27, 1100, 1900, false, params},
+            {7, {-0.120, -0.218,      0, 0,  M_PI / 2, 0   }, 1, 1500, 1500-27, 1500+27, 1100, 1900, false, params},
         }
     };
 
@@ -26,7 +26,7 @@ TEST(TestSuite, testCase1) {
 
     EXPECT_EQ(manager.get_thrusters().size(), 8);
 
-    auto out = manager.calculate_thrusts(Wrench<double>{1, 0, 0, 0.0, 0.0, 1});
+    auto out = manager.calculate_thrusts(Wrench<double>{4, 0, 0.5, 0.0, 0.0, 0});
 
     EXPECT_EQ(out.size(), 8);
 
