@@ -2,129 +2,129 @@ voltage:
 thrusters:
 - id: 1
   pose:
-    surge:
-    sway:
-    heave:
-    roll:
-    pitch:
-    yaw:
-  epsilon:
-  zero-pwm:
-  min-neg-pwm:
-  min-pos-pwm:
-  max-neg-pwm:
-  max-pos-pwm:
-  reversed:
-  drag:
+    surge: 0.0
+    sway: 0.0
+    heave: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
+  epsilon: 0
+  zero-pwm: 0.0
+  min-neg-pwm: 0.0
+  min-pos-pwm: 0.0
+  max-neg-pwm: 0.0
+  max-pos-pwm: 0.0
+  reversed: false
+  drag: 0.0
 - id: 2
   pose:
-    surge:
-    sway:
-    heave:
-    roll:
-    pitch:
-    yaw:
-  epsilon:
-  zero-pwm:
-  min-neg-pwm:
-  min-pos-pwm:
-  max-neg-pwm:
-  max-pos-pwm:
-  reversed:
-  drag:
+    surge: 0.0
+    sway: 0.0
+    heave: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
+  epsilon: 0
+  zero-pwm: 0.0
+  min-neg-pwm: 0.0
+  min-pos-pwm: 0.0
+  max-neg-pwm: 0.0
+  max-pos-pwm: 0.0
+  reversed: false
+  drag: 0.0
 - id: 3
   pose:
-    surge:
-    sway:
-    heave:
-    roll:
-    pitch:
-    yaw:
-  epsilon:
-  zero-pwm:
-  min-neg-pwm:
-  min-pos-pwm:
-  max-neg-pwm:
-  max-pos-pwm:
-  reversed:
-  drag:  
+    surge: 0.0
+    sway: 0.0
+    heave: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
+  epsilon: 0
+  zero-pwm: 0.0
+  min-neg-pwm: 0.0
+  min-pos-pwm: 0.0
+  max-neg-pwm: 0.0
+  max-pos-pwm: 0.0
+  reversed: false
+  drag: 0.0
 - id: 4
   pose:
-    surge:
-    sway:
-    heave:
-    roll:
-    pitch:
-    yaw:
-  epsilon:
-  zero-pwm:
-  min-neg-pwm:
-  min-pos-pwm:
-  max-neg-pwm:
-  max-pos-pwm:
-  reversed:
-  drag:
+    surge: 0.0
+    sway: 0.0
+    heave: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
+  epsilon: 0
+  zero-pwm: 0.0
+  min-neg-pwm: 0.0
+  min-pos-pwm: 0.0
+  max-neg-pwm: 0.0
+  max-pos-pwm: 0.0
+  reversed: false
+  drag: 0.0
 - id: 5
   pose:
-    surge:
-    sway:
-    heave:
-    roll:
-    pitch:
-    yaw:
-  epsilon:
-  zero-pwm:
-  min-neg-pwm:
-  min-pos-pwm:
-  max-neg-pwm:
-  max-pos-pwm:
-  reversed:
-  drag:
+    surge: 0.0
+    sway: 0.0
+    heave: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
+  epsilon: 0
+  zero-pwm: 0.0
+  min-neg-pwm: 0.0
+  min-pos-pwm: 0.0
+  max-neg-pwm: 0.0
+  max-pos-pwm: 0.0
+  reversed: false
+  drag: 0.0
 - id: 6
   pose:
-    surge:
-    sway:
-    heave:
-    roll:
-    pitch:
-    yaw:
-  epsilon:
-  zero-pwm:
-  min-neg-pwm:
-  min-pos-pwm:
-  max-neg-pwm:
-  max-pos-pwm:
-  reversed:
-  drag:
+    surge: 0.0
+    sway: 0.0
+    heave: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
+  epsilon: 0
+  zero-pwm: 0.0
+  min-neg-pwm: 0.0
+  min-pos-pwm: 0.0
+  max-neg-pwm: 0.0
+  max-pos-pwm: 0.0
+  reversed: false
+  drag: 0.0
 - id: 7
   pose:
-    surge:
-    sway:
-    heave:
-    roll:
-    pitch:
-    yaw:
-  epsilon:
-  zero-pwm:
-  min-neg-pwm:
-  min-pos-pwm:
-  max-neg-pwm:
-  max-pos-pwm:
-  reversed:
-  drag:
+    surge: 0.0
+    sway: 0.0
+    heave: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
+  epsilon: 0
+  zero-pwm: 0.0
+  min-neg-pwm: 0.0
+  min-pos-pwm: 0.0
+  max-neg-pwm: 0.0
+  max-pos-pwm: 0.0
+  reversed: false
+  drag: 0.0
 - id: 8
   pose:
-    surge:
-    sway:
-    heave:
-    roll:
-    pitch:
-    yaw:
-  epsilon:
-  zero-pwm:
-  min-neg-pwm:
-  min-pos-pwm:
-  max-neg-pwm:
-  max-pos-pwm:
-  reversed:
-  drag:
+    surge: 0.0
+    sway: 0.0
+    heave: 0.0
+    roll: 0.0
+    pitch: 0.0
+    yaw: 0.0
+  epsilon: 0
+  zero-pwm: 0.0
+  min-neg-pwm: 0.0
+  min-pos-pwm: 0.0
+  max-neg-pwm: 0.0
+  max-pos-pwm: 0.0
+  reversed: false
+  drag: 0.0

@@ -32,14 +32,16 @@ public:
 		ros::Subscriber pitch_sub = n.subscribe("pitch", 1, &ThrusterNode::pitch_callback, this);
 		ros::Subscriber roll_sub = n.subscribe("roll", 1, &ThrusterNode::roll_callback, this);
 
-		thruster_manager = ThrusterManager{}; // TODO: From Parameter File
-
-		XmlRpc::XmlRpcValue fit_params, thruster_params;
+		XmlRpc::XmlRpcValue fit_params, thruster_params, voltage_param;
 		n.getParam("/fits", fit_params);
+		n.getParam("/voltage", voltage)
 		n.getParam("/thrusters", thruster_params);
+		assert(voltage_param.getType() == XmlRpcValue::TypeDouble);
+		double voltage = double(voltage_param);
 		auto fits = parse_fits_param(fit_params);
-		auto thrusters = parse_thrusters_param(thruster_params);
+		auto thrusters = parse_thrusters_param(thruster_params, voltage, fits);
 
+		thruster_manager = ThrusterManager{thrusters}; // TODO: From Parameter File
 		// ros::Rate loop_rate(10);
 
 		ros::spin();
@@ -60,15 +62,44 @@ private:
 		);
 	}
 
-	static vector<Thruster> parse_thrusters_param(const XmlRpc::XmlRpcValue &value){
+	static Screw::Pose<double> parse_pose_param(const XmlRpc::XmlRpcValue &value){
+		return Screw::Pose<double>(
+			double(value["surge"]),
+			double(value["sway"]),
+			double(value["heave"]),
+			double(value["roll"]),
+			double(value["pitch"]),
+			double(value["yaw"]),
+		)
+	}
+
+	static vector<Thruster> parse_thrusters_param(const XmlRpc::XmlRpcValue &value, double voltage, vector<Thruster::PWMFits> fits){
 		vector<Thruster> thrusters;
 		try{
 			assert(value.getType() == XmlRpcValue::Type::TypeArray);
-			auto &fit_param[]
+			
 			for(size_t i = 0; i < value.size(); ++i){
-				auto
+				auto &fit_param = value[i]
+				Pose<double> p = ;
+				thrusters.push_back({
+					int(fit_param["id"]),
+					parse_pose_param(fit_param["pose"]),
+					int(fit_param["epsilon"]),
+					double(fit_param["zero-pwm"]),
+					double(fit_param["min-neg-pwm"]),
+					double(fit_param["min-pos-pwm"]),
+					double(fit_param["max-neg-pwm"]),
+					double(fit_param["max-pos-pwm"]),
+					bool(fit_param["reversed"]),
+					fits,
+					double(fit_param["drag"])
+				});
 			}
 		}
+		} catch(const XmlRpcException &e) {
+			cout << e.getMessage() << endl;
+		}
+		return thrusters;
 	}
 
 	static vector<Thruster::PWMFit> parse_fits_param(const XmlRpc::XmlRpcValue &value) {
