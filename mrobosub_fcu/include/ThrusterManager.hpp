@@ -6,6 +6,8 @@
 
 class ThrusterManager {
 public:
+    ThrusterManager() {};
+
     ThrusterManager(std::vector<Thruster> thrusters) : thrusters(thrusters) {
         calculate_thruster_matrices();
     }

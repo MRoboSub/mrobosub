@@ -2,7 +2,7 @@
 
 #include <string>
 #include <cmath>
-
+#include <vector>
 #include <Eigen/Dense>
 
 #include "Screw.hpp"
@@ -15,7 +15,7 @@ public:
     Thruster(
         int id, Pose<double> pose, int epsilon, double zero_pwm,
         double min_neg_pwm, double min_pos_pwm, double max_neg_pwm, double max_pos_pwm,
-        bool reversed, PWMFit pwm_fit, double drag=1.0
+        bool reversed, std::vector<PWMFit> pwm_fits, double drag=1.0
     ) : 
         id(id),
         pose(pose),
@@ -26,7 +26,7 @@ public:
         max_pos_pwm(max_pos_pwm),
         reversed(reversed),
         drag(drag),
-        pwm_fit(pwm_fit),
+        pwm_fits(pwm_fits),
         contribution(calculate_contribution(pose))
         { }
 
@@ -34,10 +34,10 @@ public:
         return contribution;
     }
 
-    static Wrench<double> calculate_contribution(const Pose<double> &pose);
+    Wrench<double> calculate_contribution(const Pose<double> &pose);
 
-    int thrust_to_pwm(double thrust);
-    double pwm_to_thrust(int pwm);
+    int thrust_to_pwm(double thrust, double voltage);
+    double pwm_to_thrust(int pwm, double voltage);
 
     struct QuadParams { 
         const double a;
@@ -66,14 +66,16 @@ private:
     double zero_pwm;
     double min_neg_pwm;
     double min_pos_pwm;
+    double max_neg_pwm;
+    double max_pos_pwm;
     int epsilon;
     bool reversed;
     double drag;
-    double max_pos_thrust = 1;
+    double max_pos_thrust = 1.0;
     double max_neg_thrust = -0.8;
     double min_pos_thrust = 0;
     double min_neg_thrust = 0;
-    PWMFit pwm_fit;
+    std::vector<PWMFit> pwm_fits;
     Wrench<double> contribution;
 
     int bound_pwm(int pwm);

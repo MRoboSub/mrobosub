@@ -36,6 +36,12 @@ public:
     const Vector3<T> angular() const {
         return Vector3<T>(screw[3], screw[4], screw[5]);
     }
+    T& surge() { return screw[0]; }
+    T& sway()  { return screw[1]; }
+    T& heave() { return screw[2]; }
+    T& roll()  { return screw[3]; }
+    T& pitch() { return screw[4]; }
+    T& yaw()   { return screw[5]; }
 
     const T surge() const { return screw[0]; }
     const T sway()  const { return screw[1]; }
