@@ -1,6 +1,6 @@
 <launch>
-  <node name="thruster_node" pkg="mrobosub_fcu" type="mrobosub_fcu_node">
-    <rosparam command="load" file="$(find mrobosub_fcu)/params/fits.yml" />
-    <rosparam command="load" file="$(find mrobosub_fcu)/params/thrusters.yml" />
+  <node name="thruster" pkg="mrobosub_fcu" type="mrobosub_fcu_node">
+    <rosparam command="load" file="$(find mrobosub_fcu)/params/fits.yaml" />
+    <rosparam command="load" file="$(find mrobosub_fcu)/params/thrusters.yaml" />
   </node>
 </launch>

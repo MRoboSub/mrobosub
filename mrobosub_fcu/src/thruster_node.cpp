@@ -33,9 +33,9 @@ public:
 		ros::Subscriber roll_sub = n.subscribe("roll", 1, &ThrusterNode::roll_callback, this);
 
 		XmlRpc::XmlRpcValue fit_params, thruster_params, voltage_param;
-		n.getParam("/fits", fit_params);
-		n.getParam("/voltage", voltage_param);
-		n.getParam("/thrusters", thruster_params);
+		ros::param::get("~/fits", fit_params);
+		ros::param::get("~/voltage", voltage_param);
+		ros::param::get("~/thrusters", thruster_params);
 		cout << voltage_param.getType() << endl;
 		//assert(voltage_param.getType() == XmlRpcValue::TypeDouble);
 		voltage = double(voltage_param);
