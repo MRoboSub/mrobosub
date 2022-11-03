@@ -58,11 +58,11 @@ Eigen::VectorXd ThrusterManager::calculate_raw_thrusts(Wrench<double> local_wren
 /**
  * Converts individual thruster PWMs to thrus
 */
-std::vector<uint16_t> ThrusterManager::thrusts_to_pwms(Eigen::VectorXd thrusts) {
+std::vector<uint16_t> ThrusterManager::thrusts_to_pwms(Eigen::VectorXd thrusts, double voltage) {
     std::vector<uint16_t> pwms(thrusts.rows());
     
     for(size_t i = 0; i < thrusts.rows(); ++i) {
-       pwms[i] = thrusters[i].thrust_to_pwm(thrusts[i]);
+       pwms[i] = thrusters[i].thrust_to_pwm(thrusts(i), voltage);
     }
 
     return pwms;

@@ -34,10 +34,11 @@ public:
 
 		XmlRpc::XmlRpcValue fit_params, thruster_params, voltage_param;
 		n.getParam("/fits", fit_params);
-		n.getParam("/voltage", voltage)
+		n.getParam("/voltage", voltage_param);
 		n.getParam("/thrusters", thruster_params);
-		assert(voltage_param.getType() == XmlRpcValue::TypeDouble);
-		double voltage = double(voltage_param);
+		cout << voltage_param.getType() << endl;
+		//assert(voltage_param.getType() == XmlRpcValue::TypeDouble);
+		voltage = double(voltage_param);
 		auto fits = parse_fits_param(fit_params);
 		auto thrusters = parse_thrusters_param(thruster_params, voltage, fits);
 
@@ -51,7 +52,7 @@ private:
 	ros::NodeHandle n;
 	ros::Publisher motor_pub = n.advertise<std_msgs::Int16MultiArray>("motor", 1);
 	ThrusterManager thruster_manager;
-
+	double voltage;
 	Screw<double> screw{0,0,0,0,0,0};
 
 	static Thruster::QuadParams parse_quad_param(const XmlRpc::XmlRpcValue &value) {
@@ -62,25 +63,25 @@ private:
 		);
 	}
 
-	static Screw::Pose<double> parse_pose_param(const XmlRpc::XmlRpcValue &value){
-		return Screw::Pose<double>(
+	static Screw<double> parse_pose_param(const XmlRpc::XmlRpcValue &value){
+		return Screw<double>{
 			double(value["surge"]),
 			double(value["sway"]),
 			double(value["heave"]),
 			double(value["roll"]),
 			double(value["pitch"]),
 			double(value["yaw"]),
-		)
+		};
 	}
 
-	static vector<Thruster> parse_thrusters_param(const XmlRpc::XmlRpcValue &value, double voltage, vector<Thruster::PWMFits> fits){
+	static vector<Thruster> parse_thrusters_param(const XmlRpc::XmlRpcValue &value, double voltage, vector<Thruster::PWMFit> fits){
 		vector<Thruster> thrusters;
+
 		try{
 			assert(value.getType() == XmlRpcValue::Type::TypeArray);
 			
 			for(size_t i = 0; i < value.size(); ++i){
-				auto &fit_param = value[i]
-				Pose<double> p = ;
+				auto &fit_param = value[i];
 				thrusters.push_back({
 					int(fit_param["id"]),
 					parse_pose_param(fit_param["pose"]),
@@ -95,8 +96,7 @@ private:
 					double(fit_param["drag"])
 				});
 			}
-		}
-		} catch(const XmlRpcException &e) {
+		}catch(const XmlRpcException &e) {
 			cout << e.getMessage() << endl;
 		}
 		return thrusters;
@@ -157,7 +157,7 @@ private:
 
 	void publish_pwm() {
 		auto thrusts = thruster_manager.calculate_thrusts(screw);
-		auto pwms = thruster_manager.thrusts_to_pwms(thrusts);
+		auto pwms = thruster_manager.thrusts_to_pwms(thrusts, voltage);
 
 	}
 };

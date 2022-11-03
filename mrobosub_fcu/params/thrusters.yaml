@@ -1,4 +1,4 @@
-voltage:
+voltage: 16.0
 thrusters:
 - id: 1
   pose:

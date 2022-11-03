@@ -21,7 +21,7 @@ public:
     /**
      * Converts individual thruster PWMs to thrusts
     */
-    std::vector<uint16_t> thrusts_to_pwms(Eigen::VectorXd thrusts);
+    std::vector<uint16_t> thrusts_to_pwms(Eigen::VectorXd thrusts, double voltage);
 
 private:
     std::vector<Thruster> thrusters;
