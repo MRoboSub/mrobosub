@@ -13,8 +13,8 @@ public:
     struct PWMFit;
 
     Thruster(
-        int id, Pose<double> pose, int epsilon, double zero_pwm,
-        double min_neg_pwm, double min_pos_pwm, double max_neg_pwm, double max_pos_pwm,
+        int id, Pose<double> pose, int epsilon, int zero_pwm,
+        int min_neg_pwm, int min_pos_pwm, int max_neg_pwm, int max_pos_pwm,
         bool reversed, std::vector<PWMFit> pwm_fits, double drag=1.0
     ) : 
         id(id),

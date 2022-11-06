@@ -1,130 +1,112 @@
 voltage: 16.0
+thruster_types:
+  "Uninit":
+    epsilon: 0
+    zero-pwm: 0
+    min-neg-pwm: 0
+    min-pos-pwm: 0
+    max-neg-pwm: 0
+    max-pos-pwm: 0
+  "T200":
+    epsilon: 1
+    zero-pwm: 1500 
+    min-neg-pwm: 1473 # 1500 - 27
+    min-pos-pwm: 1527 # 1500 + 27
+    max-neg-pwm: 1100
+    max-pos-pwm: 1900
 thrusters:
 - id: 1
   pose:
-    surge: 0.0
-    sway: 0.0
-    heave: 0.0
+    surge: 0.156
+    sway: 0.111
+    heave: 0.085
     roll: 0.0
     pitch: 0.0
-    yaw: 0.0
-  epsilon: 0
-  zero-pwm: 0.0
-  min-neg-pwm: 0.0
-  min-pos-pwm: 0.0
-  max-neg-pwm: 0.0
-  max-pos-pwm: 0.0
+    yaw: deg(-45) # -M_PI / 4 
+  type: "T200"
   reversed: false
-  drag: 0.0
+  drag: 1.0
+
 - id: 2
   pose:
-    surge: 0.0
-    sway: 0.0
-    heave: 0.0
+    surge: 0.156
+    sway: -0.111
+    heave: 0.085
     roll: 0.0
     pitch: 0.0
-    yaw: 0.0
-  epsilon: 0
-  zero-pwm: 0.0
-  min-neg-pwm: 0.0
-  min-pos-pwm: 0.0
-  max-neg-pwm: 0.0
-  max-pos-pwm: 0.0
+    yaw: deg(45) # M_PI / 4
+  type: "T200"
   reversed: false
-  drag: 0.0
+  drag: 1.0
+
 - id: 3
   pose:
-    surge: 0.0
-    sway: 0.0
-    heave: 0.0
+    surge: -0.156
+    sway: 0.111
+    heave: 0.085
     roll: 0.0
     pitch: 0.0
-    yaw: 0.0
-  epsilon: 0
-  zero-pwm: 0.0
-  min-neg-pwm: 0.0
-  min-pos-pwm: 0.0
-  max-neg-pwm: 0.0
-  max-pos-pwm: 0.0
+    yaw: deg(135) # -3 * M_PI / 4
+  type: "T200"
   reversed: false
-  drag: 0.0
+  drag: 1.0
+
 - id: 4
   pose:
-    surge: 0.0
-    sway: 0.0
-    heave: 0.0
+    surge: -0.156
+    sway: -0.111
+    heave: 0.085
     roll: 0.0
     pitch: 0.0
-    yaw: 0.0
-  epsilon: 0
-  zero-pwm: 0.0
-  min-neg-pwm: 0.0
-  min-pos-pwm: 0.0
-  max-neg-pwm: 0.0
-  max-pos-pwm: 0.0
+    yaw: -deg(135) # 3 * M_PI / 4
+  type: "T200"
   reversed: false
-  drag: 0.0
+  drag: 1.0
+
 - id: 5
   pose:
-    surge: 0.0
-    sway: 0.0
+    surge: 0.120
+    sway: 0.218
     heave: 0.0
     roll: 0.0
-    pitch: 0.0
+    pitch: deg(90) # M_PI / 2
     yaw: 0.0
-  epsilon: 0
-  zero-pwm: 0.0
-  min-neg-pwm: 0.0
-  min-pos-pwm: 0.0
-  max-neg-pwm: 0.0
-  max-pos-pwm: 0.0
+  type: "T200"
   reversed: false
-  drag: 0.0
+  drag: 1.0
+
 - id: 6
   pose:
-    surge: 0.0
-    sway: 0.0
+    surge: 0.120
+    sway: -0.218
     heave: 0.0
     roll: 0.0
-    pitch: 0.0
+    pitch: deg(-90) # -M_PI / 2
     yaw: 0.0
-  epsilon: 0
-  zero-pwm: 0.0
-  min-neg-pwm: 0.0
-  min-pos-pwm: 0.0
-  max-neg-pwm: 0.0
-  max-pos-pwm: 0.0
+  type: "T200"
   reversed: false
-  drag: 0.0
+  drag: 1.0
+
 - id: 7
   pose:
-    surge: 0.0
-    sway: 0.0
+    surge: -0.120
+    sway: 0.218
     heave: 0.0
     roll: 0.0
-    pitch: 0.0
+    pitch: deg(-90) # -M_PI / 2
     yaw: 0.0
-  epsilon: 0
-  zero-pwm: 0.0
-  min-neg-pwm: 0.0
-  min-pos-pwm: 0.0
-  max-neg-pwm: 0.0
-  max-pos-pwm: 0.0
+  type: "T200"
   reversed: false
-  drag: 0.0
+  drag: 1.0
+
 - id: 8
   pose:
-    surge: 0.0
-    sway: 0.0
+    surge: -0.120
+    sway: -0.218
     heave: 0.0
     roll: 0.0
-    pitch: 0.0
+    pitch: deg(45) # M_PI / 2
     yaw: 0.0
-  epsilon: 0
-  zero-pwm: 0.0
-  min-neg-pwm: 0.0
-  min-pos-pwm: 0.0
-  max-neg-pwm: 0.0
-  max-pos-pwm: 0.0
+  type: "T200"
   reversed: false
-  drag: 0.0
+  drag: 1.0

@@ -3,7 +3,7 @@
 #include <xmlrpcpp/XmlRpcException.h>
 #include "std_msgs/String.h"
 #include "std_msgs/Float64.h"
-#include "std_msgs/Int16MultiArray.h"
+#include "std_msgs/UInt16MultiArray.h"
 
 #include "ThrusterManager.hpp"
 #include "Thruster.hpp"
@@ -32,17 +32,18 @@ public:
 		ros::Subscriber pitch_sub = n.subscribe("pitch", 1, &ThrusterNode::pitch_callback, this);
 		ros::Subscriber roll_sub = n.subscribe("roll", 1, &ThrusterNode::roll_callback, this);
 
-		XmlRpc::XmlRpcValue fit_params, thruster_params, voltage_param;
+		XmlRpc::XmlRpcValue fit_params, thruster_params, voltage_param, thrusters_type_params;
 		ros::param::get("~/fits", fit_params);
 		ros::param::get("~/voltage", voltage_param);
 		ros::param::get("~/thrusters", thruster_params);
+		ros::param::get("~/thruster_types", thrusters_type_params);
 		cout << voltage_param.getType() << endl;
 		//assert(voltage_param.getType() == XmlRpcValue::TypeDouble);
 		voltage = double(voltage_param);
 		auto fits = parse_fits_param(fit_params);
-		auto thrusters = parse_thrusters_param(thruster_params, voltage, fits);
+		auto thrusters = parse_thrusters_param(thruster_params, thrusters_type_params, voltage, fits);
 
-		thruster_manager = ThrusterManager{thrusters}; // TODO: From Parameter File
+		thruster_manager = ThrusterManager{thrusters};
 		// ros::Rate loop_rate(10);
 
 		ros::spin();
@@ -50,7 +51,7 @@ public:
 
 private:
 	ros::NodeHandle n;
-	ros::Publisher motor_pub = n.advertise<std_msgs::Int16MultiArray>("motor", 1);
+	ros::Publisher motor_pub = n.advertise<std_msgs::UInt16MultiArray>("motor", 10);
 	ThrusterManager thruster_manager;
 	double voltage;
 	Screw<double> screw{0,0,0,0,0,0};
@@ -74,7 +75,10 @@ private:
 		};
 	}
 
-	static vector<Thruster> parse_thrusters_param(const XmlRpc::XmlRpcValue &value, double voltage, vector<Thruster::PWMFit> fits){
+	static vector<Thruster> parse_thrusters_param(
+		const XmlRpc::XmlRpcValue &value, const XmlRpc::XmlRpcValue &types_value,
+		double voltage, const vector<Thruster::PWMFit> &fits
+	) {
 		vector<Thruster> thrusters;
 
 		try{
@@ -82,23 +86,29 @@ private:
 			
 			for(size_t i = 0; i < value.size(); ++i){
 				auto &fit_param = value[i];
-				thrusters.push_back({
+				auto &thruster_type = fit_param["type"];
+				auto &thruster_defaults = types_value[string(thruster_type)];
+
+				Screw<double> pose = parse_pose_param(fit_param["pose"]);
+				
+				thrusters.emplace_back(
 					int(fit_param["id"]),
-					parse_pose_param(fit_param["pose"]),
-					int(fit_param["epsilon"]),
-					double(fit_param["zero-pwm"]),
-					double(fit_param["min-neg-pwm"]),
-					double(fit_param["min-pos-pwm"]),
-					double(fit_param["max-neg-pwm"]),
-					double(fit_param["max-pos-pwm"]),
+					pose,
+					int(thruster_defaults["epsilon"]),
+					int(thruster_defaults["zero-pwm"]),
+					int(thruster_defaults["min-neg-pwm"]),
+					int(thruster_defaults["min-pos-pwm"]),
+					int(thruster_defaults["max-neg-pwm"]),
+					int(thruster_defaults["max-pos-pwm"]),
 					bool(fit_param["reversed"]),
 					fits,
 					double(fit_param["drag"])
-				});
+				);
 			}
-		}catch(const XmlRpcException &e) {
-			cout << e.getMessage() << endl;
+		} catch(const XmlRpcException &e) {
+			cerr << "[ERROR] Param parse: " << e.getMessage() << endl;
 		}
+
 		return thrusters;
 	}
 
@@ -159,6 +169,12 @@ private:
 		auto thrusts = thruster_manager.calculate_thrusts(screw);
 		auto pwms = thruster_manager.thrusts_to_pwms(thrusts, voltage);
 
+		auto to_publish = std_msgs::UInt16MultiArray();
+		to_publish.data = std::move(pwms);
+		to_publish.layout.dim.push_back(std_msgs::MultiArrayDimension());  
+		to_publish.layout.dim[0].size = pwms.size();
+		to_publish.layout.dim[0].stride = 1;
+		motor_pub.publish(to_publish);
 	}
 };
 

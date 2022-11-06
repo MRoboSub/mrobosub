@@ -3,12 +3,7 @@
 #include <cmath>
 
 Wrench<double> Thruster::calculate_contribution(const Pose<double> &pose) {
-    // TODO: figure out how to do this
-
     // Note: roll should always be 0
-
-    // TODO: paramertize, make force
-
     Eigen::Vector3d forces;
 
     double xy_force = max_pos_thrust * cos(-pose.pitch());
