@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import rospy
 from std_msgs.msg import Int32
 
@@ -12,9 +14,9 @@ class Submarine:
     @classmethod
     def simulate_timestep(cls, timestep: float):
         cls.heave = max(0, cls.heave + cls.req_heave * timestep)
-        cls.yaw = (cls.yaw + cls.req_yaw * timestep / 10) % 360 - 180
-        cls.heave_publisher.publish(Int32(cls.heave))
-        cls.yaw_publisher.publish(Int32(cls.yaw))
+        cls.yaw = (cls.yaw + cls.req_yaw * timestep) % 360 - 180
+        cls.heave_publisher.publish(Int32(int(round(cls.heave))))
+        cls.yaw_publisher.publish(Int32(int(round(cls.yaw))))
 
     @classmethod
     def heave_cb(cls, msgs):
