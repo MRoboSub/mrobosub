@@ -1,5 +1,8 @@
 import rospy
 from state_machine import *
+from periodic_io import PIO
+from submerge import Submerge
+from turn import Turn
 
 
 class Start(State):
@@ -10,34 +13,6 @@ class Start(State):
 
     def handle(self) -> Outcome:
         return self.Complete()
-
-
-class Submerge(State):
-    Timeout = Outcome.make('Timeout')
-    ReachedTarget = Outcome.make('ReachedTarget')
-    FailedToReachTarget = Outcome.make('FailedToReachTarget')
-
-    def initialize(self, prev_outcome: Outcome) -> None:
-        self.depth = 0
-
-    def handle(self) -> Outcome:
-        if self.depth == 10:
-            return self.ReachedTarget()
-        else:
-            self.depth += 1
-            return self.FailedToReachTarget()
-
-
-class Turn(State):
-    Timeout = Outcome.make('Timeout')
-    ReachedTarget = Outcome.make('ReachedTarget')
-    FailedToReachTarget = Outcome.make('FailedToReachTarget')
-
-    def initialize(self, prev_outcome: Outcome) -> None:
-        self.start_time = rospy.time()
-
-    def handle(self) -> Outcome:
-        return self.Timeout()
 
 
 class Stop(State):
@@ -64,5 +39,5 @@ if __name__ == '__main__':
         Turn.Timeout: Stop,
     }
     state_machine = StateMachine('Example', transitions, Start, Stop)
-    outcome = state_machine.run(None)
+    outcome = state_machine.run()
     print(outcome)
