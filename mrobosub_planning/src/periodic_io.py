@@ -17,5 +17,5 @@ class PIO:
     rospy.Subscriber('/heave_psn', Int32, lambda m: PIO._heave_cb(m))
     rospy.Subscriber('/yaw_psn', Int32, lambda m: PIO._yaw_cb(m))
 
-    curr_yaw: int = None
-    curr_heave: int = None
+    curr_yaw: int = 0
+    curr_heave: int = 0

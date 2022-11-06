@@ -29,8 +29,8 @@ class Submarine:
 RATE = 100
 rospy.init_node('submarine_sim')
 rate_manager = rospy.Rate(RATE)
-heave_subscriber = rospy.Subscriber('/heave_pwm',  Int32, Submarine.req_heave)
-yaw_subscriber = rospy.Subscriber('/yaw_pwm',  Int32, Submarine.req_yaw)
+heave_subscriber = rospy.Subscriber('/heave_pwm',  Int32, Submarine.heave_cb)
+yaw_subscriber = rospy.Subscriber('/yaw_pwm',  Int32, Submarine.yaw_cb)
 
 while not rospy.is_shutdown():
     Submarine.simulate_timestep(1 / RATE)

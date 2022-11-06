@@ -1,8 +1,9 @@
+#! /usr/bin/env python
+
 import rospy
 from state_machine import *
 from periodic_io import PIO
-from submerge import Submerge
-from turn import Turn
+from tasks import Turn, Submerge
 
 
 class Start(State):
@@ -32,12 +33,13 @@ if __name__ == '__main__':
     transitions = {
         Start.Complete: Submerge,
         Submerge.ReachedTarget: Turn,
-        Submerge.FailedToReachTarget: Submerge,
+        Submerge.InProgress: Submerge,
         Submerge.Timeout: Stop,
         Turn.ReachedTarget: Stop,
-        Turn.FailedToReachTarget: Turn,
+        Turn.InProgress: Turn,
         Turn.Timeout: Stop,
     }
-    state_machine = StateMachine('Example', transitions, Start, Stop)
+    rospy.init_node('example')
+    state_machine = StateMachine('example', transitions, Start, Stop)
     outcome = state_machine.run()
     print(outcome)

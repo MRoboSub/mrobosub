@@ -1,11 +1,14 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import make_dataclass, field
-from typing import Mapping, Type
+from typing import Mapping, Type, Final
 import rospy
 
 
-__all__ = ['Outcome', 'State', 'StateMachine']
+Param = Final
+
+
+__all__ = ('Outcome', 'State', 'StateMachine', 'Param')
 
 
 class Outcome(ABC):
