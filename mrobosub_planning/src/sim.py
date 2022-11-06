@@ -11,7 +11,6 @@ class Submarine:
 
     @classmethod
     def simulate_timestep(cls, timestep: float):
-        # TODO: Add simulation code
         cls.heave = max(0, cls.heave + cls.req_heave * timestep)
         cls.yaw = (cls.yaw + cls.req_yaw * timestep / 10) % 360 - 180
         cls.heave_publisher.publish(Int32(cls.heave))
