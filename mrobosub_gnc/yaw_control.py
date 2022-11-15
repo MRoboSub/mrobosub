@@ -4,7 +4,7 @@ import rospy
 from std_msgs.msg import Float64
 from pid import PIDController
 
-from node import Node, Param
+from mrobosub_lib.lib import Node, Param
 
 from typing import Optional, Final
 
