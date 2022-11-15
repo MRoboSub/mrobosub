@@ -10,7 +10,7 @@ class Node:
         rospy.init_node(name, anonymous=False)
         rospy.loginfo(f'starting node {name}')
 
-        params = rospy.get_param(name, {})
+        params = rospy.get_param('~', {})
         for key in params:
             setattr(self, key, params[key])
 
