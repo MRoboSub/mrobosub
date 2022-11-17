@@ -14,6 +14,7 @@ class Turn(State):
 
     def initialize(self, prev_outcome: Outcome) -> None:
         self.start_time = rospy.get_time()
+        print(f'{self.timeout_time=}, {self.target_yaw=}, {self.tolerance=}')
 
     def handle(self) -> Outcome:
         if self.at_target():
@@ -33,8 +34,13 @@ class Submerge(State):
     ReachedTarget = Outcome.make('ReachedTarget')
     InProgress = Outcome.make('InProgress')
 
+    timeout_time: Param[float]
+    target_heave: Param[float]
+    tolerance: Param[float]
+
     def initialize(self, prev_outcome: Outcome) -> None:
         self.start_time = rospy.get_time()
+        print(f'{self.timeout_time=}, {self.target_heave=}, {self.tolerance=}')
 
     def handle(self) -> Outcome:
         if self.at_target():

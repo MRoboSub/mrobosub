@@ -5,7 +5,6 @@ from state_machine import *
 from periodic_io import PIO
 from doc.tasks import Turn, Submerge
 
-
 class Start(State):
     Complete = Outcome.make('Complete')
 
