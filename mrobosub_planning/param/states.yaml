@@ -1,0 +1,33 @@
+submerge:
+  defaults:
+    SUBMERGE_DEPTH: -150
+
+
+spin:
+  defaults:
+    FALLBACK_HEADING: 45
+
+
+gotobuoy:
+  defaults:
+    FORWARD_SPEED: 1600
+    HEADING_THLD: 20
+    TIMEOUT: 15
+
+
+scan:
+  defaults:
+    SCAN_SPEED: 70
+
+
+approachgate:
+  defaults:
+    APPROACH_SCAN_THLD: 0.5
+    APPROACH_IMG_THLD: 5
+    HEADING_THLD: 30    
+    
+
+cross:
+  defaults:
+    FWD_SPEED: 100
+    MOVE_TIME: 0.5

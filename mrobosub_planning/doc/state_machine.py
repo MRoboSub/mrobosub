@@ -24,7 +24,6 @@ class State(ABC):
     def __init__(self, prev_outcome: Outcome):
         self.initialize(prev_outcome)
 
-    @abstractmethod
     def initialize(self, prev_outcome: Outcome) -> None:
         pass
 

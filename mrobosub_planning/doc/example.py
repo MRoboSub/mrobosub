@@ -3,7 +3,7 @@
 import rospy
 from state_machine import *
 from periodic_io import PIO
-from tasks import Turn, Submerge
+from doc.tasks import Turn, Submerge
 
 
 class Start(State):
