@@ -3,17 +3,33 @@
 import rospy
 from typing import NewType, TypeVar, Final, Sequence, Any, Generic, Callable, get_type_hints
 from inspect import getfullargspec
+import std_srv
 
 Param = Final
+
+class MissingParameterError(Exception):
+    def __init__(self, name):
+        super().__init__(f'missing parameter {name}')
 
 class Node:
     def __init__(self, name: str):
         rospy.init_node(name, anonymous=False)
-        rospy.loginfo(f'starting node {name}')
+        rospy.loginfo(f'starting node {name}...')
 
-        params = rospy.get_param('~', {})
-        for key in params:
-            setattr(self, key, params[key])
+        def set_params(req=None):
+            rospy.loginfo('(re)loading parameters...')
+            params = rospy.get_param('~', {})
+            for key, val in params.items():
+                setattr(self, key, val)
+                rospy.logdebug(f'loaded parameter {key} := {val}')
+            return std_srv.srv.EmptyResponse
+
+        set_params()
+        for name, typ in get_type_hints(self).items():
+            if typ == Param and getattr(self, name) is None:
+                raise MissingParameterError(name)
+
+        self.param_reset_srv = rospy.Service('~/reset_params', std_srv.srv.Empty, set_params)
 
         rospy.on_shutdown(lambda: self.cleanup())
 
@@ -41,7 +57,6 @@ class ControlLoopNode(Node):
 class PipelineNode(Node):
     def __init__(self, name: str):
         super().__init__(name)
-
 
 
 
