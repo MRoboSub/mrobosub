@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
 import rospy
-from typing import NewType, TypeVar, Final, Sequence, Any, Generic
+from typing import NewType, TypeVar, Final, Sequence, Any, Generic, Callable, get_type_hints
+from inspect import getfullargspec
 
 Param = Final
 
 class Node:
-    def __init__(self, name):
+    def __init__(self, name: str):
         rospy.init_node(name, anonymous=False)
         rospy.loginfo(f'starting node {name}')
 
@@ -24,7 +25,7 @@ class Node:
 
 
 class ControlLoopNode(Node):
-    def __init__(self, name):
+    def __init__(self, name: str):
         super().__init__(name)
 
         self.rate = rospy.Rate(self.iteration_rate)
@@ -37,12 +38,54 @@ class ControlLoopNode(Node):
     def loop(self):
         pass
 
+class PipelineNode(Node):
+    def __init__(self, name: str):
+        super().__init__(name)
 
-T = TypeVar('T')
-class SubscribedVar(Generic[T]):
-    def __init__(self, topic, cls, initial=None):
-        self.val = initial
-        rospy.Subscriber(topic, cls, lambda msg: self._set(msg))
 
-    def _set(self, msg: T):
-        self.val = msg
+
+
+def subscriber(topic_name, MsgType=None):
+    def subscriber_factory(callback):
+        cb_annots = get_type_hints(callback).copy()
+        print(cb_annots)
+        cb_annots.pop('return', None) # remove the return type annotation if it exists
+        if len(cb_annots) > 1:
+            raise InvalidArgument('callback must accept exactly one argument')
+        elif len(cb_annots) == 0:
+            if MsgType is None:
+                raise InvalidArgument('must either annotate callback parameter or explicitly provide MsgType')
+        else: # len(cb_annots) == 1
+            _, MsgType = cb_annots.popitem()
+
+        # TODO: currently broken; does not pass self as first parameter, making it unable to be a method
+
+        return rospy.Subscriber(topic_name, MsgType, callback)
+
+    return subscriber_factory
+
+
+
+# M = TypeVar('M')
+# class Subscriber(Generic[M]):
+#     def __init__(self, topic_name: str, callback: Callable[[M], None], MsgType=None):
+#         cb_annots = get_type_hints(callback).copy()
+#         cb_annots.pop('return', None) # remove the return type annotation if it exists
+#         if len(cb_annots) > 1:
+#             raise InvalidArgument('callback must accept exactly one argument')
+#         elif len(cb_annots) == 0:
+#             if MsgType is None:
+#                 raise InvalidArgument('must either annotate callback parameter or explicitly provide MsgType')
+#         else: # len(cb_annots) == 1
+#             _, MsgType = cb_annots.popitem()
+
+#         self.subscriber = rospy.Subscriber(topic_name, MsgType, callback)
+
+# T = TypeVar('T')
+# class SubscribedVar(Generic[T]):
+#     def __init__(self, topic, cls, initial=None):
+#         self.val = initial
+#         rospy.Subscriber(topic, cls, lambda msg: self._set(msg))
+
+#     def _set(self, msg: T):
+#         self.val = msg
