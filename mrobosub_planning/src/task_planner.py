@@ -24,7 +24,6 @@ class Stop(State):
     def handle(self)->Outcome:
         return self.Finish()
 
-# TODO: find start and stop state
 compeition_transition_map = {
     Start.Complete: Submerge,
     Submerge.SubmergeAgain: Submerge,

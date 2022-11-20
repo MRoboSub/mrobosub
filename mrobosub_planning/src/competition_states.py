@@ -14,7 +14,6 @@ class Submerge(State):
         self.start_time = rospy.get_time()
 
     def handle(self) -> Outcome:
-        # print("submerge call")
         """ Submerges to target depth """
         PIO.target_depth = self.submerge_depth
         
