@@ -58,7 +58,7 @@ thrusters:
     heave: 0.085
     roll: 0.0
     pitch: 0.0
-    yaw: -deg(135) # 3 * M_PI / 4
+    yaw: deg(-135) # 3 * M_PI / 4
   type: "T200"
   reversed: false
   drag: 1.0

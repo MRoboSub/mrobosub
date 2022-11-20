@@ -4,11 +4,22 @@ services:
     image: mrobosub/mrobosub
     ports:
       - "10000:10000"
+      - 11311:11311
     volumes:
       - .:/root/catkin_ws/src/mrobosub
     environment:
       - DISPLAY=host.docker.internal:0.0
       - LIBGL_ALWAYS_INDIRECT=0
+      - QT_X11_NO_MITSHM=1
+    tty: true
+    stdin_open: true
+  uuv:
+    image: mrobosub/uuv
+    ports:
+    - "6000:6000"
+    environment:
+      - FCUURL=tcp://mrobosub:11311
+      - DISPLAY=host.docker.internal:0.0
       - QT_X11_NO_MITSHM=1
     tty: true
     stdin_open: true

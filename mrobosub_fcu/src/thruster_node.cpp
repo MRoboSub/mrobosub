@@ -4,7 +4,8 @@
 #include "std_msgs/String.h"
 #include "std_msgs/Float64.h"
 #include "std_msgs/UInt16MultiArray.h"
-
+#include "std_msgs/Float64MultiArray.h"
+#include <ros/console.h>
 #include "ThrusterManager.hpp"
 #include "Thruster.hpp"
 #include "Screw.hpp"
@@ -52,6 +53,7 @@ public:
 private:
 	ros::NodeHandle n;
 	ros::Publisher motor_pub = n.advertise<std_msgs::UInt16MultiArray>("motor", 10);
+	ros::Publisher thrusts_pub = n.advertise<std_msgs::Float64MultiArray>("thrusts",10);
 	ThrusterManager thruster_manager;
 	double voltage;
 	Screw<double> screw{0,0,0,0,0,0};
@@ -85,6 +87,7 @@ private:
 			assert(value.getType() == XmlRpcValue::Type::TypeArray);
 			
 			for(size_t i = 0; i < value.size(); ++i){
+				ROS_DEBUG_STREAM(i);
 				auto &fit_param = value[i];
 				auto &thruster_type = fit_param["type"];
 				auto &thruster_defaults = types_value[string(thruster_type)];
@@ -138,31 +141,37 @@ private:
 	void surge_callback(const std_msgs::Float64::ConstPtr& msg) {
 		screw.surge() = msg.get()->data;
 		publish_pwm();
+		publish_thrusts();
 	}
 
 	void sway_callback(const std_msgs::Float64::ConstPtr& msg) {
 		screw.sway() = msg.get()->data;
 		publish_pwm();
+		publish_thrusts();
 	}
 
 	void heave_callback(const std_msgs::Float64::ConstPtr& msg) {
 		screw.heave() = msg.get()->data;	
 		publish_pwm();
+		publish_thrusts();
 	}
 
 	void yaw_callback(const std_msgs::Float64::ConstPtr& msg) {
 		screw.yaw() = msg.get()->data;	
 		publish_pwm();
+		publish_thrusts();
 	}
 
 	void pitch_callback(const std_msgs::Float64::ConstPtr& msg) {
 		screw.pitch() = msg.get()->data;	
-		publish_pwm();	
+		publish_pwm();
+		publish_thrusts();
 	}
 
 	void roll_callback(const std_msgs::Float64::ConstPtr& msg) {
 		screw.roll() = msg.get()->data;	
 		publish_pwm();
+		publish_thrusts();
 	}
 
 	void publish_pwm() {
@@ -176,6 +185,22 @@ private:
 		to_publish.layout.dim[0].stride = 1;
 		motor_pub.publish(to_publish);
 	}
+	
+	void publish_thrusts(){
+		auto thrustsEigen = thruster_manager.calculate_thrusts(screw);
+		vector<double> thrusts(thrustsEigen.rows());
+		for(size_t i = 0; i < thrustsEigen.rows(); ++i) {
+       		thrusts[i] = thrustsEigen(i);
+    	}
+
+		auto to_publish = std_msgs::Float64MultiArray();
+		to_publish.data = std::move(thrusts);
+		to_publish.layout.dim.push_back(std_msgs::MultiArrayDimension());  
+		to_publish.layout.dim[0].size = thrusts.size();
+		to_publish.layout.dim[0].stride = 1;
+		thrusts_pub.publish(to_publish);
+	}
+
 };
 
 int main(int argc, char **argv) {

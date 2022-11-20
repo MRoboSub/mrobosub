@@ -9,6 +9,9 @@ public:
     ThrusterManager() {};
 
     ThrusterManager(std::vector<Thruster> thrusters) : thrusters(thrusters) {
+        for (auto it = thrusters.begin(); it != thrusters.end(); ++it)
+            it->debug_log();
+        
         calculate_thruster_matrices();
     }
     

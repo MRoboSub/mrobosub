@@ -1,6 +1,7 @@
 #include "ThrusterManager.hpp"
 
 #include <iostream>
+#include <ros/console.h>
 
 void ThrusterManager::calculate_thruster_matrices() {
     // Number of columns is number of thrusters

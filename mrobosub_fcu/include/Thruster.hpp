@@ -4,6 +4,7 @@
 #include <cmath>
 #include <vector>
 #include <Eigen/Dense>
+#include <ros/console.h>
 
 #include "Screw.hpp"
 
@@ -59,6 +60,10 @@ public:
 
     double get_max_pos_thrust();
     double get_max_neg_thrust();
+
+    void debug_log() const {
+        ROS_DEBUG_STREAM("thruster id: " << id);
+    }
 
 private:
     int id;
