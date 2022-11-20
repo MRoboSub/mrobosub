@@ -1,11 +1,12 @@
 from competition_states import *
+from idealistic_states import *
 from state_machine import StateMachine, State
 import rospy
 
 class Start(State):
     Complete = Outcome.make("Complete")
     
-    def initilize(self, prev_outcome: Outcome) -> None:
+    def initialize(self, prev_outcome: Outcome) -> None:
         print("init state call")
     
     def handle(self)->Outcome:
@@ -14,7 +15,7 @@ class Start(State):
 class Stop(State):
     Finish = Outcome.make("Finish")
 
-    def initilize(self, prev_outcome: Outcome) -> None:
+    def initialize(self, prev_outcome: Outcome) -> None:
         PIO.forward = 0
         PIO.lateral = 0
         PIO.target_depth = 0
