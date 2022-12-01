@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from competition_states import *
 from idealistic_states import *
 from state_machine import StateMachine, State

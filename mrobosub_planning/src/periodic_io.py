@@ -1,103 +1,134 @@
 import rospy
-from mrobosub_control.msg import ObjectPosition, HeadingRequest
-from std_msgs.msg import Float32
-from util.control_motor import MotorController
-from util.angles import angle_error_abs
+from std_msgs.msg import Float64
 
 # TODO: where to put angle error and util repository?
 
 # Don't look at these
-def _gate_position_callback(msg):
-    PeriodicIO.gate_position = msg
+def _gate_position_callback(msg: Float64):
+    PIO.gate_position = msg
 
-def _gman_position_callback(msg):
-    PeriodicIO.gate_position = msg
+def _gman_position_callback(msg : Float64):
+    PIO.gate_position = msg
 
-def _bootlegger_position_callback(msg):
-    PeriodicIO.gate_position = msg
+def _bootlegger_position_callback(msg : Float64):
+    PIO.gate_position = msg
 
-def _gun_position_callback(msg):
-    PeriodicIO.gun_position = msg
+def _gun_position_callback(msg : Float64):
+    PIO.gun_position = msg
 
-def _heading_callback(msg):
-    PeriodicIO.current_heading = msg.data
+def _yaw_callback(msg : Float64):
+    PIO.Pose.yaw = msg.data
 
-def _depth_callback(msg):
-    PeriodicIO.current_depth = msg.data
+def _heave_callback(msg : Float64):
+    PIO.Pose.heave = msg.data
 
-def _roll_callback(msg):
-    PeriodicIO.current_roll = msg.data
+def _roll_callback(msg : Float64):
+    PIO.Pose.roll = msg.data
 
 # Look at this!
-class PeriodicIO:
+class PIO:
 #public:
 
-    # Inputs
-    current_heading = 0
-    current_roll = 0
-    current_depth = 0
-    gate_position = ObjectPosition()
-    gman_position = ObjectPosition()
-    bootlegger_position = ObjectPosition()
-    gun_position = ObjectPosition()
+   
+    # gate_position = ObjectPosition()
+    # gman_position = ObjectPosition()
+    # bootlegger_position = ObjectPosition()
+    # gun_position = ObjectPosition()
 
-    # Output
-    heading_mode = HeadingRequest.DISABLED
-    heading_value = 0
-    target_depth = 0
-    forward = 0
-    lateral = 0
-    roll = 0
+    # # Output
+    # heading_mode = HeadingRequest.DISABLED
+    # heading_value = 0
+    # target_depth = 0
+    # forward = 0
+    # lateral = 0
+    # roll = 0
+
+    class Pose:
+        yaw = 0
+        heave = 0
+        roll = 0
+
+
+    # @classmethod
+    # def heading_within_threshold(cls, threshold):
+    #     return angle_error_abs(PIO.heading_value, PIO.current_heading) <= threshold
+
+    # @classmethod
+    # def depth_within_threshold(cls, threshold):
+    #     return (PIO.target_depth - PIO.current_depth) <= threshold
+
+    # @classmethod
+    # def set_absolute_heading(cls, heading):
+    #     PIO.heading_mode = HeadingRequest.ABSOLUTE
+    #     PIO.heading_value = heading
+
+    # @classmethod
+    # def set_override_heading(cls, power):
+    #     PIO.heading_mode = HeadingRequest.OVERRIDE
+    #     PIO.heading_value = power
 
     @classmethod
-    def heading_within_threshold(cls, threshold):
-        return angle_error_abs(PeriodicIO.heading_value, PeriodicIO.current_heading) <= threshold
+    def set_target_yaw(target_yaw : float):
+       PIO._target_yaw_pub.publish(target_yaw)
 
     @classmethod
-    def depth_within_threshold(cls, threshold):
-        return (PeriodicIO.target_depth - PeriodicIO.current_depth) <= threshold
+    def set_target_heave(target_heave: float):
+        PIO._target_heave_pub.publish(target_heave)
 
     @classmethod
-    def set_absolute_heading(cls, heading):
-        PeriodicIO.heading_mode = HeadingRequest.ABSOLUTE
-        PeriodicIO.heading_value = heading
+    def set_override_yaw(override_yaw : float):
+        PIO._yaw_pub.publish(override_yaw)
+    
+    @classmethod
+    def set_override_surge(override_surge : float):
+        PIO._surge_pub.publish(override_surge)
+    
+    @classmethod
+    def set_override_sway(override_sway : float):
+        PIO._sway_pub.publish(override_sway)
 
     @classmethod
-    def set_override_heading(cls, power):
-        PeriodicIO.heading_mode = HeadingRequest.OVERRIDE
-        PeriodicIO.heading_value = power
+    def set_override_roll(override_roll : float):
+        PIO._sway_pub.publish(override_roll)
 
     @classmethod
-    def publish_all(cls):
-        # PeriodicIO._mc.set(
-        #     forward=PeriodicIO.forward,
-        #     lateral=PeriodicIO.lateral
-        # )
-        PeriodicIO._foward_pub.publish(PeriodicIO.forward)
-        PeriodicIO._strafe_pub.publish(PeriodicIO.lateral)
-        PeriodicIO._heading_request_pub.publish(
-            HeadingRequest(PeriodicIO.heading_mode, PeriodicIO.heading_value)
-        )
-        PeriodicIO._depth_request_pub.publish(PeriodicIO.target_depth)
-        PeriodicIO._roll_pub.publish(PeriodicIO.roll)
+    def get_pose() -> Pose:
+        return PIO.Pose
+
+    
+    # @classmethod
+    # def publish_all(cls):
+    #     # PIO._mc.set(
+    #     #     forward=PIO.forward,
+    #     #     lateral=PIO.lateral
+    #     # )
+    #     PIO._foward_pub.publish(PIO.forward)
+    #     PIO._strafe_pub.publish(PIO.lateral)
+    #     PIO._heading_request_pub.publish(
+    #         HeadingRequest(PIO.heading_mode, PIO.heading_value)
+    #     )
+    #     PIO._depth_request_pub.publish(PIO.target_depth)
+    #     PIO._roll_pub.publish(PIO.roll)
 
 # private:
 
     # _mc = MotorController()
 
     # Subscribers
-    rospy.Subscriber('/mrobosub/object_position/gate', ObjectPosition, _gate_position_callback)
-    rospy.Subscriber('/mrobosub/object_position/gman', ObjectPosition, _gman_position_callback)
-    rospy.Subscriber('/mrobosub/object_position/bootlegger', ObjectPosition, _bootlegger_position_callback)
-    rospy.Subscriber('/mrobosub/object_position/gun', ObjectPosition, _gun_position_callback)
-    rospy.Subscriber('/mrobosub/heading', Float32, _heading_callback)
-    rospy.Subscriber('/mrobosub/altitude', Float32, _depth_callback)
-    rospy.Subscriber('/mrobosub/roll', Float32, _roll_callback)
+    # rospy.Subscriber('/mrobosub/object_position/gate', ObjectPosition, _gate_position_callback)
+    # rospy.Subscriber('/mrobosub/object_position/gman', ObjectPosition, _gman_position_callback)
+    # rospy.Subscriber('/mrobosub/object_position/bootlegger', ObjectPosition, _bootlegger_position_callback)
+    # rospy.Subscriber('/mrobosub/object_position/gun', ObjectPosition, _gun_position_callback)
+    
+    rospy.Subscriber('/mrobosub/pose/yaw', Float64, _yaw_callback)
+    rospy.Subscriber('/mrobosub/pose/heave', Float64, _heave_callback)
+    rospy.Subscriber('/mrobosub/pose/roll', Float64, _roll_callback)
 
     # Publishers
-    _depth_request_pub = rospy.Publisher('/mrobosub/depth_request', Float32)
-    _heading_request_pub = rospy.Publisher('/mrobosub/heading_request', HeadingRequest)
-    _foward_pub = rospy.Publisher('/mrobosub/out/forward', Float32)
-    _strafe_pub = rospy.Publisher('/mrobosub/out/strafe', Float32)
-    _roll_pub = rospy.Publisher('/mrobosub/out/roll', Float32)
+    _target_heave_pub = rospy.Publisher('/mrobosub/target_pos/heave', Float64)
+    _target_yaw_pub = rospy.Publisher('/mrobosub/target_pos/yaw', Float64)
+    _surge_pub = rospy.Publisher('/mrobosub/override_wrench/surge', Float64)
+    _sway_pub = rospy.Publisher('/mrobosub/override_wrench/sway', Float64)
+    _roll_pub = rospy.Publisher('/mrobosub/override_wrench/roll', Float64)
+    _yaw_pub = rospy.Publisher('/mrobosub/override_wrench/yaw', Float64)
 
