@@ -15,6 +15,7 @@ add_message_files(
 
 add_service_files(
     DIRECTORY srv
+    RequestPosition.srv
 )
 
 generate_messages()
