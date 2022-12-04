@@ -35,7 +35,7 @@ class Outcome(ABC):
     """
 
     @classmethod
-    def make(cls, name: str, **kwargs) -> Type[Outcome]:
+    def make(cls, name: str, **kwargs: Mapping[str, Type]) -> Type[Outcome]:
         """Returns a dataclass type (not an instance of a class, but a new class type) which is a subclass of Outcome
         and has the default variables specified in **kwargs.
 
@@ -99,14 +99,15 @@ class StateMachine:
             self._load_params(state, state.__module__, state.__name__.lower(), self.name)
 
     @staticmethod
-    def _load_params(state: Type, module: str, state_name, machine_name: str = ''):
+    def _load_params(state: Type[State], module: str, state_name, machine_name: str = '') -> None:
         """Set all parameters in the module/state_name/machine_name namespace of the ROS parameter services as class
         variables in state."""
-        namespace = f'{module}/{state_name}/{machine_name}' if machine_name else f'{module}/{state_name}'
-        print('--------------------------------------------')
-        print(namespace)
+        if module == '__main__':
+            module = 'globals'
+        namespace = f'~{module}/{state_name}/{machine_name}' if machine_name else f'~{module}/{state_name}'
+        print(f'loading namespace {namespace}')
         for key, value in rospy.get_param(namespace, {}).items():
-            # setattr(state, key, value)  # read-write constants
+            print(f'\t{key}: {value}')
             setattr(state, key, property(lambda self: value))  # read-only constants
 
     def run(self) -> Outcome:
@@ -117,8 +118,10 @@ class StateMachine:
             outcome = current_state.handle()
             outcome_type = type(outcome) if isinstance(outcome, Outcome) else outcome
             NextState = self.transitions[outcome_type]
+            rospy.logdebug(f'{type(current_state).__qualname__} -> {NextState.__qualname__}')
             if type(current_state) != NextState:
                 current_state = NextState(outcome)
+                rospy.loginfo(f'transition {type(current_state).__qualname__} -> {NextState.__qualname__}')
         publisher.publish(type(current_state).__qualname__)
         return current_state.handle()  # handle stop state
         

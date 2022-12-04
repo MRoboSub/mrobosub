@@ -1,39 +1,45 @@
 import rospy
 from std_msgs.msg import Float64
 
+from typing import Type
+
 # TODO: where to put angle error and util repository?
 
 # Don't look at these
-def _gate_position_callback(msg: Float64):
-    PIO.gate_position = msg
-
-def _gman_position_callback(msg : Float64):
-    PIO.gate_position = msg
-
-def _bootlegger_position_callback(msg : Float64):
-    PIO.gate_position = msg
-
-def _gun_position_callback(msg : Float64):
-    PIO.gun_position = msg
-
-def _yaw_callback(msg : Float64):
+# def _gate_position_callback(msg: Float64) -> None:
+#     PIO.gate_position = msg
+#
+# def _gman_position_callback(msg : Float64) -> None:
+#     PIO.gate_position = msg
+#
+# def _bootlegger_position_callback(msg : Float64) -> None:
+#     PIO.gate_position = msg
+#
+# def _gun_position_callback(msg : Float64) -> None:
+#     PIO.gun_position = msg
+#
+def _yaw_callback(msg : Float64) -> None:
     PIO.Pose.yaw = msg.data
 
-def _heave_callback(msg : Float64):
+def _heave_callback(msg : Float64) -> None:
     PIO.Pose.heave = msg.data
 
-def _roll_callback(msg : Float64):
+def _roll_callback(msg : Float64) -> None:
     PIO.Pose.roll = msg.data
+
+
+Namespace = Type
 
 # Look at this!
 class PIO:
 #public:
-
-   
-    # gate_position = ObjectPosition()
-    # gman_position = ObjectPosition()
-    # bootlegger_position = ObjectPosition()
-    # gun_position = ObjectPosition()
+    # gate_position: float
+    # gman_position: float
+    # bootlegger_position: float
+    # gun_position: float
+    yaw: float
+    heave: float
+    roll: float
 
     # # Output
     # heading_mode = HeadingRequest.DISABLED
@@ -68,31 +74,31 @@ class PIO:
     #     PIO.heading_value = power
 
     @classmethod
-    def set_target_yaw(target_yaw : float):
+    def set_target_yaw(cls, target_yaw : float) -> None:
        PIO._target_yaw_pub.publish(target_yaw)
 
     @classmethod
-    def set_target_heave(target_heave: float):
+    def set_target_heave(cls, target_heave: float) -> None:
         PIO._target_heave_pub.publish(target_heave)
 
     @classmethod
-    def set_override_yaw(override_yaw : float):
+    def set_override_yaw(cls, override_yaw : float) -> None:
         PIO._yaw_pub.publish(override_yaw)
     
     @classmethod
-    def set_override_surge(override_surge : float):
+    def set_override_surge(cls, override_surge : float) -> None:
         PIO._surge_pub.publish(override_surge)
     
     @classmethod
-    def set_override_sway(override_sway : float):
+    def set_override_sway(cls, override_sway : float) -> None:
         PIO._sway_pub.publish(override_sway)
 
     @classmethod
-    def set_override_roll(override_roll : float):
+    def set_override_roll(cls, override_roll : float) -> None:
         PIO._sway_pub.publish(override_roll)
 
     @classmethod
-    def get_pose() -> Pose:
+    def get_pose(cls) -> Namespace[Pose]:
         return PIO.Pose
 
     
@@ -125,10 +131,10 @@ class PIO:
     rospy.Subscriber('/mrobosub/pose/roll', Float64, _roll_callback)
 
     # Publishers
-    _target_heave_pub = rospy.Publisher('/mrobosub/target_pos/heave', Float64)
-    _target_yaw_pub = rospy.Publisher('/mrobosub/target_pos/yaw', Float64)
-    _surge_pub = rospy.Publisher('/mrobosub/override_wrench/surge', Float64)
-    _sway_pub = rospy.Publisher('/mrobosub/override_wrench/sway', Float64)
-    _roll_pub = rospy.Publisher('/mrobosub/override_wrench/roll', Float64)
-    _yaw_pub = rospy.Publisher('/mrobosub/override_wrench/yaw', Float64)
+    _target_heave_pub = rospy.Publisher('/mrobosub/target_pos/heave', Float64, queue_size=1)
+    _target_yaw_pub = rospy.Publisher('/mrobosub/target_pos/yaw', Float64, queue_size=1)
+    _surge_pub = rospy.Publisher('/mrobosub/override_wrench/surge', Float64, queue_size=1)
+    _sway_pub = rospy.Publisher('/mrobosub/override_wrench/sway', Float64, queue_size=1)
+    _roll_pub = rospy.Publisher('/mrobosub/override_wrench/roll', Float64, queue_size=1)
+    _yaw_pub = rospy.Publisher('/mrobosub/override_wrench/yaw', Float64, queue_size=1)
 

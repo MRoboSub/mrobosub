@@ -1,6 +1,14 @@
 <launch>
     <node name="task_planner" pkg="mrobosub_planning" type="task_planner.py">
-        <rosparam command="load" file="$(find mrobosub_planning)/param/competition_states.yaml" />
-         <rosparam command="load" file="$(find mrobosub_planning)/param/globals.yaml" />
+        <param 
+            textfile="$(find mrobosub_planning)/param/competition_states.yaml" 
+            type="yaml"
+            name="competition_states"
+        />
+        <param 
+            textfile="$(find mrobosub_planning)/param/globals.yaml" 
+            type="yaml"
+            name="globals"
+        />
     </node>
 </launch>
