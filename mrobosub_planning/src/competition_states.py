@@ -54,7 +54,7 @@ class Spin(State):
     fallback_heading: Param[float]
 
     SpinContinue = Outcome.make("SpinContinue")
-    SpinReach = Outcome.make("SpinReach", heading = fallback_heading)
+    SpinReach = Outcome.make("SpinReach", heading = float)
 
     @staticmethod
     def angle_error(setpoint, state):
@@ -87,7 +87,7 @@ class Spin(State):
             self.near_heading = False
 
         if self.num_spins >= 3:
-            return self.SpinReach()
+            return self.SpinReach(heading = self.fallback_heading)
            # return GotoBuoy(self.FALLBACK_HEADING)
 
         if PIO.gun_position.found:

@@ -50,7 +50,7 @@ class Outcome(ABC):
             >>> current_outcome = ReachedTargetOutcome()
             'ReachedTargetOutcome(duration=0)'
         """
-        fields = [(key, type(val), field(default=val)) for key, val in kwargs.items()]
+        fields = [(key, val, field()) for key, val in kwargs.items()]
         dataclass = make_dataclass(name, fields, bases=(cls, ))
         return cast(Type[Outcome], dataclass)  # purely for better type hinting, no actual effect
 
@@ -103,6 +103,8 @@ class StateMachine:
         """Set all parameters in the module/state_name/machine_name namespace of the ROS parameter services as class
         variables in state."""
         namespace = f'{module}/{state_name}/{machine_name}' if machine_name else f'{module}/{state_name}'
+        print('--------------------------------------------')
+        print(namespace)
         for key, value in rospy.get_param(namespace, {}).items():
             # setattr(state, key, value)  # read-write constants
             setattr(state, key, property(lambda self: value))  # read-only constants

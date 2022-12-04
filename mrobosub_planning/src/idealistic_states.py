@@ -1,6 +1,6 @@
 from state_machine import Outcome, State, Param
 from periodic_io import PIO
-from mrobosub_control.msg import HeadingRequest
+# from mrobosub_control.msg import HeadingRequest
 import rospy
 from time import *
 import os
