@@ -26,3 +26,9 @@ services:
   
 # Push with:
 # docker buildx build --push --platform linux/arm/v7,linux/arm64/v8,linux/amd64 --tag mrobosub/mrobosub .
+
+#For simulation: run:
+#docker compose up -d
+#then, run roscore for mrobosub and roslaunch node
+#make simulator node in uuv an executable, 
+#and run the python script.  
