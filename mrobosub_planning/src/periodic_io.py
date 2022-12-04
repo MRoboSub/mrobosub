@@ -127,8 +127,8 @@ class PIO:
     # Publishers
     _target_heave_pub = rospy.Publisher('/mrobosub/target_pos/heave', Float64)
     _target_yaw_pub = rospy.Publisher('/mrobosub/target_pos/yaw', Float64)
-    _surge_pub = rospy.Publisher('/mrobosub/override_wrench/surge', Float64)
-    _sway_pub = rospy.Publisher('/mrobosub/override_wrench/sway', Float64)
+    _surge_pub = rospy.Publisher('/mrobosub/output_wrench/surge', Float64)
+    _sway_pub = rospy.Publisher('/mrobosub/output_wrench/sway', Float64)
     _roll_pub = rospy.Publisher('/mrobosub/override_wrench/roll', Float64)
     _yaw_pub = rospy.Publisher('/mrobosub/override_wrench/yaw', Float64)
 
