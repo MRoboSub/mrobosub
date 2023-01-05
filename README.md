@@ -39,7 +39,7 @@ The string `*6dof` in a topic name indicates that there exists 6 topics, one for
 The string `*object`  in a topic name indicates that there exists a topic for each type of object that we are interested in. The object names are currently:
 - `gate`
 
-### Topic Descriptions
+### Topics
 
 - `/raw_imu (sensor_msgs/Imu)`
     - raw IMU data (oritentation, etc)
@@ -58,4 +58,4 @@ The string `*object`  in a topic name indicates that there exists a topic for ea
 
 ### Services
 - `/obj_enable/*object (std_srvs/SetBool)`
-    - determines if an object's information should be published or not. If set to `false`, nothing will be published on `/obj_psn/*object`
+    - determines if an object's information should be published or not. If set to `false`, nothing should be published to `/obj_psn/*object`
