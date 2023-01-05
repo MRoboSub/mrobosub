@@ -24,3 +24,38 @@ docker compose exec mrobosub bash
 
 ![image.png](./docs/img/coords.png)
 
+## Messages
+
+### Wildcards
+
+The string `*6dof` in a topic name indicates that there exists 6 topics, one for each degree of freedom (DOF). The DOF replaces `*6dof` in each topic name. The DOF's are:
+- `surge`
+- `sway`
+- `heave`
+- `roll`
+- `pitch`
+- `yaw`
+
+The string `*object`  in a topic name indicates that there exists a topic for each type of object that we are interested in. The object names are currently:
+- `gate`
+
+### Topic Descriptions
+
+- `/raw_imu (sensor_msgs/Imu)`
+    - raw IMU data (oritentation, etc)
+- `/raw_depth (std_msgs/Float64)`
+    - raw depth (m) (TODO is this positive or negative when descending?)
+- `/target_pose/*6dof (std_msgs/Float64)`
+    - desired position
+- `/target_twist/*6dof (std_msgs/Float64)`
+    - desired speeds
+- `/output_wrench/*6dof (std_msgs/Float64)`
+    - force on each DOF to send to the FCU
+- `/pose/*6dof`
+    - current pose
+- `/obj_psn/*object (mrobosub_msgs/ObjectPosition)`
+    - information about location of object on the screen and distance from the UAV
+
+### Services
+- `/obj_enable/*object (std_srvs/SetBool)`
+    - determines if an object's information should be published or not. If set to `false`, nothing will be published on `/obj_psn/*object`
