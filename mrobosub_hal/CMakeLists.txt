@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 2.8.3)
 project(mrobosub_hal)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
@@ -9,8 +9,9 @@ project(mrobosub_hal)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  rospy
   std_msgs
-  std_srvs
+  mrobosub_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -68,11 +69,18 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
+<<<<<<< HEAD
 # generate_messages(
-#  DEPENDENCIES
-#  std_msgs
-#  std_srvs
-#)
+#   DEPENDENCIES
+#   std_msgs
+# )
+=======
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  std_srvs
+)
+>>>>>>> devel
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -106,7 +114,11 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES mrobosub_hal
+<<<<<<< HEAD
+#  CATKIN_DEPENDS roscpp rospy std_msgs
+=======
 #  CATKIN_DEPENDS roscpp std_msgs
+>>>>>>> devel
 #  DEPENDS system_lib
 )
 
@@ -160,10 +172,21 @@ include_directories(
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
+<<<<<<< HEAD
+# install(PROGRAMS
+#   src/motor_test.py
+#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#)
+
+catkin_install_python(PROGRAMS src/motor_test.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+=======
 # catkin_install_python(PROGRAMS
 #   scripts/my_python_script
 #   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
+>>>>>>> devel
 
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
@@ -192,6 +215,10 @@ include_directories(
 #   # myfile2
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
+
+install(DIRECTORY launch/
+  DESTINATION ${3}/launch
+  PATTERN ".svn" EXCLUDE)
 
 #############
 ## Testing ##

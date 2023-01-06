@@ -1,0 +1,16 @@
+scan:
+  defaults:
+    scan_speed: 70
+
+
+approachgate:
+  defaults:
+    approach_scan_thld: 0.5
+    approach_img_thld: 5
+    heading_thld: 30    
+    
+
+cross:
+  defaults:
+    fwd_speed: 100
+    move_time: 0.5

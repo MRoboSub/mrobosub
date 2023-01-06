@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS mrobosub_msgs)
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
+
 # catkin_python_setup()
 
 ################################################
@@ -101,8 +102,13 @@ find_package(catkin REQUIRED COMPONENTS mrobosub_msgs)
 catkin_package(
 #  INCLUDE_DIRS include
 LIBRARIES ${PROJECT_NAME}
+<<<<<<< HEAD
+  CATKIN_DEPENDS mrobosub_msgs zed_integration
+  DEPENDS python-numpy python-cv2 python-cv_bridge
+=======
   CATKIN_DEPENDS mrobosub_msgs
   DEPENDS python-numpy python-cv2 
+>>>>>>> devel
 )
 
 ###########
