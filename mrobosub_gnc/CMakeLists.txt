@@ -7,7 +7,7 @@ project(mrobosub_gnc)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS mrobosub_msgs rospy)
+find_package(catkin REQUIRED COMPONENTS mrobosub_msgs mrobosub_lib rospy)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -101,7 +101,7 @@ find_package(catkin REQUIRED COMPONENTS mrobosub_msgs rospy)
 catkin_package(
 #  INCLUDE_DIRS include
   LIBRARIES mrobosub_gnc
-  CATKIN_DEPENDS rospy mrobosub_msgs
+  CATKIN_DEPENDS rospy mrobosub_msgs mrobosub_lib
 #  DEPENDS system_lib
 )
 
