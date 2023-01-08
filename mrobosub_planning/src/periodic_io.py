@@ -121,20 +121,20 @@ class PIO:
     # _mc = MotorController()
 
     # Subscribers
-    # rospy.Subscriber('/mrobosub/object_position/gate', ObjectPosition, _gate_position_callback)
-    # rospy.Subscriber('/mrobosub/object_position/gman', ObjectPosition, _gman_position_callback)
-    # rospy.Subscriber('/mrobosub/object_position/bootlegger', ObjectPosition, _bootlegger_position_callback)
-    # rospy.Subscriber('/mrobosub/object_position/gun', ObjectPosition, _gun_position_callback)
+    # rospy.Subscriber('/object_position/gate', ObjectPosition, _gate_position_callback)
+    # rospy.Subscriber('/object_position/gman', ObjectPosition, _gman_position_callback)
+    # rospy.Subscriber('/object_position/bootlegger', ObjectPosition, _bootlegger_position_callback)
+    # rospy.Subscriber('/object_position/gun', ObjectPosition, _gun_position_callback)
     
-    rospy.Subscriber('/mrobosub/pose/yaw', Float64, _yaw_callback)
-    rospy.Subscriber('/mrobosub/pose/heave', Float64, _heave_callback)
-    rospy.Subscriber('/mrobosub/pose/roll', Float64, _roll_callback)
+    rospy.Subscriber('/pose/yaw', Float64, _yaw_callback)
+    rospy.Subscriber('/pose/heave', Float64, _heave_callback)
+    rospy.Subscriber('/pose/roll', Float64, _roll_callback)
 
     # Publishers
-    _target_heave_pub = rospy.Publisher('/mrobosub/target_pos/heave', Float64, queue_size=1)
-    _target_yaw_pub = rospy.Publisher('/mrobosub/target_pos/yaw', Float64, queue_size=1)
-    _surge_pub = rospy.Publisher('/mrobosub/override_wrench/surge', Float64, queue_size=1)
-    _sway_pub = rospy.Publisher('/mrobosub/override_wrench/sway', Float64, queue_size=1)
-    _roll_pub = rospy.Publisher('/mrobosub/override_wrench/roll', Float64, queue_size=1)
-    _yaw_pub = rospy.Publisher('/mrobosub/override_wrench/yaw', Float64, queue_size=1)
+    _target_heave_pub = rospy.Publisher('/target_pos/heave', Float64, queue_size=1)
+    _target_yaw_pub = rospy.Publisher('/target_pos/yaw', Float64, queue_size=1)
+    _surge_pub = rospy.Publisher('/target_twist/surge', Float64, queue_size=1)
+    _sway_pub = rospy.Publisher('/target_twist/sway', Float64, queue_size=1)
+    _roll_pub = rospy.Publisher('/target_twist/roll', Float64, queue_size=1)
+    _yaw_pub = rospy.Publisher('/target_twist/yaw', Float64, queue_size=1)
 
