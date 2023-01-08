@@ -11,23 +11,23 @@ from typing import Optional, Final
 class YawControlNode(Node):
     """
     Subscribers
-    - /mrobosub/target_pose/yaw (deg)
-    - /mrobosub/pose/yaw (deg)
-    - /mrobosub/override_wrench/yaw (power)
+    - /target_pose/yaw (deg)
+    - /pose/yaw (deg)
+    - /override_wrench/yaw (power)
     """
 
     """
     Publishers
-    - /mrobosub/output_wrench/yaw
+    - /output_wrench/yaw
     """
     # pid_params: PIDParams
 
     def __init__(self):
         super().__init__('heading_control')
-        rospy.Subscriber('/mrobosub/target_pose/yaw', Float64, self.target_pose_callback)
-        rospy.Subscriber('/mrobosub/pose/yaw', Float64, self.pose_callback)
-        rospy.Subscriber('/mrobosub/override_wrench/yaw', Float64, self.override_wrench_callback)
-        self.output_yaw_pub = rospy.Publisher('/mrobosub/output_wrench/yaw', Float64, queue_size=1)
+        rospy.Subscriber('/target_pose/yaw', Float64, self.target_pose_callback)
+        rospy.Subscriber('/pose/yaw', Float64, self.pose_callback)
+        rospy.Subscriber('/target_twist/yaw', Float64, self.target_twist_callback)
+        self.output_yaw_pub = rospy.Publisher('/output_wrench/yaw', Float64, queue_size=1)
 
         self.pid = PIDInterface("yaw_pid", self.pid_callback)
         
@@ -37,8 +37,9 @@ class YawControlNode(Node):
     def pose_callback(self, pose: Float64):
         self.pid.set_current(pose.data)
 
-    def override_wrench_callback(self, override_wrench: Float64):
-        self.output_yaw_pub.publish(override_wrench.data)
+    def target_twist_yaw_callback(self, target_twist_yaw: Float64):
+        self.pid.disable()
+        self.output_yaw_pub.publish(target_twist_yaw.data)
 
     def pid_callback(self, effort: float):
         self.output_yaw_pub.publish(effort)

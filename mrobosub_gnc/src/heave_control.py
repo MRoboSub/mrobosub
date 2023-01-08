@@ -11,14 +11,14 @@ from typing import Optional, Final
 class HeaveControlNode(Node):
     """
     Subscribers
-    - /mrobosub/target_pose/heave (deg)
-    - /mrobosub/pose/heave (deg)
-    - /mrobosub/override_wrench/heave (power)
+    - /target_pose/heave (deg)
+    - /pose/heave (deg)
+    - /override_wrench/heave (power)
     """
 
     """
     Publishers
-    - /mrobosub/output_wrench/yaw
+    - /output_wrench/yaw
     """
     # pid_params: PIDParams
 
@@ -26,10 +26,10 @@ class HeaveControlNode(Node):
 
     def __init__(self):
         super().__init__('heading_control')
-        rospy.Subscriber('/mrobosub/target_pose/heave', Float64, self.target_pose_callback)
-        rospy.Subscriber('/mrobosub/pose/heave', Float64, self.pose_callback)
-        rospy.Subscriber('/mrobosub/override_wrench/heave', Float64, self.override_wrench_callback)
-        self.output_heave_pub = rospy.Publisher('/mrobosub/output_wrench/heave', Float64, queue_size=1)
+        rospy.Subscriber('/target_pose/heave', Float64, self.target_pose_callback)
+        rospy.Subscriber('/pose/heave', Float64, self.pose_callback)
+        rospy.Subscriber('/target_twist/heave', Float64, self.target_twist_heave)
+        self.output_heave_pub = rospy.Publisher('/output_wrench/heave', Float64, queue_size=1)
 
         self.pid = PIDInterface("heave_pid", self.pid_callback)
         
@@ -39,8 +39,9 @@ class HeaveControlNode(Node):
     def pose_callback(self, pose: Float64):
         self.pid.set_current(pose.data)
 
-    def override_wrench_callback(self, override_wrench: Float64):
-        self.output_heave_pub.publish(override_wrench.data)
+    def target_twist_heave(self, target_twist_heave: Float64):
+        self.pid.disable()
+        self.output_heave_pub.publish(target_twist_heave.data)
 
     def pid_callback(self, effort: float):
         output = effort + self.feed_forward

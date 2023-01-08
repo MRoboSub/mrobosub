@@ -11,23 +11,23 @@ from typing import Optional, Final
 class RollControlNode(Node):
     """
     Subscribers
-    - /mrobosub/target_pose/roll (deg)
-    - /mrobosub/pose/roll (deg)
-    - /mrobosub/override_wrench/roll (power)
+    - /target_pose/roll (deg)
+    - /pose/roll (deg)
+    - /target_twist/roll (power)
     """
 
     """
     Publishers
-    - /mrobosub/output_wrench/yaw
+    - /output_wrench/yaw
     """
     # pid_params: PIDParams
 
     def __init__(self):
         super().__init__('heading_control')
-        rospy.Subscriber('/mrobosub/target_pose/roll', Float64, self.target_pose_callback)
-        rospy.Subscriber('/mrobosub/pose/roll', Float64, self.pose_callback)
-        rospy.Subscriber('/mrobosub/override_wrench/roll', Float64, self.override_wrench_callback)
-        self.output_roll_pub = rospy.Publisher('/mrobosub/output_wrench/roll', Float64, queue_size=1)
+        rospy.Subscriber('/target_pose/roll', Float64, self.target_pose_callback)
+        rospy.Subscriber('/pose/roll', Float64, self.pose_callback)
+        rospy.Subscriber('/target_twist/roll', Float64, self.target_twist_roll_callback)
+        self.output_roll_pub = rospy.Publisher('/output_wrench/roll', Float64, queue_size=1)
 
         self.pid = PIDInterface("roll_pid", self.pid_callback)
         
@@ -37,8 +37,9 @@ class RollControlNode(Node):
     def pose_callback(self, pose: Float64):
         self.pid.set_current(pose.data)
 
-    def override_wrench_callback(self, override_wrench: Float64):
-        self.output_roll_pub.publish(override_wrench.data)
+    def target_twist_roll_callback(self, target_twist_roll: Float64):
+        self.pid.disable()
+        self.output_roll_pub.publish(target_twist_roll.data)
 
     def pid_callback(self, effort: float):
         self.output_roll_pub.publish(effort)
