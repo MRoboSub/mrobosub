@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from RequestPosition.srv import RequestPosition, RequestPositionResponse
+from ObjectPosition.srv import ObjectPosition, ObjectPositionResponse
 import cv2
 from zed_interfaces.msg import RGBDSensors
 from cv_bridge import CvBridge
@@ -163,7 +163,7 @@ def gray_world(img):
 
 def zed_callback(message):
     global img_seen_num, img_num
-    if time.time() - latest_request_time < 20:
+    if time.time() - latest_request_time < 2:
         
         # print("zed callback")
         # Convert the zed image to an opencv image
@@ -185,29 +185,29 @@ def zed_callback(message):
         # Draw any bounding boxes and display the image
         #draw_labels(boxes, confs, class_ids, image_ocv)
 
-        request_position_response = RequestPositionResponse()
+        object_position_response = ObjectPositionResponse()
 
 
         #byte_data = struct.unpack(const_unpack, message.depth.data)
             
         # Report detection result
         for i, id in enumerate(class_ids):
-            request_position_response.found = True
+            object_position_response.found = True
 
             box = boxes[i] # grab the first box in the list
             if(len(box) == 0):
-                request_position_response.found = False
+                object_position_response.found = False
             else:
-                request_position_response.x_percent = float(box[0]) / (width + 1e-10) # TODO: this should not cause an error
-                request_position_response.y_percent = float(box[1]) / (height + 1e-10)
-                request_position_response.x_diff = (float(box[0]) - (width / 2)) / (width / 2)
-                request_position_response.y_diff = ((height / 2) - float(box[1])) / (height / 2)
-                request_position_response.box_size = float(box[2]) / width
-                request_position_response.distance = 0.0  # TODO: fix get_avg_depth(message.depth, box)
-                request_position_response.confidence = confs[i]
+                object_position_response.x_percent = float(box[0]) / (width + 1e-10) # TODO: this should not cause an error
+                object_position_response.y_percent = float(box[1]) / (height + 1e-10)
+                object_position_response.x_diff = (float(box[0]) - (width / 2)) / (width / 2)
+                object_position_response.y_diff = ((height / 2) - float(box[1])) / (height / 2)
+                object_position_response.box_size = float(box[2]) / width
+                object_position_response.distance = 0.0  # TODO: fix get_avg_depth(message.depth, box)
+                object_position_response.confidence = confs[i]
                 # print(id)
                 # print("confidence: " + str(object_position.confidence))
-            recent_positions[id] = request_position_response
+            recent_positions[id] = object_position_response
 
         # THIS PRINTS a lOT
         # log("ml_node", "DEBUG", 'ml_node - done processing a frame in ' + str((time.time()-start)) + ' seconds')
@@ -215,25 +215,50 @@ def zed_callback(message):
         for i in range(0,5):
             recent_positions[i] = None
         
-def handle_request(message):
+def handle_gate_request(message):
     global latest_request_time
     latest_request_time = time.time()
-    #determine what object we want to see
-    index = -1
-    if message.object == "gate":
-        index = 0;
-    elif message.object == "gman":
-        index = 1;
-    elif message.object == "bootlegger":
-        index = 2;
-    elif message.object == "gun":
-        index = 3;
-    elif message.object == "badge":
-        index = 4;
-    
-    while recent_positions[index] == None:
+    #return recent_positions at gates index
+    gate_index = 0
+    while recent_positions[gate_index] == None:
         rospy.sleep()
-    return recent_positions[index]
+    return recent_positions[gate_index]
+
+def handle_gman_request(message):
+    global latest_request_time
+    latest_request_time = time.time()
+    #return recent_positions at gates index
+    gman_index = 1
+    while recent_positions[gman_index] == None:
+        rospy.sleep()
+    return recent_positions[gman_index]
+
+def handle_bootlegger_request(message):
+    global latest_request_time
+    latest_request_time = time.time()
+    #return recent_positions at gates index
+    bootlegger_index = 2
+    while recent_positions[bootlegger_index] == None:
+        rospy.sleep()
+    return recent_positions[bootlegger_index]
+
+def handle_gun_request(message):
+    global latest_request_time
+    latest_request_time = time.time()
+    #return recent_positions at gates index
+    gun_index = 3
+    while recent_positions[gun_index] == None:
+        rospy.sleep()
+    return recent_positions[gun_index]
+
+def handle_badge_request(message):
+    global latest_request_time
+    latest_request_time = time.time()
+    #return recent_positions at gates index
+    badge_index = 4
+    while recent_positions[badge_index] == None:
+        rospy.sleep()
+    return recent_positions[badge_index]
     
 # Load the model
 #model, classes, colors, output_layers = load_yolo()
@@ -247,8 +272,13 @@ if __name__ == '__main__':
     rospy.init_node('ml_server', anonymous=False)
     print("node initialized")
 
-    # Intialize this as a ros service
-    s = rospy.Service('ml_service', RequestPosition, handle_request)
+    # Intialize ros services for each of the objects
+    s1 = rospy.Service('object_position/gate', ObjectPosition, handle_gate_request)
+    s2 = rospy.Service('object_position/gman', ObjectPosition, handle_gman_request)
+    s3 = rospy.Service('object_position/bootlegger', ObjectPosition, handle_bootlegger_request)
+    s4 = rospy.Service('object_position/gun', ObjectPosition, handle_gun_request)
+    s5 = rospy.Service('object_position/badge', ObjectPosition, handle_badge_request)
+
     for i in range(0,5):
         recent_positions[i] = None
     latest_request_time = time.time() - 25
