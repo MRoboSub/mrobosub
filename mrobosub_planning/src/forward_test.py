@@ -8,7 +8,7 @@ class ForwardTestNode(Node):
 
     def __init__(self):
        super().__init__('forward_test')
-       _surge_pub = rospy.Publisher('/mrobosub/output_wrench/surge', Float64)
+       _surge_pub = rospy.Publisher('/output_wrench/surge', Float64)
        
 
        

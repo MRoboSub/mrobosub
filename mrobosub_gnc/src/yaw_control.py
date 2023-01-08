@@ -13,7 +13,7 @@ class YawControlNode(Node):
     Subscribers
     - /target_pose/yaw (deg)
     - /pose/yaw (deg)
-    - /override_wrench/yaw (power)
+    - /target_twist/yaw (power)
     """
 
     """

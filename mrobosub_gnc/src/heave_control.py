@@ -13,7 +13,7 @@ class HeaveControlNode(Node):
     Subscribers
     - /target_pose/heave (deg)
     - /pose/heave (deg)
-    - /override_wrench/heave (power)
+    - /target_twist/heave (power)
     """
 
     """
