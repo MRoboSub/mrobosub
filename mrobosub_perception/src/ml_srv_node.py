@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from functools import partial
+
 import rospy
 from ObjectPosition.srv import ObjectPosition, ObjectPositionResponse
 import cv2
@@ -28,17 +30,16 @@ log("ml_node", "DEBUG", 'cv2 version: ' + cv2.__version__)
 log("ml_node", "DEBUG", 'cv2 location:'+ cv2.__file__)
 
 CONFIDENCE = 0.9
+TIME_THRESHOLD
 
 
 class Targets(enum.Enum):
-    NONE = 0
-    GATE = 1
-    PATH = 2
-    BUOY = 3
-    PINGER = 4
-    TORPEDO = 5
-
-current_target = Targets.NONE
+    GATE = 0
+    GMAN = 1
+    BOOTLEGGER = 2
+    GUN = 3
+    BADGE = 4
+    COUNT = 5
 
 recent_positions = []
 latest_request_time = None
@@ -163,7 +164,7 @@ def gray_world(img):
 
 def zed_callback(message):
     global img_seen_num, img_num
-    if time.time() - latest_request_time < 2:
+    if rospy.get_time() - latest_request_time < TIME_THRESHOLD:
         
         # print("zed callback")
         # Convert the zed image to an opencv image
@@ -212,54 +213,17 @@ def zed_callback(message):
         # THIS PRINTS a lOT
         # log("ml_node", "DEBUG", 'ml_node - done processing a frame in ' + str((time.time()-start)) + ' seconds')
     else:
-        for i in range(0,5):
+        for i in range(Targets.COUNT):
             recent_positions[i] = None
         
-def handle_gate_request(message):
-    global latest_request_time
-    latest_request_time = time.time()
-    #return recent_positions at gates index
-    gate_index = 0
-    while recent_positions[gate_index] == None:
-        rospy.sleep()
-    return recent_positions[gate_index]
 
-def handle_gman_request(message):
+def handle_obj_request(idx, msg):
     global latest_request_time
-    latest_request_time = time.time()
-    #return recent_positions at gates index
-    gman_index = 1
-    while recent_positions[gman_index] == None:
-        rospy.sleep()
-    return recent_positions[gman_index]
+    latest_request_time = rospy.get_time()
+    while recent_positions[idx] == None:
+        rospy.sleep(5)
+    return recent_positions[idx]
 
-def handle_bootlegger_request(message):
-    global latest_request_time
-    latest_request_time = time.time()
-    #return recent_positions at gates index
-    bootlegger_index = 2
-    while recent_positions[bootlegger_index] == None:
-        rospy.sleep()
-    return recent_positions[bootlegger_index]
-
-def handle_gun_request(message):
-    global latest_request_time
-    latest_request_time = time.time()
-    #return recent_positions at gates index
-    gun_index = 3
-    while recent_positions[gun_index] == None:
-        rospy.sleep()
-    return recent_positions[gun_index]
-
-def handle_badge_request(message):
-    global latest_request_time
-    latest_request_time = time.time()
-    #return recent_positions at gates index
-    badge_index = 4
-    while recent_positions[badge_index] == None:
-        rospy.sleep()
-    return recent_positions[badge_index]
-    
 # Load the model
 #model, classes, colors, output_layers = load_yolo()
 model, output_layers = load_yolo()
@@ -273,15 +237,16 @@ if __name__ == '__main__':
     print("node initialized")
 
     # Intialize ros services for each of the objects
-    s1 = rospy.Service('object_position/gate', ObjectPosition, handle_gate_request)
-    s2 = rospy.Service('object_position/gman', ObjectPosition, handle_gman_request)
-    s3 = rospy.Service('object_position/bootlegger', ObjectPosition, handle_bootlegger_request)
-    s4 = rospy.Service('object_position/gun', ObjectPosition, handle_gun_request)
-    s5 = rospy.Service('object_position/badge', ObjectPosition, handle_badge_request)
+    mk_service = lambda name, idx: rospy.Service(f'object_position/{name}', ObjectPosition, idx)
+    gate_srv = mk_service('gate',Targets.GATE)
+    gman_srv = mk_service('gman',Targets.GMAN)
+    bootlegger_srv = mk_service('bootlegger',Targets.BOOTLEGGER)
+    gun_srv = mk_service('gun',Targets.GUN)
+    badge_srv = mk_service('badge',Targets.BADGE)
 
-    for i in range(0,5):
+    for i in range(Targets.COUNT):
         recent_positions[i] = None
-    latest_request_time = time.time() - 25
+    latest_request_time = rospy.get_time() - TIME_THRESHOLD
 
     # Subscribe to the ZED left image and depth topics
     # For a full list of zed topics, see https://www.stereolabs.com/docs/ros/zed-node/#published-topics
