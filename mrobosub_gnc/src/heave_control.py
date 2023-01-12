@@ -23,6 +23,9 @@ class HeaveControlNode(Node):
     # pid_params: PIDParams
 
     feed_forward: float
+    max_heave: float
+
+    heave = 0
 
     def __init__(self):
         super().__init__('heading_control')
@@ -37,14 +40,21 @@ class HeaveControlNode(Node):
         self.pid.set_target(target_pose.data)
 
     def pose_callback(self, pose: Float64):
+        self.heave = pose.data
         self.pid.set_current(pose.data)
 
     def target_twist_heave(self, target_twist_heave: Float64):
         self.pid.disable()
-        self.output_heave_pub.publish(target_twist_heave.data)
+        self.pub_output_heave(target_twist_heave.data)
 
     def pid_callback(self, effort: float):
         output = effort + self.feed_forward
+        self.pub_output_heave(output)
+
+    def pub_output_heave(self, output: float):
+        # Protect against running to ground
+        if self.heave > self.max_heave:
+            output = 0
         self.output_heave_pub.publish(output)
 
     def run(self): 

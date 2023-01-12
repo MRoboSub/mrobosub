@@ -1,7 +1,7 @@
 <launch>
   <node name="yaw_control" pkg="mrobosub_gnc" type="yaw_control.py">
-    <!-- <rosparam command="load" file="$(find mrobosub_gnc)/params/yaw_pid.yaml" /> -->
   </node>
-  <node name="yaw_pid" pkg="pid" type="pid">
+  <node name="yaw_pid" pkg="pid" type="controller">
+    <rosparam command="load" file="$(find mrobosub_gnc)/params/yaw_pid.yaml" />
   </node>
 </launch>
