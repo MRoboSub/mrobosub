@@ -3,7 +3,7 @@
 import rospy
 from typing import NewType, TypeVar, Final, Sequence, Any, Generic, Callable, get_type_hints
 from inspect import getfullargspec
-import std_srv
+from std_srvs.srv import Empty, EmptyResponse
 
 Param = Final
 
@@ -22,16 +22,16 @@ class Node:
             for key, val in params.items():
                 setattr(self, key, val)
                 rospy.logdebug(f'loaded parameter {key} := {val}')
-            return std_srv.srv.EmptyResponse
+            return EmptyResponse
 
         set_params()
-        for name, typ in get_type_hints(self).items():
+        for name, typ in get_type_hints(self.__class__).items():
             if typ == Param and getattr(self, name) is None:
                 raise MissingParameterError(name)
 
-        self.param_reset_srv = rospy.Service('~/reset_params', std_srv.srv.Empty, set_params)
+        self.param_reset_srv = rospy.Service('~/reset_params', Empty, set_params)
 
-        rospy.on_shutdown(lambda: self.cleanup())
+        rospy.on_shutdown(lambda: self.cleanup)
 
     def run(self):
         pass
@@ -58,18 +58,16 @@ class PipelineNode(Node):
     def __init__(self, name: str):
         super().__init__(name)
 
-
-
 def subscriber(topic_name, MsgType=None):
     def subscriber_factory(callback):
         cb_annots = get_type_hints(callback).copy()
         print(cb_annots)
         cb_annots.pop('return', None) # remove the return type annotation if it exists
         if len(cb_annots) > 1:
-            raise InvalidArgument('callback must accept exactly one argument')
+            raise ValueError('callback must accept exactly one argument')
         elif len(cb_annots) == 0:
             if MsgType is None:
-                raise InvalidArgument('must either annotate callback parameter or explicitly provide MsgType')
+                raise ValueError('must either annotate callback parameter or explicitly provide MsgType')
         else: # len(cb_annots) == 1
             _, MsgType = cb_annots.popitem()
 

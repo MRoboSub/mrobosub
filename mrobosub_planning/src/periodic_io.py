@@ -32,14 +32,13 @@ Namespace = Type
 
 # Look at this!
 class PIO:
+    # TODO: gun_position, buoy_position, gate_position, bootlegger_position, set_absolute_heading
+
 #public:
     # gate_position: float
     # gman_position: float
     # bootlegger_position: float
     # gun_position: float
-    yaw: float
-    heave: float
-    roll: float
 
     # # Output
     # heading_mode = HeadingRequest.DISABLED
@@ -54,10 +53,19 @@ class PIO:
         heave = 0
         roll = 0
 
+    class TargetPose:
+        yaw = 0
+        heave = 0
+        roll = 0
 
     # @classmethod
     # def heading_within_threshold(cls, threshold):
     #     return angle_error_abs(PIO.heading_value, PIO.current_heading) <= threshold
+
+    @classmethod
+    def is_yaw_within_threshold(cls, threshold):
+        # TODO find where angle_error_abs is
+        return angle_error_abs(cls.TargetPose.yaw, cls.Pose.yaw) <= threshold
 
     # @classmethod
     # def depth_within_threshold(cls, threshold):
@@ -68,38 +76,40 @@ class PIO:
     #     PIO.heading_mode = HeadingRequest.ABSOLUTE
     #     PIO.heading_value = heading
 
-    # @classmethod
-    # def set_override_heading(cls, power):
-    #     PIO.heading_mode = HeadingRequest.OVERRIDE
-    #     PIO.heading_value = power
+    @classmethod
+    def set_target_pose_yaw(cls, target_yaw : float) -> None:
+       cls._target_pose_yaw_pub.publish(target_yaw)
+       cls.TargetPose.yaw = target_yaw
 
     @classmethod
-    def set_target_yaw(cls, target_yaw : float) -> None:
-       PIO._target_yaw_pub.publish(target_yaw)
+    def set_target_pose_heave(cls, target_heave: float) -> None:
+        cls._target_pose_heave_pub.publish(target_heave)
+        cls.TargetPose.heave = target_heave
 
     @classmethod
-    def set_target_heave(cls, target_heave: float) -> None:
-        PIO._target_heave_pub.publish(target_heave)
+    def set_target_pose_roll(cls, target_roll: float) -> None:
+        cls._target_pose_roll_pub.publish(target_roll)
+        cls.TargetPose.roll = target_roll
 
     @classmethod
-    def set_override_yaw(cls, override_yaw : float) -> None:
-        PIO._yaw_pub.publish(override_yaw)
+    def set_target_twist_roll(cls, override_roll : float) -> None:
+        cls._target_twist_roll_pub.publish(override_roll)
+
+    @classmethod
+    def set_target_twist_yaw(cls, override_yaw : float) -> None:
+        cls._target_twist_yaw_pub.publish(override_yaw)
     
     @classmethod
-    def set_override_surge(cls, override_surge : float) -> None:
-        PIO._surge_pub.publish(override_surge)
+    def set_target_twist_surge(cls, override_surge : float) -> None:
+        cls._target_twist_surge_pub.publish(override_surge)
     
     @classmethod
-    def set_override_sway(cls, override_sway : float) -> None:
-        PIO._sway_pub.publish(override_sway)
-
-    @classmethod
-    def set_override_roll(cls, override_roll : float) -> None:
-        PIO._sway_pub.publish(override_roll)
+    def set_target_twist_sway(cls, override_sway : float) -> None:
+        cls._target_twist_sway_pub.publish(override_sway)
 
     @classmethod
     def get_pose(cls) -> Namespace[Pose]:
-        return PIO.Pose
+        return cls.Pose
 
     
     # @classmethod
@@ -131,10 +141,11 @@ class PIO:
     rospy.Subscriber('/pose/roll', Float64, _roll_callback)
 
     # Publishers
-    _target_heave_pub = rospy.Publisher('/target_pos/heave', Float64, queue_size=1)
-    _target_yaw_pub = rospy.Publisher('/target_pos/yaw', Float64, queue_size=1)
-    _surge_pub = rospy.Publisher('/target_twist/surge', Float64, queue_size=1)
-    _sway_pub = rospy.Publisher('/target_twist/sway', Float64, queue_size=1)
-    _roll_pub = rospy.Publisher('/target_twist/roll', Float64, queue_size=1)
-    _yaw_pub = rospy.Publisher('/target_twist/yaw', Float64, queue_size=1)
+    _target_pose_heave_pub = rospy.Publisher('/target_pose/heave', Float64, queue_size=1)
+    _target_pose_yaw_pub = rospy.Publisher('/target_pose/yaw', Float64, queue_size=1)
+    _target_pose_roll_pub = rospy.Publisher('/target_pose/roll', Float64, queue_size=1)
 
+    _target_twist_yaw_pub = rospy.Publisher('/target_twist/yaw', Float64, queue_size=1)
+    _target_twist_roll_pub = rospy.Publisher('/target_twist/roll', Float64, queue_size=1)
+    _target_twist_surge_pub = rospy.Publisher('/target_twist/surge', Float64, queue_size=1)
+    _target_twist_sway_pub = rospy.Publisher('/target_twist/sway', Float64, queue_size=1)
