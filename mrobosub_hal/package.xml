@@ -62,7 +62,7 @@
   <depend>mrobosub_msgs</depend>
   
   <exec_depend>rosserial</exec_depend>
-  <exec_depend>python-serial</exec_depend>
+  <exec_depend>python3-serial</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
