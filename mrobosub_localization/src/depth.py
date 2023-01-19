@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from std_msgs.msg import Float64, Float34
+from std_msgs.msg import Float64, Float32
 
 from mrobosub_lib.lib import Node, Param
 
