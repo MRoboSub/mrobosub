@@ -1,0 +1,3 @@
+<launch>
+  <node name="depth_teleop" pkg="mrobosub_teleop" type="depth_teleop.py" output="screen"/>
+</launch>
