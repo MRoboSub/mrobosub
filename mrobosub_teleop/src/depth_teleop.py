@@ -26,19 +26,21 @@ class DepthTeleop(Node):
 
     def run(self): 
         while True:
-            print("Which input would you like: \nTwist \nPose\n")
+            print("Which input would you like: \n[T]wist \n[P]ose \n[Q]uit \n")
             input_node = input().upper()
             
             curr_node = None
-            if input_node[0] == "T":
+            if len(input_node) > 0 and input_node[0] == "T":
                 curr_node = self.twist_pub
-            elif input_node[0] == "P":
+            elif len(input_node) > 0 and input_node[0] == "P":
                 curr_node = self.pose_pub
+            elif len(input_node) > 0 and input_node[0] == "Q":
+                return
             else:
                 print("Invalid input node\n")
                 continue
                     
-            while True:     
+            while True: 
                 print("Input your desired value (or change to change node): ")
                 desired_target = input()
                 
