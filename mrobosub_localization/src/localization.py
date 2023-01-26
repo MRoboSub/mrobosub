@@ -40,7 +40,7 @@ class StateEstimation(Node):
     def __init__(self):
         super().__init__('localization')
         rospy.Subscriber('/depth/raw_depth', Float32, self.raw_depth_callback)
-        rospy.Subscriber('/imu/data', Imu, self.imu_callback)
+        rospy.Subscriber('/mavros/imu/data', Imu, self.imu_callback)
         self.heave_pub = rospy.Publisher('/pose/heave', Float64, queue_size=1)
         self.yaw_pub = rospy.Publisher('/pose/yaw', Float64, queue_size=1)
         self.pitch_pub = rospy.Publisher('/pose/pitch', Float64, queue_size=1)
