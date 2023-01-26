@@ -1,4 +1,0 @@
-<launch>
-  <node name="depth_estimation" pkg="mrobosub_localization" type="depth.py">
-  </node>
-</launch>
