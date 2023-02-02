@@ -59,3 +59,7 @@ The string `*object`  in a topic name indicates that there exists a topic for ea
 ### Services
 - `/obj_enable/*object (std_srvs/SetBool)`
     - determines if an object's information should be published or not. If set to `false`, nothing should be published to `/obj_psn/*object`
+
+### Useful Commands
+- rosdep install --from-paths src --ignore-src -r -y
+    - be in catkin_ws and installs all dependencies for ros
