@@ -24,12 +24,12 @@ class RollControlNode(Node):
 
     def __init__(self):
         super().__init__('heading_control')
+        self.pid = PIDInterface("roll_pid", self.pid_callback)
+        self.output_roll_pub = rospy.Publisher('/output_wrench/roll', Float64, queue_size=1)
         rospy.Subscriber('/target_pose/roll', Float64, self.target_pose_callback)
         rospy.Subscriber('/pose/roll', Float64, self.pose_callback)
         rospy.Subscriber('/target_twist/roll', Float64, self.target_twist_roll_callback)
-        self.output_roll_pub = rospy.Publisher('/output_wrench/roll', Float64, queue_size=1)
 
-        self.pid = PIDInterface("roll_pid", self.pid_callback)
         
     def target_pose_callback(self, target_pose: Float64):
         self.pid.set_target(target_pose.data)

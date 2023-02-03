@@ -40,6 +40,7 @@ class TeleopNode(Node):
 
             while True:
                 request = self.get_input()
+                print(request)
                 if request is None:
                     break
                 desired_target = float(request)
