@@ -1,0 +1,6 @@
+<launch>
+  <include file="$(find mrobosub_tests)/launch/bringup.launch"/>
+  <node name="rectangle_test_no_turn" pkg="mrobosub_tests" type="rectangle_test_no_turn.py">
+    <rosparam command="load"  file="$(find mrobosub_tests)/params/rectangle_test_no_turn.yaml" />
+  </node>
+</launch>

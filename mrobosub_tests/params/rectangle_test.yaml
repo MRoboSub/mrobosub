@@ -1,0 +1,5 @@
+submerge_wait: 5.0 #sec
+target_heave: 0.5 #m
+surge_output: 0.15 #percent
+before_turn_wait: 1.0 #sec
+angle_threshold: 5.0 #deg
