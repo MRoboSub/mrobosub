@@ -1,0 +1,6 @@
+submerge_wait: 5.0 #sec
+target_heave: 0.5 #m
+surge_output: 0.15 #percent
+roll_output: 0.15 #percent
+forward_time: 5.0 #sec
+roll_start_delay: 0.5 #sec

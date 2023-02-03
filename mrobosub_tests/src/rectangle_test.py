@@ -25,7 +25,7 @@ class RectangleTestNode(Node):
         heave = 0
 
     def __init__(self):
-        super().__init__('heading_control')
+        super().__init__('rectangle_test')
         rospy.Subscriber('/pose/yaw', Float64, self.pose_yaw_callback)
         rospy.Subscriber('/pose/heave', Float64, self.pose_heave_callback)
         self.yaw_target_pub = rospy.Publisher('/target_pose/yaw', Float64, queue_size=1)

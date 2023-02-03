@@ -1,0 +1,6 @@
+<launch>
+  <include file="$(find mrobosub_tests)/launch/bringup.launch"/>
+  <node name="barrel_roll_test" pkg="mrobosub_tests" type="barrel_roll_test.py">
+    <rosparam command="load"  file="$(find mrobosub_tests)/params/barrel_roll_test.yaml" />
+  </node>
+</launch>
