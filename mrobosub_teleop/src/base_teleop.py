@@ -21,7 +21,7 @@ class TeleopNode(Node):
         self.twist_pub = rospy.Publisher(f"/target_twist/{type_}", Float64, queue_size=1)
         self.pose_pub = rospy.Publisher(f"/target_pose/{type_}", Float64, queue_size=1)
 
-    def run(self): 
+    def run(self):
         while True:
             input_node = input("Which input would you like: \n[T]wist \n[P]ose \n[Q]uit \n").upper()
 
@@ -30,11 +30,8 @@ class TeleopNode(Node):
                 curr_node = self.twist_pub
             elif input_node.startswith("P"):
                 curr_node = self.pose_pub
-            elif input_node.startswith("Q"):
-                return
             else:
-                print("Invalid input mode\n")
-                continue
+                return
 
             self.config()
 

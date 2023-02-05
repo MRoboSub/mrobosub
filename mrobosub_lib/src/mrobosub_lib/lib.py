@@ -31,7 +31,7 @@ class Node:
 
         self.param_reset_srv = rospy.Service('~/reset_params', Empty, set_params)
 
-        rospy.on_shutdown(lambda: self.cleanup)
+        rospy.on_shutdown(self.cleanup)
 
     def run(self):
         pass
