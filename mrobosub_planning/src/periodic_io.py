@@ -27,6 +27,8 @@ def _heave_callback(msg : Float64) -> None:
 def _roll_callback(msg : Float64) -> None:
     PIO.Pose.roll = msg.data
 
+def angle_error(setpoint, state):
+        return (setpoint - state + 180) % 360 - 180
 
 Namespace = Type
 
@@ -64,8 +66,7 @@ class PIO:
 
     @classmethod
     def is_yaw_within_threshold(cls, threshold):
-        # TODO find where angle_error_abs is
-        return angle_error_abs(cls.TargetPose.yaw, cls.Pose.yaw) <= threshold
+        return abs(angle_error(cls.TargetPose.yaw, cls.Pose.yaw)) <= threshold
 
     # @classmethod
     # def depth_within_threshold(cls, threshold):
