@@ -24,12 +24,12 @@ class YawControlNode(Node):
 
     def __init__(self):
         super().__init__('heading_control')
+        self.pid = PIDInterface("yaw_pid", self.pid_callback)
+        self.output_yaw_pub = rospy.Publisher('/output_wrench/yaw', Float64, queue_size=1)
         rospy.Subscriber('/target_pose/yaw', Float64, self.target_pose_yaw_callback)
         rospy.Subscriber('/pose/yaw', Float64, self.pose_yaw_callback)
         rospy.Subscriber('/target_twist/yaw', Float64, self.target_twist_yaw_callback)
-        self.output_yaw_pub = rospy.Publisher('/output_wrench/yaw', Float64, queue_size=1)
 
-        self.pid = PIDInterface("yaw_pid", self.pid_callback)
         
     def target_pose_yaw_callback(self, target_pose: Float64):
         self.pid.set_target(target_pose.data)
