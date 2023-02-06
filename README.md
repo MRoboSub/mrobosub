@@ -3,7 +3,7 @@
 Consolidated repo for the mrobosub ros network
 
 ## Install
-```bash
+```console
 $ rosdep install --from-paths src --ignore-src -r -y
 ```
 Be in `~/catkin_ws` and installs all dependencies for ros
@@ -12,9 +12,9 @@ Be in `~/catkin_ws` and installs all dependencies for ros
 
 After installing Docker Desktop, run these commands in this folder to start the container
 
-```
-docker compose up -d
-docker compose exec mrobosub bash
+```console
+$ docker compose up -d
+$ docker compose exec mrobosub bash
 ```
 
 ## Package Structure
