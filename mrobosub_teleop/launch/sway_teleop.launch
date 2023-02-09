@@ -1,0 +1,3 @@
+<launch>
+  <node name="sway_teleop" pkg="mrobosub_teleop" type="sway_teleop.py" output="screen" required="true"/>
+</launch>

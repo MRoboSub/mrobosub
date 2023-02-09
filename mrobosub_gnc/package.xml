@@ -40,5 +40,7 @@
   <buildtool_depend>catkin</buildtool_depend>
   <depend>rospy</depend>
   <depend>mrobosub_msgs</depend>
+  <depend>mrobosub_lib</depend>
+  <depend>pid</depend>
 
 </package>

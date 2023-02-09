@@ -70,5 +70,15 @@ class PIDController:
         - setpoint - the desired target to reach
         - current - the current state to control towards setpoint
         """
-        return self.calculate(setpoint - current)
+        return self.calculate_from_error(setpoint - current)
 
+    def calculate_from_angle_setpoint(self, setpoint: float, current: float) -> float:
+        """
+        Calculates next PID value from a given setpoint angle and current state angle in degrees
+
+        Arguments:
+        - setpoint - the desired target angle to reach (in degrees)
+        - current - the current state angle to control towards setpoint (in degrees)
+        """
+        error = (setpoint - current + 180) % 360 - 180
+        return self.calculate_from_error(error)

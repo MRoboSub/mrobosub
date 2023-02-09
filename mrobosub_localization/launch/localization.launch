@@ -1,0 +1,4 @@
+<launch>
+  <node name="localization" pkg="mrobosub_localization" type="localization.py">
+  </node>
+</launch>

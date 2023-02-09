@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 2.8.3)
 project(mrobosub_hal)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
@@ -9,8 +9,9 @@ project(mrobosub_hal)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  rospy
   std_msgs
-  std_srvs
+  mrobosub_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -68,11 +69,11 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-  std_srvs
-)
+# generate_messages(
+# DEPENDENCIES
+#  std_msgs
+#  std_srvs
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -192,6 +193,10 @@ include_directories(
 #   # myfile2
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
+
+install(DIRECTORY launch/
+  DESTINATION ${3}/launch
+  PATTERN ".svn" EXCLUDE)
 
 #############
 ## Testing ##

@@ -1,0 +1,7 @@
+<launch>
+
+    <rosparam command="load" 
+        file="$(find mrobosub_planning)/param/test_node.yaml" 
+        ns="test_node" />
+    <node name="test_node" pkg="mrobosub_planning" type="test_node.py" />
+</launch>

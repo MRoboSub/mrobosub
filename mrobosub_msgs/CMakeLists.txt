@@ -13,9 +13,9 @@ add_message_files(
     HeadingRequest.msg
 )
 
-add_service_files(
-    DIRECTORY srv
-)
+# add_service_files(
+#    DIRECTORY srv
+#)
 
 generate_messages()
 

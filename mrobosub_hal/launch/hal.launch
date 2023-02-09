@@ -1,0 +1,3 @@
+<launch>
+  <include file="$(find mrobosub_hal)/launch/run_arduino.launch"/>
+</launch>

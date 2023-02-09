@@ -1,0 +1,3 @@
+<launch>
+  <node name="pitch_teleop" pkg="mrobosub_teleop" type="pitch_teleop.py" output="screen" required="true"/>
+</launch>
