@@ -30,7 +30,7 @@ class RollControlNode(Node):
         rospy.Subscriber('/pose/roll', Float64, self.pose_callback)
         rospy.Subscriber('/target_twist/roll', Float64, self.target_twist_roll_callback)
 
-        
+
     def target_pose_callback(self, target_pose: Float64):
         self.pid.set_target(target_pose.data)
 

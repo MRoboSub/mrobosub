@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 
 from math import degrees
 
+
 @dataclass
 class DOF:
     name: str
@@ -23,59 +24,71 @@ class DOF:
 
     def __hash__(self):
         return hash(self.name)
-        
-    def print_usage(self):
-        print(f'{self.name} usage:')
-        print(self.name, end='')
-        if self.has_pose:
-            print(" [twist|pose]", end='')
-        if self.is_angle:
-            print(" [radians|degrees]", end='')
-        print(' value')
 
+    def print_usage(self):
+        print(f"{self.name} usage:")
+        print(self.name, end="")
+        if self.has_pose:
+            print(" [twist|pose]", end="")
+        if self.is_angle:
+            print(" [radians|degrees]", end="")
+        print(" value")
 
 
 # heave is twist and pose
 # surge, sway is twist
 # yaw, roll, pitch have twist, pose, radians, and degrees
 ALL_DOFS = [
-    DOF('heave', True, False),
-    DOF('surge', False, False),
-    DOF('sway', False, False),
-    DOF('yaw', True, True),
-    DOF('roll', True, True),
-    DOF('pitch', True, True),
+    DOF("heave", True, False),
+    DOF("surge", False, False),
+    DOF("sway", False, False),
+    DOF("yaw", True, True),
+    DOF("roll", True, True),
+    DOF("pitch", True, True),
 ]
 ALL_DOFS = {dof.short_name: dof for dof in ALL_DOFS}
+
 
 def publisher_init(topic: str):
     return rospy.Publisher(topic, Float64, queue_size=1)
 
+
 class DOFTeleop(Node):
     """
     Publishers
-    - /pose/{type_}
+    - /target_pose/heave
+    - /target_twist/heave
+    - /target_twist/surge
+    - /target_twist/sway
+    - /target_pose/yaw
+    - /target_twist/yaw
+    - /target_pose/roll
+    - /target_twist/roll
+    - /target_pose/pitch
+    - /target_twist/pitch
     """
 
     def __init__(self):
-        super().__init__(f"manual_dof_teleop")
+        super().__init__("manual_dof_teleop")
 
         self.publishers = {}
         for dof in ALL_DOFS.values():
             dof_pubs = self.publishers[dof.short_name] = {}
-            dof_pubs['twist'] = publisher_init(f"/target_twist/{dof.name}")
+            dof_pubs["twist"] = publisher_init(f"/target_twist/{dof.name}")
             if dof.has_pose:
-                dof_pubs['pose'] = publisher_init(f"/target_pose/{dof.name}")
+                dof_pubs["pose"] = publisher_init(f"/target_pose/{dof.name}")
 
     def run(self):
         while True:
-            command = input("Enter a command: dof <twist|pose> <radians|degrees> value\n")
-            args = command.split(' ')
+            command = input(
+                "Enter a command: dof <twist|pose> <radians|degrees> value\n"
+            )
+            args = command.split(" ")
             requested_dof = args[0][:2].lower()
 
             # handle quits
-            if requested_dof == '' or requested_dof.startswith('q'):
-                print('Quitting!')
+            if requested_dof == "" or requested_dof.startswith("q"):
+                print("Quitting!")
                 return
 
             # get dof
@@ -83,7 +96,11 @@ class DOFTeleop(Node):
                 requested_dof = ALL_DOFS[requested_dof]
             except KeyError:
                 print(f'Unknown dof "{requested_dof}"')
-                print('Acceptable options are:', *[dof.name for dof in ALL_DOFS.values()], sep='\n')
+                print(
+                    "Acceptable options are:",
+                    *[dof.name for dof in ALL_DOFS.values()],
+                    sep="\n",
+                )
                 continue
             args = args[1:]
             if len(args) < 1:
@@ -91,10 +108,10 @@ class DOFTeleop(Node):
                 continue
 
             # handle twist|pose
-            mode = 'twist'
+            mode = "twist"
             if requested_dof.has_pose:
-                if args[0].lower().startswith('p'):
-                    mode = 'pose'
+                if args[0].lower().startswith("p"):
+                    mode = "pose"
                 args = args[1:]
                 if len(args) < 1:
                     requested_dof.print_usage()
@@ -105,7 +122,7 @@ class DOFTeleop(Node):
                 if len(args) < 2:
                     requested_dof.print_usage()
                     continue
-                if args[0].lower().startswith('r'):
+                if args[0].lower().startswith("r"):
                     args[1] = degrees(float(args[1]))
                 args = args[1:]
 
@@ -118,13 +135,16 @@ class DOFTeleop(Node):
                 continue
 
             # publish
-            print(f'running command: {requested_dof.name} {mode} {requested_target:5.2f}')
+            print(
+                f"running command: {requested_dof.name} {mode} {requested_target:5.2f}"
+            )
             self.publishers[requested_dof.short_name][mode].publish(requested_target)
 
     def cleanup(self):
-        print('Quitting!')
+        print("Quitting!")
         for dof in self.publishers:
-            dof['twist'].publish(0)
+            dof["twist"].publish(0)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     DOFTeleop().run()

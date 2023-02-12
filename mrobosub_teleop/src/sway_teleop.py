@@ -7,5 +7,6 @@ class SwayTeleop(TeleopNode):
     def __init__(self):
         super().__init__("sway")
 
+
 if __name__ == "__main__":
     SwayTeleop().run()
