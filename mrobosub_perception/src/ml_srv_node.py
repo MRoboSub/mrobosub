@@ -237,7 +237,7 @@ if __name__ == '__main__':
     print("node initialized")
 
     # Intialize ros services for each of the objects
-    mk_service = lambda name, idx: rospy.Service(f'object_position/{name}', ObjectPosition, idx)
+    mk_service = lambda name, idx: rospy.Service(f'object_position/{name}', ObjectPosition, lambda msg : handle_obj_request(idx, msg))
     gate_srv = mk_service('gate',Targets.GATE)
     gman_srv = mk_service('gman',Targets.GMAN)
     bootlegger_srv = mk_service('bootlegger',Targets.BOOTLEGGER)
