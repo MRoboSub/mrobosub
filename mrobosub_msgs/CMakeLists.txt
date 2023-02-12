@@ -14,7 +14,7 @@ add_message_files(
 
 add_service_files(
     DIRECTORY srv
-    ObjectPosition.srv
+    FILES ObjectPosition.srv
 )
 
 generate_messages()

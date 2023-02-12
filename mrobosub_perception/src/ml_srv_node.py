@@ -3,6 +3,7 @@
 from functools import partial
 
 import rospy
+import rospkg
 from mrobosub_msgs.srv import ObjectPosition                                           
 import cv2
 from zed_interfaces.msg import RGBDSensors
@@ -11,6 +12,7 @@ import numpy as np
 import time
 import sys
 import enum
+import pathlib
 #from rsub_log import log
 #from get_depth import get_avg_depth
 import struct
@@ -30,7 +32,7 @@ for i in range(height*width*2):
 #log("ml_node", "DEBUG", 'cv2 location:'+ cv2.__file__)
 
 CONFIDENCE = 0.9
-TIME_THRESHOLD
+TIME_THRESHOLD = 1.0
 
 
 class Targets(enum.Enum):
@@ -41,12 +43,14 @@ class Targets(enum.Enum):
     BADGE = 4
     COUNT = 5
 
-recent_positions = []
+recent_positions = [None] * Targets.COUNT.value
 latest_request_time = None
 
 def load_yolo():
     ''' Load pretrained weights, initialize CUDA. '''
-    net = cv2.dnn.readNet("/home/jetson/catkin_ws/src/models/best.onnx")
+    rospack = rospkg.RosPack()
+    model_path = pathlib.Path(rospack.get_path('mrobosub_perception'), 'models/best.onnx')
+    net = cv2.dnn.readNet(str(model_path))
 
     net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
     net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA_FP16)
@@ -75,8 +79,9 @@ def get_box_dimensions(outputs, height, width):
     # confidences = []
     # boxes = []
     # rows = outputs[0].shape[1]
-
-    outputs = np.array(outputs)
+    
+    breakpoint()
+    outputs = np.array(outputs[3], dtype=np.ndarray)
     # filter by box confidence threshold
     filtered = outputs[0,0,(outputs[0,0,:,4] > 0.2)]
 
@@ -169,8 +174,8 @@ def zed_callback(message):
         # print("zed callback")
         # Convert the zed image to an opencv image
         bridge = CvBridge()
-        image_ocv = bridge.imgmsg_to_cv2(message.rgb, desired_encoding='passthrough')
-
+        image_ocv = bridge.imgmsg_to_cv2(message, desired_encoding='passthrough')
+        
         # Remove the 4th channel (transparency)
         image_ocv = image_ocv[:,:,:3]
 
@@ -213,7 +218,7 @@ def zed_callback(message):
         # THIS PRINTS a lOT
         # log("ml_node", "DEBUG", 'ml_node - done processing a frame in ' + str((time.time()-start)) + ' seconds')
     else:
-        for i in range(Targets.COUNT):
+        for i in range(Targets.COUNT.value):
             recent_positions[i] = None
         
 
@@ -237,20 +242,20 @@ if __name__ == '__main__':
     print("node initialized")
 
     # Intialize ros services for each of the objects
-    mk_service = lambda name, idx: rospy.Service(f'object_position/{name}', ObjectPosition, lambda msg : handle_obj_request(idx, msg))
+    mk_service = lambda name, idx: rospy.Service(f'object_position/{name}', ObjectPosition, lambda msg : handle_obj_request(idx.value, msg))
     gate_srv = mk_service('gate',Targets.GATE)
     gman_srv = mk_service('gman',Targets.GMAN)
     bootlegger_srv = mk_service('bootlegger',Targets.BOOTLEGGER)
     gun_srv = mk_service('gun',Targets.GUN)
     badge_srv = mk_service('badge',Targets.BADGE)
 
-    for i in range(Targets.COUNT):
+    for i in range(Targets.COUNT.value):
         recent_positions[i] = None
     latest_request_time = rospy.get_time() - TIME_THRESHOLD
 
     # Subscribe to the ZED left image and depth topics
     # For a full list of zed topics, see https://www.stereolabs.com/docs/ros/zed-node/#published-topics
-    rospy.Subscriber("/zed2/zed_node/rgb/image_rect_color", RGBDSensors, zed_callback, queue_size=1)
+    rospy.Subscriber("/zed2/zed_node/rgb/image_rect_color", Image, zed_callback, queue_size=1)
     #rospy.Subscriber("/zed_nodelet/rgb/image_rect_color", Image, zed_callback, queue_size=1)   
     rospy.spin()
     
