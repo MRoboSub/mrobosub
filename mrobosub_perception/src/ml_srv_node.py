@@ -3,7 +3,7 @@
 from functools import partial
 
 import rospy
-from ObjectPosition.srv import ObjectPosition, ObjectPositionResponse
+from mrobosub_msgs.srv import ObjectPosition                                           
 import cv2
 from zed_interfaces.msg import RGBDSensors
 from cv_bridge import CvBridge
@@ -11,8 +11,8 @@ import numpy as np
 import time
 import sys
 import enum
-from rsub_log import log
-from get_depth import get_avg_depth
+#from rsub_log import log
+#from get_depth import get_avg_depth
 import struct
 from sensor_msgs.msg import Image
 
@@ -24,10 +24,10 @@ for i in range(height*width*2):
     const_unpack += 'B'
 
 
-log("ml_node", "INFO", "Starting")
-log("ml_node", "DEBUG", 'python version: ' + sys.version)
-log("ml_node", "DEBUG", 'cv2 version: ' + cv2.__version__)
-log("ml_node", "DEBUG", 'cv2 location:'+ cv2.__file__)
+#log("ml_node", "INFO", "Starting")
+#log("ml_node", "DEBUG", 'python version: ' + sys.version)
+#log("ml_node", "DEBUG", 'cv2 version: ' + cv2.__version__)
+#log("ml_node", "DEBUG", 'cv2 location:'+ cv2.__file__)
 
 CONFIDENCE = 0.9
 TIME_THRESHOLD
@@ -250,7 +250,7 @@ if __name__ == '__main__':
 
     # Subscribe to the ZED left image and depth topics
     # For a full list of zed topics, see https://www.stereolabs.com/docs/ros/zed-node/#published-topics
-    rospy.Subscriber("/sync_nodelet/rgbd_sens", RGBDSensors, zed_callback, queue_size=1)
+    rospy.Subscriber("/zed2/zed_node/rgb/image_rect_color", RGBDSensors, zed_callback, queue_size=1)
     #rospy.Subscriber("/zed_nodelet/rgb/image_rect_color", Image, zed_callback, queue_size=1)   
     rospy.spin()
     
