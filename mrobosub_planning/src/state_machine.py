@@ -3,9 +3,9 @@ Python metaprogramming."""
 
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod
 from dataclasses import make_dataclass, field
-from typing import Mapping, Type, Final, cast
+from typing import Mapping, Self, Type, Final, cast
 import rospy
 from std_msgs.msg import String
 
@@ -53,6 +53,17 @@ class Outcome(ABC):
         fields = [(key, val, field()) for key, val in kwargs.items()]
         dataclass = make_dataclass(name, fields, bases=(cls, ))
         return cast(Type[Outcome], dataclass)  # purely for better type hinting, no actual effect
+
+
+class StateMeta(ABCMeta):
+    def __new__(mcls: type[Self], name: str, bases: tuple[type, ...], namespace: dict[str, Any], **kwargs: Any) -> Self:
+        try:
+            for var, type_ in namespace["__annotations__"].items():
+                if type_ is Outcome:
+                    namespace[var] = Outcome.make(name + var)
+        except AttributeError:
+            pass
+        return super().__new__(name, bases, namespace, **kwargs)
 
 
 class State(ABC):
