@@ -4,11 +4,11 @@ from functools import partial
 
 import rospy
 import rospkg
-from mrobosub_msgs.srv import ObjectPosition                                           
+from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse
 import cv2
 from zed_interfaces.msg import RGBDSensors
 from cv_bridge import CvBridge
-import numpy as np 
+import numpy as np
 import time
 import sys
 import enum
@@ -32,7 +32,7 @@ for i in range(height*width*2):
 #log("ml_node", "DEBUG", 'cv2 location:'+ cv2.__file__)
 
 CONFIDENCE = 0.9
-TIME_THRESHOLD = 1.0
+TIME_THRESHOLD = 10
 
 
 class Targets(enum.Enum):
@@ -73,26 +73,25 @@ def detect_objects(img):
     return outputs
 
 
-def get_box_dimensions(outputs, height, width): 
+def get_box_dimensions(outputs, height, width):
     ''' Iterate through all detections, choose detections over confidence threshold. '''
-    # class_ids = []
-    # confidences = []
-    # boxes = []
-    # rows = outputs[0].shape[1]
-    
-    breakpoint()
-    outputs = np.array(outputs[3], dtype=np.ndarray)
-    # filter by box confidence threshold
-    filtered = outputs[0,0,(outputs[0,0,:,4] > 0.2)]
 
-    # filter by class confidence threshold
-    maxes = np.amax(filtered[:,5:],axis=1)
-    max_filter = np.where(maxes > 0.25, True, False)
-    filtered = filtered[(max_filter)]
+    # outputs is a 1 x 25200 x 10 array, of 25200 bounding boxes and 10 class probabilities for each box
+    outputs = np.array(outputs[3][0], dtype=np.ndarray)
 
-    class_ids = np.argmax(filtered[:,5:],axis=1)
-    confidences = np.amax(filtered[:,5:],axis=1)
-    boxes = np.zeros((len(filtered),4))
+    """
+    outputs has 25,200 predictions, where each prediction has a 10-vector:
+    [x, y, w, h, box confidence, 5 class predictions]
+    """
+
+    # keep all of the outputs where the fourth element (box confidence) of the 10-vector is greater than 0.2
+    filtered = outputs[(outputs[:,4] > 0.2),:]
+    filtered = filtered[np.any(filtered[:,5:] > 0.25, axis=1), :]
+
+    maxes = np.amax(filtered[:,5:], axis=1)
+    classes = np.argmax(filtered[:,5:], axis=1)
+    boxes = np.zeros((filtered.shape[0],4))
+
     for i, row in enumerate(filtered):
         x,y,w,h = row[:4]
         left = int(x - 0.5 * w)
@@ -100,49 +99,24 @@ def get_box_dimensions(outputs, height, width):
         width = int(w)
         height = int(h)
         boxes[i] = np.array([left,top,width,height])
-    
-    '''
-    for r in range(rows):
-        row = outputs[0][0][r]
-        confidence = row[4]
-        #print('BOX CONF',confidence)
-        # This value is the box confidence. confidence that any object exists in the box.
-	if confidence >= 0.2:
-            classes_scores = row[5:]
-            _,_,_, max_indx = cv2.minMaxLoc(classes_scores)
-            class_id = max_indx[1]
-	    # this  value is the class confidence,  confidence that the box contains this class.
-            if(classes_scores[class_id] > 0.25):
-                confidences.append(confidence)
-                #print('found :' + classes[class_id])
-		class_ids.append(class_id)
-                x,y,w,h = row[0], row[1], row[2], row[3]
-                left = int(x - 0.5 * w)
-                top = int(y - 0.5 * h)
-                width = int(w)
-                height = int(h)
-                box = np.array([left,top,width,height])
-                boxes.append(box)
-    '''
 
     # Perfom NMSBoxes algorithm, merges overlapping bounding boxes that have the same prediction to create an average bounding box.
-    indexes = cv2.dnn.NMSBoxes(boxes, confidences,0.25,0.45)
+    indexes = cv2.dnn.NMSBoxes(boxes, maxes, 0.25, 0.45)
     indexes = list(indexes)
-    
+
     result_class_ids = np.zeros(len(indexes))
     result_confidences = np.zeros(len(indexes))
     result_boxes = np.zeros(len(indexes))
 
     if len(indexes) > 0:
-        result_confidences = (confidences[indexes])
-        result_class_ids = (class_ids[indexes])
+        result_confidences = (maxes[indexes])
+        result_class_ids = (classes[indexes])
         result_boxes = (boxes[indexes])
-
 
     return result_class_ids, result_confidences, result_boxes
 
 
-def draw_labels(boxes, confs, class_ids, img): 
+def draw_labels(boxes, confs, class_ids, img):
 	# NON FUNCTIONING: Draw bounding boxes on input image and show.
 	indexes = cv2.dnn.NMSBoxes(boxes, confs, 0.5, 0.4)
 	font = cv2.FONT_HERSHEY_PLAIN
@@ -160,7 +134,7 @@ def draw_labels(boxes, confs, class_ids, img):
 def gray_world(img):
     # Perform white-balancing on input image.
     def whitebalance(channel, perc = 0.05):
-        minimum, maximum = (np.percentile(channel, perc), np.percentile(channel, 100.0-perc)) 
+        minimum, maximum = (np.percentile(channel, perc), np.percentile(channel, 100.0-perc))
         channel = np.uint8(np.clip((channel-minimum)*255.0/(maximum-minimum), 0, 255))
         return channel
 
@@ -169,13 +143,16 @@ def gray_world(img):
 
 def zed_callback(message):
     global img_seen_num, img_num
+    # print('in zed callback')
     if rospy.get_time() - latest_request_time < TIME_THRESHOLD:
-        
+    # if True:
+        print('processing img')
+
         # print("zed callback")
         # Convert the zed image to an opencv image
         bridge = CvBridge()
         image_ocv = bridge.imgmsg_to_cv2(message, desired_encoding='passthrough')
-        
+
         # Remove the 4th channel (transparency)
         image_ocv = image_ocv[:,:,:3]
 
@@ -186,16 +163,18 @@ def zed_callback(message):
         height, width, channels = image_ocv.shape   # shape of the image
         outputs = detect_objects(image_ocv)   # get raw detection data
         class_ids, confs, boxes = get_box_dimensions(outputs, height, width)
+
+
         # log("ml_node", "DEBUG", 'ml_node - ' + str(len(class_ids)) + ' detections')
 
         # Draw any bounding boxes and display the image
-        #draw_labels(boxes, confs, class_ids, image_ocv)
+        draw_labels(boxes, confs, class_ids, image_ocv)
 
         object_position_response = ObjectPositionResponse()
 
 
         #byte_data = struct.unpack(const_unpack, message.depth.data)
-            
+
         # Report detection result
         for i, id in enumerate(class_ids):
             object_position_response.found = True
@@ -214,15 +193,18 @@ def zed_callback(message):
                 # print(id)
                 # print("confidence: " + str(object_position.confidence))
             recent_positions[id] = object_position_response
+            print(id)
+            print(recent_positions[id])
 
         # THIS PRINTS a lOT
         # log("ml_node", "DEBUG", 'ml_node - done processing a frame in ' + str((time.time()-start)) + ' seconds')
     else:
         for i in range(Targets.COUNT.value):
             recent_positions[i] = None
-        
+
 
 def handle_obj_request(idx, msg):
+    breakpoint()
     global latest_request_time
     latest_request_time = rospy.get_time()
     while recent_positions[idx] == None:
@@ -256,8 +238,8 @@ if __name__ == '__main__':
     # Subscribe to the ZED left image and depth topics
     # For a full list of zed topics, see https://www.stereolabs.com/docs/ros/zed-node/#published-topics
     rospy.Subscriber("/zed2/zed_node/rgb/image_rect_color", Image, zed_callback, queue_size=1)
-    #rospy.Subscriber("/zed_nodelet/rgb/image_rect_color", Image, zed_callback, queue_size=1)   
+    #rospy.Subscriber("/zed_nodelet/rgb/image_rect_color", Image, zed_callback, queue_size=1)
     rospy.spin()
-    
+
     cv2.destroyAllWindows()
 
