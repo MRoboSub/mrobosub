@@ -18,11 +18,10 @@ import pathlib
 import struct
 from sensor_msgs.msg import Image
 
-height = 376
-width = 1344
+MODEL_DIMENSION = 640 # hard-coded in the model
 bridge = CvBridge()
 const_unpack = ''
-for i in range(height*width*2):
+for i in range(376*1344*2):
     const_unpack += 'B'
 
 
@@ -67,7 +66,7 @@ def detect_objects(img):
     global model
     global output_layers
 
-    blob = cv2.dnn.blobFromImage(img, scalefactor=0.00392, size=(640, 640), mean=(0, 0, 0), swapRB=True, crop=False)
+    blob = cv2.dnn.blobFromImage(img, scalefactor=0.00392, size=(MODEL_DIMENSION, MODEL_DIMENSION), mean=(0, 0, 0), swapRB=True, crop=False)
     model.setInput(blob)
     outputs = model.forward(output_layers)
     return outputs
@@ -94,6 +93,10 @@ def get_box_dimensions(outputs, height, width):
 
     for i, row in enumerate(filtered):
         x,y,w,h = row[:4]
+
+        # correct box placement from image padding
+        x -= (MODEL_DIMENSION - width)/2
+        y -= (MODEL_DIMENSION - height)/2
         left = int(x - 0.5 * w)
         top = int(y - 0.5 * h)
         width = int(w)
@@ -112,22 +115,21 @@ def get_box_dimensions(outputs, height, width):
         result_confidences = (maxes[indexes])
         result_class_ids = (classes[indexes])
         result_boxes = (boxes[indexes])
-
+    
+    print("NMS Detections", len(indexes))
     return result_class_ids, result_confidences, result_boxes
 
 
-def draw_labels(boxes, confs, class_ids, img):
+def draw_labels(box, img):
     # NON FUNCTIONING: Draw bounding boxes on input image and show.
-    indexes = cv2.dnn.NMSBoxes(boxes, confs, 0.5, 0.4)
-    font = cv2.FONT_HERSHEY_PLAIN
-    for i in range(len(boxes)):
-        if i in indexes:
-            x, y, w, h = boxes[i]
-            print('(x, y, w, h):', boxes[i])
-            color = 'red' #color = colors[i]
-            cv2.rectangle(img, (x,y), (x+w, y+h), color, 2)
-            # draw bounding box on image and show
-            cv2.imshow("Image", img)
+    x, y, w, h = box
+    color = 'red' #color = colors[i]
+    # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    # img = np.ascontiguousarray(img, dtype=np.uint8)
+    img=img.copy()
+    #cv2.rectangle(img, (x,y), (x+w, y+h), (0, 255, 0), 2)
+    # draw bounding box on image and show
+    cv2.imshow("Image", img)
 
 
 def gray_world(img):
@@ -146,6 +148,7 @@ def zed_callback(message):
     if rospy.get_time() - latest_request_time < TIME_THRESHOLD:
     # if True:
         print('processing img')
+        start = rospy.get_time()
 
         # print("zed callback")
         # Convert the zed image to an opencv image
@@ -155,6 +158,7 @@ def zed_callback(message):
         # Remove the 4th channel (transparency)
         image_ocv = image_ocv[:,:,:3]
 
+        # np.save("/home/mrobosub/saved_image.npy", image_ocv)
         # Perform gray world assumption on image
         #image_ocv = gray_world(image_ocv)
 
@@ -163,25 +167,27 @@ def zed_callback(message):
         outputs = detect_objects(image_ocv)   # get raw detection data
         class_ids, confs, boxes = get_box_dimensions(outputs, height, width)
 
-
         # log("ml_node", "DEBUG", 'ml_node - ' + str(len(class_ids)) + ' detections')
 
         # Draw any bounding boxes and display the image
-        draw_labels(boxes, confs, class_ids, image_ocv)
-
-        object_position_response = ObjectPositionResponse()
-
-
         #byte_data = struct.unpack(const_unpack, message.depth.data)
 
-        # Report detection result
+        for i in range(Targets.COUNT.value):
+            object_position_response = ObjectPositionResponse()
+            object_position_response.found = False
+            recent_positions[i] = object_position_response
+
         for i, id in enumerate(class_ids):
+            object_position_response = ObjectPositionResponse()
             object_position_response.found = True
 
             box = boxes[i] # grab the first box in the list
-            if(len(box) == 0):
-                object_position_response.found = False
-            else:
+
+            if len(box) != 0:
+                print("made detection")
+
+                # print("saving box: ", box)
+                # np.save("/home/mrobosub/box.npy", box)
                 object_position_response.x_percent = float(box[0]) / (width + 1e-10) # TODO: this should not cause an error
                 object_position_response.y_percent = float(box[1]) / (height + 1e-10)
                 object_position_response.x_diff = (float(box[0]) - (width / 2)) / (width / 2)
@@ -191,10 +197,10 @@ def zed_callback(message):
                 object_position_response.confidence = confs[i]
                 # print(id)
                 # print("confidence: " + str(object_position.confidence))
-            recent_positions[id] = object_position_response
-            print(id)
-            print(recent_positions[id])
 
+                recent_positions[id] = object_position_response
+
+        print(f"processed in {time.time() - start}")
         # THIS PRINTS a lOT
         # log("ml_node", "DEBUG", 'ml_node - done processing a frame in ' + str((time.time()-start)) + ' seconds')
     else:
@@ -203,7 +209,6 @@ def zed_callback(message):
 
 
 def handle_obj_request(idx, msg):
-    breakpoint()
     global latest_request_time
     latest_request_time = rospy.get_time()
     while recent_positions[idx] == None:
