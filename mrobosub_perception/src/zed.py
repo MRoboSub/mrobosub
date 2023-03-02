@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+
 import cv2
 from sensor_msgs.msg import Image
 import rospy
@@ -21,15 +24,17 @@ class Zed(ControlLoopNode):
         )
 
     def chop(self, frame):
-        width = len(frame[0])
-        return frame[:(width//2)]
+        width = frame.shape[1]
+        return frame[:,:(width//2),:]
 
     def loop(self):
         success, frame = self.cap.read()
 
         if success:
-            frame = self.chop(frame)
-            self.pub.publish(self.br.cv2_to_imgmsg(frame))
+            frame_chopped = self.chop(frame)
+            print(frame.shape, frame_chopped.shape)
+            img = self.br.cv2_to_imgmsg(frame_chopped, encoding='rgb8')
+            self.pub.publish(img)
 
             
 
