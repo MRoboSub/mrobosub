@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from common import *
 from gate_task import *
 from buoy_task import *
 
@@ -26,7 +27,7 @@ transitions = {
     AlignPathMarker.Aligned: ApproachBuoyOpen,
     AlignPathMarker.TimedOut: ApproachBuoyOpen,
 
-    FallBackTurn.Unaligned: FallbackTurn,
+    FallBackTurn.Unaligned: FallBackTurn,
     FallBackTurn.Aligned: ApproachBuoyOpen,
 
     SeenGlyph: ApproachBuoyClosed,
@@ -34,16 +35,14 @@ transitions = {
     HitBuoyFirst: FindGlyph,
 
     ApproachBuoyOpen.GlyphNotSeen: ApproachBuoyOpen, 
-    ApproachBuoyOpen.HitBuoy: FindGlyph,
-    ApproachBuoyOpen.Timeout: Surface,
+    ApproachBuoyOpen.TimedOut: Surface,
 
     ApproachBuoyClosed.NotReached: ApproachBuoyClosed,
-    ApproachBuoyClosed.Timeout: Surface,
+    ApproachBuoyClosed.TimedOut: Surface,
 
     FindGlyph.GlyphNotSeen: FindGlyph,
     FindGlyph.TimedOut: Pause,
     
-    Pause.FoundGlyph: ApproachBuoyClosed,
     Pause.TimedOut: ContingencySubmerge,
     
     ContingencySubmerge.Submerging: ContingencySubmerge,

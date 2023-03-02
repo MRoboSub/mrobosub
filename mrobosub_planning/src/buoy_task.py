@@ -30,9 +30,12 @@ class ApproachBuoyOpen(TimedState):
     surge_speed: Param[float]
     timeout: Param[int]
 
-    def initialize(self, prev_outcome: Aligned) -> None:
-        super().initialize()
-        self.target_yaw = prev_outcome.angle
+    def initialize(self, prev_outcome) -> None:
+        super().initialize(prev_outcome)
+        if hasattr(prev_outcome, 'angle'):
+            self.target_yaw = prev_outcome.angle
+        else:
+            self.target_yaw = PIO.Pose.yaw
 
     def handle_if_not_timedout(self) -> Outcome:
         PIO.set_target_pose_yaw(self.target_yaw)
@@ -54,14 +57,15 @@ class ApproachBuoyOpen(TimedState):
         
 class ApproachBuoyClosed(TimedState):
     NotReached = Outcome.make('NotReached')
+    TimedOut = Outcome.make('TimedOut')
     
     surge_speed: Param[float]
     heave_factor: Param[float]
     yaw_factor: Param[float]
     timeout: Param[int]
 
-    def initialize(self, prev_outcome: SeenBuoy) -> None:
-        super().initialize()
+    def initialize(self, prev_outcome) -> None:
+        super().initialize(prev_outcome)
         self.most_recent_results = prev_outcome.glyph_results
         self.glyph = prev_outcome.glyph
 
@@ -121,7 +125,7 @@ class FallBack(TimedState):
 
 class Ascend(TimedState):
     NotReached = Outcome.make("Unreached")
-    Submerged = Outcome.make("Submerged")
+    Reached = Outcome.make("Reached")
     TimedOut = Outcome.make("TimedOut")
     
     target_depth: Param[float]
@@ -131,7 +135,7 @@ class Ascend(TimedState):
         PIO.set_target_pose_heave(self.target_depth)
 
         if PIO.Pose.heave < self.target_depth:
-            return self.Submerged()
+            return self.Reached()
         else:
             return self.NotReached()
 

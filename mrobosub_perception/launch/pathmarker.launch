@@ -17,6 +17,6 @@
     name="pathmarker"
     output="screen"
   >
-    <param textfile="$(find mrobosub_perception)/params/pathmarker.yaml" type="yaml" name="pathmarker" />
+    <rosparam command="load" file="$(find mrobosub_perception)/params/pathmarker.yaml" />
   </node> 
 </launch>

@@ -16,9 +16,9 @@ transitions = {
     AlignPathMarker.TimedOut: Surface,
 
     ApproachBuoyOpen.GlyphNotSeen: ApproachBuoyOpen, 
-    ApproachBuoyOpen.Timeout: Surface,
+    ApproachBuoyOpen.TimedOut: Surface,
 
-    SeenGlyph: Surface
+    SeenGlyph: Surface,
     HitBuoyFirst: Surface,
 
     Surface.Submerged: Surface,

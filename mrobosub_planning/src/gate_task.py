@@ -1,6 +1,6 @@
 from umrsm import Outcome, TimedState, State, Param
 from periodic_io import PIO, angle_error, Glyph, Gbl
-from buoy_task import SeenGlyphh
+from buoy_task import SeenGlyph
 from mrobosub_msgs.srv import GlyphPositionResponse
 
 FoundBuoyPathMarker = Outcome.make('FoundPathMarker', angle=float)
