@@ -5,7 +5,7 @@ import time
 import roslaunch
 import rospkg
 import rospy
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Float64
 from std_srvs.srv import SetBool, Trigger
 from pathlib import Path
 
