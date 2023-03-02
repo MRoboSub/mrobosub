@@ -148,3 +148,39 @@ class FallBackTurn(State):
             return self.Aligned()
         else:
             return self.Unaligned()
+
+class Spin(TimedState):
+    timeout: Param[float]
+
+    Unreached = Outcome.make('Unreached')
+    TimedOut = Outcome.make('TimedOut')
+
+    def initialize(self, prev_outcome: Outcome) -> None:
+        super().initialize(prev_outcome)
+
+    def handle_if_not_timedout(self) -> Outcome:
+        PIO.set_target_twist_yaw(0.15)
+        return self.Unreached        
+    
+    def handle_once_timedout(self) -> None:
+        pass
+
+class SpinFinish(TimedState):
+    timeout: Param[float]
+
+    Unreached = Outcome.make('Unreached')
+    TimedOut = Outcome.make('TimedOut')
+
+    def initialize(self, prev_outcome: Outcome) -> None:
+        super().initialize(prev_outcome)
+
+    def handle_if_not_timedout(self) -> Outcome:
+        PIO.set_target_pose_yaw(0)
+
+        if PIO.is_yaw_within_threshold(self.yaw_threshold):
+            return self.ReachedAngle()
+        else:
+            return self.Unaligned()
+    
+    def handle_once_timedout(self) -> None:
+        pass
