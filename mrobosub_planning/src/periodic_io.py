@@ -141,7 +141,7 @@ class PIO:
     
     @classmethod
     def set_target_twist_heave(cls, override_heave: float) -> None:
-        cls._target_pose_heave_pub.publish(override_heave)
+        cls._target_twist_heave_pub.publish(override_heave)
 
     # @classmethod
     # def get_pose(cls) -> Namespace[Pose]:
