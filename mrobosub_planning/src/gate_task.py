@@ -2,6 +2,7 @@ from umrsm import Outcome, TimedState, State, Param, TurnToYaw
 from periodic_io import PIO, angle_error, Glyph, Gbl
 from buoy_task import SeenGlyph, search_for_glyph
 from mrobosub_msgs.srv import ObjectPositionResponse
+import rospy
 
 FoundBuoyPathMarker = Outcome.make('FoundPathMarker', angle=float)
 SeenGateImage = Outcome.make('SeenGateImage', position=ObjectPositionResponse, glyph_seen=Glyph)
@@ -35,14 +36,11 @@ class ApproachGate(TimedState):
 
     def handle_if_not_timedout(self) -> Outcome:
         PIO.set_target_twist_surge(self.surge_speed)
-        pm_angle = PIO.query_pathmarker()
 
         abydos_response = PIO.query_glyph(Glyph.abydos)
         earth_response = PIO.query_glyph(Glyph.earth)
 
-        if pm_angle is not None:
-            return FoundBuoyPathMarker(angle=pm_angle)
-        elif abydos_response.found:
+        if abydos_response.found:
             return SeenGateImage(position=abydos_response, glyph_seen=Glyph.abydos)
         elif earth_response.found:
             return SeenGateImage(position=earth_response, glyph_seen=Glyph.earth)
@@ -156,6 +154,7 @@ class Spin(TimedState):
     TimedOut = Outcome.make('TimedOut')
 
     def initialize(self, prev_outcome: Outcome) -> None:
+        self.timeout = 18
         super().initialize(prev_outcome)
 
     def handle_if_not_timedout(self) -> Outcome:
@@ -166,14 +165,28 @@ class Spin(TimedState):
         PIO.set_target_twist_yaw(0)
         return self.TimedOut()
 
-class SpinFinish(TurnToYaw):
-    timeout: Param[float]
-
+class SpinFinish(TimedState):
     Unreached = Outcome.make('Unreached')
     Reached = Outcome.make('Reached')
     TimedOut = Outcome.make('TimedOut')
 
-    target_yaw : Param[float]
+    target_yaw: Param[float]
     yaw_threshold: Param[float]
     settle_time: Param[float]
-    timeout : Param[float]
+    timeout: Param[float]
+
+    def handle_if_not_timedout(self) -> Outcome:
+        target_yaw = 0
+        PIO.set_target_pose_yaw(target_yaw)
+        
+        if not PIO.is_yaw_within_threshold(5):
+            self.timer = rospy.get_time()
+
+        if rospy.get_time() - self.timer >= 1:
+            reached = self.Reached()
+            reached.angle = target_yaw
+            return self.Reached()
+
+        unreached = self.Unreached()
+        unreached.angle = target_yaw
+        return unreached

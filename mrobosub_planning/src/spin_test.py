@@ -1,6 +1,7 @@
+from common import Start, Submerge, Surface, Stop
+from gate_task import Spin, SpinFinish
 
-
-transitions {
+transitions = {
     Start.Complete: Submerge,
 
     Submerge.Unreached: Submerge,
@@ -11,7 +12,7 @@ transitions {
     Spin.TimedOut: SpinFinish,
 
     SpinFinish.Unreached: SpinFinish,
-    SpinFinish.Reached: Suface,
+    SpinFinish.Reached: Surface,
     SpinFinish.TimedOut: Surface,
 
     Surface.Submerged: Surface,

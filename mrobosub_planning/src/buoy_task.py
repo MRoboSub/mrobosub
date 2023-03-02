@@ -246,7 +246,7 @@ class FindGlyph(TimedState):
     speed: Param[float]
 
     def handle_if_not_timedout(self) -> Outcome:
-        PIO.set_target_twist_surge(-self.speed) 
+        # PIO.set_target_twist_surge(-self.speed)
 
         res = PIO.query_all_glyphs()
 

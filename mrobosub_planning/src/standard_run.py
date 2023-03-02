@@ -16,18 +16,26 @@ transitions = {
     AlignGate.TimedOut: ApproachGate,
 
     ApproachGate.Unreached: ApproachGate,
-    ApproachGate.TimedOut: FallBackTurn,
+    ApproachGate.TimedOut: Spin,
 
     SeenGateImage: ApproachGateImage,
-    FoundBuoyPathMarker: AlignPathMarker,
 
-    ApproachGateImage.GoneThroughGate: FallBackTurn,
-    ApproachGateImage.TimedOut: ApproachBuoyOpen,
+    ApproachGateImage.GoneThroughGate: Spin,
+    ApproachGateImage.TimedOut: Surface,
 
+    # should be unused
     AlignPathMarker.Unaligned: AlignPathMarker,
     AlignPathMarker.Aligned: ApproachBuoyOpen,
     AlignPathMarker.TimedOut: ApproachBuoyOpen,
 
+    Spin.Unreached: Spin,
+    Spin.TimedOut: SpinFinish,
+
+    SpinFinish.Unreached: SpinFinish,
+    SpinFinish.Reached: ApproachBuoyOpen,
+    SpinFinish.TimedOut: ApproachBuoyOpen,
+
+    # should be unused
     FallBackTurn.Unaligned: FallBackTurn,
     FallBackTurn.Aligned: ApproachBuoyOpen,
 
