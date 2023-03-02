@@ -9,7 +9,7 @@ import alignment_test
 import spin_test
 import rospy
 import sys
-
+from periodic_io import PIO
 
 
 # maybe change this to something hacky like getting .transitions from the machine name module?
@@ -31,4 +31,15 @@ if __name__ == '__main__':
         transition_maps[machine_name],
         common.Start, common.Stop
     )
-    machine.run()
+    try:
+        machine.run()
+    except Exception as e:
+        print(e)
+        rate = rospy.Rate(50)
+        for _ in range(20):
+            PIO.set_target_twist_heave(0)
+            PIO.set_target_twist_yaw(0)
+            PIO.set_target_twist_surge(0)
+            PIO.set_target_twist_roll(0)
+            PIO.set_target_twist_sway(0)
+            rate.sleep()

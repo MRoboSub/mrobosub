@@ -9,7 +9,7 @@ from std_msgs.msg import Bool
 from std_srvs.srv import SetBool, Trigger
 from pathlib import Path
 
-USE_ML = False
+USE_ML = True
 
 class RobotState(Enum):
     ambient = 0
@@ -35,6 +35,12 @@ if USE_ML:
 
 rate = rospy.Rate(10)
 
+target_twist_yaw_pub = rospy.Publisher('/target_twist/yaw', Float64, queue_size=1)
+target_twist_roll_pub = rospy.Publisher('/target_twist/roll', Float64, queue_size=1)
+target_twist_surge_pub = rospy.Publisher('/target_twist/surge', Float64, queue_size=1)
+target_twist_sway_pub = rospy.Publisher('/target_twist/sway', Float64, queue_size=1)
+target_twist_heave_pub = rospy.Publisher('/target_twist/heave', Float64, queue_size = 1)
+
 led_strange_pub = rospy.Publisher('/led/strange', Bool, queue_size=1)
 led_charm_pub = rospy.Publisher('/led/charm', Bool, queue_size=1)
 led_on_pub = rospy.Publisher('/led/on', Bool, queue_size=1)
@@ -53,6 +59,9 @@ rospy.Subscriber('/buttons/charm', Bool, set_charm)
 while not rospy.is_shutdown(): 
     led_on_pub.publish(True)
 
+    # KEEP THIS LINE
+    rate.sleep()
+
     prev_state = curr_state
 
     strange_input = hall_effect_inputs['strange']
@@ -60,8 +69,14 @@ while not rospy.is_shutdown():
 
     curr_state = RobotState(strange_input + charm_input)
 
+    if curr_state == RobotState.ready:
+        target_twist_yaw_pub.publish(0.0)
+        target_twist_roll_pub.publish(0.0)
+        target_twist_surge_pub.publish(0.0)
+        target_twist_sway_pub.publish(0.0)
+        target_twist_heave_pub.publish(0.0)
+
     if curr_state == prev_state:
-        rate.sleep()
         continue
     elif curr_state == RobotState.ambient:
         arm_resp = arm_srv(False)
@@ -97,7 +112,5 @@ while not rospy.is_shutdown():
 
     led_strange_pub.publish(bool(strange_input))
     led_charm_pub.publish(bool(charm_input))
-
-    rate.sleep()
 
 

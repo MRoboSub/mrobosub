@@ -56,8 +56,6 @@ class ApproachBuoyOpen(TimedState):
         PIO.set_target_twist_surge(0)
 
 
-
-
 class CenterHeaveGlyph(TimedState):
     NotCentered = Outcome.make('NotCentered')
     Centered = Outcome.make('Centered', glyph=Glyph, last_data=ObjectPositionResponse)
