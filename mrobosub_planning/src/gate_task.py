@@ -167,10 +167,11 @@ class Spin(TimedState):
 
     def initialize(self, prev_outcome: Outcome) -> None:
         super().initialize(prev_outcome)
-        self.timeout = 12
+        self.timeout = 15
 
     def handle_if_not_timedout(self) -> Outcome:
-        PIO.set_target_twist_yaw(0.15)
+        PIO.set_target_twist_yaw(0.12)
+        PIO.set_target_pose_heave(1)
         return self.Unreached
 
     def handle_once_timedout(self) -> None:
@@ -190,7 +191,7 @@ class SpinFinish(TimedState):
     def handle_if_not_timedout(self) -> Outcome:
         target_yaw = 0
         PIO.set_target_pose_yaw(target_yaw)
-        
+
         if not PIO.is_yaw_within_threshold(5):
             self.timer = rospy.get_time()
 
