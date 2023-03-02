@@ -9,6 +9,8 @@ from std_msgs.msg import Bool
 from std_srvs.srv import SetBool, Trigger
 from pathlib import Path
 
+USE_ML = False
+
 class RobotState(Enum):
     ambient = 0
     ready = 1
@@ -28,7 +30,8 @@ arm_srv = rospy.ServiceProxy('/arming/cmd', SetBool)
 rospy.wait_for_service('/localization/zero_state')
 zero_srv = rospy.ServiceProxy('/localization/zero_state', Trigger)
 
-rospy.wait_for_service('/object_position/earth')
+if USE_ML:
+    rospy.wait_for_service('/object_position/earth')
 
 rate = rospy.Rate(10)
 
@@ -64,21 +67,26 @@ while not rospy.is_shutdown():
         arm_resp = arm_srv(False)
         rospy.loginfo(f'arming response: {arm_resp.success}; {arm_resp.message}')
     elif curr_state == RobotState.ready:
+        zero_srv()
+        
         #if not capt_launch is None:
         #    capt_launch.shutdown()
         #    capt_launch = None
+        
         if prev_state == RobotState.running:
+            arm_srv(True)
             soft_stop = rospy.ServiceProxy('/captain/soft_stop', Trigger)
-            res = soft_stop()
-        zero_srv()
-        arm_resp = arm_srv(True)
-
-        retries = 0
-        while not arm_resp.success and retries < 10:
+            try:
+                res = soft_stop()
+            except:
+                pass
+        else:
             arm_resp = arm_srv(True)
-            retries += 1
-
-        rospy.loginfo(f'arming response: {arm_resp.success}; {arm_resp.message}; {retries} retries')
+            retries = 0
+            while not arm_resp.success and retries < 10:
+                arm_resp = arm_srv(True)
+                retries += 1
+            rospy.loginfo(f'arming response: {arm_resp.success}; {arm_resp.message}; {retries} retries')
     else:
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         roslaunch.configure_logging(uuid)
