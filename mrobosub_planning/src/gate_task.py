@@ -34,18 +34,29 @@ class ApproachGate(TimedState):
     timeout: Param[int]
     surge_speed: Param[float]
 
+    def initialize(self, prev_outcome: SeenGateImage) -> None:
+        super().initialize(prev_outcome)
+        self.found_image_threshold = 50
+        self.times_seen = 0
+
     def handle_if_not_timedout(self) -> Outcome:
         PIO.set_target_twist_surge(self.surge_speed)
 
         abydos_response = PIO.query_glyph(Glyph.abydos)
         earth_response = PIO.query_glyph(Glyph.earth)
+        res_exists = abydos_response.found or earth_response.found
 
-        if abydos_response.found:
-            return SeenGateImage(position=abydos_response, glyph_seen=Glyph.abydos)
-        elif earth_response.found:
-            return SeenGateImage(position=earth_response, glyph_seen=Glyph.earth)
-        else:
+        if not res_exists:
             return self.Unreached()
+
+        if self.times_seen >= self.found_image_threshold:
+            if abydos_response.found:
+                return SeenGateImage(position=abydos_response, glyph_seen=Glyph.abydos)
+            else:
+                return SeenGateImage(position=earth_response, glyph_seen=Glyph.earth)
+    
+        self.times_seen += 1
+        return self.Unreached()
     
     def handle_once_timedout(self) -> None:
         PIO.set_target_twist_surge(0)
@@ -76,7 +87,7 @@ class ApproachGateImage(TimedState):
         super().initialize(prev_outcome)
         Gbl.planet_seen = prev_outcome.glyph_seen
         self.last_target_yaw = PIO.Pose.yaw + prev_outcome.position.x_theta
-        self.lost_image_threshold = 200
+        self.lost_image_threshold = 300
         self.times_not_seen = 0
 
     def handle_if_not_timedout(self) -> Outcome:
@@ -155,13 +166,13 @@ class Spin(TimedState):
     TimedOut = Outcome.make('TimedOut')
 
     def initialize(self, prev_outcome: Outcome) -> None:
-        self.timeout = 18
         super().initialize(prev_outcome)
+        self.timeout = 12
 
     def handle_if_not_timedout(self) -> Outcome:
         PIO.set_target_twist_yaw(0.15)
-        return self.Unreached        
-    
+        return self.Unreached
+
     def handle_once_timedout(self) -> None:
         PIO.set_target_twist_yaw(0)
         return self.TimedOut()

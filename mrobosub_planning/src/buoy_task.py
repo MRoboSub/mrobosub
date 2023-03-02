@@ -40,19 +40,18 @@ class ApproachBuoyOpen(TimedState):
     def handle_if_not_timedout(self) -> Outcome:
         PIO.set_target_pose_yaw(self.target_yaw)
         PIO.set_target_twist_surge(self.surge_speed)
-        
 
         seen_glyph_outcome = search_for_glyph(Gbl.preferred_glyph())
-        hit = PIO.buoy_collision
+        # hit = PIO.buoy_collision
 
         if seen_glyph_outcome:
             # possible change: add some counter to increase the likelihood that we get our preferred glyph?
             return seen_glyph_outcome
-        elif hit:
-            return HitBuoyFirst()
+        # elif hit:
+        #     return HitBuoyFirst()
         else:
             return self.GlyphNotSeen()
-    
+
     def handle_once_timedout(self) -> None:        
         PIO.set_target_twist_surge(0)
 
@@ -62,7 +61,7 @@ class ApproachBuoyOpen(TimedState):
 class CenterHeaveGlyph(TimedState):
     NotCentered = Outcome.make('NotCentered')
     Centered = Outcome.make('Centered', glyph=Glyph, last_data=ObjectPositionResponse)
-    TimedOut = Outcome.make('TimedOut')
+    TimedOut = Outcome.make('TimedOut', glyph=Glyph, last_data=ObjectPositionResponse)
 
     heave_down_speed: Param[float] 
     heave_up_speed: Param[float]
@@ -73,7 +72,7 @@ class CenterHeaveGlyph(TimedState):
     def initialize(self, prev_outcome: SeenGlyph) -> None:
         super().initialize(prev_outcome)
         self.deadband = 50
-        self.timeout = 15
+        self.timeout = 40
         self.most_recent_results = prev_outcome.glyph_results
         self.glyph = prev_outcome.glyph
         self.glyph_y_diff = self.most_recent_results[self.glyph].y_position
@@ -95,6 +94,9 @@ class CenterHeaveGlyph(TimedState):
 
         return self.NotCentered()
 
+    def handle_once_timedout(self):
+        return self.TimedOut(self.glyph, self.most_recent_results[self.glyph])
+
 
 
 class CenterYawGlyph(TimedState):
@@ -108,7 +110,7 @@ class CenterYawGlyph(TimedState):
     def initialize(self, prev_outcome: CenterHeaveGlyph.Centered):
         self.surge_speed = 0.2
         self.yaw_factor = 0.004
-        self.timeout = 10
+        self.timeout = 40
         super().initialize(prev_outcome)
         self.glyph = prev_outcome.glyph
         self.angle_diff = prev_outcome.last_data.x_theta
@@ -254,13 +256,13 @@ class FindGlyph(TimedState):
     speed: Param[float]
 
     def handle_if_not_timedout(self) -> Outcome:
-        # PIO.set_target_twist_surge(-self.speed)
+        PIO.set_target_twist_surge(-self.speed)
 
-        res = PIO.query_all_glyphs()
+        res = search_for_glyph(Gbl.preferred_glyph())
 
-        if len(res):
-            return SeenGlyph(glyph_results=res)
-        
+        if res is not None:
+            return res
+
         return self.GlyphNotSeen()
 
     def handle_once_timedout(self) -> None:
