@@ -76,6 +76,7 @@ class ApproachGateImage(TimedState):
         super().initialize(prev_outcome)
         Gbl.planet_seen = prev_outcome.glyph_seen
         self.last_target_yaw = PIO.Pose.yaw + prev_outcome.position.x_theta
+        self.lost_image_threshold = 200
         self.times_not_seen = 0
 
     def handle_if_not_timedout(self) -> Outcome:
@@ -86,7 +87,7 @@ class ApproachGateImage(TimedState):
                 return self.GoneThroughGate(planet=Gbl.planet_seen)
         else:
             self.times_not_seen = 0
-            self.last_target_yaw = PIO.Pose.yaw + resp.x_theta
+            self.last_target_yaw = PIO.Pose.yaw + resp.x_theta * 0.5
 
         #pm_angle = self.query_pathmarker()
         #if pm_angle is not None:

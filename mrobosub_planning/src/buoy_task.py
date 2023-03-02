@@ -72,6 +72,8 @@ class CenterHeaveGlyph(TimedState):
 
     def initialize(self, prev_outcome: SeenGlyph) -> None:
         super().initialize(prev_outcome)
+        self.deadband = 50
+        self.timeout = 15
         self.most_recent_results = prev_outcome.glyph_results
         self.glyph = prev_outcome.glyph
         self.glyph_y_diff = self.most_recent_results[self.glyph].y_position
@@ -85,10 +87,11 @@ class CenterHeaveGlyph(TimedState):
         # use updated info if we have it, otherwise continue with old info? is this bad
         if abs(self.glyph_y_diff) < self.deadband:
             return self.Centered(self.glyph, self.most_recent_results[self.glyph])
-        elif self.y_position > 0: # TODO: check sign?
-            PIO.set_target_twist_heave(heave_down_speed)
+        elif self.glyph_y_diff > 0: # TODO: check sign?
+
+            PIO.set_target_twist_heave(0.17)
         else:
-            PIO.set_target_twist_heave(heave_up_speed)
+            PIO.set_target_twist_heave(0)
 
         return self.NotCentered()
 
@@ -103,12 +106,17 @@ class CenterYawGlyph(TimedState):
     timeout: Param[int]
 
     def initialize(self, prev_outcome: CenterHeaveGlyph.Centered):
+        self.surge_speed = 0.2
+        self.yaw_factor = 0.004
+        self.timeout = 10
         super().initialize(prev_outcome)
         self.glyph = prev_outcome.glyph
         self.angle_diff = prev_outcome.last_data.x_theta
         self.target_heave = PIO.Pose.heave
 
     def handle_if_not_timedout(self):
+        
+        print(self.glyph)
         query_res = PIO.query_glyph(self.glyph)
         if query_res.found:
             self.angle_diff = query_res.x_theta
