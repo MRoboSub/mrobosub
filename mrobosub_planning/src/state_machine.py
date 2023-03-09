@@ -5,9 +5,11 @@ Python metaprogramming."""
 from __future__ import annotations
 from abc import ABC, ABCMeta, abstractmethod
 from dataclasses import make_dataclass, field
-from typing import Mapping, Self, Type, Final, cast
+from typing import Mapping, Type, Final, cast
 import rospy
 from std_msgs.msg import String
+
+from copy import copy
 
 
 STATE_TOPIC = 'current_state'
@@ -56,7 +58,7 @@ class Outcome(ABC):
 
 
 class StateMeta(ABCMeta):
-    def __new__(mcls: type[Self], name: str, bases: tuple[type, ...], namespace: dict[str, Any], **kwargs: Any) -> Self:
+    def __new__(mcls: type[StateMeta], name: str, bases: tuple[type, ...], namespace: dict[str, Any], **kwargs: Any) -> StateMeta:
         try:
             for var, type_ in namespace["__annotations__"].items():
                 if type_ is Outcome:
