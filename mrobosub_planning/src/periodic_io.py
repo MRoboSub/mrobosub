@@ -111,6 +111,10 @@ class PIO:
     @classmethod
     def get_pose(cls) -> Namespace[Pose]:
         return cls.Pose
+    
+    @classmethod
+    def have_seen_pathmaker():
+        pass
 
     
     # @classmethod

@@ -93,6 +93,24 @@ class State(ABC):
         pass
 
 
+class TimedState(State):
+    def initialize(self, prev_outcome: Outcome) -> None:
+        self.start_time = rospy.get_time()
+    
+    def handle(self) -> Outcome:
+        if rospy.get_time() - self.start_time >= self.timeout:
+            self.handle_once_timedout()
+            return self.TimedOut()
+        else:
+            self.handle_if_not_timedout()
+
+    @abstractmethod
+    def handle_if_not_timedout(self) -> Outcome:
+        pass
+
+    def handle_once_timedout(self) -> None:
+        pass
+
 class StateMachine:
     def __init__(self, name: str, transitions: Mapping[Type[Outcome], Type[State]], StartState: Type[State], StopState: Type[State]):
         self.name = name
