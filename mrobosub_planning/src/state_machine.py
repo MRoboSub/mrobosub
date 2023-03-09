@@ -121,7 +121,7 @@ class StateMachine:
         print(f'loading namespace {namespace}')
         for key, value in rospy.get_param(namespace, {}).items():
             print(f'\t{key}: {value}')
-            setattr(state, key, property(lambda self: value))  # read-only constants
+            setattr(state, key, value)  # read-only constants
 
     def run(self) -> Outcome:
         publisher = rospy.Publisher(STATE_TOPIC, String, queue_size=1)
