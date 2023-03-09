@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from periodic_io import PIO
 from non_idealistic_states import *
-from state_machine import StateMachine, State
+from state_machine import StateMachine, State, Outcome, TimedState, Param
 import rospy
 
 class Start(State):
@@ -25,6 +25,23 @@ class Stop(State):
     def handle(self) -> Outcome:
         return self.Finish()
 
+class Submerge(TimedState):
+    Unreached = Outcome.make("Unreached")
+    Submerged = Outcome.make("Submerged")
+    TimedOut = Outcome.make("TimedOut")
+    
+    target_depth: Param[float]
+    timeout: Param[int]
+    
+    def handle_if_not_timedout(self) -> Outcome:
+        PIO.set_target_pose_heave(self.target_depth)
+
+        if PIO.Pose.heave > self.target_depth:
+            return self.Submerged()
+        else:
+            return self.Unreached()
+    
+
 state_machine = {
     Start.Complete: Submerge,
 
@@ -33,16 +50,16 @@ state_machine = {
     Submerge.TimedOut: AlignGate,
 
     AlignGate.Unaligned: AlignGate,
-    AlignGate.FoundPathMarker: ApproachGate,
+    AlignGate.ReachedAngle: ApproachGate,
     AlignGate.TimedOut: ApproachGate,
 
     ApproachGate.Unreached: ApproachGate,
     ApproachGate.FoundPathMarker: AlignPathMarker,
-    ApproachGate.TimedOut: Scan,
+    ApproachGate.TimedOut: FallBackTurn,
 
-    Scan.NotFound: Scan,
-    Scan.FoundPathMarker: AlignPathMarker,
-    Scan.TimedOut: FallBackTurn,
+    #Scan.NotFound: Scan,
+    #Scan.FoundPathMarker: AlignPathMarker,
+    #Scan.TimedOut: FallBackTurn,
 
     FallBackTurn.Unaligned: FallbackTurn,
     FallBackTurn.Aligned: ApproachBuoy,
@@ -56,14 +73,15 @@ state_machine = {
     Center.Uncentered: Center,
     Center.Centered: FallBack,
 
-    FallBack.Unaligned: FallBack,
-    FallBack.Aligned: Ascend,
+    FallBack.NotReached: FallBack,
+    FallBack.TimedOut: Ascend,
 
-    Ascend.Unreached: Ascend,
-    Ascend.Reached: Pass,
+    Ascend.NotReached: Ascend,
+    Ascend.Reached: PassBuoy,
+    Ascend.TimedOut: PassBuoy,
 
-    Pass.Incomplete: Pass,
-    Pass.Complete: Surface,
+    PassBuoy.NotReached: PassBuoy,
+    PassBuoy.TimedOut: Surface,
 
     Surface.Submerged: Surface,
     Surface.Surfaced: Stop     
