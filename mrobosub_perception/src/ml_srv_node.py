@@ -152,8 +152,10 @@ def zed_callback(message):
 
         # print("zed callback")
         # Convert the zed image to an opencv image
-        bridge = CvBridge()
-        image_ocv = bridge.imgmsg_to_cv2(message, desired_encoding='passthrough')
+        #bridge = CvBridge()
+        #image_ocv = bridge.imgmsg_to_cv2(message, desired_encoding='passthrough')
+
+        image_ocv  = np.frombuffer(message.data, dtype=np.uint8).reshape(message.height, message.width, -1)
 
         # Remove the 4th channel (transparency)
         image_ocv = image_ocv[:,:,:3]
@@ -225,6 +227,7 @@ print("model loaded")
 if __name__ == '__main__':
     print("made it to main")
     rospy.init_node('ml_server', anonymous=False)
+    print(sys.version)
     print("node initialized")
 
     # Intialize ros services for each of the objects
