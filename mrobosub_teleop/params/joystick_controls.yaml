@@ -1,7 +1,7 @@
-surge: 2
-sway: 1
-heave: 0
+surge: {'axis': 0}
+sway: {'axis': 0}
+heave: {'axis': 0}
 yaw: [
-  {'mode': 0, 'axis': 1, 'reversed': false},
-  {'mode': 1, 'axis': 3, 'reversed': true},
+  {'mode': 'rate', 'axis': 0, 'reversed': false},
+  {'mode': 'heading', 'forward_axis': 0, 'sideways_axis': 0, 'forward_reversed': false, 'sideways_reversed': false},
 ]
