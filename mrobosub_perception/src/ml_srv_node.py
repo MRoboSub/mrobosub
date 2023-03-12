@@ -13,6 +13,7 @@ import time
 import sys
 import enum
 import pathlib
+import torch
 #from rsub_log import log
 #from get_depth import get_avg_depth
 import struct
@@ -47,98 +48,14 @@ recent_positions = [None] * Targets.COUNT.value
 latest_request_time = None
 
 def load_yolo():
-    ''' Load pretrained weights, initialize CUDA. '''
-    rospack = rospkg.RosPack()
-    model_path = pathlib.Path(rospack.get_path('mrobosub_perception'), 'models/best.onnx')
-    net = cv2.dnn.readNet(str(model_path))
-
-    net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-    net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA_FP16)
-
-    layers_names = net.getLayerNames()
-    #this should really only be one layer.
-    output_layers = [layers_names[i-1] for i in net.getUnconnectedOutLayers()]
-
-    return net, output_layers
-
-
-def detect_objects(img):
-    ''' get all detections from image using detection network. should return 25200 detections. '''
-    global model
-    global output_layers
-
-    blob = cv2.dnn.blobFromImage(img, scalefactor=0.00392, size=(640, 640), mean=(0, 0, 0), swapRB=True, crop=False)
-    model.setInput(blob)
-    outputs = model.forward(output_layers)
-    return outputs
-
-
-def get_box_dimensions(outputs, height, width):
-    ''' Iterate through all detections, choose detections over confidence threshold. '''
-
-    # outputs is a 1 x 25200 x 10 array, of 25200 bounding boxes and 10 class probabilities for each box
-    outputs = np.array(outputs[3][0], dtype=np.ndarray)
-
-    """
-    outputs has 25,200 predictions, where each prediction has a 10-vector:
-    [x, y, w, h, box confidence, 5 class predictions]
-    """
-
-    # keep all of the outputs where the fourth element (box confidence) of the 10-vector is greater than 0.2
-    filtered = outputs[(outputs[:,4] > 0.2),:]
-    filtered = filtered[np.any(filtered[:,5:] > 0.25, axis=1), :]
-
-    maxes = np.amax(filtered[:,5:], axis=1)
-    classes = np.argmax(filtered[:,5:], axis=1)
-    boxes = np.zeros((filtered.shape[0],4))
-
-    for i, row in enumerate(filtered):
-        x,y,w,h = row[:4]
-        left = int(x - 0.5 * w)
-        top = int(y - 0.5 * h)
-        width = int(w)
-        height = int(h)
-        boxes[i] = np.array([left,top,width,height])
-
-    # Perfom NMSBoxes algorithm, merges overlapping bounding boxes that have the same prediction to create an average bounding box.
-    indexes = cv2.dnn.NMSBoxes(boxes, maxes, 0.25, 0.45)
-    indexes = list(indexes)
-
-    result_class_ids = np.zeros(len(indexes))
-    result_confidences = np.zeros(len(indexes))
-    result_boxes = np.zeros(len(indexes))
-
-    if len(indexes) > 0:
-        result_confidences = (maxes[indexes])
-        result_class_ids = (classes[indexes])
-        result_boxes = (boxes[indexes])
-
-    return result_class_ids, result_confidences, result_boxes
-
-
-def draw_labels(boxes, confs, class_ids, img):
-    # NON FUNCTIONING: Draw bounding boxes on input image and show.
-    indexes = cv2.dnn.NMSBoxes(boxes, confs, 0.5, 0.4)
-    font = cv2.FONT_HERSHEY_PLAIN
-    for i in range(len(boxes)):
-        if i in indexes:
-            x, y, w, h = boxes[i]
-            print('(x, y, w, h):', boxes[i])
-            color = 'red' #color = colors[i]
-            cv2.rectangle(img, (x,y), (x+w, y+h), color, 2)
-            # draw bounding box on image and show
-            cv2.imshow("Image", img)
-
-
-def gray_world(img):
-    # Perform white-balancing on input image.
-    def whitebalance(channel, perc = 0.05):
-        minimum, maximum = (np.percentile(channel, perc), np.percentile(channel, 100.0-perc))
-        channel = np.uint8(np.clip((channel-minimum)*255.0/(maximum-minimum), 0, 255))
-        return channel
-
-    return np.dstack([whitebalance(channel, 0.05) for channel in cv2.split(img)])
-
+    # load model
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    else:
+        device = torch.device("cpu")
+    model = torch.hub.load('./yolov5', 'custom', path='./models/best.pt', source='local')  # local repo
+    model.conf = 0.25  # NMS confidence threshold
+    return model
 
 def zed_callback(message):
     global img_seen_num, img_num
@@ -155,19 +72,13 @@ def zed_callback(message):
         # Remove the 4th channel (transparency)
         image_ocv = image_ocv[:,:,:3]
 
-        # Perform gray world assumption on image
-        #image_ocv = gray_world(image_ocv)
-
         # Find any objects in the image
         height, width, channels = image_ocv.shape   # shape of the image
-        outputs = detect_objects(image_ocv)   # get raw detection data
-        class_ids, confs, boxes = get_box_dimensions(outputs, height, width)
-
-
-        # log("ml_node", "DEBUG", 'ml_node - ' + str(len(class_ids)) + ' detections')
+        outputs = model(image_ocv, size=width)   # get raw detection data
+        detections = outputs.xyxy[0].numpy()   # get the detections
 
         # Draw any bounding boxes and display the image
-        draw_labels(boxes, confs, class_ids, image_ocv)
+        # results.show()
 
         object_position_response = ObjectPositionResponse()
 
