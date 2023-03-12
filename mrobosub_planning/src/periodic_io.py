@@ -67,6 +67,7 @@ class PIO:
     @classmethod
     def is_yaw_within_threshold(cls, threshold):
         return abs(angle_error(cls.TargetPose.yaw, cls.Pose.yaw)) <= threshold
+    
 
     # @classmethod
     # def depth_within_threshold(cls, threshold):
@@ -115,6 +116,7 @@ class PIO:
     @classmethod
     def have_seen_pathmaker():
         pass
+
 
     
     # @classmethod
