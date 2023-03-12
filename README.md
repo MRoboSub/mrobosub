@@ -1,6 +1,21 @@
 # mrobosub
 
-consolidated repo for the mrobosub ros network
+Consolidated repo for the mrobosub ros network
+
+## Install
+```console
+$ rosdep install --from-paths src --ignore-src -r -y
+```
+Be in `~/catkin_ws` and installs all dependencies for ros
+
+## Docker
+
+After installing Docker Desktop, run these commands in this folder to start the container
+
+```console
+$ docker compose up -d
+$ docker compose exec mrobosub bash
+```
 
 ## Package Structure
 
@@ -12,13 +27,6 @@ consolidated repo for the mrobosub ros network
 - `mrobosub_msgs` - The messages package. Contains all the custom ROS message types created for the `mrobosub` project. Most packages depend on `mrobosub_msgs`.
 - `mrobosub_perception` - The perception package. Handles retrieving images from the cameras and processing them via classical CV (computer vision) and ML (machine learning) to determine where objects are located relative to the submarine.
 - `mrobosub_planning` - Contains the high level state machine that determines what the submarine should be doing at all times.
-
-## Docker
-
-```
-docker compose up -d
-docker compose exec mrobosub bash
-```
 
 ## Coordinate System
 

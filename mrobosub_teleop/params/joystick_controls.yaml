@@ -1,0 +1,7 @@
+surge: 2
+sway: 1
+heave: 0
+yaw: [
+  {'mode': 0, 'axis': 1, 'reversed': false},
+  {'mode': 1, 'axis': 3, 'reversed': true},
+]

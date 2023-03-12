@@ -1,4 +1,4 @@
-Kp: 1.0
+Kp: 0.1
 Ki: 0.0
 Kd: 0.001
 angle_error: true
