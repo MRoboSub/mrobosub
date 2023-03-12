@@ -107,40 +107,24 @@ class PIO:
     @classmethod
     def set_target_twist_sway(cls, override_sway : float) -> None:
         cls._target_twist_sway_pub.publish(override_sway)
-
-    @classmethod
-    def get_pose(cls) -> Namespace[Pose]:
-        return cls.Pose
     
     @classmethod
-    def have_seen_pathmaker():
-        pass
+    def query_pathmarker(cls) -> Option[float]:
+        """ Request a the pathmaker angle.
 
-    
-    # @classmethod
-    # def publish_all(cls):
-    #     # PIO._mc.set(
-    #     #     forward=PIO.forward,
-    #     #     lateral=PIO.lateral
-    #     # )
-    #     PIO._foward_pub.publish(PIO.forward)
-    #     PIO._strafe_pub.publish(PIO.lateral)
-    #     PIO._heading_request_pub.publish(
-    #         HeadingRequest(PIO.heading_mode, PIO.heading_value)
-    #     )
-    #     PIO._depth_request_pub.publish(PIO.target_depth)
-    #     PIO._roll_pub.publish(PIO.roll)
+        Returns: 
+            angle of path marker in global frame (i.e. same frame as the Pose.yaw) if found
+            None otherwise. 
+        """
+        resp = cls._pathmarker_srv()
+        if resp.found:
+            return (90 - resp.angle) + cls.Pose.yaw
+        else:
+            return None
 
 # private:
 
-    # _mc = MotorController()
-
-    # Subscribers
-    # rospy.Subscriber('/object_position/gate', ObjectPosition, _gate_position_callback)
-    # rospy.Subscriber('/object_position/gman', ObjectPosition, _gman_position_callback)
-    # rospy.Subscriber('/object_position/bootlegger', ObjectPosition, _bootlegger_position_callback)
-    # rospy.Subscriber('/object_position/gun', ObjectPosition, _gun_position_callback)
-    
+    # Subscribers   
     rospy.Subscriber('/pose/yaw', Float64, _yaw_callback)
     rospy.Subscriber('/pose/heave', Float64, _heave_callback)
     rospy.Subscriber('/pose/roll', Float64, _roll_callback)
@@ -154,3 +138,6 @@ class PIO:
     _target_twist_roll_pub = rospy.Publisher('/target_twist/roll', Float64, queue_size=1)
     _target_twist_surge_pub = rospy.Publisher('/target_twist/surge', Float64, queue_size=1)
     _target_twist_sway_pub = rospy.Publisher('/target_twist/sway', Float64, queue_size=1)
+
+    # Services
+    _pathmarker_srv = rospy.ServiceProxy('pathmarker/angle', PathmarkerAngle, persistent=True)

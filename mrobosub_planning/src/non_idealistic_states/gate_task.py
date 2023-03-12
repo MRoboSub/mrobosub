@@ -20,7 +20,7 @@ class AlignGate(TimedState):
 
 class ApproachGate(TimedState):
     Unreached = Outcome.make('Unreached')
-    FoundPathMarker = Outcome.make("FoundPathMarker")
+    FoundPathMarker = Outcome.make("FoundPathMarker", angle=float)
     TimedOut = Outcome.make('TimedOut')
     
     timeout: Param[int]
@@ -28,8 +28,9 @@ class ApproachGate(TimedState):
 
     def handle_if_not_timedout(self) -> Outcome:
         PIO.set_target_twist_surge(self.speed)
-        if PIO.have_seen_pathmarker():
-            return self.FoundPathMarker()
+        pm_angle = PIO.query_pathmarker()
+        if pm_angle is not None:
+            return self.FoundPathMarker(angle=pm_angle)
         else:
             self.Unreached()
     
@@ -54,12 +55,20 @@ class AlignPathMarker(TimedState):
     Unaligned = Outcome.make("Unaligned")
     Aligned = Outcome.make("Aligned")
 
-    target_yaw: Param[float]
     yaw_threshold: Param[float]
     timeout: Param[int]
 
+    def initialize(prev_outcome: FoundPathMarker) -> None:
+        super().initialize()
+        self.last_known_angle = prev_outcome.angle
+
+
     def handle_if_not_timedout(self) -> Outcome:
-        PIO.set_target_pose_yaw(self.target_yaw)
+        pm_resp = PIO.query_pathmarker()
+        if pm_resp is not None:
+            self.last_known_angle = pm_resp
+        
+        PIO.set_target_pose_yaw(self.last_known_angle)
         if PIO.is_yaw_within_threshold(self.yaw_theshold):
             return self.Aligned()
         else:
