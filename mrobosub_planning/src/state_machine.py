@@ -37,13 +37,13 @@ class Outcome(ABC):
     @classmethod
     def make(cls, name: str, **kwargs: Mapping[str, Type]) -> Type[Outcome]:
         """Returns a dataclass type (not an instance of a class, but a new class type) which is a subclass of Outcome
-        and has the default variables specified in **kwargs.
+        and has the fields (with types) specified by kwargs
 
         Args:
             name: The name of the outcome; should always be the same as the variable it's assigned to.
 
         Example:
-            >>> ReachedTargetOutcome = Outcome.make('ReachedTargetOutcome', duration=0)
+            >>> ReachedTargetOutcome = Outcome.make('ReachedTargetOutcome', duration=int)
             >>> current_outcome = ReachedTargetOutcome(duration=10)
             >>> current_outcome
             'ReachedTargetOutcome(duration=10)'
@@ -56,7 +56,12 @@ class Outcome(ABC):
 
 
 class State(ABC):
-    """States contain logic that will be executed by the StateMachine."""
+    """States contain logic that will be executed by the StateMachine.
+
+        Each State also contains class variables for each parameter on the parameter server, which
+            can be accessed using self. Data that should be shared between calls of handle should be 
+            set as an instance variable.
+    """
 
     def __init__(self, prev_outcome: Outcome):
         self.initialize(prev_outcome)
@@ -69,6 +74,9 @@ class State(ABC):
         run for states prefixed with *:
 
             *Start -> *StateA -> StateA -> *StateB -> StateB -> *StateA -> *End
+
+        prev_outcome is the Outcome object returned by the previous state, which may be used for initializing
+                any instance variables, if you would like.
         """
         pass
 
@@ -76,14 +84,24 @@ class State(ABC):
     def handle(self) -> Outcome:
         """Contains the logic to be run for a particular state.
 
-        Unlike initialize which will only run once, if the same state is run consecutively handle is run whenever
-        however many times the state is run.
+        Is called repeatedly for each iteration of the state, including the first one.
         """
         pass
 
 
 class StateMachine:
+    """ The main interface for running a system. """
     def __init__(self, name: str, transitions: Mapping[Type[Outcome], Type[State]], StartState: Type[State], StopState: Type[State]):
+        """ Creates a new state machine.
+
+            You should call this code once for any particular run. 
+            name: a string representing the name of the machine (used for overriding default parameters)
+            transitions: a dictionary from Outcomes to States. Each of these should be the class itself, rather
+                    than an instance of the class
+            StartState: the class of the state to begin with
+            StopState: the class of the state to end with. when this state is reach, its handle will be 
+                called once, then the run method will return.
+        """
         self.name = name
         self.StartState = StartState
         self.transitions = transitions
@@ -111,6 +129,10 @@ class StateMachine:
             setattr(state, key, property(lambda self: value))  # read-only constants
 
     def run(self) -> Outcome:
+        """ Performs a run, beginning with the StartState and ending when it reaches StopState.
+            
+            Returns the Outcome from calling handle() on StopState.
+        """
         publisher = rospy.Publisher(STATE_TOPIC, String, queue_size=1)
         current_state = self.StartState(None)
         while type(current_state) != self.StopState:
