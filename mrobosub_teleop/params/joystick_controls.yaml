@@ -1,7 +1,69 @@
-surge: {'axis': 0}
-sway: {'axis': 0}
-heave: {'axis': 0}
-yaw: [
-  {'mode': 'rate', 'axis': 0, 'reversed': false},
-  {'mode': 'heading', 'forward_axis': 0, 'sideways_axis': 0, 'forward_reversed': false, 'sideways_reversed': false},
-]
+surge:
+    twist:
+        axis:
+            id: 1
+sway:
+    twist:
+        axis:
+            id: 0
+heave:
+    toggle: 10
+    twist:
+        axis:
+            id: 5
+    pose:
+        axis:
+            id: 5
+        increase:
+            id: 3
+            scale: 0.2
+        decrease:
+            id: 0
+            scale: 0.2
+yaw:
+    toggle: 9
+    twist:
+        axis:
+            id: 4
+    pose:
+        axis:
+            id: 4
+        increase:
+            id: 1
+            scale: 10
+        decrease:
+            id: 2
+            scale: 10
+pitch:
+    toggle: 6
+    twist:
+        increase:
+            id: 10
+            scale: 0.3
+        decrease:
+            id: 11
+            scale: 0.3
+    pose:
+        increase:
+            id: 10
+            scale: 0.3
+        decrease:
+            id: 11
+            scale: 0.3
+roll:
+    toggle: 7
+    twist:
+        increase:
+            id: 12
+            scale: 0.3
+        decrease:
+            id: 13
+            scale: 0.3
+    pose:
+        increase:
+            id: 12
+            scale: 0.3
+        decrease:
+            id: 13
+            scale: 0.3
+estop_id: 100
