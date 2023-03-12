@@ -56,13 +56,32 @@ state_machine = {
     ApproachGate.Reached: ApproachMarker,
 
     ApproachMarker.Unreached: ApproachMarker,
-    ApproachMarker.Reached: MoveAroundMarker,
+    ApproachMarker.Reached_0: MoveAroundMarker,
+    ApproachMarker.Reached_1: TurnAroundMarker,
 
+    # Reached_0 (sway)
     MoveAroundMarker.Unreached: MoveAroundMarker,
     MoveAroundMarker.Reached: ReturnGate,
 
     ReturnGate.Unreached: ReturnGate,
     ReturnGate.Reached: Stop,
+
+    #Reached_1 (turn)
+    TurnAroundMarker.Unreached: TurnAroundMarker,
+    TurnAroundMarker.Reached: MovePastMarker,
+    TurnAroundMarker.TimedOut: MovePastMarker,
+
+    MovePastMarker.Unreached: MovePastMarker,
+    MovePastMarker.Reached: TurnToGate,
+
+    TurnToGate.Unreached: TurnToGate,
+    TurnToGate.Reached: ReturnToGate,
+    TurnToGate.TimedOut: ReturnToGate,
+
+    ReturnToGate.Unreached: ReturnToGate,
+    ReturnToGate.Reached: Stop,
+
+
 }
 
 def main():
