@@ -153,6 +153,9 @@ class JoystickTeleop(Node):
             if 'decrease' in config:
                 if self.get_button(config['decrease']['id']):
                     output -= config['decrease'].get('scale', 1)
+            if 'invert' in config:
+                if self.get_button(config['invert']):
+                    output *= -1
             publish(output)
 
         periodic.mode = ControlMode.Twist
@@ -172,16 +175,18 @@ class JoystickTeleop(Node):
 
         if 'increase' in config:
             increase = ButtonTrigger(lambda: self.get_button(config['increase']['id']))
+            scale = config['increase'].get('scale', 1)
             def get_increase():
-                return increase.was_triggered() * config['increase'].get('scale', 1)
+                return increase.was_triggered() * scale
         else:
             def get_increase():
                 return 0
 
         if 'decrease' in config:
             decrease = ButtonTrigger(lambda: self.get_button(config['decrease']['id']))
+            scale = config['decrease'].get('scale', 1)
             def get_decrease():
-                return decrease.was_triggered() * config['decrease'].get('scale', 1)
+                return decrease.was_triggered() * scale
         else:
             def get_decrease():
                 return 0
@@ -197,11 +202,13 @@ class JoystickTeleop(Node):
         def periodic():
             nonlocal setpoint
 
-            setpoint += get_axis()
-            setpoint += get_increase()
-            setpoint += get_decrease()
+            delta += get_axis()
+            delta += get_increase()
+            delta += get_decrease()
             if get_invert():
-                setpoint *= -1
+                delta *= -1
+
+            setpoint += delta
 
             publish(setpoint)
 
