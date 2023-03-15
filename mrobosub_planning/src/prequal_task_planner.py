@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from periodic_io import PIO
-from prequal_states import *
 from state_machine import StateMachine, State, Outcome, TimedState, Param
+from prequal_states.gate_task import *
 import rospy
 
 class Start(State):
@@ -56,12 +56,12 @@ state_machine = {
     ApproachGate.Reached: ApproachMarker,
 
     ApproachMarker.Unreached: ApproachMarker,
-    ApproachMarker.Reached_0: MoveAroundMarker,
+    ApproachMarker.Reached_0: StrafeAroundMarker,
     ApproachMarker.Reached_1: TurnAroundMarker,
 
     # Reached_0 (sway)
-    MoveAroundMarker.Unreached: MoveAroundMarker,
-    MoveAroundMarker.Reached: ReturnGate,
+    StrafeAroundMarker.Unreached: StrafeAroundMarker,
+    StrafeAroundMarker.Reached: ReturnGate,
 
     ReturnGate.Unreached: ReturnGate,
     ReturnGate.Reached: Stop,
