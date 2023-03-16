@@ -7,63 +7,57 @@ sway:
         axis:
             id: 0
 heave:
-    toggle: 10
+    toggle: 7
     twist:
         axis:
-            id: 5
+            id: 3
+            scale: 0.2
     pose:
         axis:
-            id: 5
+            id: 3
+            scale: 0.05
         increase:
             id: 3
             scale: 0.2
         decrease:
-            id: 0
+            id: 1
             scale: 0.2
 yaw:
-    toggle: 9
-    twist:
-        axis:
-            id: 4
-    pose:
-        axis:
-            id: 4
-        increase:
-            id: 1
-            scale: 10
-        decrease:
-            id: 2
-            scale: 10
-pitch:
     toggle: 6
     twist:
-        increase:
-            id: 10
-            scale: 0.3
-        decrease:
-            id: 11
-            scale: 0.3
+        axis:
+            id: 2
+            scale: -0.2
     pose:
+        axis:
+            id: 2
+            scale: -1
         increase:
-            id: 10
-            scale: 0.3
+            id: 2
+            scale: 10
         decrease:
-            id: 11
-            scale: 0.3
+            id: 0
+            scale: 10
 roll:
-    toggle: 7
+    toggle: 4
     twist:
-        increase:
-            id: 12
-            scale: 0.3
-        decrease:
-            id: 13
-            scale: 0.3
+        axis:
+            id: 4
+            scale: -0.2
     pose:
-        increase:
-            id: 12
-            scale: 0.3
-        decrease:
-            id: 13
-            scale: 0.3
-estop_id: 100
+        axis:
+            id: 4
+            scale: -0.1
+pitch:
+    toggle: 5
+    twist:
+        axis:
+            id: 5
+            scale: 0.2
+    pose:
+        axis:
+            id: 5
+            scale: 0.1
+estop_id: 9
+update_rate: 50
+

@@ -90,27 +90,27 @@ class DOF:
 
         if 'axis' in config:
             axis_id = config['axis']['id']
-            scale = config['axis'].get('scale', 1)
+            axis_scale = config['axis'].get('scale', 1)
             def get_axis():
-                return self.inputs.get_axis(axis_id) * scale
+                return self.inputs.get_axis(axis_id) * axis_scale
         else:
             def get_axis():
                 return 0
 
         if 'increase' in config:
             increase = ButtonTrigger(lambda: self.inputs.get_button(config['increase']['id']))
-            scale = config['increase'].get('scale', 1)
+            inc_scale = config['increase'].get('scale', 1)
             def get_increase():
-                return increase.dual_edge() * scale
+                return increase.rising_edge() * inc_scale
         else:
             def get_increase():
                 return 0
 
         if 'decrease' in config:
             decrease = ButtonTrigger(lambda: self.inputs.get_button(config['decrease']['id']))
-            scale = config['decrease'].get('scale', 1)
+            dec_scale = config['decrease'].get('scale', 1) * -1
             def get_decrease():
-                return decrease.dual_edge() * scale
+                return decrease.rising_edge() * dec_scale
         else:
             def get_decrease():
                 return 0
@@ -149,19 +149,19 @@ class ToggleableDOF(DOF):
 class SurgeControl(DOF):
     def __init__(self, inputs: Inputs, config: config) -> None:
         super().__init__(inputs, config)
-        self.publisher = rospy.Publisher(f'/target_twist/surge', Float64, queue_size=1)
+        self.twist_pub = rospy.Publisher(f'/target_twist/surge', Float64, queue_size=1)
 
     def __call__(self):
-        self.publisher.publish(self.get_twist_input())
+        self.twist_pub.publish(self.get_twist_input())
 
 
 class SwayControl(DOF):
     def __init__(self, inputs: Inputs, config: config) -> None:
         super().__init__(inputs, config)
-        self.publisher = rospy.Publisher(f'/target_twist/sway', Float64, queue_size=1)
+        self.twist_pub = rospy.Publisher(f'/target_twist/sway', Float64, queue_size=1)
 
     def __call__(self):
-        self.publisher.publish(self.get_twist_input())
+        self.twist_pub.publish(self.get_twist_input())
 
 
 class HeaveControl(ToggleableDOF):
@@ -291,6 +291,7 @@ class JoystickTeleop(Node):
     pitch: config
     yaw: config
     estop_id: int
+    update_rate: int
 
     def __init__(self) -> None:
         super().__init__("joystick_teleop")
@@ -313,7 +314,7 @@ class JoystickTeleop(Node):
 
         self.should_stop = False
         def poll_estop():
-            self.should_stop &= self.inputs.get_button(self.estop_id)
+            self.should_stop |= self.inputs.get_button(self.estop_id)
         self.periodic_funcs['poll_estop'] = poll_estop
 
     def joystick_callback(self, msg: Joy):
@@ -325,11 +326,14 @@ class JoystickTeleop(Node):
             func()
 
     def stop(self):
-        for dof in 'surge', 'sway', 'heave', 'yaw', 'pitch', 'roll':
-            rospy.Publisher(f'/target_twist/{dof}', Float64, queue_size=1).publish(0)
+        for item in self.periodic_funcs.values():
+            try:
+                item.twist_pub.publish(0)
+            except AttributeError:
+                pass
 
     def run(self):
-        rate = rospy.Rate(1)
+        rate = rospy.Rate(self.update_rate)
         while not rospy.is_shutdown():
             if self.should_stop:
                 self.stop()
