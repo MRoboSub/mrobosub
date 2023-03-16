@@ -67,11 +67,13 @@ state_machine = {
     AlignPathMarker.Unaligned: AlignPathMarker,
     AlignPathMarker.Aligned: ApproachBuoy,
 
-    ApproachBuoy.Unreached: ApproachBuoy,
-    ApproachBuoy.Reached: Center,
+    ApproachBuoyOpen.BuoyNotSeen: ApproachBuoyOpen,
+    ApproachBuoyOpen.SeenBuoy: ApproachBuoyClosed,
+    ApproachBuoyOpen.TimedOut: FallBack,
 
-    Center.Uncentered: Center,
-    Center.Centered: FallBack,
+    ApproachBuoyClosed.NotReached: ApproachBuoyClosed,
+    ApproachBuoyClosed.HitBuoy: FallBack,
+    ApproachBuoyClosed.TimedOut: FallBack,
 
     FallBack.NotReached: FallBack,
     FallBack.TimedOut: Ascend,

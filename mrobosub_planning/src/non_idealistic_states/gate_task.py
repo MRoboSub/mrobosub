@@ -76,7 +76,7 @@ class AlignPathMarker(TimedState):
 
 class FallBackTurn(State):
     Unaligned = Outcome.make("Unaligned")
-    Aligned = Outcome.make("Aligned")   
+    Aligned = Outcome.make("Aligned", angle=float)   
 
     target_yaw: Param[float]
     yaw_threshold: Param[float]

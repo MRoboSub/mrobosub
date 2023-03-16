@@ -1,7 +1,9 @@
 import rospy
 from std_msgs.msg import Float64
+from mrobosub_msgs.srv import GlyphPosition, GlyphPositionResponse
 
-from typing import Type
+from typing import Type, Mapping
+from enum import Enum
 
 # TODO: where to put angle error and util repository?
 
@@ -31,6 +33,12 @@ def angle_error(setpoint, state):
         return (setpoint - state + 180) % 360 - 180
 
 Namespace = Type
+
+
+Glyph = Enum('Glyph', [
+    'taurus', 'serpens_caput', 'capricornus', 'monoceros', 'sagittarius', 'orion', # abydos
+    'auriga', 'cetus', 'centaurus', 'cancer', 'scutum', 'eridanus', # earth
+])
 
 # Look at this!
 class PIO:
@@ -122,6 +130,20 @@ class PIO:
         else:
             return None
 
+    @classmethod
+    def query_glyph(cls, glyph: Glyph) -> GlyphPositionResponse:
+        return glyph_srv(str(glyph))
+
+    @classmethod
+    def query_all_glyphs(cls) -> Mapping[Glyph, GlyphPositionResponse]:
+        """ query all 12 glyphs and return a dict from any found glyphs to their position. """
+        results = { }
+        for g in Glyph:
+            resp = cls.query_glyph(g)
+            if resp.found:
+                results[g] = resp
+        return results
+
 # private:
 
     # Subscribers   
@@ -141,3 +163,5 @@ class PIO:
 
     # Services
     _pathmarker_srv = rospy.ServiceProxy('pathmarker/angle', PathmarkerAngle, persistent=True)
+    _glyph_srv = rospy.ServiceProxy('glyph', GlyphPosition, persistent=True)
+
