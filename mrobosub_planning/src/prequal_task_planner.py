@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from periodic_io import PIO
 from state_machine import StateMachine, State, Outcome, TimedState, Param
-from prequal_states.gate_task import *
+from prequal_states import *
 import rospy
 
 class Start(State):
@@ -85,7 +85,7 @@ state_machine = {
 }
 
 def main():
-    rospy.init_node('task_planner')
+    rospy.init_node('prequal_task_planner')
     machine = StateMachine(
         'competition', 
         state_machine,
