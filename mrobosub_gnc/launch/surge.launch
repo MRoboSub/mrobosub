@@ -1,0 +1,4 @@
+<launch>
+  <node name="surge_control" pkg="mrobosub_gnc" type="surge_control.py">
+  </node>
+</launch>

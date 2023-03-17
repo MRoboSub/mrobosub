@@ -18,4 +18,5 @@
   <exec_depend>rospy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <depend>mrobosub_msgs</depend>
+  <depend>sensor_msgs</depend>
 </package>
