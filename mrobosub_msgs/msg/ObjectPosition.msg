@@ -1,7 +1,0 @@
-bool found
-float32 x_percent    # Center of bounding box in terms of percent of image width
-float32 y_percent    # Center of bounding box in terms of percent of image height
-float32 x_diff       # X distance in percent from center of bounding box to center of image
-float32 y_diff       # Y distance in percent from center of bounding box to center of image
-float32 box_size     # Width of bounding box as percent over width of image
-float32 distance     # Zed-calculated distance to gate

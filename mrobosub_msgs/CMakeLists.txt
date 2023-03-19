@@ -8,14 +8,14 @@ find_package(catkin REQUIRED
 add_message_files(
     DIRECTORY msg
     FILES 
-    ObjectPosition.msg
     HydrophoneAngle.msg
     HeadingRequest.msg
 )
 
-# add_service_files(
-#    DIRECTORY srv
-#)
+add_service_files(
+    DIRECTORY srv
+    FILES ObjectPosition.srv
+)
 
 generate_messages()
 
