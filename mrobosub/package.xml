@@ -16,6 +16,7 @@
     <exec_depend>mrobosub_perception</exec_depend>
     <exec_depend>mrobosub_planning</exec_depend>
     <exec_depend>mrobosub_lib</exec_depend>
+    <exec_depend>mrobosub_bringup</exec_depend>
 
     <export>
         <metapackage />
