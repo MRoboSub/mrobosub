@@ -1,8 +1,8 @@
 import rospy
 from std_msgs.msg import Float64
-from mrobosub_msgs.srv import GlyphPosition, GlyphPositionResponse
+from mrobosub_msgs.srv import GlyphPosition, GlyphPositionResponse, PathmarkerAngle
 
-from typing import Type, Mapping
+from typing import Type, Mapping, Optional
 from enum import Enum
 
 # TODO: where to put angle error and util repository?
@@ -118,7 +118,7 @@ class PIO:
         cls._target_twist_sway_pub.publish(override_sway)
     
     @classmethod
-    def query_pathmarker(cls) -> Option[float]:
+    def query_pathmarker(cls) -> Optional[float]:
         """ Request a the pathmaker angle.
 
         Returns: 

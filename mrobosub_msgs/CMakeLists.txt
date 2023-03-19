@@ -14,7 +14,9 @@ add_message_files(
 
 add_service_files(
     DIRECTORY srv
-    FILES ObjectPosition.srv
+    FILES 
+    GlyphPosition.srv
+    PathmarkerAngle.srv
 )
 
 generate_messages()
