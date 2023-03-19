@@ -99,7 +99,6 @@ find_package(catkin REQUIRED COMPONENTS roscpp mrobosub_msgs tf)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  # INCLUDE_DIRS include
   LIBRARIES mrobosub_fcu
   CATKIN_DEPENDS mrobosub_msgs roscpp tf
 #  DEPENDS system_lib

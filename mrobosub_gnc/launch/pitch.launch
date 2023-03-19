@@ -1,0 +1,7 @@
+<launch>
+  <node name="pitch_control" pkg="mrobosub_gnc" type="pitch_control.py">
+  </node>
+  <node name="pitch_pid" ns="pitch_pid" pkg="pid" type="controller">
+    <rosparam command="load"  file="$(find mrobosub_gnc)/params/pitch_pid.yaml" />
+  </node>
+</launch>

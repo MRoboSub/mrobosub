@@ -1,0 +1,8 @@
+<launch>
+  <include file="$(find mrobosub_gnc)/launch/heave.launch"/>
+  <include file="$(find mrobosub_gnc)/launch/roll.launch"/>
+  <include file="$(find mrobosub_gnc)/launch/pitch.launch"/>
+  <include file="$(find mrobosub_gnc)/launch/yaw.launch"/>
+  <include file="$(find mrobosub_gnc)/launch/surge.launch"/>
+  <include file="$(find mrobosub_gnc)/launch/sway.launch"/>
+</launch>

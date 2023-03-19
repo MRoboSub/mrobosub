@@ -1,12 +1,18 @@
 {
     "files.eol": "\n",
     "python.autoComplete.extraPaths": [
-        "/root/catkin_ws/devel/lib/python2.7/dist-packages",
-        "/opt/ros/noetic/lib/python2.7/dist-packages"
+        "/root/catkin_ws/devel/lib/python3/dist-packages",
+        "/root/catkin_ws/src/mrobosub/mrobosub_lib/src",
+        "/opt/ros/noetic/lib/python3/dist-packages"
     ],
     "python.analysis.extraPaths": [
-        "/root/catkin_ws/devel/lib/python2.7/dist-packages",
-        "/opt/ros/noetic/lib/python2.7/dist-packages"
-    ]
+        "/root/catkin_ws/devel/lib/python3/dist-packages",
+        "/root/catkin_ws/src/mrobosub/mrobosub_lib/src",
+        "/opt/ros/noetic/lib/python3/dist-packages"
+    ],
+    "cmake.configureOnOpen": false,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    }
 }
 

@@ -43,9 +43,11 @@
   <depend>mrobosub_msgs</depend>
 
   <depend>rospy</depend>
-  <depend>python-cv2</depend>
-  <!-- depend>python-cv_bridge</depend -->
+  <!-- <depend>cv_bridge</depend> -->
+  <depend>python3-opencv</depend>
+  <!-- <depend>cv_bridge</depend> -->
   <depend>python-numpy</depend>
+  <depend>zed_integration</depend>
 
 
 </package>
