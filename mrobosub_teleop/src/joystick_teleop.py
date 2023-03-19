@@ -3,14 +3,12 @@
 import rospy
 from sensor_msgs.msg import Joy
 from std_msgs.msg import Header, Float64
-from typing import Callable, Dict, Union, Tuple, TypeVar
+from typing import Callable, Dict, Union
 from enum import Enum, auto
-from functools import partial
 
 from mrobosub_lib.lib import Node, Param
 
-config = Dict[str, Union[int, 'config']]
-T = TypeVar('T')
+config = Dict[str, Union[int, bool, 'config']]
 
 class ControlMode(Enum):
     Twist = auto()
