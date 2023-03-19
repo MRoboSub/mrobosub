@@ -17,6 +17,9 @@ class AlignGate(TimedState):
             return self.ReachedAngle()
         else:
             return self.Unaligned()
+    
+    def handle_once_timedout(self) -> None:
+        PIO.set_target_pose_yaw(0)
 
 class ApproachGate(TimedState):
     Unreached = Outcome.make('Unreached')
