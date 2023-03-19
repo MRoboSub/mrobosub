@@ -7,7 +7,6 @@ import rospkg
 from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse
 import cv2
 from zed_interfaces.msg import RGBDSensors
-from cv_bridge import CvBridge
 import numpy as np
 import time
 import sys
@@ -17,11 +16,11 @@ import torch
 #from rsub_log import log
 #from get_depth import get_avg_depth
 import struct
+import os
 from sensor_msgs.msg import Image
 
 height = 376
 width = 1344
-bridge = CvBridge()
 const_unpack = ''
 for i in range(height*width*2):
     const_unpack += 'B'
@@ -47,13 +46,28 @@ class Targets(enum.Enum):
 recent_positions = [None] * Targets.COUNT.value
 latest_request_time = None
 
+def imgmsg_to_cv2(img_msg):
+    dtype = np.dtype("uint8") # Hardcode to 8 bits...
+    dtype = dtype.newbyteorder('>' if img_msg.is_bigendian else '<')
+    image_opencv = np.ndarray(shape=(img_msg.height, img_msg.width, 4), # and three channels of data. Since OpenCV works with bgr natively, we don't need to reorder the channels.
+                    dtype=dtype, buffer=img_msg.data)
+    # If the byt order is different between the message and the system.
+    if img_msg.is_bigendian == (sys.byteorder == 'little'):
+        image_opencv = image_opencv.byteswap().newbyteorder()
+    return image_opencv[:,:,:3]
+
 def load_yolo():
     # load model
     if torch.cuda.is_available():
         device = torch.device("cuda")
     else:
         device = torch.device("cpu")
-    model = torch.hub.load('./yolov5', 'custom', path='./models/best.pt', source='local')  # local repo
+
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    yolo_path = os.path.join(path, 'yolov5')
+
+    model_path = os.path.join(path, "models/best.pt")
+    model = torch.hub.load(yolo_path, 'custom', path=model_path, source='local')  # local repo
     model.conf = 0.25  # NMS confidence threshold
     return model
 
@@ -62,12 +76,11 @@ def zed_callback(message):
     # print('in zed callback')
     if rospy.get_time() - latest_request_time < TIME_THRESHOLD:
     # if True:
-        print('processing img')
+        start = time.time()
 
         # print("zed callback")
         # Convert the zed image to an opencv image
-        bridge = CvBridge()
-        image_ocv = bridge.imgmsg_to_cv2(message, desired_encoding='passthrough')
+        image_ocv = imgmsg_to_cv2(message)
 
         # Remove the 4th channel (transparency)
         image_ocv = image_ocv[:,:,:3]
@@ -75,7 +88,7 @@ def zed_callback(message):
         # Find any objects in the image
         height, width, channels = image_ocv.shape   # shape of the image
         outputs = model(image_ocv, size=width)   # get raw detection data
-        detections = outputs.xyxy[0].numpy()   # get the detections
+        detections = outputs.xyxy[0].cpu().numpy()   # get the detections
 
         # Draw any bounding boxes and display the image
         # results.show()
@@ -86,22 +99,36 @@ def zed_callback(message):
         #byte_data = struct.unpack(const_unpack, message.depth.data)
 
         # Report detection result
-        for i, id in enumerate(class_ids):
+        print(detections)
+        print('TIME: ', str((time.time() - start)))
+        
+        for i, idx in enumerate(detections):
             object_position_response.found = True
+        
+            box = detections[i][:4]
+            fov_x = 110
+            fov_y = 70
 
-            box = boxes[i] # grab the first box in the list
-            if(len(box) == 0):
-                object_position_response.found = False
-            else:
-                object_position_response.x_percent = float(box[0]) / (width + 1e-10) # TODO: this should not cause an error
-                object_position_response.y_percent = float(box[1]) / (height + 1e-10)
-                object_position_response.x_diff = (float(box[0]) - (width / 2)) / (width / 2)
-                object_position_response.y_diff = ((height / 2) - float(box[1])) / (height / 2)
-                object_position_response.box_size = float(box[2]) / width
-                object_position_response.distance = 0.0  # TODO: fix get_avg_depth(message.depth, box)
-                object_position_response.confidence = confs[i]
-                # print(id)
-                # print("confidence: " + str(object_position.confidence))
+            x_pos = int((box[0] + box[2]) / 2)
+            y_pos = int((box[1] + box[3]) / 2)
+            
+            d_x = x_pos - (width / 2)
+            d_y = y_pos - (height / 2)
+            
+            theta_x = (d_x * fov_x) / width
+            theta_y = (d_y * fov_y) / height
+            
+            conf = detections[i][4]
+            
+            print(x_pos, y_pos, theta_x, theta_y)
+           
+            object_position_response.x_position = x_pos
+            object_position_response.y_position = y_pos
+            object_position_response.x_theta    = theta_x
+            object_position_response.y_theta    = theta_y
+            object_position_response.confidence = conf
+        
+        
             recent_positions[id] = object_position_response
             print(id)
             print(recent_positions[id])
@@ -114,7 +141,6 @@ def zed_callback(message):
 
 
 def handle_obj_request(idx, msg):
-    breakpoint()
     global latest_request_time
     latest_request_time = rospy.get_time()
     while recent_positions[idx] == None:
@@ -123,7 +149,7 @@ def handle_obj_request(idx, msg):
 
 # Load the model
 #model, classes, colors, output_layers = load_yolo()
-model, output_layers = load_yolo()
+model = load_yolo()
 obj_pos_pub = None
 bounding_pub = None
 print("model loaded")
@@ -132,6 +158,7 @@ if __name__ == '__main__':
     print("made it to main")
     rospy.init_node('ml_server', anonymous=False)
     print("node initialized")
+    
 
     # Intialize ros services for each of the objects
     mk_service = lambda name, idx: rospy.Service(f'object_position/{name}', ObjectPosition, lambda msg : handle_obj_request(idx.value, msg))
