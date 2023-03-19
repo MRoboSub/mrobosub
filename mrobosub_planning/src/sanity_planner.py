@@ -1,7 +1,6 @@
 #!/usr/bin/env python
-from competition_states import *
-from idealistic_states import *
-from state_machine import StateMachine, State
+from sanity_states import Submerge
+from state_machine import StateMachine, State, Outcome
 import rospy
 
 class Start(State):
@@ -17,10 +16,7 @@ class Stop(State):
     Finish = Outcome.make("Finish")
 
     def initialize(self, prev_outcome: Outcome) -> None:
-        PIO.forward = 0
-        PIO.lateral = 0
-        PIO.target_depth = 0
-        PIO.set_override_heading(0)
+        pass
     
     def handle(self)->Outcome:
         return self.Finish()
@@ -28,22 +24,16 @@ class Stop(State):
 state_machine = {
     Start.Complete: Submerge,
     Submerge.SubmergeAgain: Submerge,
-    Submerge.TimedOut: CrossGate,
-    Submerge.ReachedDepth: CrossGate,
-    CrossGate.CrossingContinue: CrossGate,
-    CrossGate.CrossingDone: Spin,
-    Spin.SpinContinue: Spin,
-    Spin.SpinReach: GotoBuoy,
-    GotoBuoy.GotoBuoyContinue: GotoBuoy,
-    GotoBuoy.TimeOut: Surface,
+    Submerge.TimedOut: Stop,
+    Submerge.ReachedDepth: Stop,
 }
 
 def main():
     rospy.init_node('task_planner')
     machine = StateMachine(
-        'competition', 
+        'sanity', 
         state_machine,
-        Start, Surface
+        Start, Stop
     )
     machine.run()
 

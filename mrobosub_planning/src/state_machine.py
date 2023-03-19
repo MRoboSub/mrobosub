@@ -3,11 +3,13 @@ Python metaprogramming."""
 
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod
 from dataclasses import make_dataclass, field
 from typing import Mapping, Type, Final, cast
 import rospy
 from std_msgs.msg import String
+
+from copy import copy
 
 
 STATE_TOPIC = 'current_state'
@@ -55,6 +57,17 @@ class Outcome(ABC):
         return cast(Type[Outcome], dataclass)  # purely for better type hinting, no actual effect
 
 
+class StateMeta(ABCMeta):
+    def __new__(mcls: type[StateMeta], name: str, bases: tuple[type, ...], namespace: dict[str, Any], **kwargs: Any) -> StateMeta:
+        try:
+            for var, type_ in namespace["__annotations__"].items():
+                if type_ is Outcome:
+                    namespace[var] = Outcome.make(name + var)
+        except AttributeError:
+            pass
+        return super().__new__(name, bases, namespace, **kwargs)
+
+
 class State(ABC):
     """States contain logic that will be executed by the StateMachine.
 
@@ -88,6 +101,24 @@ class State(ABC):
         """
         pass
 
+
+class TimedState(State):
+    def initialize(self, prev_outcome: Outcome) -> None:
+        self.start_time = rospy.get_time()
+    
+    def handle(self) -> Outcome:
+        if rospy.get_time() - self.start_time >= self.timeout:
+            self.handle_once_timedout()
+            return self.TimedOut()
+        else:
+            self.handle_if_not_timedout()
+
+    @abstractmethod
+    def handle_if_not_timedout(self) -> Outcome:
+        pass
+
+    def handle_once_timedout(self) -> None:
+        pass
 
 class StateMachine:
     """ The main interface for running a system. """
@@ -126,7 +157,7 @@ class StateMachine:
         print(f'loading namespace {namespace}')
         for key, value in rospy.get_param(namespace, {}).items():
             print(f'\t{key}: {value}')
-            setattr(state, key, property(lambda self: value))  # read-only constants
+            setattr(state, key, value)  # read-only constants
 
     def run(self) -> Outcome:
         """ Performs a run, beginning with the StartState and ending when it reaches StopState.

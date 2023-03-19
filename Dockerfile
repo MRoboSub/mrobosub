@@ -7,7 +7,8 @@ RUN apt-get update && \
                         python3-pip \
                         git \
                         vim \
-                        screen
+                        screen \
+			python3-tk
 
 SHELL ["/bin/bash", "-c"] 
 

@@ -1,0 +1,3 @@
+<launch>
+  <node name="gui_teleop" pkg="mrobosub_teleop" type="gui_teleop.py" output="screen" required="true"/>
+</launch>

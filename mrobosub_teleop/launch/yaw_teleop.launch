@@ -1,3 +1,0 @@
-<launch>
-  <node name="yaw_teleop" pkg="mrobosub_teleop" type="yaw_teleop.py" output="screen" required="true"/>
-</launch>

@@ -16,6 +16,7 @@ class TestNode(ControlLoopNode):
 
 
     def loop(self):
+        
         self.num_pub.publish(self.n.val * 10)
 
 
