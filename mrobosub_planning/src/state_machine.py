@@ -1,7 +1,6 @@
 """Contains the state machine implementation. You probably shouldn't read this unless you want to deal with wierd
 Python metaprogramming."""
 
-
 from __future__ import annotations
 from abc import ABC, ABCMeta, abstractmethod
 from dataclasses import make_dataclass, field
@@ -11,15 +10,45 @@ from std_msgs.msg import String
 
 from copy import copy
 
-
 STATE_TOPIC = 'current_state'
 
+__all__ = ('Outcome', 'State', 'TimedState', 'StateMachine', 'Param')
 
 Param = Final
+""" Param generic type used for annotations. The annotations themselves do nothing at runtime. 
 
+parameters are loaded as class variables into State subclasses and should be accessed using self.{name}
 
-__all__ = ('Outcome', 'State', 'StateMachine', 'Param')
+they are loaded in the following order, where later values with the same name will overwrite earlier ones.
 
+loaded into all states:
+1. ~globals/defaults
+2. ~globals/{machine}
+
+loaded into all states in a particular module:
+3. ~{module}/mod/defaults
+4. ~{module}/mod/{machine}
+the module __main__ [i.e. the module of the file which gets launched rather than imported] 
+    uses the module name 'globals'. 
+
+loaded into the particular state:
+5. ~{module}/{state}/defaults
+6. ~{module}/{state}/{machine}
+the state name is converted to all lowercase without spaces or underscores. the module name
+
+the purpose of loading parameters both for the defaults and {machine} namespaces is so that states shared
+    between multiple state machines can override parameters when used in a particular machine if necessary.
+    you should generally prefer to use 'defaults' unless there is a good reason not to.
+
+the purpose of loading parameters from the '{module}/mod' namespace is for parameters which are needed across 
+    all states in a particular module, but not necessarily all states in a machine. it is often the case 
+    that states for a machine are divided across different files for logical organization, so it may also 
+    be the case that these states have shared state
+
+the purpose of loading parameters for the 'global' namespace is for parameters shared across all states.
+    it is rarely the case that such parameters exist, but the namespace can also be used for defaults
+    which are overrided for particular states [e.g. a default threshold which is only overridden when necessary]
+"""
 
 class Outcome(ABC):
     """Abstract base classes for state outcomes.
@@ -29,7 +58,7 @@ class Outcome(ABC):
     outcomeB will map to a different state.
 
     Example:
-        >>> OutcomeA = Outcome.make('OutcomeA', offset=0)
+        >>> OutcomeA = Outcome.make('OutcomeA', offset=int)
         >>> OutcomeB = Outcome.make('OutcomeB')
         >>> outcome_a_1 = OutcomeA(offset=10)
         >>> outcome_a_2 = OutcomeA(offset=-5)
@@ -103,6 +132,11 @@ class State(ABC):
 
 
 class TimedState(State):
+    """ base class for States which can be timed out. 
+
+        expects an outcome called TimedOut and parameter named timeout.
+        override handle_once_timedout iff cleanup is needed after timeout
+    """
     def initialize(self, prev_outcome: Outcome) -> None:
         self.start_time = rospy.get_time()
     

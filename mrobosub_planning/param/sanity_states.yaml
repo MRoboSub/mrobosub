@@ -2,3 +2,7 @@ submerge:
   defaults:
     submerge_depth: 1.5
     timeout_time: 10
+
+mod:
+  defaults:
+    heave_threshold: 0.1
