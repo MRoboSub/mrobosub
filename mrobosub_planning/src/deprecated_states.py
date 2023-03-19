@@ -1,85 +1,9 @@
-from state_machine import Outcome, State, Param
+""" States which are deprecated but may contain useful logic to replicate. """
+
+
+from umrsm import Outcome, State, Param
 from periodic_io import PIO
-# from mrobosub_control.msg import HeadingRequest
 import rospy
-from time import *
-import os
-
-#All the states start from here
-
-
-class PathMarkerAlign(State):
-    GoBuoyScan = Outcome.make("BuoyScan")
-
-    def handle(self) -> Outcome:
-        """ Aligns to path marker after crossing gate. """
-        # TODO: add logic to align to pathmarker
-        return self.GoBuoyScan()
-
-
-class BuoyScan(State):
-    scan_speed: Param[float]
-
-    BuoyScanCont = Outcome.make("BuoyScanCont")
-    BuoyApproach = Outcome.make("BuoyApproach")
-
-    def handle(self) -> Outcome:
-        """ Open loop scans for buoy. """
-        # set heading mode to override so we open loop spin TODO
-        PIO.set_target_twist_surge(0)
-        PIO.set_target_twist_yaw(self.scan_speed)
-
-        if PIO.buoy_position.found:
-            return self.BuoyApproach()
-
-        return self.BuoyScanCont()
-
-
-class BuoyApproach(State):
-    BuoyRetreat = Outcome.make("BuoyRetreat")
-
-    def handle(self) -> Outcome:
-        return self.BuoyRetreat()
-
-
-class BuoyRetreat(State):
-    BuoyRise = Outcome.make("BuoyRise")
-
-    def handle(self) -> Outcome:
-        return self.BuoyRise()
-
-
-class BuoyRise(State):
-    BuoyForward = Outcome.make("BuoyForward")
-
-    def handle(self) -> Outcome:
-        return self.BuoyForward()
-
-
-class BuoyForward(State):
-    DoStop = Outcome.make("Outcome")
-    
-    def handle(self) -> Outcome:
-        return self.DoStop()
-
-
-class Scan(State):
-    scan_speed: Param[float]
-
-    ScanAgain = Outcome.make("ScanAgain")
-    ApproachGate = Outcome.make("ApproachGate")
-
-    def handle(self) -> Outcome:
-        # set heading mode to override so we open loop spin
-        PIO.set_target_twist_surge(0)
-        PIO.set_target_twist_yaw(self.scan_speed)
-
-        # TODO
-        if PIO.gate_position.found:
-            return self.ApproachGate()
-
-        return self.ScanAgain()
-
 
 class ApproachGate(State):
     """
@@ -160,22 +84,71 @@ class ApproachSide(State):
 
         return self.SideAgain()
 
-
-class Cross(State):
-    fwd_speed: Param[float]
-    move_time: Param[float]
-    
-    TimedOut = Outcome.make('TimedOut')
-    CrossAgain = Outcome.make("CrossAgain")
+class CrossGate(State):
+    CrossingContinue = Outcome.make("CrossingContinue")
+    CrossingDone = Outcome.make("CrossingDone")
 
     def initialize(self, prev_outcome: Outcome) -> None:
-        self.cross_start = rospy.get_time()
+        self.start_time = rospy.get_time()
+    
+    def handle(self)-> Outcome:
+        time = rospy.get_time()
+        if 7 < time - self.start_time < 11:
+            PIO.set_target_twist_roll(1700)
+        if 11 < time - self.start_time < 13 and abs(PIO.get_pose().roll) > 45:
+            PIO.set_target_twist_roll(1700)
+        if time - self.start_time < 15:
+            PIO.set_target_twist_surge(1350)
+        else:
+            PIO.set_target_twist_surge(1500)
+            return self.CrossingDone()
+        return self.CrossingContinue()
+
+
+class Spin(State):
+    fallback_heading: Param[float]
+
+    SpinContinue = Outcome.make("SpinContinue")
+    SpinReach = Outcome.make("SpinReach", heading = float)
+
+    @staticmethod
+    def angle_error(setpoint, state):
+        """
+        Computes the wrapped error between two angles
+        A positive error indicates that the setpoint
+        is clockwise of the state
+        """
+        error = ((setpoint%360) - (state%360)) % 360
+        if(error > 180): error -= 360
+        return error
+    
+    @classmethod
+    def angle_error_abs(cls, setpoint, state):
+        return abs(cls.angle_error(setpoint, state))
+    
+    def initialize(self, prev_outcome: Outcome) -> None:
+        self.start_time = rospy.get_time()
+        self.start_heading = PIO.get_pose().yaw
+        self.num_spins = 0
+        self.near_heading = True
 
     def handle(self) -> Outcome:
-        if (rospy.get_time() - self.cross_start) >= self.move_time:
-            return self.TimedOut()
+        print(self.angle_error_abs(self.start_heading, PIO.get_pose().yaw))
 
-        PIO.set_target_twist_surge(self.fwd_speed)
-        PIO.set_target_pose_yaw(self.current_heading)
+        if self.angle_error_abs(self.start_heading, PIO.get_pose().yaw) <= 2 and not self.near_heading:
+            self.num_spins += 1
+            self.near_heading = True
+        elif self.angle_error_abs(self.start_heading, PIO.get_pose().yaw) >= 10:
+            self.near_heading = False
 
-        return self.CrossAgain()
+        if self.num_spins >= 3:
+            return self.SpinReach(heading = self.fallback_heading)
+           # return GotoBuoy(self.FALLBACK_HEADING)
+
+        if PIO.gun_position.found:
+            return self.SpinReach(heading = PIO.get_pose().yaw)
+          #  return GotoBuoy(PeriodicIO.current_heading)
+
+        PIO.set_target_twist_yaw(1550)
+        return self.SpinContinue()
+
