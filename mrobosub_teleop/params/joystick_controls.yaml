@@ -5,21 +5,26 @@ surge:
 sway:
     twist:
         axis:
+            invert: true
             id: 0
 heave:
     toggle: 7
     twist:
         axis:
+            invert: true
             id: 3
             scale: 0.2
     pose:
         axis:
+            invert: true
             id: 3
             scale: 0.05
         increase:
+            invert: true
             id: 3
             scale: 0.2
         decrease:
+            invert: true
             id: 1
             scale: 0.2
 yaw:
