@@ -1,4 +1,4 @@
-from state_machine import Outcome, TimedState, State, Param
+from umrsm import Outcome, TimedState, State, Param
 from periodic_io import PIO, angle_error
 
 class AlignGate(TimedState):
