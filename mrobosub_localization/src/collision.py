@@ -4,6 +4,8 @@ import rospy
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Float64, Bool
 from mrobosub_lib.lib import Node, Param
+from dynamic_reconfigure.server import Server
+from mrobosub_localization.cfg import collision_paramsConfig
 from math import exp
 
 class CollisionDetector(Node):
@@ -35,7 +37,13 @@ class CollisionDetector(Node):
         self.last_time = next_time
         self.last_value = output
 
+    def reconfigure_callback(self, config, level):
+        self.rc = config["rc"]
+        self.threshold = config["threshold"] 
+        return config
+    
     def run(self):
+        srv = Server(collision_paramsConfig, self.reconfigure_callback)
         rospy.spin()
 
 if __name__ == "__main__":
