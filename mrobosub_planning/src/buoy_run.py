@@ -29,6 +29,7 @@ transitions = {
     Backup.TimedOut: Pause,
 
     Pause.TimedOut: ContingencySubmerge,
+    Pause.Pausing: Pause,
 
     ContingencySubmerge.Submerging: ContingencySubmerge,
     ContingencySubmerge.Submerged: ContingencyApproach,

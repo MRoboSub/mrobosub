@@ -50,9 +50,9 @@ class Gbl:
     @classmethod
     def glyphs_of_planet(cls, planet: Optional[Glyph]) -> Tuple[Glyph, Glyph]:
         if planet == Glyph.earth:
-            return (Glyph.auriga, Glyph.cetus)
+            return (Glyph.auriga, Glyph.serpens_caput)
         else:
-            return (Glyph.taurus, Glyph.serpens_caput)
+            return (Glyph.taurus, Glyph.cetus)
 
     @classmethod
     def preferred_glyph(cls) -> Glyph:
