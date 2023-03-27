@@ -1,4 +1,4 @@
 <launch>
   <include file="$(find mrobosub_bringup)/launch/bringup.launch" />
-  <!-- <node pkg="mrobosub_bringup" name="quartermaster" type="quartermaster" /> -->
+  <node pkg="mrobosub_bringup" name="quartermaster" type="quartermaster" />
 </launch>

@@ -4,6 +4,7 @@ from std_msgs.msg import Float64, Bool
 from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, PathmarkerAngle, BinCamPos, BinCamPosResponse # type: ignore
 from typing import Dict, Type, Mapping, Optional, Tuple
 from enum import Enum, auto
+from std_srvs.srv import SetBool
 
 
 def angle_error(setpoint, state):
@@ -88,7 +89,7 @@ class PIO:
         
         try:
             resp = cls._bin_cam_pos_srv()
-        except:
+        except rospy.service.ServiceException as e:
             return None
         if(resp.found):
             return resp
@@ -167,7 +168,7 @@ class PIO:
         
         try:
             resp = cls._pathmarker_srv()
-        except:
+        except rospy.service.ServiceException as e:
             return None
 
         if resp.found:
@@ -187,6 +188,7 @@ class PIO:
         except:
             print("[ERROR] Failed to call buoy position service")
             raise Exception()
+                pass
 
         obj_msg = ObjectPositionResponse()
         obj_msg.found = False
@@ -211,6 +213,27 @@ class PIO:
             if resp.found:
                 results[g] = resp
         return results
+    
+    
+    @classmethod
+    def activate_zed(cls):
+        cls._set_cameras(True, False, "Cannot activate ZED")
+
+    @classmethod
+    def activate_bot_cam(cls):
+        cls._set_cameras(False, True, "Cannot activate Bot Cam")
+
+    @classmethod
+    def deactivate_cameras(cls):
+        cls._set_cameras(False, False, "Cannot deactivate cameras")
+
+    @classmethod
+    def _set_cameras(cls, zed_on: bool, bot_cam_on: bool, error_msg="Cannot call camera service"):
+        try:
+            cls._zed_on_srv(zed_on)
+            cls._bot_cam_on_srv(bot_cam_on)
+        except rospy.service.ServiceException as e:
+            print(f'Error: {error_msg}, {e}')
 
 
 # private:
@@ -259,3 +282,5 @@ class PIO:
     for glyph in Glyph:
         _object_position_srvs[glyph] = rospy.ServiceProxy(f'/object_position/{glyph.name.lower()}', ObjectPosition, persistent=True)
 
+    _zed_on_srv = rospy.ServiceProxy('/zed/on', SetBool)
+    _bot_cam_on_srv = rospy.ServiceProxy('/bot_cam/on', SetBool)
