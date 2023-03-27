@@ -14,11 +14,11 @@ class Submerge(TimedState):
     class Submerged(NamedTuple): pass
     class TimedOut(NamedTuple): pass
     
-    target_heave: float = 0.35
+    target_heave: float = 1.4
     heave_threshold: float = 0.1
     timeout: float = 15
-    yaw_threshold: float = 0
-    target_yaw: float = 2
+    yaw_threshold: float = 2
+    target_yaw: float = 0
     
     def handle_if_not_timedout(self) -> Union[Submerged, None]:
         PIO.set_target_pose_heave(self.target_heave)
