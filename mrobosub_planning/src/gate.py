@@ -33,7 +33,7 @@ transitions = {
 
     SeenGlyph: ApproachBuoyClosed,
     HitBuoySecond: FallBack,
-    HitBuoyFirst: FindGlyph,
+    HitBuoyFirst: Backup,
 
     ApproachBuoyOpen.GlyphNotSeen: ApproachBuoyOpen, 
     ApproachBuoyOpen.TimedOut: Surface,
@@ -41,8 +41,8 @@ transitions = {
     ApproachBuoyClosed.NotReached: ApproachBuoyClosed,
     ApproachBuoyClosed.TimedOut: Surface,
 
-    FindGlyph.GlyphNotSeen: FindGlyph,
-    FindGlyph.TimedOut: Pause,
+    Backup.GlyphNotSeen: Backup,
+    Backup.TimedOut: Pause,
     
     Pause.TimedOut: ContingencySubmerge,
     

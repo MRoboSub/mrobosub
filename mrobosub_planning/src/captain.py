@@ -10,6 +10,7 @@ import spin_test
 import rospy
 import sys
 from periodic_io import PIO
+import traceback
 
 
 # maybe change this to something hacky like getting .transitions from the machine name module?
@@ -34,7 +35,7 @@ if __name__ == '__main__':
     try:
         machine.run()
     except Exception as e:
-        print(e)
+        print(traceback.format_exc())
         rate = rospy.Rate(50)
         for _ in range(20):
             PIO.set_target_twist_heave(0)

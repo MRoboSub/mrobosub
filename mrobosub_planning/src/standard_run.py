@@ -40,7 +40,7 @@ transitions = {
     FallBackTurn.Aligned: ApproachBuoyOpen,
 
     SeenGlyph: CenterHeaveGlyph,
-    HitBuoyFirst: FindGlyph,
+    HitBuoyFirst: Backup,
     HitBuoySecond: FallBack,
 
     ApproachBuoyOpen.GlyphNotSeen: ApproachBuoyOpen, 
@@ -53,8 +53,8 @@ transitions = {
     CenterYawGlyph.NotReached: CenterYawGlyph,
     CenterYawGlyph.TimedOut: Surface,
 
-    FindGlyph.GlyphNotSeen: FindGlyph,
-    FindGlyph.TimedOut: Pause,
+    Backup.GlyphNotSeen: Backup,
+    Backup.TimedOut: Pause,
     
     Pause.TimedOut: ContingencySubmerge,
     

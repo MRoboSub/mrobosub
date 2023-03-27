@@ -2,6 +2,7 @@ from umrsm import Outcome, TimedState, State, Param
 from periodic_io import PIO, Gbl, angle_error, Glyph
 from mrobosub_msgs.srv import ObjectPositionResponse
 from typing import Mapping
+import rospy
 
 SeenGlyph = Outcome.make('SeenGlyph', glyph_results=Mapping[Glyph, ObjectPositionResponse], glyph = Glyph)
 HitBuoyFirst = Outcome.make('HitBuoyFirst')
@@ -63,38 +64,41 @@ class CenterHeaveGlyph(TimedState):
 
     heave_down_speed: Param[float] 
     heave_up_speed: Param[float]
-    deadband: Param[int] # pixels
+    deadband: Param[float] # degrees
     timeout: Param[float]
 
-
     def initialize(self, prev_outcome: SeenGlyph) -> None:
-        super().initialize(prev_outcome)
-        self.deadband = 50
+        self.deadband = 5
         self.timeout = 40
+        super().initialize(prev_outcome)
         self.most_recent_results = prev_outcome.glyph_results
         self.glyph = prev_outcome.glyph
-        self.glyph_y_diff = self.most_recent_results[self.glyph].y_position
+        self.glyph_y_theta = self.most_recent_results[self.glyph].y_theta
+        self.preferred = Gbl.preferred_glyph()
+
 
     def handle_if_not_timedout(self):
+        if self.glyph == self.preferred:
+            self.glyph = self.preferred
+
         query_res = PIO.query_glyph(self.glyph)
         if query_res.found:
-            self.glyph_y_diff = query_res.y_position
+            self.glyph_y_theta = query_res.y_theta
             self.most_recent_results[self.glyph] = query_res
 
         # use updated info if we have it, otherwise continue with old info? is this bad
-        if abs(self.glyph_y_diff) < self.deadband:
+        if abs(self.glyph_y_theta) < self.deadband:
             return self.Centered(self.glyph, self.most_recent_results[self.glyph])
-        elif self.glyph_y_diff > 0: # TODO: check sign?
-
+        elif self.glyph_y_theta > 0:
             PIO.set_target_twist_heave(0.17)
         else:
-            PIO.set_target_twist_heave(0)
+            PIO.set_target_twist_heave(0.0)
+        PIO.set_target_twist_surge(0)
 
         return self.NotCentered()
 
     def handle_once_timedout(self):
-        return self.TimedOut(self.glyph, self.most_recent_results[self.glyph])
-
+        return self.TimedOut(self.glyph, self.most_recent_results[self.glyph])   
 
 
 class CenterYawGlyph(TimedState):
@@ -105,33 +109,56 @@ class CenterYawGlyph(TimedState):
     yaw_factor: Param[float]
     timeout: Param[int]
 
+    bbox_area_thold: Param[int]
+    unseen_thold: Param[int]
+
     def initialize(self, prev_outcome: CenterHeaveGlyph.Centered):
+
         self.surge_speed = 0.2
-        self.yaw_factor = 0.004
+        self.yaw_factor = 0.0005
         self.timeout = 40
+        self.hit_time_thold = 2
+        self.bbox_area = prev_outcome.last_data.x_position
+        self.frames_unseen = 0
+
         super().initialize(prev_outcome)
         self.glyph = prev_outcome.glyph
         self.angle_diff = prev_outcome.last_data.x_theta
         self.target_heave = PIO.Pose.heave
 
-    def handle_if_not_timedout(self):
-        
+        self.hit_start_time = None
+
         print(self.glyph)
+
+    def handle_if_not_timedout(self):       
         query_res = PIO.query_glyph(self.glyph)
         if query_res.found:
             self.angle_diff = query_res.x_theta
+            self.bbox_area = query_res.x_position
+            self.frames_unseen = 0
+        else:
+            self.frames_unseen += 1
 
         PIO.set_target_pose_heave(self.target_heave)
         PIO.set_target_twist_surge(self.surge_speed)
 
         # Use setpoint for yaw angle
-        PIO.set_target_twist_yaw(self.angle_diff * self.yaw_factor)
+        PIO.set_target_pose_yaw(self.Pose.yaw + self.angle_diff)
         
-        hit = PIO.buoy_collision
+        # hit = PIO.buoy_collision and \
+        #     (self.bbox_area >= self.bbox_area_thold or self.frames_unseen >= self.unseen_thold)
+
         
-        if hit:
-            if not Gbl.second_glpyh:
-                Gbl.second_glpyh = True
+        if (
+            (self.bbox_area >= self.bbox_area_thold or self.frames_unseen >= self.unseen_thold)
+            and self.hit_start_time is None
+        ):
+            self.hit_start_time = rospy.get_time()
+            
+        if self.hit_start_time is not None and rospy.get_time() - self.hit_start_time >= self.hit_time_thold:
+            if not Gbl.second_glyph:
+                Gbl.second_glyph = True
+                Gbl.first_hit_glyph = self.glyph
                 return HitBuoyFirst()
             else:
                 return HitBuoySecond()
@@ -140,6 +167,7 @@ class CenterYawGlyph(TimedState):
 
     def handle_once_timedout(self) -> None:
         PIO.set_target_twist_surge(0)
+        PIO.set_target_twist_yaw(0)
 
         
 
@@ -185,8 +213,8 @@ class OldApproachBuoyClosed(TimedState):
         hit = PIO.buoy_collision
         
         if hit:
-            if not Gbl.second_glpyh:
-                Gbl.second_glpyh = True
+            if not Gbl.second_glyph:
+                Gbl.second_glyph = True
                 return HitBuoyFirst()
             else:
                 return HitBuoySecond()
@@ -202,10 +230,10 @@ class FallBack(TimedState):
     TimedOut = Outcome.make('TimedOut')
 
     timeout: Param[int]
-    speed: Param[float]
+    surge_speed: Param[float]
 
     def handle_if_not_timedout(self) -> Outcome:
-        PIO.set_target_twist_surge(-1*self.speed) 
+        PIO.set_target_twist_surge(-self.surge_speed) 
 
         return self.NotReached()
 
@@ -246,15 +274,21 @@ class PassBuoy(TimedState):
         PIO.set_target_twist_surge(0) 
 
 
-class FindGlyph(TimedState):
+class Backup(TimedState):
     GlyphNotSeen = Outcome.make('GlyphNotSeen')
     TimedOut = Outcome.make('TimedOut')
 
     timeout: Param[int]
-    speed: Param[float]
+    surge_speed: Param[float]
+
+    def initialize(self, prev_outcome):
+        super().initialize(prev_outcome)
+        self.start_yaw = PIO.Pose.yaw
 
     def handle_if_not_timedout(self) -> Outcome:
-        PIO.set_target_twist_surge(-self.speed)
+
+        PIO.set_target_twist_surge(-0.1)
+        PIO.set_target_pose_yaw(self.start_yaw)
 
         res = search_for_glyph(Gbl.preferred_glyph())
 
@@ -264,7 +298,7 @@ class FindGlyph(TimedState):
         return self.GlyphNotSeen()
 
     def handle_once_timedout(self) -> None:
-        PIO.set_target_twist_surge(0) 
+        PIO.set_target_twist_surge(0)
 
 
 class Pause(TimedState):
