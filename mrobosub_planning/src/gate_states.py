@@ -120,7 +120,7 @@ class ApproachGateImage(TimedState):
         return self.TimedOut()
 
 
-class AlignPathMarker(TimedState):
+class AlignPathmarker(TimedState):
     # class SeenGlyph(SeenGlyphType):
     #     pass
     class Aligned(NamedTuple):
@@ -143,6 +143,7 @@ class AlignPathMarker(TimedState):
 
     def handle_if_not_timedout(self) -> Union[Aligned, TimedOut, None]:
         pm_resp = PIO.query_pathmarker()
+        print(pm_resp)
         if pm_resp is not None:
             self.last_known_angle = pm_resp
 

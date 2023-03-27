@@ -50,8 +50,8 @@ class HsvPipeline():
 
     wb_shift: int = 200
     wb_scale: int = 120
-    white_balance: bool = False
-    histogram_equalization: bool = False
+    white_balance: bool = True
+    histogram_equalization: bool = True
     
     erode_radius: int = 2
     dilate_radius: int = 2

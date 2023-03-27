@@ -7,6 +7,7 @@ import standard_run
 import prequal_turn
 import buoy_transitions
 import bin_transitions
+import pathmarker_test
 import alignment_test
 import spin_test
 import rospy
@@ -24,6 +25,7 @@ transition_maps: Dict[str, TransitionMap] = {
     'buoy': buoy_transitions.transitions,
     'alignment': alignment_test.transitions,
     'spin': spin_test.transitions,
+    'pathmarker_test': pathmarker_test.transitions,
 }
 
 

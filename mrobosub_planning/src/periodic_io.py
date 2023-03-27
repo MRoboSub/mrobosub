@@ -169,8 +169,9 @@ class PIO:
         try:
             resp = cls._pathmarker_srv()
         except rospy.service.ServiceException as e:
+            print('Pathmarker service is not active')
             return None
-
+        print(f"{resp=}")
         if resp.found:
             convertedAngle = (90 + resp.angle) + cls.Pose.yaw
             if convertedAngle > 90: #if pointing behind us flip 180
@@ -188,7 +189,6 @@ class PIO:
         except:
             print("[ERROR] Failed to call buoy position service")
             raise Exception()
-                pass
 
         obj_msg = ObjectPositionResponse()
         obj_msg.found = False
