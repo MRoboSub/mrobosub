@@ -13,35 +13,54 @@ class ApproachBin(TimedState):
         pass
     class Reached(NamedTuple):
         pass
-    timeout: float = 10.0
 
-    surge_speed = 0.2 #max surge speed
-    yaw_factor = 1
-    max_pixel_dist = 500.0 #maximum pixel distance we could see sqrt(maxPixelX**2+maxPixelY**2)
-    centered_pixel_dist_thresh = 50 #threshold distance in pixels within which we say we have centered appropriatclass CenterToBinFromFar(TimedState):
+    timeout: float = 40.0
 
+    surge_speed = .6 #max surge speed
+    yaw_factor = .2
+    centered_pixel_dist_thresh = .1 #threshold distance in pixels within which we say we have centered appropriatclass CenterToBinFromFar(TimedState):
+    aligned_yaw_thresh = 5 #threshold within which we consider yaw aligned
+    corrective_yaw_thresh = 30 #once angle to bin > thresh center the yaw
+    yaw_aligned = False     #keeps track of if the yaw is aligned and we are suring or if we are not aligned and are aligning
+    
     def __init__(self, prev_outcome):
         super().__init__(prev_outcome)
-        self.dist_to_bin: float  = self.max_pixel_dist
         self.angle_to_bin: float = 0.0
 
 
     def handle_if_not_timedout(self) -> Union[None, Reached]:
         bin_camera_position = PIO.query_BinCamPos() 
         #print(f"{bin_camera_position=}")
+        dist_to_bin = 20000
         if bin_camera_position and bin_camera_position.found:
             x, y = bin_camera_position.x_position, bin_camera_position.y_position
+            x -= 0.5
+            y -= 0.5
+            y *= -1
             self.angle_to_bin = math.atan2(y, x) 
-            self.angle_to_bin = math.degrees(-self.angle_to_bin + math.pi/2)
-            self.dist_to_bin = math.sqrt(y**2 + x**2)
-            PIO.set_target_twist_surge(self.surge_speed*(self.dist_to_bin/self.max_pixel_dist)) #set surge speed decreases as closer to centered
+            self.angle_to_bin = (((math.degrees(self.angle_to_bin) - 90) % 360 + 180) % 360) - 180
+            dist_to_bin = math.sqrt(y**2 + x**2)
+            print(f'{x=:.2f}; {y=:.2f}; {self.angle_to_bin=:.2f}; {dist_to_bin=:.2f}; {self.yaw_aligned=}')
+
+            if abs(self.angle_to_bin) > self.corrective_yaw_thresh:
+                self.yaw_aligned = False
+            elif abs(self.angle_to_bin) < self.aligned_yaw_thresh:
+                self.yaw_aligned = True
+
+            if not self.yaw_aligned:
+                # Use setpoint for yaw angle
+                PIO.set_target_twist_surge(0)
+                PIO.set_target_pose_yaw((PIO.Pose.yaw % 360 - self.angle_to_bin * self.yaw_factor) % 360) ## adjust yaw factor in pool testing
+
+            else:
+                #PIO.set_target_pose_yaw(PIO.Pose.yaw)
+                juice = (self.surge_speed*dist_to_bin) #set surge speed decreases as closer to centered
+                print(f'{juice=}')
+                PIO.set_target_twist_surge(juice)
             
-            # Use setpoint for yaw angle
-            PIO.set_target_pose_yaw((PIO.Pose.yaw % 360 + self.angle_to_bin % 360 * self.yaw_factor) % 360) ## adjust yaw factor in pool testing
-        
-        if self.dist_to_bin < self.centered_pixel_dist_thresh:
+        if dist_to_bin < self.centered_pixel_dist_thresh:
             PIO.set_target_twist_surge(0)
-            PIO.set_target_twist_yaw(PIO.Pose.yaw) #TODO: why is this twist and above is pose
+            PIO.set_target_pose_yaw(PIO.Pose.yaw)
             return self.Reached()
         else:
             return None
@@ -49,7 +68,7 @@ class ApproachBin(TimedState):
 
     def handle_once_timedout(self) -> TimedOut:
         PIO.set_target_twist_surge(0)
-        PIO.set_target_twist_yaw(PIO.Pose.yaw)
+        PIO.set_target_pose_yaw(PIO.Pose.yaw)
         return self.TimedOut()
 
         
@@ -62,43 +81,51 @@ class CenterCameraToBin(TimedState):
         pass
     class Reached(NamedTuple):
         pass
-    timeout: float = 10.0
+    timeout: float = 40.0
 
-    surge_and_strafe_speed = 0.2 #max surge/sway speed
-    yaw_factor = 1
-    max_pixel_dist = 500.0 #maximum pixel distance we could see sqrt(maxPixelX**2+maxPixelY**2)
-    centered_pixel_x_y_thresh = 50 #threshold distance in pixels if x is within then no sway and if y is within then no y
+    surge_and_strafe_speed = 0.05 #max surge/sway speed
+    centered_pixel_x_y_thresh = 0.05 
 
     def __init__(self, prev_outcome):
         super().__init__(prev_outcome)
-        self.dist_to_bin: float  = self.max_pixel_dist
         self.angle_to_bin: float = 0.0
 
     def handle_if_not_timedout(self) -> Union[None, Reached]:
         bin_camera_position = PIO.query_BinCamPos() 
         if bin_camera_position and bin_camera_position.found: 
-            self.angle_to_bin = math.atan2(bin_camera_position.y, bin_camera_position.x) 
+            x,y = bin_camera_position.x_position, bin_camera_position.y_position
+            x -= 0.5
+            y -= 0.5
+            y *= -1
+            self.angle_to_bin = math.atan2(y, x) 
 
-            surge_speed:float = 0.0
-            sway_speed:float = 0.0
-            
-            if bin_camera_position.y - self.centered_pixel_x_y_thresh / 2 > 0:
-                surge_speed = self.surge_and_strafe_speed
-            elif bin_camera_position.y + self.centered_pixel_x_y_thresh / 2 < 0:
-                surge_speed = -1 * self.surge_and_strafe_speed
-            if bin_camera_position.x - self.centered_pixel_x_y_thresh / 2 > 0:
-                sway_speed = self.surge_and_strafe_speed
-            elif bin_camera_position.x + self.centered_pixel_x_y_thresh / 2 < 0:
-                sway_speed = -1 * self.surge_and_strafe_speed
+            surge_aligned = abs(y) < self.centered_pixel_x_y_thresh
+            sway_aligned = abs(x) < self.centered_pixel_x_y_thresh
 
-            PIO.set_target_twist_surge(surge_speed)
-            PIO.set_target_twist_sway(sway_speed)
+            if not surge_aligned:
+                if y > 0:
+                    surge_speed = self.surge_and_strafe_speed
+                else:
+                    surge_speed = -self.surge_and_strafe_speed
+                PIO.set_target_twist_surge(surge_speed)
 
-            if surge_speed == 0 and sway_speed == 0:
-                return self.Reached()
+            if not sway_aligned:
+                if x > 0:
+                    sway_speed = self.surge_and_strafe_speed
+                else:
+                    sway_speed = -self.surge_and_strafe_speed
+                PIO.set_target_twist_sway(sway_speed)
+
+            print(f'{surge_aligned=}; {sway_aligned=}')
+            if sway_aligned and surge_aligned:
+                #return self.Reached()
+                PIO.set_target_twist_heave(0.1)
+                print('Descending')
+                if PIO.Pose.heave > 1.8:
+                    return self.Reached()
             else:
                 return None
-            
+ 
     def handle_once_timedout(self) -> TimedOut:
         PIO.set_target_twist_surge(0)
         PIO.set_target_twist_sway(0)
@@ -147,6 +174,7 @@ class CenterLeftDropper(TimedState):
             if surge_speed == 0 and sway_speed == 0:
                 return self.Reached(True)
             else:
+                PIO.set_target_twist_heave(0)
                 return None
             
     def handle_once_timedout(self) -> TimedOut:
@@ -161,13 +189,15 @@ class Descend(TimedState):
     class TimedOut(NamedTuple): pass
     timeout: float = 10.0
 
-    depth = 2.0 #depth to descend to
-    heave_threshold = 0.1
+    depth = 1.8 #depth to descend to
+    heave_threshold = 0.2
 
     def handle_if_not_timedout(self) -> Union[Reached, None]:
-        PIO.set_target_pose_heave(self.depth)
+        #PIO.set_target_pose_heave(self.depth)
+        PIO.set_target_twist_heave(0.1)
 
-        if (PIO.is_heave_within_threshold(self.heave_threshold)):
+        if PIO.Pose.heave > self.depth:
+        #if (PIO.is_heave_within_threshold(self.heave_threshold)):
             return self.Reached()
         else:
             return None

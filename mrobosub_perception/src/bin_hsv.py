@@ -40,7 +40,7 @@ class BinHsv(Node):
             bgr_img = self.br.imgmsg_to_cv2(msg, desired_encoding='bgr8')
             pipeline = HsvPipeline(**self.hsv_params, color_space=cv2.COLOR_RGB2HSV)
             mask, enhanced_img = pipeline.filter_image(bgr_img, return_enhanced=True)
-            detection = pipeline.find_rectangular_object(mask)
+            detection = pipeline.find_circular_object(mask)
 
             if detection is not None:
                 annotated_img = cv2.drawMarker(bgr_img, (detection.x,detection.y), (255,255,255), markerType=cv2.MARKER_CROSS)
@@ -55,8 +55,8 @@ class BinHsv(Node):
             if detection is not None:
                 x_theta, y_theta = utils.pixels_to_angles(bgr_img, detection.x, detection.y)
                 response.found = True
-                response.x_position = detection.x
-                response.y_position = detection.y
+                response.x_position = detection.x / bgr_img.shape[1]
+                response.y_position = detection.y / bgr_img.shape[0]
                 response.x_theta = x_theta
                 response.y_theta = y_theta
 
