@@ -4,6 +4,7 @@ import rospy
 from sensor_msgs.msg import Image
 import cv2
 from cv_bridge import CvBridge
+import subprocess
 
 from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
 
@@ -26,8 +27,9 @@ class WebcamPub():
         # https://stackoverflow.com/a/66279297
         #cap.set(cv2.CAP_PROP_FPS,10)
         #cap.set(cv2.CAP_PROP_BUFFERSIZE,1)
-        self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
-        self.cap.set(cv2.CAP_PROP_EXPOSURE, 100)
+        self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
+        self.cap.set(cv2.CAP_PROP_EXPOSURE, 1000)
+        subprocess.call('v4l2-ctl -d /dev/video10 -c white_balance_temperature_auto=0 -c exposure_auto=1 -c exposure_absolute=2000 -c brightness=64', shell=True)
 
     def close_capture(self):
         self.cap.release()

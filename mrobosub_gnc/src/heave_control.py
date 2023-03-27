@@ -54,7 +54,7 @@ class HeaveControlNode(Node):
     def pub_output_heave(self, output: float):
         # Protect against running to ground
         if self.heave > self.max_heave:
-            output = 0
+            output = min(0, output)
         self.output_heave_pub.publish(output)
 
     def run(self): 

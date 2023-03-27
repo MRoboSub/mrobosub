@@ -320,7 +320,7 @@ class HsvPipeline():
                 selected_contour = contour
 
         return selected_contour
-
+    
     def _get_circular_object(self, contours):
         maxHeight = 0
         maxHwRatio = 0
