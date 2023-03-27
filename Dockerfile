@@ -8,7 +8,9 @@ RUN apt-get update && \
                         git \
                         vim \
                         screen \
-			python3-tk
+                        python3-tk
+
+RUN pip install mypy -U
 
 SHELL ["/bin/bash", "-c"] 
 

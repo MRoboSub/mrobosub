@@ -7,7 +7,7 @@ import rospkg
 from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse
 import cv2
 from cv_bridge import CvBridge
-from zed_interfaces.msg import RGBDSensors
+# from zed_interfaces.msg import RGBDSensors
 import numpy as np
 import time
 import sys

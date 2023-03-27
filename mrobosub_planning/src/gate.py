@@ -31,15 +31,15 @@ transitions = {
     FallBackTurn.Unaligned: FallBackTurn,
     FallBackTurn.Aligned: ApproachBuoyOpen,
 
-    SeenGlyph: ApproachBuoyClosed,
+    SeenGlyph: OldApproachBuoyClosed,
     HitBuoySecond: FallBack,
     HitBuoyFirst: Backup,
 
     ApproachBuoyOpen.GlyphNotSeen: ApproachBuoyOpen, 
     ApproachBuoyOpen.TimedOut: Surface,
 
-    ApproachBuoyClosed.NotReached: ApproachBuoyClosed,
-    ApproachBuoyClosed.TimedOut: Surface,
+    OldApproachBuoyClosed.NotReached: OldApproachBuoyClosed,
+    OldApproachBuoyClosed.TimedOut: Surface,
 
     Backup.GlyphNotSeen: Backup,
     Backup.TimedOut: Pause,

@@ -1,3 +1,4 @@
+from mrobosub_planning.src.common import Surface
 from umrsm import *
 import prequal_front
 from periodic_io import PIO

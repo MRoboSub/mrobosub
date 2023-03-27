@@ -167,7 +167,7 @@ class Spin(TimedState):
 
     def initialize(self, prev_outcome: Outcome) -> None:
         super().initialize(prev_outcome)
-        self.timeout = 15
+        self.timeout = 15.0
 
     def handle_if_not_timedout(self) -> Outcome:
         PIO.set_target_twist_yaw(0.12)
