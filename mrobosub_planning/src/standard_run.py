@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-from common import Start, Submerge, Surface, Stop
-from gate_task import AlignGate, AlignPathMarker, ApproachGate, Spin, ApproachGateImage, SpinFinish
-from buoy_task import ApproachBuoyOpen, CenterHeaveGlyph, CenterYawGlyph, FallBack, FindGlyph, PassBuoy, Pause, ContingencyApproach, ContingencySubmerge, Ascend
+from common_states import Start, Submerge, Surface, Stop
+from gate_states import AlignGate, AlignPathMarker, ApproachGate, Spin, ApproachGateImage, SpinFinish
+from buoy_states import ApproachBuoyOpen, CenterHeaveBuoy, CenterYawBuoy
 from umrsm import TransitionMap
 
 
@@ -29,34 +29,14 @@ transitions: TransitionMap = {
     SpinFinish.Reached: ApproachBuoyOpen,
     SpinFinish.TimedOut: ApproachBuoyOpen,
 
-    ApproachBuoyOpen.SeenGlyph: CenterHeaveGlyph,
+    ApproachBuoyOpen.SeenBuoy: CenterHeaveBuoy,
     ApproachBuoyOpen.TimedOut: Surface,
 
-    CenterHeaveGlyph.Centered: CenterYawGlyph,
-    CenterHeaveGlyph.TimedOut: CenterYawGlyph,
+    CenterHeaveBuoy.Centered: CenterYawBuoy,
+    CenterHeaveBuoy.TimedOut: CenterYawBuoy,
 
-    CenterYawGlyph.HitBuoyFirst: FindGlyph,
-    CenterYawGlyph.HitBuoySecond: FallBack,
-    CenterYawGlyph.TimedOut: Surface,
-
-    FindGlyph.SeenGlyph: CenterHeaveGlyph,
-    FindGlyph.TimedOut: Pause,
-
-    Pause.SeenGlyph: CenterHeaveGlyph,
-    Pause.TimedOut: ContingencySubmerge,
-
-    ContingencySubmerge.SeenGlyph: CenterHeaveGlyph,
-    ContingencySubmerge.Submerged: ContingencyApproach,
-
-    ContingencyApproach.HitBuoySecond: FallBack,
-    ContingencyApproach.TimedOut: Surface,
-
-    FallBack.TimedOut: Ascend,
-
-    Ascend.Reached: PassBuoy,
-    Ascend.TimedOut: PassBuoy,
-
-    PassBuoy.TimedOut: Surface,
+    CenterYawBuoy.CloseToBuoy: Surface, # this is where movement of around buoy will connect
+    CenterYawBuoy.TimedOut: Surface, #could do passBuoy instead of surface as well
 
     Surface.Surfaced: Stop     
 }

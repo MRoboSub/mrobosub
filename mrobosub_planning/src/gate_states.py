@@ -1,6 +1,5 @@
 from abstract_states import TimedState
 from periodic_io import PIO, Glyph, Gbl
-from buoy_task import search_for_glyph, SeenGlyphType
 from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
 import rospy
 from typing import NamedTuple, Union
@@ -122,8 +121,8 @@ class ApproachGateImage(TimedState):
 
 
 class AlignPathMarker(TimedState):
-    class SeenGlyph(SeenGlyphType):
-        pass
+    # class SeenGlyph(SeenGlyphType):
+    #     pass
     class Aligned(NamedTuple):
         pass
     class TimedOut(NamedTuple):
@@ -134,26 +133,27 @@ class AlignPathMarker(TimedState):
 
     def __init__(self, prev_outcome: NamedTuple) -> None:
         super().__init__(prev_outcome)
-        if not isinstance(prev_outcome, ApproachGateImage.FoundBuoyPathMarker):
-            raise TypeError(f"Expected type FoundBuoyPathMarker, received {prev_outcome}")
-        self.last_known_angle = prev_outcome.angle
+        self.last_known_angle = None
+        if isinstance(prev_outcome, ApproachGateImage.FoundBuoyPathMarker):
+            self.last_known_angle = prev_outcome.angle
+        else:
+            print(f"Expected type FoundBuoyPathMarker, received {prev_outcome}") 
+        
 
 
-    def handle_if_not_timedout(self) -> Union[SeenGlyph, Aligned, TimedOut, None]:
+    def handle_if_not_timedout(self) -> Union[Aligned, TimedOut, None]:
         pm_resp = PIO.query_pathmarker()
         if pm_resp is not None:
             self.last_known_angle = pm_resp
 
-        seen_glyph_outcome = search_for_glyph(Gbl.preferred_glyph())
-
-        PIO.set_target_pose_yaw(self.last_known_angle)
-
-        if seen_glyph_outcome:
-            return self.SeenGlyph(*seen_glyph_outcome)
-        elif PIO.is_yaw_within_threshold(self.yaw_threshold):
-            return self.Aligned()
+        if self.last_known_angle != None:
+            PIO.set_target_pose_yaw(self.last_known_angle)
         else:
             return None
+
+        if PIO.is_yaw_within_threshold(self.yaw_threshold):
+            return self.Aligned()
+        return None
 
     def handle_once_timedout(self) -> TimedOut:
         return self.TimedOut()

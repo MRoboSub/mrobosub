@@ -7,7 +7,7 @@ from enum import Enum, auto
 
 
 def angle_error(setpoint, state):
-        return (setpoint - state + 180) % 360 - 180
+        return (((setpoint - state) % 360) + 360) % 360
 
 Namespace = Type
 
@@ -171,22 +171,37 @@ class PIO:
             return None
 
         if resp.found:
-            return (90 - resp.angle) + cls.Pose.yaw
+            convertedAngle = (90 + resp.angle) + cls.Pose.yaw
+            if convertedAngle > 90: #if pointing behind us flip 180
+                convertedAngle -= 180
+            elif convertedAngle < -90:
+                convertedAngle += 180
+            return convertedAngle
         else:
             return None
 
     @classmethod
-    def query_glyph(cls, glyph: Optional[Glyph]) -> ObjectPositionResponse:
-        if glyph is not None:
-            try:
-                return cls._object_position_srvs[glyph]()
-            except:
-                pass
+    def query_buoy(cls) -> ObjectPositionResponse:
+        try:
+            return cls._hsv_buoy_position_srv()
+        except:
+            print("[ERROR] Failed to call buoy position service")
+            raise Exception()
 
         obj_msg = ObjectPositionResponse()
         obj_msg.found = False
         return obj_msg
- 
+
+    #Old need to update without glyphs
+    @classmethod
+    def query_glyph(cls, glyph: Optional[Glyph]) -> ObjectPositionResponse:
+        if glyph is not None:
+            return cls._object_position_srvs[glyph]()
+        else:
+            obj_msg = ObjectPositionResponse()
+            obj_msg.found = False
+            return obj_msg
+    #also odl
     @classmethod
     def query_all_glyphs(cls) -> GlyphDetections:
         """ query all 12 glyphs and return a dict from any found glyphs to their position. """
@@ -196,6 +211,7 @@ class PIO:
             if resp.found:
                 results[g] = resp
         return results
+
 
 # private:
     class Callbacks:
@@ -236,6 +252,10 @@ class PIO:
     # Services
     _pathmarker_srv = rospy.ServiceProxy('pathmarker/angle', PathmarkerAngle, persistent=True)
     _bin_cam_pos_srv = rospy.ServiceProxy('bin_cam_pos', BinCamPos, persistent = True)
+    _hsv_buoy_position_srv = rospy.ServiceProxy('/hsv_buoy_position', ObjectPosition, persistent=True)
+
+    #also old
     _object_position_srvs: Dict[Glyph, rospy.ServiceProxy] = {}
     for glyph in Glyph:
         _object_position_srvs[glyph] = rospy.ServiceProxy(f'/object_position/{glyph.name.lower()}', ObjectPosition, persistent=True)
+

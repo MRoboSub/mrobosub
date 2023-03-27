@@ -23,27 +23,40 @@ class Glyph(Enum):
 class binCamPosServiceMock:
     def __init__(self) -> None:
         self.position = BinCamPosResponse() ## dummy position
-        self.service = rospy.Service('bin_cam_pos', BinCamPos, self.handle_obj_request)
+        self.service = rospy.Service('bin_cam_pos', BinCamPos, self._handle_obj_request)
 
-    def handle_obj_request(self, _msg):
+    def _handle_obj_request(self, _msg):
         return self.position
     
     def set_position(self, pos: BinCamPosResponse):
         self.position = pos
 
+# DEPRECATED we don't use glyphs no more
+# class ObjectPositionServiceMock:
+#     def __init__(self) -> None:
+#         self._visible_glyphs: Dict[Glyph, ObjectPositionResponse] = {}
+#         mk_service = lambda name, glyph: rospy.Service(f'object_position/{name}', ObjectPosition, lambda _msg : self._handle_obj_request(glyph))
+#         self.services = {glyph: mk_service(glyph.name.lower(), glyph) for glyph in Glyph}
+
+#     def _handle_obj_request(self, target: Glyph):
+#         res = ObjectPositionResponse()
+#         res.found = False
+#         return self._visible_glyphs.get(target, res)
+
+#     def set_seen_glyphs(self, positions: Dict[Glyph, ObjectPositionResponse]):
+#         self._visible_glyphs = positions
+
 class ObjectPositionServiceMock:
     def __init__(self) -> None:
-        self._visible_glyphs: Dict[Glyph, ObjectPositionResponse] = {}
-        mk_service = lambda name, glyph: rospy.Service(f'object_position/{name}', ObjectPosition, lambda _msg : self._handle_obj_request(glyph))
-        self.services = {glyph: mk_service(glyph.name.lower(), glyph) for glyph in Glyph}
+        self.objectPosition = ObjectPositionResponse()
+        self.service = rospy.Service('hsv_buoy_position', ObjectPosition, self._handle_obj_request)
 
-    def _handle_obj_request(self, target: Glyph):
-        res = ObjectPositionResponse()
-        res.found = False
-        return self._visible_glyphs.get(target, res)
 
-    def set_seen_glyphs(self, positions: Dict[Glyph, ObjectPositionResponse]):
-        self._visible_glyphs = positions
+    def _handle_obj_request(self, _msg):
+        return self.objectPosition
+
+    def set_position(self, position: ObjectPositionResponse):
+        self.objectPosition = position
 
 class PoseMock:
     def __init__(self) -> None:
@@ -137,17 +150,18 @@ def main():
     seen.x_theta = -5.
     seen.y_theta = 0.
     seen.confidence = 1.
-    ml_srvs.set_seen_glyphs({Glyph.EARTH: seen})
+    #TODO remake these ml tests with new object position stuff if needed
+    #ml_srvs.set_seen_glyphs({Glyph.EARTH: seen})
 
     for i in range(20*5):
         sleep(0.05)
 
-    ml_srvs.set_seen_glyphs({})
+    #ml_srvs.set_seen_glyphs({})
 
     for i in range(20*8):
         sleep(0.05)
 
-    ml_srvs.set_seen_glyphs({Glyph.ABYDOS: seen})
+    #ml_srvs.set_seen_glyphs({Glyph.ABYDOS: seen})
 
     for i in range(20*60):
         sleep(0.05)

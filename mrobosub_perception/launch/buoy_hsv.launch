@@ -8,5 +8,7 @@
     args="$(arg always_run)"
   >
     <rosparam command="load" file="$(find mrobosub_perception)/params/buoy_hsv.yaml" />
+    <param name="serv_name" type="str" value="/hsv_buoy_position" />
+    <rosparam command="load" file="$(find mrobosub_perception)/params/hsv_filter_1.yaml" />
   </node> 
 </launch>
