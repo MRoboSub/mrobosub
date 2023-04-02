@@ -3,4 +3,5 @@
     <rosparam command="delete" param="/joystick_teleop/" />
     <rosparam command="load" file="$(find mrobosub_teleop)/params/joystick_controls.yaml" />
   </node>
+  <node name="joy_node" pkg="joy" type="joy_node"/>
 </launch>
