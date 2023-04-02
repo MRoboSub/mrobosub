@@ -15,18 +15,19 @@ transitions = {
     AlignGate.TimedOut: ApproachGate,
 
     ApproachGate.Unreached: ApproachGate,
-    ApproachGate.FoundPathMarker: AlignPathMarker,
     ApproachGate.TimedOut: FallBackTurn,
 
-    #Scan.NotFound: Scan,
-    #Scan.FoundPathMarker: AlignPathMarker,
-    #Scan.TimedOut: FallBackTurn,
+    SeenGateImage: ApproachGateImage,
+    FoundBuoyPathMarker: AlignPathMarker,
 
-    FallBackTurn.Unaligned: FallbackTurn,
-    FallBackTurn.Aligned: ApproachBuoy,
+    ApproachGateImage.GoneThroughGate: FallBackTurn,
 
     AlignPathMarker.Unaligned: AlignPathMarker,
-    AlignPathMarker.Aligned: ApproachBuoy,
+    AlignPathMarker.Aligned: ApproachBuoyOpen,
+    AlignPathMarker.TimedOut: FallBackTurn,
+
+    FallBackTurn.Unaligned: FallbackTurn,
+    FallBackTurn.Aligned: ApproachBuoyOpen,
 
     ApproachBuoyOpen.BuoyNotSeen: ApproachBuoyOpen,
     ApproachBuoyOpen.SeenBuoy: ApproachBuoyClosed,

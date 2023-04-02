@@ -36,9 +36,14 @@ Namespace = Type
 
 
 Glyph = Enum('Glyph', [
+    'abydos_poo', 'earth_poo',
     'taurus', 'serpens_caput', 'capricornus', 'monoceros', 'sagittarius', 'orion', # abydos
     'auriga', 'cetus', 'centaurus', 'cancer', 'scutum', 'eridanus', # earth
 ])
+
+
+class Gbl:
+    planet_seen: Optional[Glyph] = None
 
 # Look at this!
 class PIO:
