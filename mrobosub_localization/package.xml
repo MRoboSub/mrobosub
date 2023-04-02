@@ -42,5 +42,6 @@
   <depend>mrobosub_msgs</depend>
   <depend>rospy</depend>
   <depend>tf</depend>
+  <depend>dynamic_reconfigure</depend>
 
 </package>
