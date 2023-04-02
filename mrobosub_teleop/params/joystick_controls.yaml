@@ -1,3 +1,4 @@
+# https://docs.google.com/drawings/d/1WsFFssHDDiEz5W3Qh0mATrt074NOUzndBtDNBxi8qcY/edit
 surge:
     twist:
         axis:
@@ -12,7 +13,7 @@ heave:
     twist:
         axis:
             id: 3
-            scale: -0.2
+            scale: -0.4
     pose:
         axis:
             id: 3
