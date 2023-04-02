@@ -1,13 +1,14 @@
 from umrsm import Outcome, TimedState, State, Param
-from periodic_io import PIO, angle_error
+from periodic_io import PIO, Gbl, angle_error
 
 class ApproachBuoyOpen(TimedState):
-    BuoyNotSeen = Outcome.make('BuoyNotSeen')
-    SeenBuoy = Outcome.make('SeenBuoy', glyph_results=Mapping[Glyph, GlyphPositionResponse])
+    GlyphNotSeen = Outcome.make('GlyphNotSeen')
+    SeenGlyph = Outcome.make('SeenGlyph', glyph_results=Mapping[Glyph, GlyphPositionResponse])
+    HitBuoy = Outcome.make('HitBuoy')
     TimedOut = Outcome.make('TimedOut')
-
-    timeout: Param[float]
+    
     surge_speed: Param[float]
+    timeout: Param[int]
 
     def initialize(self, prev_outcome: Aligned) -> None:
         super().initialize()
@@ -16,23 +17,29 @@ class ApproachBuoyOpen(TimedState):
     def handle_if_not_timedout(self) -> Outcome:
         PIO.set_target_pose_yaw(self.target_yaw)
         PIO.set_target_twist_surge(self.surge_speed)
+        
         res = PIO.query_all_glyphs()
+        hit = Gbl.buoy_collision
+        
         if len(res):
             return self.SeenBuoy(glyph_results=res)
-        else:
-            return self.BuoyNotSeen()
-
-    def handle_once_timedout(self) -> None:
-        PIO.set_target_twist_surge(0)
+        
+        if hit:
+            return self.HitBuoy()
+        
+        return self.BuoyNotSeen()
     
+    def handle_once_timedout(self) -> None:        
+        PIO.set_target_twist_surge(0)
 
+        
 class ApproachBuoyClosed(TimedState):
     NotReached = Outcome.make('NotReached')
-    HitBuoy = Outcome.make('HitBuoy')
-    TimedOut = Outcome.make('TimedOut')
-
+    HitBuoyFirst = Outcome.make('HitBuoyFirst')
+    HitBuoySecond = Outcome.make('HitBuoySecond')
+    
     surge_speed: Param[float]
-    timeout: Param[float]
+    timeout: Param[int]
 
     def initialize(self, prev_outcome: SeenBuoy) -> None:
         super().initialize()
@@ -41,10 +48,18 @@ class ApproachBuoyClosed(TimedState):
     def handle_if_not_timedout(self) -> Outcome:
         self.most_recent_results |= PIO.query_all_glyphs()
 
-        # movement based on the results
+        # Use PID with the heave position/percentage 
+        # Use setpoint for yaw angle
+        
+        hit = Gbl.buoy_collision
+        
+        if hit:
+            return self.HitBuoySecond() if Gbl.second_glpyh else self.HitBuoyFirst()
+        
+        return self.NotReached()
 
-        # logic for whether we've hit it
-        return self.HitBuoy()
+    def handle_once_timedout(self) -> None:
+        PIO.set_target_twist_surge(0)
 
 
 class FallBack(TimedState):

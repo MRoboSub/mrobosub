@@ -1,5 +1,5 @@
 import rospy
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, Bool
 from mrobosub_msgs.srv import GlyphPosition, GlyphPositionResponse, PathmarkerAngle
 
 from typing import Type, Mapping, Optional
@@ -29,6 +29,9 @@ def _heave_callback(msg : Float64) -> None:
 def _roll_callback(msg : Float64) -> None:
     PIO.Pose.roll = msg.data
 
+def _collision_callback(msg : Bool) -> None:
+    Gbl.buoy_collision = msg.data
+
 def angle_error(setpoint, state):
         return (setpoint - state + 180) % 360 - 180
 
@@ -44,6 +47,8 @@ Glyph = Enum('Glyph', [
 
 class Gbl:
     planet_seen: Optional[Glyph] = None
+    buoy_collision = False
+    second_glpyh = False
 
 # Look at this!
 class PIO:
@@ -72,7 +77,7 @@ class PIO:
         yaw = 0
         heave = 0
         roll = 0
-
+    
     # @classmethod
     # def heading_within_threshold(cls, threshold):
     #     return angle_error_abs(PIO.heading_value, PIO.current_heading) <= threshold
@@ -138,7 +143,7 @@ class PIO:
 
     @classmethod
     def query_glyph(cls, glyph: Glyph) -> GlyphPositionResponse:
-        return glyph_srv(str(glyph))
+        return cls._glyph_srv(str(glyph))
 
     @classmethod
     def query_all_glyphs(cls) -> Mapping[Glyph, GlyphPositionResponse]:
@@ -156,6 +161,8 @@ class PIO:
     rospy.Subscriber('/pose/yaw', Float64, _yaw_callback)
     rospy.Subscriber('/pose/heave', Float64, _heave_callback)
     rospy.Subscriber('/pose/roll', Float64, _roll_callback)
+    
+    rospy.Subscriber('/collision/collision', Bool, _collision_callback)
 
     # Publishers
     _target_pose_heave_pub = rospy.Publisher('/target_pose/heave', Float64, queue_size=1)
