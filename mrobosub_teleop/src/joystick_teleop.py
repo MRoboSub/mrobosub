@@ -170,8 +170,8 @@ class HeaveControl(ToggleableDOF):
         self.pose_sub = rospy.Subscriber('/pose/heave', Float64, self.update_pose)
         self.get_pose_delta = self.pose_delta_factory()
 
-    def update_pose(self, new_pose: float):
-        self.pose = new_pose
+    def update_pose(self, new_pose: Float64):
+        self.pose = new_pose.data
 
     def __call__(self) -> None:
         if self.toggle_button.rising_edge():
@@ -197,8 +197,8 @@ class YawControl(ToggleableDOF):
         self.get_pose_delta = self.pose_delta_factory()
         self.range = ModulusRange(-180, 180)
 
-    def update_pose(self, new_pose: float):
-        self.pose = new_pose
+    def update_pose(self, new_pose: Float64):
+        self.pose = new_pose.data
 
     def __call__(self) -> None:
         if self.toggle_button.rising_edge():

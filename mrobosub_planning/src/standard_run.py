@@ -22,21 +22,38 @@ transitions = {
 
     ApproachGateImage.GoneThroughGate: FallBackTurn,
 
-    AlignPathMarker.Unaligned: AlignPathMarker,
-    AlignPathMarker.Aligned: ApproachBuoyOpen,
-    AlignPathMarker.TimedOut: FallBackTurn,
+    AlignPathMarker.Unaligned: ApproachBuoyOpen,
+    AlignPathMarker.Aligned: AlignPathMarker,
+    AlignPathMarker.TimedOut: ApproachBuoyOpen,
 
     FallBackTurn.Unaligned: FallbackTurn,
     FallBackTurn.Aligned: ApproachBuoyOpen,
 
-    ApproachBuoyOpen.BuoyNotSeen: ApproachBuoyOpen,
-    ApproachBuoyOpen.SeenBuoy: ApproachBuoyClosed,
-    ApproachBuoyOpen.TimedOut: FallBack,
+    ApproachBuoyOpen.GlyphNotSeen: ApproachBuoyOpen, 
+    ApproachBuoyOpen.SeenGlyph: ApproachBuoyClosed,
+    ApproachBuoyOpen.HitBuoy: FindGlyph,
+    ApproachBuoyOpen.Timeout: Surface,
 
     ApproachBuoyClosed.NotReached: ApproachBuoyClosed,
-    ApproachBuoyClosed.HitBuoy: FallBack,
-    ApproachBuoyClosed.TimedOut: FallBack,
+    ApproachBuoyClosed.HitBuoyFirst: FindGlyph,
+    ApproachBuoyClosed.HitBuoySecond: FallBack,
+    ApproachBuoyClosed.Timeout: Surface,
 
+    FindGlyph.GlyphNotSeen: FindGlyph,
+    FindGlyph.SeenGlyph: Pause,
+    FindGlyph.TimedOut: Pause,
+    
+    Pause.FoundGlyph: ApproachBuoyClosed,
+    Pause.TimedOut: ContingencySubmerge,
+    
+    ContingencySubmerge.Submerging: ContingencySubmerge,
+    ContingencySubmerge.SeenGlyph: ApproachBuoyClosed,
+    ContingencySubmerge.Submerged: ContingencyApproach,
+
+    ContingencyApproach.Approaching: ContingencyApproach,
+    ContingencyApproach.HitBuoy: FallBack,
+    ContingencyApproach.TimedOut: Surface,
+    
     FallBack.NotReached: FallBack,
     FallBack.TimedOut: Ascend,
 

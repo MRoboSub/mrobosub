@@ -7,7 +7,16 @@ project(mrobosub_localization)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS rospy mrobosub_msgs)
+find_package(catkin REQUIRED COMPONENTS rospy mrobosub_msgs dynamic_reconfigure)
+
+#add dynamic reconfigure api
+#find_package(catkin REQUIRED dynamic_reconfigure)
+generate_dynamic_reconfigure_options(
+  cfg/collision_params.cfg
+  #...
+)
+
+
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -101,7 +110,7 @@ find_package(catkin REQUIRED COMPONENTS rospy mrobosub_msgs)
 catkin_package(
 #  INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS rospy mrobosub_msgs tf
+  CATKIN_DEPENDS rospy mrobosub_msgs tf dynamic_reconfigure
 #  DEPENDS system_lib
 )
 
