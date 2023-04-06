@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+
+import RPi.GPIO as gpio
+from enum import Enum
+import time
+import roslaunch
+import rospkg
+from pathlib import Path
+
+class RobotState(Enum):
+    standby = 0
+    brought_up = 1
+    running = 2
+
+
+gpio.setmode(gpio.BOARD)
+
+STRANGE_CONTROLLER_PIN = 3
+CHARM_CONTROLLER_PIN = 5
+
+gpio.setup((STRANGE_CONTROLLER_PIN, CHARM_CONTROLLER_PIN), gpio.IN)
+
+curr_state = RobotState.standby
+
+def gpio_to_binary(inp):
+    if inp == gpio.HIGH:
+        return 1
+    else:
+        return 0
+
+
+
+rospack = rospkg.RosPack()
+
+
+while True:
+    prev_state = curr_state
+
+    strange_input = gpio_to_binary(gpio.input(STRANGE_CONTROLLER_PIN))
+    charm_input = gpio_to_binary(gpio.input(CHARM_CONTROLLER_PIN))
+
+    curr_state = RobotState(strange_input + charm_input)
+
+    if curr_state == prev_state:
+        continue
+    elif curr_state == RobotState.brought_up:
+        if not planner_launch is None:
+            planner_launch.shutdown()
+            planner_launch = None
+        if not bringup_launch is None:
+            bringup_launch.shutdown()
+            bringup_launch = None
+
+        bringup_pkg = Path(rospack.get_path('mrobosub_bringup'))
+        uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+        roslaunch.configure_logging(uuid)
+        bringup_launch = roslaunch.parent.ROSLaunchParent(uuid, [str(bringup_pkg / 'launch' / 'bringup.launch')])
+        bringup_launch.start()
+
+        # run mavros
+    elif curr_state == RobotState.running:
+        uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+        roslaunch.configure_logging(uuid)
+        planner_launch = roslaunch.parent.ROSLaunchParent(uuid, [str(bringup_pkg / 'launch' / 'bringup.launch')])
+        planner_launch.start()
+        # launch state machine
+    else: # curr_state == RobotState.standby
+        if not bringup_launch is None:
+            bringup_launch.shutdown()
+
+    time.sleep(0.01)
+
+
+gpio.cleanup()
+
+
+
+
+
+
