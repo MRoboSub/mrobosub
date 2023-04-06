@@ -27,7 +27,9 @@ def publish_message():
 
   # Create a VideoCapture object
   # The argument '0' gets the default webcam.
-  cap = cv2.VideoCapture(1)
+  cap = cv2.VideoCapture(3)
+  cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 3)
+  # cap.set(cv2.CAP_PROP_EXPOSURE, -1)
 
   # Used to convert between ROS and OpenCV images
   br = CvBridge()
