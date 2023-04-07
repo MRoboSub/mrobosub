@@ -44,7 +44,7 @@ def publish_message():
 
       if ret == True:
         # Print debugging information to the terminal
-        rospy.loginfo('publishing video frame')
+        #rospy.loginfo('publishing video frame')
 
         # Publish the image.
         # The 'cv2_to_imgmsg' method converts an OpenCV
@@ -57,5 +57,5 @@ def publish_message():
 if __name__ == '__main__':
   try:
     publish_message()
-  except rospy.ROSInterruptException:
-    pass
+  except rospy.ROSInterruptException as e:
+    raise e

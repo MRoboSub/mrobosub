@@ -5,10 +5,16 @@
     name="webcam_pub"
     output="screen"
   />
-  <node
+  <!-- <node
     pkg="mrobosub_perception"
     type="webcam_sub.py"
     name="webcam_sub"
+    output="screen"
+  /> -->
+  <node
+    pkg="mrobosub_perception"
+    type="pathmarker.py"
+    name="pathmarker"
     output="screen"
   />
 </launch>
