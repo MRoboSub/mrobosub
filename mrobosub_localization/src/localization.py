@@ -30,10 +30,10 @@ class StateEstimation(Node):
     """
     # pid_params: PIDParams
 
-    heave_offset = 0
-    yaw_offset = 0
-    pitch_offset = 0
-    roll_offset = 0
+    heave_offset = None
+    yaw_offset = None
+    pitch_offset = None
+    roll_offset = None
 
     orientation = None
 
@@ -47,11 +47,12 @@ class StateEstimation(Node):
         rospy.Subscriber('/imu/data', Imu, self.imu_callback)
 
     def raw_depth_callback(self, raw_depth: Float32):
-        if not self.heave_offset:
+        if self.heave_offset is None:
             self.heave_offset = raw_depth.data
         self.heave_pub.publish(raw_depth.data - self.heave_offset)
 
     def imu_callback(self, msg):
+
         orientation = msg.orientation
 
         quaternion = [
@@ -62,6 +63,11 @@ class StateEstimation(Node):
         ]
         euler = euler_from_quaternion(quaternion)
         
+        if self.yaw_offset is None:
+            self.yaw_offset = degrees(-euler[2])
+            self.pitch_offset = degrees(-euler[1])
+            self.roll_offset = degrees(euler[0])
+
         yaw = degrees(-euler[2]) - self.yaw_offset
         pitch = degrees(-euler[1]) - self.pitch_offset
         roll = degrees(euler[0]) - self.roll_offset

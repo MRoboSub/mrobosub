@@ -5,9 +5,9 @@ import prequal_front
 import rospy
 
 class TurnAroundMarker(TimedState):
-    Unreached = Outcome("Unreached")
-    Reached = Outcome("Reached")
-    TimedOut = Outcome("TimedOut")
+    Unreached = Outcome.make("Unreached")
+    Reached = Outcome.make("Reached")
+    TimedOut = Outcome.make("TimedOut")
 
     target_yaw: Param[float]
     yaw_threshold: Param[float]
@@ -75,7 +75,8 @@ class ReturnToGate(State):
             return self.Unreached()
 
 
-transitions = prequal_front.transitions | {
+transitions = prequal_front.transitions
+transitions.update({
     prequal_front.ApproachMarker.Reached: TurnAroundMarker,
 
     TurnAroundMarker.Unreached: TurnAroundMarker,
@@ -90,5 +91,5 @@ transitions = prequal_front.transitions | {
     TurnToGate.TimedOut: ReturnToGate,
 
     ReturnToGate.Unreached: ReturnToGate,
-    ReturnToGate.Reached: Surface,
-}
+    ReturnToGate.Reached: Stop,
+})

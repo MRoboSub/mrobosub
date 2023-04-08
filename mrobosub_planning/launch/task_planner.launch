@@ -10,5 +10,20 @@
             type="yaml"
             name="globals"
         />
+        <param 
+            textfile="$(find mrobosub_planning)/param/prequal_front.yaml" 
+            type="yaml"
+            name="prequal_front"
+        />
+        <param 
+            textfile="$(find mrobosub_planning)/param/prequal_turn.yaml" 
+            type="yaml"
+            name="prequal_turn"
+        />
+        <param 
+            textfile="$(find mrobosub_planning)/param/common.yaml" 
+            type="yaml"
+            name="common"
+        />
     </node>
 </launch>

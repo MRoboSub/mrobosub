@@ -145,7 +145,7 @@ class TimedState(State):
             self.handle_once_timedout()
             return self.TimedOut()
         else:
-            self.handle_if_not_timedout()
+            return self.handle_if_not_timedout()
 
     @abstractmethod
     def handle_if_not_timedout(self) -> Outcome:
@@ -202,6 +202,7 @@ class StateMachine:
         current_state = self.StartState(None)
         while type(current_state) != self.StopState:
             publisher.publish(type(current_state).__qualname__)
+            print(type(current_state).__qualname__)
             outcome = current_state.handle()
             outcome_type = type(outcome) if isinstance(outcome, Outcome) else outcome
             NextState = self.transitions[outcome_type]

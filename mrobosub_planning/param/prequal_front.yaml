@@ -1,0 +1,16 @@
+aligngate:
+  defaults:
+    target_yaw: 0 
+    yaw_threshold: 1 
+    timeout: 10
+
+approachgate:
+  defaults:
+    target_surge_time: 2 
+    speed: 0.15 
+
+
+approachmarker:
+  defaults:
+    target_surge_time: 6
+    speed: 0.15

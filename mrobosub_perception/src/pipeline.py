@@ -21,9 +21,9 @@ class PathmarkerPipeline:
         self.blur_output = None
 
         self.__hsv_threshold_input = self.blur_output
-        self.__hsv_threshold_hue = [0.0, 26.4163793231847]
-        self.__hsv_threshold_saturation = [70.76052474461012, 179.1589539693891]
-        self.__hsv_threshold_value = [100.89927838860655, 255.0]
+        self.__hsv_threshold_hue = [0.0, 45]
+        self.__hsv_threshold_saturation = [46, 151]
+        self.__hsv_threshold_value = [63, 255.0]
 
         self.hsv_threshold_output = None
 

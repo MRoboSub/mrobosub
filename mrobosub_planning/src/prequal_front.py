@@ -18,7 +18,7 @@ class AlignGate(TimedState):
     def handle_if_not_timedout(self) -> Outcome:
         PIO.set_target_pose_yaw(self.target_yaw)
 
-        if PIO.is_yaw_within_threshold(self.yaw_theshold):
+        if PIO.is_yaw_within_threshold(self.yaw_threshold):
             return self.ReachedAngle()
         else:
             return self.Unaligned()
@@ -79,6 +79,6 @@ transitions = {
 
     ApproachMarker.Unreached: ApproachMarker,
     
-    Surface.Unreached: Surface,
-    Surface.Reached: Stop
+    #Surface.Unreached: Surface,
+    #Surface.Reached: Stop
 }

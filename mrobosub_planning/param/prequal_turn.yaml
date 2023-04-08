@@ -1,0 +1,22 @@
+turnaroundmarker:
+        defaults:
+                target_yaw: 90
+                yaw_threshold: 2
+                timeout: 10
+
+movepastmarker:
+        defaults:
+                target_surge_time: 5
+                speed: 0.3
+
+turntogate:
+        defaults:
+                target_yaw: 180
+                yaw_threshold: 2
+                timeout: 10
+
+returntogate:
+        defaults:
+                target_surge_time: 15
+                speed: 0.3
+
