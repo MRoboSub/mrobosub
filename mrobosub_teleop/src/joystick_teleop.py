@@ -175,13 +175,13 @@ class HeaveControl(ToggleableDOF):
 
     def __call__(self) -> None:
         if self.toggle_button.rising_edge():
-            if self.mode is ControlMode.Twist:
+            if self.mode == ControlMode.Twist:
                 self.mode = ControlMode.Pose
                 self.setpoint = self.pose
             else:
                 self.mode = ControlMode.Twist
 
-        if self.mode is ControlMode.Twist:
+        if self.mode == ControlMode.Twist:
             self.twist_pub.publish(self.get_twist_input())
         else:
             self.setpoint += self.get_pose_delta()
@@ -202,13 +202,13 @@ class YawControl(ToggleableDOF):
 
     def __call__(self) -> None:
         if self.toggle_button.rising_edge():
-            if self.mode is ControlMode.Twist:
+            if self.mode == ControlMode.Twist:
                 self.setpoint = self.pose
                 self.mode = ControlMode.Pose
             else:
                 self.mode = ControlMode.Twist
 
-        if self.mode is ControlMode.Twist:
+        if self.mode == ControlMode.Twist:
             self.twist_pub.publish(self.get_twist_input())
         else:
             self.setpoint += self.get_pose_delta()
@@ -225,13 +225,13 @@ class RollControl(ToggleableDOF):
 
     def __call__(self) -> None:
         if self.toggle_button.rising_edge():
-            if self.mode is ControlMode.Twist:
+            if self.mode == ControlMode.Twist:
                 self.setpoint = 0
                 self.mode = ControlMode.Pose
             else:
                 self.mode = ControlMode.Twist
 
-        if self.mode is ControlMode.Twist:
+        if self.mode == ControlMode.Twist:
             self.twist_pub.publish(self.get_twist_input())
         else:
             self.setpoint += self.get_pose_delta()
@@ -248,13 +248,13 @@ class PitchControl(ToggleableDOF):
 
     def __call__(self) -> None:
         if self.toggle_button.rising_edge():
-            if self.mode is ControlMode.Twist:
+            if self.mode == ControlMode.Twist:
                 self.setpoint = 0
                 self.mode = ControlMode.Pose
             else:
                 self.mode = ControlMode.Twist
 
-        if self.mode is ControlMode.Twist:
+        if self.mode == ControlMode.Twist:
             self.twist_pub.publish(self.get_twist_input())
         else:
             self.setpoint += self.get_pose_delta()
@@ -342,5 +342,5 @@ class JoystickTeleop(Node):
     def cleanup(self):
         self.stop()
 
-if __name__ is "__main__":
+if __name__ == "__main__":
     JoystickTeleop().run()

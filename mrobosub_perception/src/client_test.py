@@ -3,7 +3,7 @@
 import rospy
 from mrobosub_msgs.srv import ObjectPosition
 
-if __name__ is '__main__':
+if __name__ == '__main__':
 
     rospy.init_node("ml_test", anonymous=False)
     

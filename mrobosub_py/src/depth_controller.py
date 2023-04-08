@@ -123,7 +123,7 @@ class DepthController(Controller):
         print(logstr)
 
 
-if __name__ is "__main__":
+if __name__ == "__main__":
     print("depth_control: Starting")
 
     depth_controller = DepthController()

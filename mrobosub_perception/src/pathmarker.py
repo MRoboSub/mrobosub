@@ -41,6 +41,6 @@ def handle_request(msg):
     return resp
 
 
-if __name__ is "__main__":
+if __name__ == "__main__":
     pathmarker_service()
     rospy.spin()

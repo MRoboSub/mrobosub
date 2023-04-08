@@ -21,5 +21,5 @@ class ForwardTestNode(Node):
     def cleanup(self):
         self._surge_pub.publish(0)
 
-if __name__ is '__main__':
+if __name__ == '__main__':
     ForwardTestNode().run()

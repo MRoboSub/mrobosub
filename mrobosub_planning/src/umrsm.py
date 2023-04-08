@@ -185,7 +185,7 @@ class StateMachine:
     def _load_params(state: Type[State], module: str, state_name, machine_name: str = '') -> None:
         """Set all parameters in the module/state_name/machine_name namespace of the ROS parameter services as class
         variables in state."""
-        if module is '__main__':
+        if module == '__main__':
             module = 'globals'
         namespace = f'~{module}/{state_name}/{machine_name}' if machine_name else f'~{module}/{state_name}'
         print(f'loading namespace {namespace}')
