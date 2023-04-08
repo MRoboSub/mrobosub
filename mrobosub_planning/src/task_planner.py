@@ -18,7 +18,7 @@ transition_maps = {
 }
 
 
-if __name__ is '__main__':
+if __name__ == '__main__':
     rospy.init_node('task_planner')
     machine_name = sys.argv[1]
     machine = StateMachine(

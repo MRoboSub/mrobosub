@@ -42,7 +42,7 @@ def publish_message():
       # as the video frame.
       ret, frame = cap.read()
 
-      if ret is True:
+      if ret == True:
         # Print debugging information to the terminal
         #rospy.loginfo('publishing video frame')
 
@@ -54,7 +54,7 @@ def publish_message():
       # Sleep just enough to maintain the desired rate
       rate.sleep()
 
-if __name__ is '__main__':
+if __name__ == '__main__':
   try:
     publish_message()
   except rospy.ROSInterruptException as e:
