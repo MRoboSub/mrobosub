@@ -75,5 +75,5 @@ class RectangleTestNode(Node):
         self.sway_output_pub.publish(0)
         self.roll_output_pub.publish(0)
 
-if __name__ == '__main__':
+if __name__ is '__main__':
     RectangleTestNode().run()

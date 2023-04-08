@@ -188,7 +188,7 @@ class PathmarkerPipeline:
             A filtered list of Lines.
         """
         detector = cv2.createLineSegmentDetector()
-        if (len(input.shape) == 2 or input.shape[2] == 1):
+        if (len(input.shape) is 2 or input.shape[2] is 1):
             lines = detector.detect(input)
         else:
             tmp = cv2.cvtColor(input, cv2.COLOR_BGR2GRAY)
@@ -284,7 +284,7 @@ def merge_lines_pipeline_2(lines):
     return super_lines_final
 
 def merge_lines_segments1(lines, use_log=False):
-    if(len(lines) == 1):
+    if(len(lines) is 1):
         return lines[0]
 
     line_i = lines[0]

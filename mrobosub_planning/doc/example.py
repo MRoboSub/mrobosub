@@ -28,7 +28,7 @@ class Stop(State):
         return self.Failure(self.outcome) if self.error else self.Success(self.outcome)
 
 
-if __name__ == '__main__':
+if __name__ is '__main__':
     transitions = {
         Start.Complete: Submerge,
         Submerge.ReachedTarget: Turn,

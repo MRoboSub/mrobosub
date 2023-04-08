@@ -88,5 +88,5 @@ class RectangleTestNode(Node):
         self.surge_output_pub.publish(0)
         self.sway_output_pub.publish(0)
 
-if __name__ == '__main__':
+if __name__ is '__main__':
     RectangleTestNode().run()

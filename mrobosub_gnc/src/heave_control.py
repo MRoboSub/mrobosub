@@ -63,5 +63,5 @@ class HeaveControlNode(Node):
     def cleanup(self):
         self.output_heave_pub.publish(0)
 
-if __name__ == '__main__':
+if __name__ is '__main__':
     HeaveControlNode().run()

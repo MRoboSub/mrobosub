@@ -21,7 +21,7 @@ class CollisionDetector(Node):
         self.last_time = 0
 
     def filter_callback(self, msg):
-        if self.last_time == 0:
+        if self.last_time is 0:
             self.pub_filtered.publish(msg.linear_acceleration.x)
             self.last_value = msg.linear_acceleration.x
             self.last_time = msg.header.stamp.secs + msg.header.stamp.nsecs / 1e9
@@ -46,5 +46,5 @@ class CollisionDetector(Node):
         srv = Server(collision_paramsConfig, self.reconfigure_callback)
         rospy.spin()
 
-if __name__ == "__main__":
+if __name__ is "__main__":
     CollisionDetector().run()

@@ -87,7 +87,7 @@ class DOFTeleop(Node):
             requested_dof = args[0][:2].lower()
 
             # handle quits
-            if requested_dof == "" or requested_dof.startswith("q"):
+            if requested_dof is "" or requested_dof.startswith("q"):
                 print("Quitting!")
                 return
 
@@ -146,5 +146,5 @@ class DOFTeleop(Node):
             dof["twist"].publish(0)
 
 
-if __name__ == "__main__":
+if __name__ is "__main__":
     DOFTeleop().run()

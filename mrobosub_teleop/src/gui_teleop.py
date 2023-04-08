@@ -48,7 +48,7 @@ class MainGUI(tk.Tk):
         super().__init__(*args, **kwargs)
         
 
-if __name__ == '__main__':
+if __name__ is '__main__':
     # root = tk.Tk()
 
     frame = MainGUI()

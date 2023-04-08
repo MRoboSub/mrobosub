@@ -44,5 +44,5 @@ def receive_message():
   # Close down the video stream when done
   cv2.destroyAllWindows()
 
-if __name__ == '__main__':
+if __name__ is '__main__':
   receive_message()

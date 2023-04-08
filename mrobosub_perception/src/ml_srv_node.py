@@ -213,7 +213,7 @@ def zed_callback(message):
 def handle_obj_request(idx, msg):
     global latest_request_time
     latest_request_time = rospy.get_time()
-    while recent_positions[idx] == None:
+    while recent_positions[idx] is None:
         rospy.sleep(5)
     return recent_positions[idx]
 
@@ -224,7 +224,7 @@ obj_pos_pub = None
 bounding_pub = None
 print("model loaded")
 
-if __name__ == '__main__':
+if __name__ is '__main__':
     print("made it to main")
     rospy.init_node('ml_server', anonymous=False)
     print(sys.version)

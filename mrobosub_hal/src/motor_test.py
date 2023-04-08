@@ -34,6 +34,6 @@ class MotorTestNode:
         self.pub.publish(msg)
         print("Motor test complete")
 
-if __name__ == "__main__":
+if __name__ is "__main__":
     node = MotorTestNode()
     node.run()

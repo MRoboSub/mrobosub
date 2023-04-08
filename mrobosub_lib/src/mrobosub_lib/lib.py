@@ -26,7 +26,7 @@ class Node:
 
         set_params()
         for name, typ in get_type_hints(self.__class__).items():
-            if typ == Param and getattr(self, name) is None:
+            if typ is Param and getattr(self, name) is None:
                 raise MissingParameterError(name)
 
         self.param_reset_srv = rospy.Service('~/reset_params', Empty, set_params)
@@ -65,10 +65,10 @@ def subscriber(topic_name, MsgType=None):
         cb_annots.pop('return', None) # remove the return type annotation if it exists
         if len(cb_annots) > 1:
             raise ValueError('callback must accept exactly one argument')
-        elif len(cb_annots) == 0:
+        elif len(cb_annots) is 0:
             if MsgType is None:
                 raise ValueError('must either annotate callback parameter or explicitly provide MsgType')
-        else: # len(cb_annots) == 1
+        else: # len(cb_annots) is 1
             _, MsgType = cb_annots.popitem()
 
         # TODO: currently broken; does not pass self as first parameter, making it unable to be a method
@@ -86,10 +86,10 @@ def subscriber(topic_name, MsgType=None):
 #         cb_annots.pop('return', None) # remove the return type annotation if it exists
 #         if len(cb_annots) > 1:
 #             raise InvalidArgument('callback must accept exactly one argument')
-#         elif len(cb_annots) == 0:
+#         elif len(cb_annots) is 0:
 #             if MsgType is None:
 #                 raise InvalidArgument('must either annotate callback parameter or explicitly provide MsgType')
-#         else: # len(cb_annots) == 1
+#         else: # len(cb_annots) is 1
 #             _, MsgType = cb_annots.popitem()
 
 #         self.subscriber = rospy.Subscriber(topic_name, MsgType, callback)
