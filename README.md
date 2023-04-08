@@ -32,6 +32,29 @@ $ docker compose exec mrobosub bash
 
 ![image.png](./docs/img/coords.png)
 
+
+## Computer Setup
+
+### Bringup
+
+Use the `robot_upstart` package to run a launch file on boot
+
+```bash
+$ sudo apt install ros-noetic-robot-upstart
+$ rosrun robot_upstart install <pkg>/launch/<file>.launch --job <service_name> --symlink
+$ sudo systemctl daemon-reload
+$ sudo systemctl start <service_name>
+``` 
+
+### GPIO
+
+Bringup as currently written relies on GPIO. In order to run GPIO code, regular users need read/write access to `/dev/gpiomem`
+
+```bash
+$ chmod o+rw /dev/gpiomem
+```
+
+
 ## Messages
 
 ### Wildcards

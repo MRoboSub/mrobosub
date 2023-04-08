@@ -101,7 +101,7 @@ find_package(catkin REQUIRED COMPONENTS mrobosub_msgs)
 catkin_package(
 #  INCLUDE_DIRS include
 LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS mrobosub_msgs zed_integration
+  CATKIN_DEPENDS mrobosub_msgs
   DEPENDS python-numpy python-cv2 python-cv_bridge
 )
 

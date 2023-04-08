@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="mrobosub_bringup" name="quartermaster" type="quartermaster" />
+</launch>

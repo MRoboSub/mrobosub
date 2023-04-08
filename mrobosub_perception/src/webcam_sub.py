@@ -18,16 +18,15 @@ def callback(data):
   br = CvBridge()
 
   # Output debugging information to the terminal
-  rospy.loginfo("receiving video frame")
-  print(data.height, data.width)
+  # rospy.loginfo("receiving video frame")
 
   # Convert ROS Image message to OpenCV image
-#   current_frame = br.imgmsg_to_cv2(data)
+  current_frame = br.imgmsg_to_cv2(data, desired_encoding='passthrough')
 
 #   # Display image
-#   cv2.imshow("camera", current_frame)
+  cv2.imshow("camera", current_frame)
 
-#   cv2.waitKey(1)
+  cv2.waitKey(1)
 
 def receive_message():
 
