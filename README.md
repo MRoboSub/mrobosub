@@ -57,7 +57,7 @@ $ chmod o+rw /dev/gpiomem
 To permanently allow this
 
 ```bash
-$ sudo adduser dialout
+$ sudo usermod -a -G dialout pi
 $ sudo apt install rpi.gpio-common
 ```
 
