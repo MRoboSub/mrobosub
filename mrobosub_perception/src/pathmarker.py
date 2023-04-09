@@ -13,6 +13,9 @@ from pipeline import PathmarkerPipeline
 pipeline = PathmarkerPipeline()
 resp = PathmarkerAngleResponse()
 
+pub = rospy.Publisher('bot_cam_debug', Image, queue_size=10)
+br = CvBridge()
+
 def pathmarker_service():
     rospy.init_node('pathmaker', anonymous=True)
     print("testing")
@@ -32,6 +35,11 @@ def handle_frame(data):
     resp.found = pipeline.found
     resp.angle = pipeline.angle
     image = pipeline.hsv_threshold_output
+
+    for line in pipeline.filter_lines_output:
+        cv2.line(image, (line.x1, line.y1), (line.x2, line.y2), (255,0,0))
+
+    pub.publish(br.cv2_to_imgmsg(image))
 
     # cv2.imshow("camera_2", image)
     # cv2.waitKey(1)
