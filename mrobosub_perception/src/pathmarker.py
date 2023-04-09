@@ -7,6 +7,7 @@ from mrobosub_lib.lib import Node
 from cv_bridge import CvBridge
 import cv2
 from mrobosub_msgs.srv import PathmarkerAngle, PathmarkerAngleResponse
+import numpy as np
 
 from pipeline import PathmarkerPipeline
 
@@ -35,7 +36,7 @@ def handle_frame(data):
     resp.found = pipeline.found
     resp.angle = pipeline.angle
     mask = pipeline.hsv_threshold_output
-    image = pipeline.soruce
+    image = np.copy(pipeline.soruce)
 
     image[(mask==0).all(-1)] = 0
 
