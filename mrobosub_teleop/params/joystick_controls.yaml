@@ -60,6 +60,9 @@ pitch:
         axis:
             id: 5
             scale: 0.1
+state_machine:
+    switch_mode: 8
+    soft_stop_id: 3
+    zero_pos_sensors: 2
 estop_id: 9
 update_rate: 50
-

@@ -16,7 +16,7 @@ class SurgeControlNode(Node):
 
     """
     Publishers
-    - /output_wrench/yaw
+    - /output_wrench/surge
     """
     # pid_params: PIDParams
 
