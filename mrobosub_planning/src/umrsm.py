@@ -210,14 +210,14 @@ class StateMachine:
         publisher = rospy.Publisher(STATE_TOPIC, String, queue_size=1)
         self.current_state = self.StartState(None)
         while type(self.current_state) != self.StopState:
-            publisher.publish(type(current_state).__qualname__)
-            outcome = current_state.handle()
+            publisher.publish(type(self.current_state).__qualname__)
+            outcome = self.current_state.handle()
             outcome_type = type(outcome) if isinstance(outcome, Outcome) else outcome
             if self.stop_signal_recvd:
                 NextState = self.StopState
             else:
                 NextState = self.transitions[outcome_type]
-            rospy.logdebug(f'{type(current_state).__qualname__} -> {NextState.__qualname__}')
+            rospy.logdebug(f'{type(self.current_state).__qualname__} -> {NextState.__qualname__}')
             if type(self.current_state) != NextState:
                 self.current_state = NextState(outcome)
                 rospy.loginfo(f'transition {type(self.current_state).__qualname__} --[{outcome_type.__qualname__}]--> {NextState.__qualname__}')

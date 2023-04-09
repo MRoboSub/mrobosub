@@ -26,9 +26,6 @@ class Submerge(TimedState):
             return self.Submerged()
         else:
             return self.Unreached()
-    
-
-Surface = Stop
 
 class Stop(State):
     Finish = Outcome.make("Finish")
@@ -47,3 +44,5 @@ class Stop(State):
         PIO.set_target_twist_roll(0)
         PIO.set_target_twist_sway(0)
         return self.Finish()
+
+Surface = Stop
