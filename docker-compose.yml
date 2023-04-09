@@ -2,6 +2,7 @@ version: "3"
 services:
   mrobosub:
     image: mrobosub/mrobosub
+    privileged: true
     ports:
       - "10000:10000"
     volumes:

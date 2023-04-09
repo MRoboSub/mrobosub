@@ -26,13 +26,13 @@ class MovePastMarker(State):
     Reached = Outcome.make("TurnToGate")
     
     target_surge_time: Param[float]
-    speed: Param[float]
+    surge_speed: Param[float]
 
     def initialize(self, prev_outcome: Outcome)-> None:
         self.start_time = rospy.get_time()
         
     def handle(self)->Outcome:
-        PIO.set_target_twist_surge(self.speed)
+        PIO.set_target_twist_surge(self.surge_speed)
         if rospy.get_time() - self.start_time >= self.target_surge_time:
             PIO.set_target_twist_surge(0)
             return self.Reached()
@@ -61,13 +61,13 @@ class ReturnToGate(State):
     Reached = Outcome.make("Stop")
     
     target_surge_time: Param[float]
-    speed: Param[float]
+    surge_speed: Param[float]
     
     def initialize(self, prev_outcome: Outcome) -> None:
         self.start_time = rospy.get_time()
     
     def handle(self) -> Outcome:
-        PIO.set_target_twist_surge(self.speed)
+        PIO.set_target_twist_surge(self.surge_speed)
         if rospy.get_time() - self.start_time >= self.target_surge_time:
             PIO.set_target_twist_surge(0)
             return self.Reached()

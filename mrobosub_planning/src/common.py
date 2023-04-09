@@ -28,18 +28,22 @@ class Submerge(TimedState):
             return self.Unreached()
     
 
-class Surface(State):
-    # TODO
-    pass
+Surface = Stop
 
 class Stop(State):
     Finish = Outcome.make("Finish")
 
     def initialize(self, prev_outcome: Outcome) -> None:
-        PIO.forward = 0
-        PIO.lateral = 0
-        PIO.target_depth = 0
-        PIO.set_override_heading(0)
+        PIO.set_target_pose_heave(0)
+        PIO.set_target_twist_yaw(0)
+        PIO.set_target_twist_surge(0)
+        PIO.set_target_twist_roll(0)
+        PIO.set_target_twist_sway(0)
     
     def handle(self)->Outcome:
+        PIO.set_target_pose_heave(0)
+        PIO.set_target_twist_yaw(0)
+        PIO.set_target_twist_surge(0)
+        PIO.set_target_twist_roll(0)
+        PIO.set_target_twist_sway(0)
         return self.Finish()

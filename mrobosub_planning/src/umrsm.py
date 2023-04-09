@@ -7,10 +7,12 @@ from dataclasses import make_dataclass, field
 from typing import Mapping, Type, Final, cast
 import rospy
 from std_msgs.msg import String
+from std_srvs.srv import Trigger
 
 from copy import copy
 
-STATE_TOPIC = 'current_state'
+STATE_TOPIC = 'captain/current_state'
+SOFT_STOP_SERVICE = 'captain/soft_stop'
 
 __all__ = ('Outcome', 'State', 'TimedState', 'StateMachine', 'Param')
 
@@ -34,7 +36,7 @@ the module __main__ [i.e. the module of the file which gets launched rather than
 loaded into the particular state:
 5. ~{module}/{state}/defaults
 6. ~{module}/{state}/{machine}
-the state name is converted to all lowercase without spaces or underscores. the module name
+the state name is converted to all lowercase without spaces or underscores. 
 
 the purpose of loading parameters both for the defaults and {machine} namespaces is so that states shared
     between multiple state machines can override parameters when used in a particular machine if necessary.
@@ -172,6 +174,9 @@ class StateMachine:
         self.transitions = transitions
         self.StopState = StopState
 
+        self._soft_stop_srv = rospy.Service(SOFT_STOP_SERVICE, Trigger, self.soft_stop)
+        self.stop_signal_recvd = False
+
         self._load_params(State, 'globals', 'defaults')
         self._load_params(State, 'globals', self.name)
         states = set(transitions.values()).union({self.StartState})
@@ -193,23 +198,28 @@ class StateMachine:
             print(f'\t{key}: {value}')
             setattr(state, key, value)  # read-only constants
 
+    def soft_stop(self) -> Tuple[bool, string]:
+        self.stop_signal_recvd = True
+        return True, self.current_state.__qualname__
+
     def run(self) -> Outcome:
         """ Performs a run, beginning with the StartState and ending when it reaches StopState.
             
             Returns the Outcome from calling handle() on StopState.
         """
         publisher = rospy.Publisher(STATE_TOPIC, String, queue_size=1)
-        current_state = self.StartState(None)
-        while type(current_state) != self.StopState:
+        self.current_state = self.StartState(None)
+        while type(self.current_state) != self.StopState:
             publisher.publish(type(current_state).__qualname__)
-            print(type(current_state).__qualname__)
             outcome = current_state.handle()
             outcome_type = type(outcome) if isinstance(outcome, Outcome) else outcome
-            NextState = self.transitions[outcome_type]
+            if self.stop_signal_recvd:
+                NextState = self.StopState
+            else:
+                NextState = self.transitions[outcome_type]
             rospy.logdebug(f'{type(current_state).__qualname__} -> {NextState.__qualname__}')
-            if type(current_state) != NextState:
-                current_state = NextState(outcome)
-                rospy.loginfo(f'transition {type(current_state).__qualname__} -> {NextState.__qualname__}')
-        publisher.publish(type(current_state).__qualname__)
-        return current_state.handle()  # handle stop state
-        
+            if type(self.current_state) != NextState:
+                self.current_state = NextState(outcome)
+                rospy.loginfo(f'transition {type(self.current_state).__qualname__} --[{outcome_type.__qualname__}]--> {NextState.__qualname__}')
+        publisher.publish(type(self.current_state).__qualname__)
+        return self.current_state.handle()  # handle stop state
