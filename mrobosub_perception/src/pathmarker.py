@@ -34,11 +34,14 @@ def handle_frame(data):
     pipeline.process(image_ocv)
     resp.found = pipeline.found
     resp.angle = pipeline.angle
-    image = pipeline.hsv_threshold_output
+    mask = pipeline.hsv_threshold_output
+    image = pipeline.soruce
+
+    image[(mask==0).all(-1)] = 0
 
     for line in pipeline.filter_lines_output:
         print("adding line")
-        image = cv2.line(image, (line.x1, line.y1), (line.x2, line.y2), (255,0,0))
+        image = cv2.line(image, (line.x1, line.y1), (line.x2, line.y2), (255,0,0), 3)
 
     pub.publish(br.cv2_to_imgmsg(image))
 
