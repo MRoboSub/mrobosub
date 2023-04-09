@@ -4,7 +4,6 @@ import rospy
 from sensor_msgs.msg import Joy
 from std_msgs.msg import Header, Float64
 from std_srvs.srv import Trigger
-from mrobosub_msgs.srv import StateOffsets
 from typing import Callable, Dict, Union
 from enum import Enum, auto
 
@@ -342,7 +341,7 @@ class JoystickTeleop(Node):
         self.axis_controls['yaw'] = YawControl(self.inputs, self.yaw)
         self.axis_controls['roll'] = RollControl(self.inputs, self.roll)
         self.axis_controls['pitch'] = PitchControl(self.inputs, self.pitch)
-        self.periodic_funcs |= self.axis_controls
+        self.periodic_funcs.update(self.axis_controls)
 
         self.wrench_pubs = [rospy.Publisher(f'/output_wrench/{axis}', Float64, queue_size=1) for axis in AXES]
 
@@ -387,7 +386,7 @@ class JoystickTeleop(Node):
             self.in_state_machine_mode = True
         else:
             del self.periodic_funcs['state_machine']
-            self.periodic_funcs |= self.axis_controls
+            self.periodic_funcs.update(self.axis_controls)
             self.in_state_machine_mode = False
 
     def soft_stop(self):
