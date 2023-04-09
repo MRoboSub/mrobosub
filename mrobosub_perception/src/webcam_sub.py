@@ -15,7 +15,6 @@ from pathlib import Path
 import time
 from datetime import datetime
 
-last_time = time.time()
 def callback(data):
 
   # Used to convert between ROS and OpenCV images
@@ -57,4 +56,5 @@ def receive_message():
   cv2.destroyAllWindows()
 
 if __name__ == '__main__':
+  last_time = time.time()
   receive_message()
