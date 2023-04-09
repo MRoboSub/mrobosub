@@ -28,8 +28,8 @@ def callback(data):
 #   # Display image
 
   if cv2.waitKey(1) == ord(' '):
-    Path("./pathmarker_output/").mkdir(exist_ok=True)
-    file_name = f"./pathmarker_output/{datetime.today().strftime('%Y-%m-%d-%H:%M:%S')}.png"
+    Path("/home/pathmarker_output/").mkdir(exist_ok=True)
+    file_name = f"/home/pathmarker_output/{datetime.today().strftime('%Y-%m-%d-%H:%M:%S')}.png"
     cv2.imwrite(file_name, current_frame)
     print(f"Saved Frame {file_name}")
 
