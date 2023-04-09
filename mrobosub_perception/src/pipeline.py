@@ -114,14 +114,14 @@ class PathmarkerPipeline:
             if (abs(self.angle1 - self.angle2) > 20.0):
                 self.angle = 0.0
                 self.found = False
-                print("extremele angle difference detected")
+                # print("extremele angle difference detected")
                 return
-            
+
             self.angle = (self.angle1 + self.angle2) / 2.0
             self.found = True
-            print("self.angle: , ", self.angle)
-            print("self.angle1: , ", self.angle1)
-            print("self.angle2: , ", self.angle2)
+            # print("self.angle: , ", self.angle)
+            # print("self.angle1: , ", self.angle1)
+            # print("self.angle2: , ", self.angle2)
         else:
             self.angle = 0.0
             self.found = False
