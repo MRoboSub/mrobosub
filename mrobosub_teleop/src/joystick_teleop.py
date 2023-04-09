@@ -4,7 +4,6 @@ import rospy
 from sensor_msgs.msg import Joy
 from std_msgs.msg import Header, Float64
 from std_srvs.srv import Trigger
-from mrobosub_msgs.srv import StateOffsets
 from typing import Callable, Dict, Union
 from enum import Enum, auto
 
