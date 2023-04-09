@@ -61,6 +61,29 @@ $ sudo adduser dialout
 $ sudo apt install rpi.gpio-common
 ```
 
+### Persistent Bottom Camera Device Name
+
+In `/dev/udev/rules.d`, add a file named `25-myvideorules.rules` with the following content
+
+```
+SUBSYSTEM=="video4linux", ATTRS{name}=="H264 USB Camera: USB Camera", ATTRS{index}=="0", SYMLINK+="botcam"
+```
+
+If the name of the camera is different, find it by running
+
+```
+udevadm info -a -p $(udevadm info -q path -p /class/video4linux/video0)
+```
+
+Where `video0` is the capture device name under `/dev` (for example, `/dev/video`)
+
+Then restart or run
+
+```
+sudo udevadm control --reload-rules && udevadm trigger
+```
+
+The camera will now be available under `/dev/botcam`
 
 ## Messages
 
