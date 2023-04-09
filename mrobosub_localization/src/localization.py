@@ -7,6 +7,7 @@ from mrobosub_lib.lib import Node, Param
 
 from typing import Optional, Final
 
+from std_srvs.srv import Trigger
 from geometry_msgs.msg import Quaternion
 from sensor_msgs.msg import Imu
 
@@ -45,6 +46,15 @@ class StateEstimation(Node):
         self.roll_pub = rospy.Publisher('/pose/roll', Float64, queue_size=1)    
         rospy.Subscriber('/depth/raw_depth', Float32, self.raw_depth_callback)
         rospy.Subscriber('/imu/data', Imu, self.imu_callback)
+        rospy.Service('localization/zero_state', Trigger, lambda msg: self.handle_reset())
+
+    def handle_reset(self):
+        self.heave_offset = None
+        self.yaw_offset = None
+        self.pitch_offset = None
+        self.roll_offset = None
+
+        return [True, '']
 
     def raw_depth_callback(self, raw_depth: Float32):
         if self.heave_offset is None:

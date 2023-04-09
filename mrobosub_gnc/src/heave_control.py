@@ -18,7 +18,7 @@ class HeaveControlNode(Node):
 
     """
     Publishers
-    - /output_wrench/yaw
+    - /output_wrench/heave
     """
     # pid_params: PIDParams
 

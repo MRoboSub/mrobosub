@@ -18,7 +18,7 @@ class PitchControlNode(Node):
 
     """
     Publishers
-    - /output_wrench/yaw
+    - /output_wrench/pitch
     """
     # pid_params: PIDParams
 

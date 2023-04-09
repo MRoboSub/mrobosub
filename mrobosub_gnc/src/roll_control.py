@@ -18,7 +18,7 @@ class RollControlNode(Node):
 
     """
     Publishers
-    - /output_wrench/yaw
+    - /output_wrench/roll
     """
     # pid_params: PIDParams
 

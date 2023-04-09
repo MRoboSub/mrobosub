@@ -16,7 +16,7 @@ class SwayControlNode(Node):
 
     """
     Publishers
-    - /output_wrench/yaw
+    - /output_wrench/sway
     """
     # pid_params: PIDParams
 
