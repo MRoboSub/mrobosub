@@ -12,7 +12,6 @@ from sensor_msgs.msg import Image # Image is the message type
 from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Images
 import cv2 # OpenCV library
 from pathlib import Path
-import time
 from datetime import datetime
 
 def callback(data):
@@ -32,10 +31,7 @@ def callback(data):
     Path("./pathmarker_output/").mkdir(exist_ok=True)
     file_name = f"./pathmarker_output/{datetime.today().strftime('%Y-%m-%d-%H:%M:%S')}.png"
     cv2.imwrite(file_name, current_frame)
-    last_time = time.time()
-
-  if time.time() - last_time < 5:
-    current_frame = cv2.putText(current_frame, "Saved Frame", (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2)
+    print(f"Saved Frame {file_name}")
 
   cv2.imshow("camera", current_frame)
 
@@ -56,5 +52,4 @@ def receive_message():
   cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-  last_time = time.time()
   receive_message()
