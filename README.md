@@ -75,7 +75,7 @@ If the name of the camera is different, find it by running
 udevadm info -a -p $(udevadm info -q path -p /class/video4linux/video0)
 ```
 
-Where `video0` is the capture device name under `/dev` (for example, `/dev/video`)
+Where `video0` is the capture device name under `/dev` (for example, `/dev/video0`)
 
 Then restart or run
 
