@@ -37,7 +37,7 @@ def handle_frame(data):
     image = pipeline.hsv_threshold_output
 
     for line in pipeline.filter_lines_output:
-        cv2.line(image, (line.x1, line.y1), (line.x2, line.y2), (255,0,0))
+        image = cv2.line(image, (line.x1, line.y1), (line.x2, line.y2), (255,0,0))
 
     pub.publish(br.cv2_to_imgmsg(image))
 
