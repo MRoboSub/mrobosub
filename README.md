@@ -54,6 +54,13 @@ Bringup as currently written relies on GPIO. In order to run GPIO code, regular 
 $ chmod o+rw /dev/gpiomem
 ```
 
+To permanently allow this
+
+```bash
+$ sudo adduser dialout
+$ sudo apt install rpi.gpio-common
+```
+
 
 ## Messages
 
