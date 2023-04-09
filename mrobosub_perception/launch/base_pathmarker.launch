@@ -1,7 +1,7 @@
 <launch>
   <node
     pkg="mrobosub_perception"
-    type="webcam_sub"
+    type="webcam_sub.py"
     name="webcam_sub"
     output="screen"
   />
