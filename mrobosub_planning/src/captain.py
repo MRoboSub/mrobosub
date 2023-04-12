@@ -20,7 +20,7 @@ transition_maps = {
 
 if __name__ == '__main__':
     rospy.init_node('task_planner')
-    machine_name = 'prequal_turn' #sys.argv[1]
+    machine_name = sys.argv[1]
     machine = StateMachine(
         machine_name,
         transition_maps[machine_name],

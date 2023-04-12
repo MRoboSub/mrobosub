@@ -1,5 +1,6 @@
 <launch>
-    <node name="task_planner" pkg="mrobosub_planning" type="task_planner.py" output="screen">
+    <arg name="machine" default="prequal_turn" />
+    <node name="captain" pkg="mrobosub_planning" type="captain.py" output="screen" args="$(arg machine)">
         <param 
             textfile="$(find mrobosub_planning)/param/globals.yaml" 
             type="yaml"
