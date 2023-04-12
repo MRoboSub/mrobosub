@@ -1,10 +1,12 @@
 from umrsm import Outcome, TimedState, State, Param
 from periodic_io import PIO, Gbl, angle_error
 
+SeenGlyph = Outcome.make('SeenGlyph', glyph_results=Mapping[Glyph, GlyphPositionResponse])
+HitBuoyFirst = Outcome.make('HitBuoyFirst')
+HitBuoySecond = Outcome.make('HitBuoySecond')
+
 class ApproachBuoyOpen(TimedState):
     GlyphNotSeen = Outcome.make('GlyphNotSeen')
-    SeenGlyph = Outcome.make('SeenGlyph', glyph_results=Mapping[Glyph, GlyphPositionResponse])
-    HitBuoy = Outcome.make('HitBuoy')
     TimedOut = Outcome.make('TimedOut')
     
     surge_speed: Param[float]
@@ -22,10 +24,10 @@ class ApproachBuoyOpen(TimedState):
         hit = Gbl.buoy_collision
         
         if len(res):
-            return self.SeenBuoy(glyph_results=res)
+            return SeenGlyph(glyph_results=res)
         
         if hit:
-            return self.HitBuoy()
+            return HitBuoyFirst()
         
         return self.BuoyNotSeen()
     
@@ -35,8 +37,6 @@ class ApproachBuoyOpen(TimedState):
         
 class ApproachBuoyClosed(TimedState):
     NotReached = Outcome.make('NotReached')
-    HitBuoyFirst = Outcome.make('HitBuoyFirst')
-    HitBuoySecond = Outcome.make('HitBuoySecond')
     
     surge_speed: Param[float]
     timeout: Param[int]
@@ -53,7 +53,7 @@ class ApproachBuoyClosed(TimedState):
         hit = Gbl.buoy_collision
         
         if hit:
-            return self.HitBuoySecond() if Gbl.second_glpyh else self.HitBuoyFirst()
+            return HitBuoySecond() if Gbl.second_glpyh else HitBuoyFirst()
         
         return self.NotReached()
 
@@ -110,7 +110,6 @@ class PassBuoy(TimedState):
 
 class FindGlyph(TimedState):
     GlyphNotSeen = Outcome.make('GlyphNotSeen')
-    SeenGlyph = Outcome.make('SeenGlyph')
     TimedOut = Outcome.make('TimedOut')
 
     timeout: Param[int]
@@ -122,7 +121,7 @@ class FindGlyph(TimedState):
         res = PIO.query_all_glyphs()
 
         if len(res):
-            return self.SeenGlyph(glyph_results=res)
+            return SeenGlyph(glyph_results=res)
         
         return self.GlyphNotSeen()
 
@@ -131,23 +130,19 @@ class FindGlyph(TimedState):
 
 
 class Pause(TimedState):
-    FoundGlyph = Outcome.make('FoundGlyph')
     TimedOut = Outcome.make('TimedOut')
 
-    def initialize(self, prev_outcome: SeenGlyph) -> None:
-        super().initialize()
-        self.most_recent_results = prev_outcome.glyph_results
+    timeout: Param[float]
 
     def handle_if_not_timedout(self) -> Outcome:
         
-        self.most_recent_results.update(PIO.query_all_glyphs())
+        res = PIO.query_all_glyphs()
 
-        if len(self.most_recent_results):
-            return self.FoundGlyph(glyph_results = self.most_recent_results)
+        if len(res):
+            return SeenGlyph(glyph_results = res)
     
             
 class ContingencySubmerge(State):
-    SeenGlyph = Outcome.make('SeenGlyph')
     Submerged = Outcome.make('Submerged')
     Submerging = Outcome.make('Submerging')
 
@@ -160,7 +155,7 @@ class ContingencySubmerge(State):
         res = PIO.query_all_glyphs()
 
         if len(res):
-            return self.SeenGlyph(glyph_results=res)
+            return SeenGlyph(glyph_results=res)
         
         if PIO.is_heave_within_threshold(threshold=self.threshold):
             return self.Submerged()
@@ -170,7 +165,6 @@ class ContingencySubmerge(State):
 
 class ContingencyApproach(TimedState):
     Approaching = Outcome.make('Approaching')
-    HitBuoy = Outcome.make('HitBuoy')
     TimedOut = Outcome.make('TimedOut')
 
     surge_speed: Param[float]
@@ -182,7 +176,7 @@ class ContingencyApproach(TimedState):
         hit = Gbl.buoy_collision
         
         if hit:
-            return self.HitBuoy()
+            return HitBuoySecond()
         
         return self.Approaching()
     
