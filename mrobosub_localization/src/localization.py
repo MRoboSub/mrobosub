@@ -49,12 +49,19 @@ class StateEstimation(Node):
         rospy.Service('localization/zero_state', Trigger, lambda msg: self.handle_reset())
 
     def handle_reset(self):
+        previous_offsets = f'{self.heave_offset=}, {self.yaw_offset=}, {self.pitch_offset=}, {self.roll_offset=}'
+
         self.heave_offset = None
         self.yaw_offset = None
         self.pitch_offset = None
         self.roll_offset = None
 
-        return [True, '']
+        self.heave_pub.publish(0)
+        self.yaw_pub.publish(0)
+        self.pitch_pub.publish(0)
+        self.roll_pub.publish(0)
+
+        return [True, previous_offsets]
 
     def raw_depth_callback(self, raw_depth: Float32):
         if self.heave_offset is None:
