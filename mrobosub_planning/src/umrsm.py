@@ -7,7 +7,7 @@ from dataclasses import make_dataclass, field
 from typing import Mapping, Type, Final, cast
 import rospy
 from std_msgs.msg import String
-from std_srvs.srv import Trigger
+from std_srvs.srv import Trigger, TriggerRequest
 
 from copy import copy
 
@@ -198,9 +198,9 @@ class StateMachine:
             print(f'\t{key}: {value}')
             setattr(state, key, value)  # read-only constants
 
-    def soft_stop(self) -> Tuple[bool, string]:
+    def soft_stop(self, data: TriggerRequest) -> Tuple[bool, string]:
         self.stop_signal_recvd = True
-        return True, self.current_state.__qualname__
+        return True, type(self.current_state).__qualname__
 
     def run(self) -> Outcome:
         """ Performs a run, beginning with the StartState and ending when it reaches StopState.
