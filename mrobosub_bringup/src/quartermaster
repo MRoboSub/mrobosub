@@ -31,7 +31,11 @@ def gpio_to_binary(inp):
 
 
 rospack = rospkg.RosPack()
+bringup_pkg = Path(rospack.get_path('mrobosub_bringup'))
+planning_pkg = Path(rospack.get_path('mrobosub_planning'))
 
+planner_launch = None
+bringup_launch = None
 
 while True:
     prev_state = curr_state
@@ -51,22 +55,22 @@ while True:
             bringup_launch.shutdown()
             bringup_launch = None
 
-        bringup_pkg = Path(rospack.get_path('mrobosub_bringup'))
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         roslaunch.configure_logging(uuid)
         bringup_launch = roslaunch.parent.ROSLaunchParent(uuid, [str(bringup_pkg / 'launch' / 'bringup.launch')])
         bringup_launch.start()
-
-        # run mavros
     elif curr_state == RobotState.running:
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         roslaunch.configure_logging(uuid)
-        planner_launch = roslaunch.parent.ROSLaunchParent(uuid, [str(bringup_pkg / 'launch' / 'bringup.launch')])
+        planner_launch = roslaunch.parent.ROSLaunchParent(uuid, [str(planning_pkg / 'launch' / 'captain.launch')])
         planner_launch.start()
-        # launch state machine
     else: # curr_state == RobotState.standby
         if not bringup_launch is None:
             bringup_launch.shutdown()
+            bringup_launch = None
+        if not planner_launch is None:
+            planner_launch.shutdown()
+            planner_launch = None
 
     time.sleep(0.01)
 
