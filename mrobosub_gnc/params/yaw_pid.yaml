@@ -1,5 +1,5 @@
 Kp: 0.01
 Ki: 0.0
-Kd: 0.001
+Kd: 0.0015
 angle_error: true
 angle_wrap: 360.0

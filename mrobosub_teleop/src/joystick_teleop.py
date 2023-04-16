@@ -369,7 +369,7 @@ class JoystickTeleop(Node):
         self.inputs.buttons = msg.buttons
 
     def periodic(self):
-        for func in self.periodic_funcs.values():
+        for func in list(self.periodic_funcs.values()):
             func()
 
     def hard_stop(self):
@@ -384,10 +384,12 @@ class JoystickTeleop(Node):
                 del self.periodic_funcs[axis]
             self.periodic_funcs['state_machine'] = self.state_machine_mode
             self.in_state_machine_mode = True
+            print('Quitting teleop mode, entering state machine mode')
         else:
             del self.periodic_funcs['state_machine']
             self.periodic_funcs.update(self.axis_controls)
             self.in_state_machine_mode = False
+            print('Quitting state machine mode, entering teleop mode')
 
     def soft_stop(self):
         soft_stop = rospy.ServiceProxy('captain/soft_stop', Trigger)

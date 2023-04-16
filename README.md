@@ -46,6 +46,14 @@ $ sudo systemctl daemon-reload
 $ sudo systemctl start <service_name>
 ``` 
 
+Then edit the service script with
+
+```bash
+$ sudo vim /usr/sbin/<service_name>-start
+```
+
+Find the line with `export ROS_HOSTNAME=$(hostname)` and replace it with `export ROS_IP=192.168.2.3`
+
 ### GPIO
 
 Bringup as currently written relies on GPIO. In order to run GPIO code, regular users need read/write access to `/dev/gpiomem`
