@@ -18,7 +18,11 @@ gpio.setmode(gpio.BOARD)
 STRANGE_CONTROLLER_PIN = 3
 CHARM_CONTROLLER_PIN = 5
 
+STRANGE_INDICATOR_PIN = 37
+CHARM_INDICATOR_PIN = 36
+
 gpio.setup((STRANGE_CONTROLLER_PIN, CHARM_CONTROLLER_PIN), gpio.IN)
+gpio.setup((STRANGE_INDICATOR_PIN, CHARM_INDICATOR_PIN), gpio.OUT)
 
 curr_state = RobotState.standby
 
@@ -71,6 +75,9 @@ while True:
         if not planner_launch is None:
             planner_launch.shutdown()
             planner_launch = None
+
+    gpio.output(STRANGE_INDICATOR_PIN, bool(strange_input))
+    gpio.output(CHARM_INDICATOR_PIN, bool(charm_input))
 
     time.sleep(0.01)
 
