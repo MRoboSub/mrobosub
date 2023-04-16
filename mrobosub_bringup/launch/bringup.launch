@@ -3,5 +3,5 @@
     <include file="$(find mrobosub_hal)/launch/hal.launch"/>
     <include file="$(find mrobosub_localization)/launch/localization.launch"/>
     <!-- <include file="$(find mrobosub_perception)/launch/perception.launch"/> -->
-    <node pkg="mrobosub_bringup" type="mavros" name="mavros />
+    <node pkg="mrobosub_bringup" type="mavros" name="mavros" />
 </launch>
