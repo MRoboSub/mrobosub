@@ -36,10 +36,10 @@ yaw:
             scale: -1
         increase:
             id: 2
-            scale: 10
+            scale: 30
         decrease:
             id: 0
-            scale: 10
+            scale: 30
 roll:
     toggle: 4
     twist:
