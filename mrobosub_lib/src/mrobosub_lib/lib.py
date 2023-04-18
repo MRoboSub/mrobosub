@@ -5,6 +5,15 @@ from typing import NewType, TypeVar, Final, Sequence, Any, Generic, Callable, ge
 from inspect import getfullargspec
 from std_srvs.srv import Empty, EmptyResponse
 
+def signum(x):
+    if x < 0:
+        return -1
+    elif x > 0:
+        return 1
+    else:
+        return 0
+
+
 Param = Final
 
 class MissingParameterError(Exception):

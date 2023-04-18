@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 import rospy
-from std_msgs.msg import Float64
-from pid_interface import PIDInterface
 
 from mrobosub_lib.lib import Node, Param
 
@@ -28,7 +26,7 @@ class HeaveControlNode(Node):
     heave = 0
 
     def __init__(self):
-        super().__init__('heading_control')
+        super().__init__('heave_control')
         self.pid = PIDInterface("heave_pid", self.pid_callback)
         self.output_heave_pub = rospy.Publisher('/output_wrench/heave', Float64, queue_size=1)
         rospy.Subscriber('/target_pose/heave', Float64, self.target_pose_callback)

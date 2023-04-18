@@ -264,24 +264,30 @@ class PitchControl(ToggleableDOF):
 
 
 class StateMachineMode:
-    def __init__(self, inputs: Inputs, config: config, handle_soft_stop: Callable[[], None]) -> None:
+    def __init__(
+            self,
+            inputs: Inputs,
+            config: config,
+            handle_soft_stop: Callable[[], None],
+            handle_zero: Callable[[], None],
+            handle_idle: Callable[[], None]) -> None:
         self.switch_mode_button = ButtonTrigger(lambda: inputs.get_button(config['switch_mode']))
         self.soft_stop_button = ButtonTrigger(lambda: inputs.get_button(config['soft_stop_id']))
         self.zero_button = ButtonTrigger(lambda: inputs.get_button(config['zero_pos_sensors']))
+        self.idle_button = ButtonTrigger(lambda: inputs.get_button(config['idle']))
         self.handle_soft_stop = handle_soft_stop
+        self.handle_zero = handle_zero
+        self.handle_idle = handle_idle
 
     def __call__(self):
         if self.soft_stop_button.rising_edge():
             self.handle_soft_stop()
 
         if self.zero_button.rising_edge():
-            zero = rospy.ServiceProxy('localization/zero_state', Trigger)
-            try:
-                res = zero()
-                print('Zeroed state estimator')
-                print(res)
-            except rospy.ServiceException as exc:
-                print(f'Unable to zero state estimator ({exc})')
+            self.handle_zero()
+
+        if self.idle_button.rising_edge():
+            self.handle_idle()
 
     def should_switch_mode(self) -> bool:
         return self.switch_mode_button.rising_edge()
@@ -345,7 +351,12 @@ class JoystickTeleop(Node):
 
         self.wrench_pubs = [rospy.Publisher(f'/output_wrench/{axis}', Float64, queue_size=1) for axis in AXES]
 
-        self.state_machine_mode = StateMachineMode(self.inputs, self.state_machine, self.soft_stop)
+        self.state_machine_mode = StateMachineMode(
+            self.inputs,
+            self.state_machine,
+            self.soft_stop,
+            self.handle_zero,
+            self.request_stop_motors)
 
         self.estop_trigger = ButtonTrigger(lambda: self.inputs.get_button(self.estop_id))
 
@@ -372,9 +383,12 @@ class JoystickTeleop(Node):
         for func in list(self.periodic_funcs.values()):
             func()
 
-    def hard_stop(self):
+    def request_stop_motors(self):
         for axis in self.axis_controls.values():
             axis.twist_pub.publish(0)
+
+    def hard_stop(self):
+        self.request_stop_motors()
         for pub in self.wrench_pubs:
             pub.publish(0)
 
@@ -399,6 +413,18 @@ class JoystickTeleop(Node):
             print(res)
         except rospy.ServiceException as exc:
             print(f'Unable to process soft stop ({exc})')
+
+    def handle_zero(self):
+        zero = rospy.ServiceProxy('localization/zero_state', Trigger)
+        try:
+            res = zero()
+            for axis in self.axis_controls:
+                if hasattr(axis, 'setpoint'):
+                    axis.setpoint = 0
+            print('Zeroed state estimator')
+            print(res)
+        except rospy.ServiceException as exc:
+            print(f'Unable to zero state estimator ({exc})')
 
     def run(self):
         rate = rospy.Rate(self.update_rate)

@@ -1,4 +1,4 @@
 submerge:
         defaults:
-                target_depth: 0.5
+                target_depth: 1.7
                 timeout: 5

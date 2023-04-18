@@ -38,6 +38,7 @@ class ControlLoopNode(Node):
         pass
 
 
+
 T = TypeVar('T')
 class SubscribedVar(Generic[T]):
     def __init__(self, topic, cls, initial=None):
