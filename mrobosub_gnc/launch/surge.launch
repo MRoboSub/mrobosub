@@ -1,4 +1,5 @@
 <launch>
   <node name="surge_control" pkg="mrobosub_gnc" type="surge_control.py">
+    <rosparam command="load" file="$(find mrobosub_gnc)/params/surge_control.yaml" />
   </node>
 </launch>
