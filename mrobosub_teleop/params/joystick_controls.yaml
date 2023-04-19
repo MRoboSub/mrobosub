@@ -13,7 +13,7 @@ heave:
     twist:
         axis:
             id: 3
-            scale: -0.4
+            scale: -0.2
     pose:
         axis:
             id: 3
@@ -64,5 +64,6 @@ state_machine:
     switch_mode: 8
     soft_stop_id: 3
     zero_pos_sensors: 2
+    idle: 1
 estop_id: 9
 update_rate: 50
