@@ -5,11 +5,11 @@ turnaroundmarker:
 
 movepastmarker:
   defaults:
-    target_surge_time: 10
+    target_surge_time: 2 
 
 turntogate:
   defaults:
-    target_yaw: 180
+    target_yaw: -170
     timeout: 10
 
 returntogate:

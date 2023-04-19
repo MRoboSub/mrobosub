@@ -219,7 +219,7 @@ class StateMachine:
                 NextState = self.transitions[outcome_type]
             rospy.logdebug(f'{type(self.current_state).__qualname__} -> {NextState.__qualname__}')
             if type(self.current_state) != NextState:
-                self.current_state = NextState(outcome)
                 rospy.loginfo(f'transition {type(self.current_state).__qualname__} --[{outcome_type.__qualname__}]--> {NextState.__qualname__}')
+                self.current_state = NextState(outcome)
         publisher.publish(type(self.current_state).__qualname__)
         return self.current_state.handle()  # handle stop state
