@@ -38,8 +38,12 @@ rospack = rospkg.RosPack()
 planning_pkg = Path(rospack.get_path('mrobosub_planning'))
 capt_launch = None
 
+rospy.wait_for_service('/arming/cmd')
 arm_srv = rospy.ServiceProxy('/arming/cmd', SetBool)
-zero_srv = rospy.ServiceProxy('localization/zero_state', Trigger)
+
+
+rospy.wait_for_service('/localization/zero_state')
+zero_srv = rospy.ServiceProxy('/localization/zero_state', Trigger)
 
 rate = rospy.Rate(10)
 
@@ -57,9 +61,12 @@ while not rospy.is_shutdown():
         arm_resp = arm_srv(False)
         rospy.loginfo(f'arming response: {arm_resp.success}; {arm_resp.message}')
     elif curr_state == RobotState.ready:
-        if not capt_launch is None:
-            capt_launch.shutdown()
-            capt_launch = None
+        #if not capt_launch is None:
+        #    capt_launch.shutdown()
+        #    capt_launch = None
+        if prev_state == RobotState.running:
+            soft_stop = rospy.ServiceProxy('/captain/soft_stop', Trigger)
+            res = soft_stop()
         zero_srv()
         arm_resp = arm_srv(True)
         rospy.loginfo(f'arming response: {arm_resp.success}; {arm_resp.message}')

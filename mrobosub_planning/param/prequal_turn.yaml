@@ -6,7 +6,7 @@ turnaroundmarker:
 
 movepastmarker:
   defaults:
-    target_surge_time: 2 
+    target_surge_time: 8 
     wait_time: 1
 
 turntogate:
