@@ -2,16 +2,20 @@ turnaroundmarker:
   defaults:
     target_yaw: 90
     timeout: 10
+    settle_time: 1
 
 movepastmarker:
   defaults:
     target_surge_time: 2 
+    wait_time: 1
 
 turntogate:
   defaults:
     target_yaw: -170
     timeout: 10
+    settle_time: 1
 
 returntogate:
   defaults:
     target_surge_time: 26
+    wait_time: 1
