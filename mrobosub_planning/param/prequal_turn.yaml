@@ -1,21 +1,31 @@
 turnaroundmarker:
   defaults:
+    target_heave: 1.2
     target_yaw: 90
     timeout: 10
     settle_time: 1
 
 movepastmarker:
   defaults:
+    target_heave: 1.2
     target_surge_time: 8 
     wait_time: 1
 
 turntogate:
   defaults:
-    target_yaw: -170
+    target_heave: 1.2
+    target_yaw: -175
     timeout: 10
     settle_time: 1
 
+leavemarker:
+  defaults:
+    target_heave: 1.2
+    target_surge_time: 10
+    wait_time: 1
+
 returntogate:
   defaults:
-    target_surge_time: 26
+    target_heave: 1.9
+    target_surge_time: 24
     wait_time: 1

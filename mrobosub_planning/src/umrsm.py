@@ -175,6 +175,7 @@ class ForwardAndWait(State):
     def handle(self) -> Outcome:
         if not self.waiting:
             PIO.set_target_twist_surge(self.surge_speed)
+            PIO.set_target_pose_heave(self.target_heave)
 
             if rospy.get_time() - self.start_time >= self.target_surge_time:
                 PIO.set_target_twist_surge(0)
@@ -264,19 +265,23 @@ class StateMachine:
             
             Returns the Outcome from calling handle() on StopState.
         """
+        rate = rospy.Rate(50)
         publisher = rospy.Publisher(STATE_TOPIC, String, queue_size=1)
         self.current_state = self.StartState(None)
         while type(self.current_state) != self.StopState:
             publisher.publish(type(self.current_state).__qualname__)
             outcome = self.current_state.handle()
             outcome_type = type(outcome) if isinstance(outcome, Outcome) else outcome
+            outcome_name = outcome_type.__qualname__
             if self.stop_signal_recvd:
                 NextState = self.StopState
+                outcome_name = '!! Abort !!'
             else:
                 NextState = self.transitions[outcome_type]
             rospy.logdebug(f'{type(self.current_state).__qualname__} -> {NextState.__qualname__}')
             if type(self.current_state) != NextState:
-                rospy.loginfo(f'transition {type(self.current_state).__qualname__} --[{outcome_type.__qualname__}]--> {NextState.__qualname__}')
+                rospy.loginfo(f'transition {type(self.current_state).__qualname__} --[{outcome_name}]--> {NextState.__qualname__}')
                 self.current_state = NextState(outcome)
+            rate.sleep()
         publisher.publish(type(self.current_state).__qualname__)
         return self.current_state.handle()  # handle stop state

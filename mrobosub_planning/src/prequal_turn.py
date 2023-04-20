@@ -34,14 +34,21 @@ class TurnToGate(TurnToYaw):
     timeout: Param[float]
     settle_time: Param[float]
         
-class ReturnToGate(ForwardAndWait):
-    Unreached = Outcome.make("ReturnToGate")
-    Reached = Outcome.make("Stop")
+class LeaveMarker(ForwardAndWait):
+    Unreached = Outcome.make("Unreached")
+    Reached = Outcome.make("Reached")
     
     target_surge_time: Param[float]
     surge_speed: Param[float]
     wait_time: Param[float]
     
+class ReturnToGate(ForwardAndWait):
+    Unreached = Outcome.make("Unreached")
+    Reached = Outcome.make("Reached")
+    
+    target_surge_time: Param[float]
+    surge_speed: Param[float]
+    wait_time: Param[float]
 
 transitions = prequal_front.transitions
 transitions.update({
@@ -55,8 +62,11 @@ transitions.update({
     MovePastMarker.Reached: TurnToGate,
 
     TurnToGate.Unreached: TurnToGate,
-    TurnToGate.Reached: ReturnToGate,
-    TurnToGate.TimedOut: ReturnToGate,
+    TurnToGate.Reached: LeaveMarker,
+    TurnToGate.TimedOut: LeaveMarker,
+
+    LeaveMarker.Unreached: LeaveMarker,
+    LeaveMarker.Reached: ReturnToGate,
 
     ReturnToGate.Unreached: ReturnToGate,
     ReturnToGate.Reached: Stop,
