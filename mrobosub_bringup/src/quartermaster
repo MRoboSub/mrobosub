@@ -55,14 +55,14 @@ while not rospy.is_shutdown():
         continue
     elif curr_state == RobotState.ambient:
         arm_resp = arm_srv(False)
-        rospy.loginfo(f'arming response: {arm_resp.succes; arm_resp.message}')
+        rospy.loginfo(f'arming response: {arm_resp.success}; {arm_resp.message}')
     elif curr_state == RobotState.ready:
         if not capt_launch is None:
             capt_launch.shutdown()
             capt_launch = None
-        arm_resp = arm_srv(True)
-        rospy.loginfo(f'arming response: {arm_resp.succes; arm_resp.message}')
         zero_srv()
+        arm_resp = arm_srv(True)
+        rospy.loginfo(f'arming response: {arm_resp.success}; {arm_resp.message}')
     else:
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         roslaunch.configure_logging(uuid)
