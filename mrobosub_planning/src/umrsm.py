@@ -8,13 +8,14 @@ from typing import Mapping, Type, Final, cast
 import rospy
 from std_msgs.msg import String
 from std_srvs.srv import Trigger, TriggerRequest
+from periodic_io import PIO
 
 from copy import copy
 
 STATE_TOPIC = 'captain/current_state'
 SOFT_STOP_SERVICE = 'captain/soft_stop'
 
-__all__ = ('Outcome', 'State', 'TimedState', 'StateMachine', 'Param')
+__all__ = ('Outcome', 'State', 'TimedState', 'ForwardAndWait', 'TurnToYaw', 'StateMachine', 'Param')
 
 Param = Final
 """ Param generic type used for annotations. The annotations themselves do nothing at runtime. 
@@ -156,6 +157,62 @@ class TimedState(State):
     def handle_once_timedout(self) -> None:
         pass
 
+class ForwardAndWait(State):
+    """
+    Must specify the following outcomes:
+    Unreached
+    Reached
+
+    Must specify the following parameters:
+    target_surge_time: float
+    wait_time: float
+    surge_speed: float
+    """
+    def initialize(self, prev_outcome: Outcome) -> None:
+        self.start_time = rospy.get_time()
+        self.waiting = False
+
+    def handle(self) -> Outcome:
+        if not self.waiting:
+            PIO.set_target_twist_surge(self.surge_speed)
+
+            if rospy.get_time() - self.start_time >= self.target_surge_time:
+                PIO.set_target_twist_surge(0)
+                self.waiting = True
+                self.start_time = rospy.get_time()
+        else:
+            PIO.set_target_twist_surge(0)
+        
+            if rospy.get_time() - self.start_time >= self.wait_time:
+                return self.Reached()
+        
+        return self.Unreached()
+        
+
+class TurnToYaw(TimedState):
+    """
+    Must specify following outcomes:
+    Unreached
+    Reached
+    TimedOut
+
+    Must specify following parameters:
+    target_yaw: float
+    yaw_threshold: float
+    settle_time: float
+    timeout: float
+    """
+    def handle_if_not_timedout(self) -> Outcome:
+        PIO.set_target_pose_yaw(self.target_yaw)
+        
+        if not PIO.is_yaw_within_threshold(self.yaw_threshold):
+            self.timer = rospy.get_time()
+
+        if rospy.get_time() - self.timer >= self.settle_time:
+            return self.Reached()
+
+        return self.Unreached()
+
 class StateMachine:
     """ The main interface for running a system. """
     def __init__(self, name: str, transitions: Mapping[Type[Outcome], Type[State]], StartState: Type[State], StopState: Type[State]):
@@ -219,7 +276,7 @@ class StateMachine:
                 NextState = self.transitions[outcome_type]
             rospy.logdebug(f'{type(self.current_state).__qualname__} -> {NextState.__qualname__}')
             if type(self.current_state) != NextState:
-                self.current_state = NextState(outcome)
                 rospy.loginfo(f'transition {type(self.current_state).__qualname__} --[{outcome_type.__qualname__}]--> {NextState.__qualname__}')
+                self.current_state = NextState(outcome)
         publisher.publish(type(self.current_state).__qualname__)
         return self.current_state.handle()  # handle stop state

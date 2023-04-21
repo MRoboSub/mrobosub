@@ -5,9 +5,12 @@ aligngate:
 
 approachgate:
   defaults:
-    target_surge_time: 6 
+    target_surge_time: 0 
+    wait_time: 1
 
 
 approachmarker:
   defaults:
     target_surge_time: 20
+    wait_time: 1
+

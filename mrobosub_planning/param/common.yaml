@@ -1,4 +1,7 @@
 submerge:
         defaults:
-                target_depth: 1.7
-                timeout: 5
+                target_heave: 1.5
+                heave_threshold: 0.1
+                timeout: 15
+                target_yaw: 0
+                yaw_threshold: 2
