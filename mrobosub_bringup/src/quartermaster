@@ -23,6 +23,7 @@ def gpio_to_binary(inp):
 STRANGE_CONTROLLER_PIN = 3
 CHARM_CONTROLLER_PIN = 5
 
+ON_INDICATOR_PIN = 111
 STRANGE_INDICATOR_PIN = 37
 CHARM_INDICATOR_PIN = 36
 
@@ -30,7 +31,7 @@ rospy.init_node('quartermaster')
 
 gpio.setmode(gpio.BOARD)
 gpio.setup((STRANGE_CONTROLLER_PIN, CHARM_CONTROLLER_PIN), gpio.IN)
-gpio.setup((STRANGE_INDICATOR_PIN, CHARM_INDICATOR_PIN), gpio.OUT)
+gpio.setup((ON_INDICATOR_PIN, STRANGE_INDICATOR_PIN, CHARM_INDICATOR_PIN), gpio.OUT)
 
 curr_state = RobotState.ambient
 
@@ -44,6 +45,8 @@ arm_srv = rospy.ServiceProxy('/arming/cmd', SetBool)
 
 rospy.wait_for_service('/localization/zero_state')
 zero_srv = rospy.ServiceProxy('/localization/zero_state', Trigger)
+
+gpio.output(ON_INDICATOR_PIN, gpio.HIGH)
 
 rate = rospy.Rate(10)
 
