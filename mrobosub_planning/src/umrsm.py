@@ -189,6 +189,33 @@ class ForwardAndWait(State):
         
         return self.Unreached()
         
+class DoubleTimedState(State):
+    """
+    Must specify the following outcomes:
+    Unreached
+    Reached
+
+    Must specify the following parameters:
+    phase_one_time: float
+    phase_two_time: float
+    """
+    def initialize(self, prev_outcome: Outcome) -> None:
+        self.start_time = rospy.get_time()
+        self.timed_out_first = False
+
+    def handle(self) -> Outcome:
+        if not self.timed_out_first:
+            outcome = self.handle_first_phase()
+            if rospy.get_time() - self.start_time >= self.phase_one_time:
+                self.timed_out_first = True
+                self.start_time = rospy.get_time()
+        else:
+            outcome = self.handle_second_phase()
+            if rospy.get_time() - self.start_time >= self.phase_two_time:
+                outcome = self.handle_once_timedout()
+
+        return outcome
+        
 
 class TurnToYaw(TimedState):
     """
