@@ -93,7 +93,6 @@ def zed_callback(message):
         # Draw any bounding boxes and display the image
         # results.show()
 
-        object_position_response = ObjectPositionResponse()
 
 
         #byte_data = struct.unpack(const_unpack, message.depth.data)
@@ -102,7 +101,8 @@ def zed_callback(message):
         print(detections)
         print('TIME: ', str((time.time() - start)))
         
-        for i, idx in enumerate(detections):
+        for i, detection in enumerate(detections):
+            object_position_response = ObjectPositionResponse()
             object_position_response.found = True
         
             box = detections[i][:4]
@@ -129,6 +129,7 @@ def zed_callback(message):
             object_position_response.confidence = conf
         
         
+            idx = int(detections[i][5])
             recent_positions[idx] = object_position_response
             print(idx)
             print(recent_positions[idx])
