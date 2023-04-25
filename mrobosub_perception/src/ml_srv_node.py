@@ -129,9 +129,9 @@ def zed_callback(message):
             object_position_response.confidence = conf
         
         
-            recent_positions[id] = object_position_response
-            print(id)
-            print(recent_positions[id])
+            recent_positions[idx] = object_position_response
+            print(idx)
+            print(recent_positions[idx])
 
         # THIS PRINTS a lOT
         # log("ml_node", "DEBUG", 'ml_node - done processing a frame in ' + str((time.time()-start)) + ' seconds')
