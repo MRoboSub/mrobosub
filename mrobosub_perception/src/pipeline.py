@@ -14,6 +14,7 @@ class PathmarkerPipeline:
     def __init__(self):
         """initializes all values to presets or None if need to be set
         """
+        self.soruce = None
 
         self.__blur_type = BlurType.Box_Blur
         self.__blur_radius = 5.148004411577104
@@ -48,6 +49,7 @@ class PathmarkerPipeline:
         """
         Runs the pipeline and sets all outputs to new values.
         """
+        self.soruce = source0
         # Step Blur0:
         self.__blur_input = source0
         (self.blur_output) = self.__blur(self.__blur_input, self.__blur_type, self.__blur_radius)
@@ -114,14 +116,14 @@ class PathmarkerPipeline:
             if (abs(self.angle1 - self.angle2) > 20.0):
                 self.angle = 0.0
                 self.found = False
-                print("extremele angle difference detected")
+                # print("extremele angle difference detected")
                 return
-            
+
             self.angle = (self.angle1 + self.angle2) / 2.0
             self.found = True
-            print("self.angle: , ", self.angle)
-            print("self.angle1: , ", self.angle1)
-            print("self.angle2: , ", self.angle2)
+            # print("self.angle: , ", self.angle)
+            # print("self.angle1: , ", self.angle1)
+            # print("self.angle2: , ", self.angle2)
         else:
             self.angle = 0.0
             self.found = False
