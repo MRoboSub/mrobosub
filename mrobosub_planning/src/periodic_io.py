@@ -1,7 +1,6 @@
 import rospy
 from std_msgs.msg import Float64, Bool
 from mrobosub_msgs.srv import GlyphPosition, GlyphPositionResponse, PathmarkerAngle
-
 from typing import Type, Mapping, Optional
 from enum import Enum
 
@@ -30,13 +29,12 @@ def _roll_callback(msg : Float64) -> None:
     PIO.Pose.roll = msg.data
 
 def _collision_callback(msg : Bool) -> None:
-    Gbl.buoy_collision = msg.data
+    PIO.buoy_collision = msg.data
 
 def angle_error(setpoint, state):
         return (setpoint - state + 180) % 360 - 180
 
 Namespace = Type
-
 
 Glyph = Enum('Glyph', [
     'abydos_poo', 'earth_poo',
@@ -47,7 +45,6 @@ Glyph = Enum('Glyph', [
 
 class Gbl:
     planet_seen: Optional[Glyph] = None
-    buoy_collision = False
     second_glpyh = False
 
 # Look at this!
@@ -78,6 +75,8 @@ class PIO:
         heave = 0
         roll = 0
     
+    buoy_collision = False
+
     # @classmethod
     # def heading_within_threshold(cls, threshold):
     #     return angle_error_abs(PIO.heading_value, PIO.current_heading) <= threshold
@@ -85,11 +84,10 @@ class PIO:
     @classmethod
     def is_yaw_within_threshold(cls, threshold):
         return abs(angle_error(cls.TargetPose.yaw, cls.Pose.yaw)) <= threshold
-    
 
-    # @classmethod
-    # def depth_within_threshold(cls, threshold):
-    #     return (PIO.target_depth - PIO.current_depth) <= threshold
+    @classmethod
+    def is_heave_within_threshold(cls, threshold):
+        return abs(cls.TargetPose.heave - cls.Pose.heave) <= threshold
 
     # @classmethod
     # def set_absolute_heading(cls, heading):
@@ -128,6 +126,14 @@ class PIO:
         cls._target_twist_sway_pub.publish(override_sway)
     
     @classmethod
+    def set_target_twist_heave(cls, override_heave: float) -> None:
+        cls._target_pose_heave_pub.publish(override_heave)
+
+    # @classmethod
+    # def get_pose(cls) -> Namespace[Pose]:
+    #     return cls.Pose
+        
+    @classmethod
     def query_pathmarker(cls) -> Optional[float]:
         """ Request a the pathmaker angle.
 
@@ -144,7 +150,7 @@ class PIO:
     @classmethod
     def query_glyph(cls, glyph: Glyph) -> GlyphPositionResponse:
         return cls._glyph_srv(str(glyph))
-
+    
     @classmethod
     def query_all_glyphs(cls) -> Mapping[Glyph, GlyphPositionResponse]:
         """ query all 12 glyphs and return a dict from any found glyphs to their position. """
@@ -157,12 +163,12 @@ class PIO:
 
 # private:
 
-    # Subscribers   
+    # Subscribers
     rospy.Subscriber('/pose/yaw', Float64, _yaw_callback)
     rospy.Subscriber('/pose/heave', Float64, _heave_callback)
     rospy.Subscriber('/pose/roll', Float64, _roll_callback)
-    
     rospy.Subscriber('/collision/collision', Bool, _collision_callback)
+
 
     # Publishers
     _target_pose_heave_pub = rospy.Publisher('/target_pose/heave', Float64, queue_size=1)
@@ -173,8 +179,8 @@ class PIO:
     _target_twist_roll_pub = rospy.Publisher('/target_twist/roll', Float64, queue_size=1)
     _target_twist_surge_pub = rospy.Publisher('/target_twist/surge', Float64, queue_size=1)
     _target_twist_sway_pub = rospy.Publisher('/target_twist/sway', Float64, queue_size=1)
-
+    _target_twist_heave_pub = rospy.Publisher('/target_twist/heave', Float64, queue_size = 1)
+    
     # Services
     _pathmarker_srv = rospy.ServiceProxy('pathmarker/angle', PathmarkerAngle, persistent=True)
     _glyph_srv = rospy.ServiceProxy('glyph', GlyphPosition, persistent=True)
-

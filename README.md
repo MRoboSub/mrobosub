@@ -46,6 +46,14 @@ $ sudo systemctl daemon-reload
 $ sudo systemctl start <service_name>
 ``` 
 
+Then edit the service script with
+
+```bash
+$ sudo vim /usr/sbin/<service_name>-start
+```
+
+Find the line with `export ROS_HOSTNAME=$(hostname)` and replace it with `export ROS_IP=192.168.2.3`
+
 ### GPIO
 
 Bringup as currently written relies on GPIO. In order to run GPIO code, regular users need read/write access to `/dev/gpiomem`
@@ -54,6 +62,36 @@ Bringup as currently written relies on GPIO. In order to run GPIO code, regular 
 $ chmod o+rw /dev/gpiomem
 ```
 
+To permanently allow this
+
+```bash
+$ sudo usermod -a -G dialout pi
+$ sudo apt install rpi.gpio-common
+```
+
+### Persistent Bottom Camera Device Name
+
+In `/dev/udev/rules.d`, add a file named `25-myvideorules.rules` with the following content
+
+```
+SUBSYSTEM=="video4linux", ATTRS{name}=="H264 USB Camera: USB Camera", ATTRS{index}=="0", SYMLINK+="botcam"
+```
+
+If the name of the camera is different, find it by running
+
+```
+udevadm info -a -p $(udevadm info -q path -p /class/video4linux/video0)
+```
+
+Where `video0` is the capture device name under `/dev` (for example, `/dev/video0`)
+
+Then restart or run
+
+```
+sudo udevadm control --reload-rules && udevadm trigger
+```
+
+The camera will now be available under `/dev/botcam`
 
 ## Messages
 

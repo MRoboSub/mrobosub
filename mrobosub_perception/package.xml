@@ -47,7 +47,7 @@
   <depend>python3-opencv</depend>
   <!-- <depend>cv_bridge</depend> -->
   <depend>python-numpy</depend>
-  <depend>zed_integration</depend>
+  <!-- depend>zed_integration</depend-->
 
 
 </package>

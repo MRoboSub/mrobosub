@@ -5,22 +5,14 @@ from enum import Enum
 import time
 import roslaunch
 import rospkg
+import rospy
+from std_srvs.srv import SetBool, Trigger
 from pathlib import Path
 
 class RobotState(Enum):
-    standby = 0
-    brought_up = 1
+    ambient = 0
+    ready = 1
     running = 2
-
-
-gpio.setmode(gpio.BOARD)
-
-STRANGE_CONTROLLER_PIN = 3
-CHARM_CONTROLLER_PIN = 5
-
-gpio.setup((STRANGE_CONTROLLER_PIN, CHARM_CONTROLLER_PIN), gpio.IN)
-
-curr_state = RobotState.standby
 
 def gpio_to_binary(inp):
     if inp == gpio.HIGH:
@@ -28,12 +20,37 @@ def gpio_to_binary(inp):
     else:
         return 0
 
+STRANGE_CONTROLLER_PIN = 3
+CHARM_CONTROLLER_PIN = 5
 
+ON_INDICATOR_PIN = 32
+STRANGE_INDICATOR_PIN = 37
+CHARM_INDICATOR_PIN = 36
+
+rospy.init_node('quartermaster')
+
+gpio.setmode(gpio.BOARD)
+gpio.setup((STRANGE_CONTROLLER_PIN, CHARM_CONTROLLER_PIN), gpio.IN)
+gpio.setup((ON_INDICATOR_PIN, STRANGE_INDICATOR_PIN, CHARM_INDICATOR_PIN), gpio.OUT)
+
+curr_state = RobotState.ambient
 
 rospack = rospkg.RosPack()
+planning_pkg = Path(rospack.get_path('mrobosub_planning'))
+capt_launch = None
+
+rospy.wait_for_service('/arming/cmd')
+arm_srv = rospy.ServiceProxy('/arming/cmd', SetBool)
 
 
-while True:
+rospy.wait_for_service('/localization/zero_state')
+zero_srv = rospy.ServiceProxy('/localization/zero_state', Trigger)
+
+gpio.output(ON_INDICATOR_PIN, gpio.HIGH)
+
+rate = rospy.Rate(10)
+
+while not rospy.is_shutdown():
     prev_state = curr_state
 
     strange_input = gpio_to_binary(gpio.input(STRANGE_CONTROLLER_PIN))
@@ -43,38 +60,32 @@ while True:
 
     if curr_state == prev_state:
         continue
-    elif curr_state == RobotState.brought_up:
-        if not planner_launch is None:
-            planner_launch.shutdown()
-            planner_launch = None
-        if not bringup_launch is None:
-            bringup_launch.shutdown()
-            bringup_launch = None
-
-        bringup_pkg = Path(rospack.get_path('mrobosub_bringup'))
+    elif curr_state == RobotState.ambient:
+        arm_resp = arm_srv(False)
+        rospy.loginfo(f'arming response: {arm_resp.success}; {arm_resp.message}')
+    elif curr_state == RobotState.ready:
+        #if not capt_launch is None:
+        #    capt_launch.shutdown()
+        #    capt_launch = None
+        if prev_state == RobotState.running:
+            soft_stop = rospy.ServiceProxy('/captain/soft_stop', Trigger)
+            res = soft_stop()
+        zero_srv()
+        arm_resp = arm_srv(True)
+        rospy.loginfo(f'arming response: {arm_resp.success}; {arm_resp.message}')
+    else:
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         roslaunch.configure_logging(uuid)
-        bringup_launch = roslaunch.parent.ROSLaunchParent(uuid, [str(bringup_pkg / 'launch' / 'bringup.launch')])
-        bringup_launch.start()
+        capt_launch = roslaunch.parent.ROSLaunchParent(
+            uuid, [str(planning_pkg / 'launch' / 'captain.launch')]
+        )
+        capt_launch.start()
 
-        # run mavros
-    elif curr_state == RobotState.running:
-        uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
-        roslaunch.configure_logging(uuid)
-        planner_launch = roslaunch.parent.ROSLaunchParent(uuid, [str(bringup_pkg / 'launch' / 'bringup.launch')])
-        planner_launch.start()
-        # launch state machine
-    else: # curr_state == RobotState.standby
-        if not bringup_launch is None:
-            bringup_launch.shutdown()
+    gpio.output(STRANGE_INDICATOR_PIN, bool(strange_input))
+    gpio.output(CHARM_INDICATOR_PIN, bool(charm_input))
 
-    time.sleep(0.01)
+    rate.sleep()
 
 
 gpio.cleanup()
-
-
-
-
-
 

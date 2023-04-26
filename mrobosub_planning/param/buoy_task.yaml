@@ -1,0 +1,38 @@
+approachbouyopen:
+  defaults:
+    timeout: 20
+
+approachbouyclosed:
+  defaults:
+    timeout: 10
+
+fallback:
+  defaults:
+    timeout: 3
+
+ascend:
+  defaults:
+    target_depth: 0.25
+    timeout: 3
+
+passbouy:
+  defaults:
+    timeout: 5
+
+findglyph:
+  defaults:
+    timeout: 7
+
+pause:
+  defaults:
+    timeout: 3
+
+contingencysubmerge:
+  defaults:
+
+
+contingencyapproach:
+  defaults:
+    timeout: 7
+
+

@@ -1,0 +1,21 @@
+aligngate:
+  defaults:
+    target_yaw: 0 
+    timeout: 10
+
+approachgate:
+  defaults:
+    timeout: 15
+
+
+approachgateimage:
+  defaults:
+    lost_image_threshold: 15 
+
+alignpathmarker:
+  defaults:
+    timeout: 10
+
+fallbackturn:
+  defaults:
+    target_yaw: 0

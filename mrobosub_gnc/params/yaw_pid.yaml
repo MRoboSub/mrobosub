@@ -1,5 +1,7 @@
-Kp: 1.0
+Kp: 0.006
 Ki: 0.0
-Kd: 0.001
+Kd: 0.0009
+upper_limit: 0.3
+lower_limit: -0.3
 angle_error: true
 angle_wrap: 360.0

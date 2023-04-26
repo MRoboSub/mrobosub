@@ -4,78 +4,54 @@ from common import *
 import prequal_front 
 import rospy
 
-class TurnAroundMarker(TimedState):
-    Unreached = Outcome("Unreached")
-    Reached = Outcome("Reached")
-    TimedOut = Outcome("TimedOut")
-
-    target_yaw: Param[float]
-    yaw_threshold: Param[float]
-    timeout: Param[int]
-    
-    def handle_if_not_timedout(self) -> Outcome:
-        PIO.set_target_pose_yaw(self.target_yaw)
-        if PIO.is_yaw_within_threshold(self.yaw_threshold):
-            return self.Reached()
-        else:
-            return self.Unreached()
-    
-        
-class MovePastMarker(State):
-    Unreached = Outcome.make("MovePastMarker")
-    Reached = Outcome.make("TurnToGate")
-    
-    target_surge_time: Param[float]
-    speed: Param[float]
-
-    def initialize(self, prev_outcome: Outcome)-> None:
-        self.start_time = rospy.get_time()
-        
-    def handle(self)->Outcome:
-        PIO.set_target_twist_surge(self.speed)
-        if rospy.get_time() - self.start_time >= self.target_surge_time:
-            PIO.set_target_twist_surge(0)
-            return self.Reached()
-        else:
-            return self.Unreached()
-        
-       
-class TurnToGate(TimedState):
+class TurnAroundMarker(TurnToYaw):
     Unreached = Outcome.make("Unreached")
     Reached = Outcome.make("Reached")
     TimedOut = Outcome.make("TimedOut")
 
     target_yaw: Param[float]
     yaw_threshold: Param[float]
-    timeout: Param[int]
+    timeout: Param[float]
+    settle_time: Param[float]
     
-    def handle_if_not_timedout(self) -> Outcome:
-        PIO.set_target_pose_yaw(self.target_yaw)
-        if PIO.is_yaw_within_threshold(self.yaw_threshold):
-            return self.Reached()
-        else:
-            return self.Unreached()
         
-class ReturnToGate(State):
-    Unreached = Outcome.make("ReturnToGate")
-    Reached = Outcome.make("Stop")
+class MovePastMarker(ForwardAndWait):
+    Unreached = Outcome.make("MovePastMarker")
+    Reached = Outcome.make("TurnToGate")
     
     target_surge_time: Param[float]
-    speed: Param[float]
-    
-    def initialize(self, prev_outcome: Outcome) -> None:
-        self.start_time = rospy.get_time()
-    
-    def handle(self) -> Outcome:
-        PIO.set_target_twist_surge(self.speed)
-        if rospy.get_time() - self.start_time >= self.target_surge_time:
-            PIO.set_target_twist_surge(0)
-            return self.Reached()
-        else:
-            return self.Unreached()
+    surge_speed: Param[float]
+    wait_time: Param[float]
+        
+       
+class TurnToGate(TurnToYaw):
+    Unreached = Outcome.make("Unreached")
+    Reached = Outcome.make("Reached")
+    TimedOut = Outcome.make("TimedOut")
 
+    target_yaw: Param[float]
+    yaw_threshold: Param[float]
+    timeout: Param[float]
+    settle_time: Param[float]
+        
+class LeaveMarker(ForwardAndWait):
+    Unreached = Outcome.make("Unreached")
+    Reached = Outcome.make("Reached")
+    
+    target_surge_time: Param[float]
+    surge_speed: Param[float]
+    wait_time: Param[float]
+    
+class ReturnToGate(ForwardAndWait):
+    Unreached = Outcome.make("Unreached")
+    Reached = Outcome.make("Reached")
+    
+    target_surge_time: Param[float]
+    surge_speed: Param[float]
+    wait_time: Param[float]
 
-transitions = prequal_front.transitions | {
+transitions = prequal_front.transitions
+transitions.update({
     prequal_front.ApproachMarker.Reached: TurnAroundMarker,
 
     TurnAroundMarker.Unreached: TurnAroundMarker,
@@ -86,9 +62,12 @@ transitions = prequal_front.transitions | {
     MovePastMarker.Reached: TurnToGate,
 
     TurnToGate.Unreached: TurnToGate,
-    TurnToGate.Reached: ReturnToGate,
-    TurnToGate.TimedOut: ReturnToGate,
+    TurnToGate.Reached: LeaveMarker,
+    TurnToGate.TimedOut: LeaveMarker,
+
+    LeaveMarker.Unreached: LeaveMarker,
+    LeaveMarker.Reached: ReturnToGate,
 
     ReturnToGate.Unreached: ReturnToGate,
-    ReturnToGate.Reached: Surface,
-}
+    ReturnToGate.Reached: Stop,
+})

@@ -7,12 +7,15 @@ from dataclasses import make_dataclass, field
 from typing import Mapping, Type, Final, cast
 import rospy
 from std_msgs.msg import String
+from std_srvs.srv import Trigger, TriggerRequest
+from periodic_io import PIO
 
 from copy import copy
 
-STATE_TOPIC = 'current_state'
+STATE_TOPIC = 'captain/current_state'
+SOFT_STOP_SERVICE = 'captain/soft_stop'
 
-__all__ = ('Outcome', 'State', 'TimedState', 'StateMachine', 'Param')
+__all__ = ('Outcome', 'State', 'TimedState', 'ForwardAndWait', 'TurnToYaw', 'StateMachine', 'Param')
 
 Param = Final
 """ Param generic type used for annotations. The annotations themselves do nothing at runtime. 
@@ -34,7 +37,7 @@ the module __main__ [i.e. the module of the file which gets launched rather than
 loaded into the particular state:
 5. ~{module}/{state}/defaults
 6. ~{module}/{state}/{machine}
-the state name is converted to all lowercase without spaces or underscores. the module name
+the state name is converted to all lowercase without spaces or underscores. 
 
 the purpose of loading parameters both for the defaults and {machine} namespaces is so that states shared
     between multiple state machines can override parameters when used in a particular machine if necessary.
@@ -145,7 +148,7 @@ class TimedState(State):
             self.handle_once_timedout()
             return self.TimedOut()
         else:
-            self.handle_if_not_timedout()
+            return self.handle_if_not_timedout()
 
     @abstractmethod
     def handle_if_not_timedout(self) -> Outcome:
@@ -153,6 +156,90 @@ class TimedState(State):
 
     def handle_once_timedout(self) -> None:
         pass
+
+class ForwardAndWait(State):
+    """
+    Must specify the following outcomes:
+    Unreached
+    Reached
+
+    Must specify the following parameters:
+    target_surge_time: float
+    wait_time: float
+    surge_speed: float
+    """
+    def initialize(self, prev_outcome: Outcome) -> None:
+        self.start_time = rospy.get_time()
+        self.waiting = False
+
+    def handle(self) -> Outcome:
+        if not self.waiting:
+            PIO.set_target_twist_surge(self.surge_speed)
+            PIO.set_target_pose_heave(self.target_heave)
+
+            if rospy.get_time() - self.start_time >= self.target_surge_time:
+                PIO.set_target_twist_surge(0)
+                self.waiting = True
+                self.start_time = rospy.get_time()
+        else:
+            PIO.set_target_twist_surge(0)
+        
+            if rospy.get_time() - self.start_time >= self.wait_time:
+                return self.Reached()
+        
+        return self.Unreached()
+        
+class DoubleTimedState(State):
+    """
+    Must specify the following outcomes:
+    Unreached
+    Reached
+
+    Must specify the following parameters:
+    phase_one_time: float
+    phase_two_time: float
+    """
+    def initialize(self, prev_outcome: Outcome) -> None:
+        self.start_time = rospy.get_time()
+        self.timed_out_first = False
+
+    def handle(self) -> Outcome:
+        if not self.timed_out_first:
+            outcome = self.handle_first_phase()
+            if rospy.get_time() - self.start_time >= self.phase_one_time:
+                self.timed_out_first = True
+                self.start_time = rospy.get_time()
+        else:
+            outcome = self.handle_second_phase()
+            if rospy.get_time() - self.start_time >= self.phase_two_time:
+                outcome = self.handle_once_timedout()
+
+        return outcome
+        
+
+class TurnToYaw(TimedState):
+    """
+    Must specify following outcomes:
+    Unreached
+    Reached
+    TimedOut
+
+    Must specify following parameters:
+    target_yaw: float
+    yaw_threshold: float
+    settle_time: float
+    timeout: float
+    """
+    def handle_if_not_timedout(self) -> Outcome:
+        PIO.set_target_pose_yaw(self.target_yaw)
+        
+        if not PIO.is_yaw_within_threshold(self.yaw_threshold):
+            self.timer = rospy.get_time()
+
+        if rospy.get_time() - self.timer >= self.settle_time:
+            return self.Reached()
+
+        return self.Unreached()
 
 class StateMachine:
     """ The main interface for running a system. """
@@ -171,6 +258,9 @@ class StateMachine:
         self.StartState = StartState
         self.transitions = transitions
         self.StopState = StopState
+
+        self._soft_stop_srv = rospy.Service(SOFT_STOP_SERVICE, Trigger, self.soft_stop)
+        self.stop_signal_recvd = False
 
         self._load_params(State, 'globals', 'defaults')
         self._load_params(State, 'globals', self.name)
@@ -193,22 +283,32 @@ class StateMachine:
             print(f'\t{key}: {value}')
             setattr(state, key, value)  # read-only constants
 
+    def soft_stop(self, data: TriggerRequest) -> Tuple[bool, string]:
+        self.stop_signal_recvd = True
+        return True, type(self.current_state).__qualname__
+
     def run(self) -> Outcome:
         """ Performs a run, beginning with the StartState and ending when it reaches StopState.
             
             Returns the Outcome from calling handle() on StopState.
         """
+        rate = rospy.Rate(50)
         publisher = rospy.Publisher(STATE_TOPIC, String, queue_size=1)
-        current_state = self.StartState(None)
-        while type(current_state) != self.StopState:
-            publisher.publish(type(current_state).__qualname__)
-            outcome = current_state.handle()
+        self.current_state = self.StartState(None)
+        while type(self.current_state) != self.StopState:
+            publisher.publish(type(self.current_state).__qualname__)
+            outcome = self.current_state.handle()
             outcome_type = type(outcome) if isinstance(outcome, Outcome) else outcome
-            NextState = self.transitions[outcome_type]
-            rospy.logdebug(f'{type(current_state).__qualname__} -> {NextState.__qualname__}')
-            if type(current_state) != NextState:
-                current_state = NextState(outcome)
-                rospy.loginfo(f'transition {type(current_state).__qualname__} -> {NextState.__qualname__}')
-        publisher.publish(type(current_state).__qualname__)
-        return current_state.handle()  # handle stop state
-        
+            outcome_name = outcome_type.__qualname__
+            if self.stop_signal_recvd:
+                NextState = self.StopState
+                outcome_name = '!! Abort !!'
+            else:
+                NextState = self.transitions[outcome_type]
+            rospy.logdebug(f'{type(self.current_state).__qualname__} -> {NextState.__qualname__}')
+            if type(self.current_state) != NextState:
+                rospy.loginfo(f'transition {type(self.current_state).__qualname__} --[{outcome_name}]--> {NextState.__qualname__}')
+                self.current_state = NextState(outcome)
+            rate.sleep()
+        publisher.publish(type(self.current_state).__qualname__)
+        return self.current_state.handle()  # handle stop state

@@ -16,30 +16,38 @@ class Submerge(TimedState):
     Submerged = Outcome.make("Submerged")
     TimedOut = Outcome.make("TimedOut")
     
-    target_depth: Param[float]
+    target_heave: Param[float]
+    heave_threshold: Param[float]
     timeout: Param[int]
+    yaw_threshold: Param[float]
+    target_yaw: Param[float]
     
     def handle_if_not_timedout(self) -> Outcome:
-        PIO.set_target_pose_heave(self.target_depth)
+        PIO.set_target_pose_heave(self.target_heave)
+        PIO.set_target_pose_yaw(self.target_yaw)
 
-        if PIO.Pose.heave > self.target_depth:
+        if (PIO.is_heave_within_threshold(self.heave_threshold) and 
+                PIO.is_yaw_within_threshold(self.yaw_threshold)):
             return self.Submerged()
         else:
             return self.Unreached()
-    
-
-class Surface(State):
-    # TODO
-    pass
 
 class Stop(State):
     Finish = Outcome.make("Finish")
 
     def initialize(self, prev_outcome: Outcome) -> None:
-        PIO.forward = 0
-        PIO.lateral = 0
-        PIO.target_depth = 0
-        PIO.set_override_heading(0)
+        PIO.set_target_pose_heave(0)
+        PIO.set_target_twist_yaw(0)
+        PIO.set_target_twist_surge(0)
+        PIO.set_target_twist_roll(0)
+        PIO.set_target_twist_sway(0)
     
     def handle(self)->Outcome:
+        PIO.set_target_pose_heave(0)
+        PIO.set_target_twist_yaw(0)
+        PIO.set_target_twist_surge(0)
+        PIO.set_target_twist_roll(0)
+        PIO.set_target_twist_sway(0)
         return self.Finish()
+
+Surface = Stop
