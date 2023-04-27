@@ -14,7 +14,7 @@ class PathmarkerPipeline:
     def __init__(self):
         """initializes all values to presets or None if need to be set
         """
-        self.soruce = None
+        self.source = None
 
         self.__blur_type = BlurType.Box_Blur
         self.__blur_radius = 5.148004411577104
@@ -49,7 +49,7 @@ class PathmarkerPipeline:
         """
         Runs the pipeline and sets all outputs to new values.
         """
-        self.soruce = source0
+        self.source = source0
         # Step Blur0:
         self.__blur_input = source0
         (self.blur_output) = self.__blur(self.__blur_input, self.__blur_type, self.__blur_radius)

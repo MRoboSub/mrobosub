@@ -27,16 +27,13 @@ def pathmarker_service():
 
 
 def handle_frame(data):
-    bridge = CvBridge()
-    image_ocv = bridge.imgmsg_to_cv2(data, desired_encoding='passthrough')
-
-    # Remove the 4th channel (transparency)
+    image_ocv = br.imgmsg_to_cv2(data, desired_encoding='passthrough')
 
     pipeline.process(image_ocv)
     resp.found = pipeline.found
     resp.angle = pipeline.angle
     mask = pipeline.hsv_threshold_output
-    image = np.copy(pipeline.soruce)
+    image = np.copy(pipeline.source)
     image[mask< 255] = 0
 
     for line in pipeline.filter_lines_output:
