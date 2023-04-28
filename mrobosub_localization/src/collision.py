@@ -33,7 +33,7 @@ class CollisionDetector(Node):
 
         output = (self.last_value - msg.linear_acceleration.x) * a + msg.linear_acceleration.x
         self.pub_filtered.publish(output)
-        self.pub_collision.publish(abs(output) > self.threshold)
+        self.pub_collision.publish(-output > self.threshold)
         self.last_time = next_time
         self.last_value = output
 
