@@ -23,6 +23,7 @@ def gpio_to_binary(inp):
 STRANGE_CONTROLLER_PIN = 3
 CHARM_CONTROLLER_PIN = 5
 
+ON_INDICATOR_PIN = 32
 STRANGE_INDICATOR_PIN = 37
 CHARM_INDICATOR_PIN = 36
 
@@ -30,7 +31,7 @@ rospy.init_node('quartermaster')
 
 gpio.setmode(gpio.BOARD)
 gpio.setup((STRANGE_CONTROLLER_PIN, CHARM_CONTROLLER_PIN), gpio.IN)
-gpio.setup((STRANGE_INDICATOR_PIN, CHARM_INDICATOR_PIN), gpio.OUT)
+gpio.setup((ON_INDICATOR_PIN, STRANGE_INDICATOR_PIN, CHARM_INDICATOR_PIN), gpio.OUT)
 
 curr_state = RobotState.ambient
 
@@ -38,8 +39,14 @@ rospack = rospkg.RosPack()
 planning_pkg = Path(rospack.get_path('mrobosub_planning'))
 capt_launch = None
 
+rospy.wait_for_service('/arming/cmd')
 arm_srv = rospy.ServiceProxy('/arming/cmd', SetBool)
-zero_srv = rospy.ServiceProxy('localization/zero_state', Trigger)
+
+
+rospy.wait_for_service('/localization/zero_state')
+zero_srv = rospy.ServiceProxy('/localization/zero_state', Trigger)
+
+gpio.output(ON_INDICATOR_PIN, gpio.HIGH)
 
 rate = rospy.Rate(10)
 
@@ -57,9 +64,12 @@ while not rospy.is_shutdown():
         arm_resp = arm_srv(False)
         rospy.loginfo(f'arming response: {arm_resp.success}; {arm_resp.message}')
     elif curr_state == RobotState.ready:
-        if not capt_launch is None:
-            capt_launch.shutdown()
-            capt_launch = None
+        #if not capt_launch is None:
+        #    capt_launch.shutdown()
+        #    capt_launch = None
+        if prev_state == RobotState.running:
+            soft_stop = rospy.ServiceProxy('/captain/soft_stop', Trigger)
+            res = soft_stop()
         zero_srv()
         arm_resp = arm_srv(True)
         rospy.loginfo(f'arming response: {arm_resp.success}; {arm_resp.message}')

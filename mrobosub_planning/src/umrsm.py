@@ -175,6 +175,7 @@ class ForwardAndWait(State):
     def handle(self) -> Outcome:
         if not self.waiting:
             PIO.set_target_twist_surge(self.surge_speed)
+            PIO.set_target_pose_heave(self.target_heave)
 
             if rospy.get_time() - self.start_time >= self.target_surge_time:
                 PIO.set_target_twist_surge(0)
@@ -187,6 +188,33 @@ class ForwardAndWait(State):
                 return self.Reached()
         
         return self.Unreached()
+        
+class DoubleTimedState(State):
+    """
+    Must specify the following outcomes:
+    Unreached
+    Reached
+
+    Must specify the following parameters:
+    phase_one_time: float
+    phase_two_time: float
+    """
+    def initialize(self, prev_outcome: Outcome) -> None:
+        self.start_time = rospy.get_time()
+        self.timed_out_first = False
+
+    def handle(self) -> Outcome:
+        if not self.timed_out_first:
+            outcome = self.handle_first_phase()
+            if rospy.get_time() - self.start_time >= self.phase_one_time:
+                self.timed_out_first = True
+                self.start_time = rospy.get_time()
+        else:
+            outcome = self.handle_second_phase()
+            if rospy.get_time() - self.start_time >= self.phase_two_time:
+                outcome = self.handle_once_timedout()
+
+        return outcome
         
 
 class TurnToYaw(TimedState):
@@ -264,19 +292,23 @@ class StateMachine:
             
             Returns the Outcome from calling handle() on StopState.
         """
+        rate = rospy.Rate(50)
         publisher = rospy.Publisher(STATE_TOPIC, String, queue_size=1)
         self.current_state = self.StartState(None)
         while type(self.current_state) != self.StopState:
             publisher.publish(type(self.current_state).__qualname__)
             outcome = self.current_state.handle()
             outcome_type = type(outcome) if isinstance(outcome, Outcome) else outcome
+            outcome_name = outcome_type.__qualname__
             if self.stop_signal_recvd:
                 NextState = self.StopState
+                outcome_name = '!! Abort !!'
             else:
                 NextState = self.transitions[outcome_type]
             rospy.logdebug(f'{type(self.current_state).__qualname__} -> {NextState.__qualname__}')
             if type(self.current_state) != NextState:
-                rospy.loginfo(f'transition {type(self.current_state).__qualname__} --[{outcome_type.__qualname__}]--> {NextState.__qualname__}')
+                rospy.loginfo(f'transition {type(self.current_state).__qualname__} --[{outcome_name}]--> {NextState.__qualname__}')
                 self.current_state = NextState(outcome)
+            rate.sleep()
         publisher.publish(type(self.current_state).__qualname__)
         return self.current_state.handle()  # handle stop state

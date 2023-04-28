@@ -100,6 +100,7 @@ class Ascend(TimedState):
         else:
             return self.NotReached()
 
+
 class PassBuoy(TimedState):
     NotReached = Outcome.make('NotReached')
     TimedOut = Outcome.make('TimedOut')
@@ -114,6 +115,7 @@ class PassBuoy(TimedState):
 
     def handle_once_timedout(self) -> None:
         PIO.set_target_twist_surge(0) 
+
 
 class FindGlyph(TimedState):
     GlyphNotSeen = Outcome.make('GlyphNotSeen')
@@ -193,6 +195,3 @@ class ContingencyApproach(TimedState):
     
     def handle_once_timedout(self) -> None:        
         PIO.set_target_twist_surge(0)
-
-
-    
