@@ -71,7 +71,7 @@ $ sudo apt install rpi.gpio-common
 
 ### Persistent Bottom Camera Device Name
 
-In `/dev/udev/rules.d`, add a file named `25-myvideorules.rules` with the following content
+In `/etc/udev/rules.d`, add a file named `25-myvideorules.rules` with the following content
 
 ```
 SUBSYSTEM=="video4linux", ATTRS{name}=="H264 USB Camera: USB Camera", ATTRS{index}=="0", SYMLINK+="botcam"
