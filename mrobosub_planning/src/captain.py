@@ -11,7 +11,7 @@ import sys
 
 # maybe change this to something hacky like getting .transitions from the machine name module?
 transition_maps = {
-    # 'standard': standard_run.transitions,
+    'standard': standard_run.transitions,
     # 'prequal_strafe': prequal_strafe.transitions,
     'prequal_turn': prequal_turn.transitions,
     # ...
