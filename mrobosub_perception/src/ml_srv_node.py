@@ -7,19 +7,20 @@ import rospkg
 from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse
 import cv2
 from zed_interfaces.msg import RGBDSensors
-from cv_bridge import CvBridge
 import numpy as np
 import time
 import sys
 import enum
 import pathlib
+import torch
 #from rsub_log import log
 #from get_depth import get_avg_depth
 import struct
+import os
 from sensor_msgs.msg import Image
 
-MODEL_DIMENSION = 640 # hard-coded in the model
-bridge = CvBridge()
+height = 376
+width = 1344
 const_unpack = ''
 for i in range(376*1344*2):
     const_unpack += 'B'
@@ -45,162 +46,94 @@ class Targets(enum.Enum):
 recent_positions = [None] * Targets.COUNT.value
 latest_request_time = None
 
+def imgmsg_to_cv2(img_msg):
+    dtype = np.dtype("uint8") # Hardcode to 8 bits...
+    dtype = dtype.newbyteorder('>' if img_msg.is_bigendian else '<')
+    image_opencv = np.ndarray(shape=(img_msg.height, img_msg.width, 4), # and three channels of data. Since OpenCV works with bgr natively, we don't need to reorder the channels.
+                    dtype=dtype, buffer=img_msg.data)
+    # If the byt order is different between the message and the system.
+    if img_msg.is_bigendian == (sys.byteorder == 'little'):
+        image_opencv = image_opencv.byteswap().newbyteorder()
+    return image_opencv[:,:,:3]
+
 def load_yolo():
-    ''' Load pretrained weights, initialize CUDA. '''
-    rospack = rospkg.RosPack()
-    model_path = pathlib.Path(rospack.get_path('mrobosub_perception'), 'models/best.onnx')
-    net = cv2.dnn.readNet(str(model_path))
+    # load model
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    else:
+        device = torch.device("cpu")
 
-    net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-    net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA_FP16)
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    yolo_path = os.path.join(path, 'yolov5')
 
-    layers_names = net.getLayerNames()
-    #this should really only be one layer.
-    output_layers = [layers_names[i-1] for i in net.getUnconnectedOutLayers()]
-
-    return net, output_layers
-
-
-def detect_objects(img):
-    ''' get all detections from image using detection network. should return 25200 detections. '''
-    global model
-    global output_layers
-
-    blob = cv2.dnn.blobFromImage(img, scalefactor=0.00392, size=(MODEL_DIMENSION, MODEL_DIMENSION), mean=(0, 0, 0), swapRB=True, crop=False)
-    model.setInput(blob)
-    outputs = model.forward(output_layers)
-    return outputs
-
-
-def get_box_dimensions(outputs, height, width):
-    ''' Iterate through all detections, choose detections over confidence threshold. '''
-
-    # outputs is a 1 x 25200 x 10 array, of 25200 bounding boxes and 10 class probabilities for each box
-    outputs = np.array(outputs[3][0], dtype=np.ndarray)
-
-    """
-    outputs has 25,200 predictions, where each prediction has a 10-vector:
-    [x, y, w, h, box confidence, 5 class predictions]
-    """
-
-    # keep all of the outputs where the fourth element (box confidence) of the 10-vector is greater than 0.2
-    filtered = outputs[(outputs[:,4] > 0.2),:]
-    filtered = filtered[np.any(filtered[:,5:] > 0.25, axis=1), :]
-
-    maxes = np.amax(filtered[:,5:], axis=1)
-    classes = np.argmax(filtered[:,5:], axis=1)
-    boxes = np.zeros((filtered.shape[0],4))
-
-    for i, row in enumerate(filtered):
-        x,y,w,h = row[:4]
-
-        # correct box placement from image padding
-        x -= (MODEL_DIMENSION - width)/2
-        y -= (MODEL_DIMENSION - height)/2
-        left = int(x - 0.5 * w)
-        top = int(y - 0.5 * h)
-        width = int(w)
-        height = int(h)
-        boxes[i] = np.array([left,top,width,height])
-
-    # Perfom NMSBoxes algorithm, merges overlapping bounding boxes that have the same prediction to create an average bounding box.
-    indexes = cv2.dnn.NMSBoxes(boxes, maxes, 0.25, 0.45)
-    indexes = list(indexes)
-
-    result_class_ids = np.zeros(len(indexes))
-    result_confidences = np.zeros(len(indexes))
-    result_boxes = np.zeros(len(indexes))
-
-    if len(indexes) > 0:
-        result_confidences = (maxes[indexes])
-        result_class_ids = (classes[indexes])
-        result_boxes = (boxes[indexes])
-    
-    print("NMS Detections", len(indexes))
-    return result_class_ids, result_confidences, result_boxes
-
-
-def draw_labels(box, img):
-    # NON FUNCTIONING: Draw bounding boxes on input image and show.
-    x, y, w, h = box
-    color = 'red' #color = colors[i]
-    # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    # img = np.ascontiguousarray(img, dtype=np.uint8)
-    img=img.copy()
-    #cv2.rectangle(img, (x,y), (x+w, y+h), (0, 255, 0), 2)
-    # draw bounding box on image and show
-    cv2.imshow("Image", img)
-
-
-def gray_world(img):
-    # Perform white-balancing on input image.
-    def whitebalance(channel, perc = 0.05):
-        minimum, maximum = (np.percentile(channel, perc), np.percentile(channel, 100.0-perc))
-        channel = np.uint8(np.clip((channel-minimum)*255.0/(maximum-minimum), 0, 255))
-        return channel
-
-    return np.dstack([whitebalance(channel, 0.05) for channel in cv2.split(img)])
-
+    model_path = os.path.join(path, "models/best.pt")
+    model = torch.hub.load(yolo_path, 'custom', path=model_path, source='local')  # local repo
+    model.conf = 0.25  # NMS confidence threshold
+    return model
 
 def zed_callback(message):
     global img_seen_num, img_num
     # print('in zed callback')
     if rospy.get_time() - latest_request_time < TIME_THRESHOLD:
     # if True:
-        print('processing img')
-        start = rospy.get_time()
+        start = time.time()
 
         # print("zed callback")
         # Convert the zed image to an opencv image
-        #bridge = CvBridge()
-        #image_ocv = bridge.imgmsg_to_cv2(message, desired_encoding='passthrough')
-
-        image_ocv  = np.frombuffer(message.data, dtype=np.uint8).reshape(message.height, message.width, -1)
+        image_ocv = imgmsg_to_cv2(message)
 
         # Remove the 4th channel (transparency)
         image_ocv = image_ocv[:,:,:3]
 
-        # np.save("/home/mrobosub/saved_image.npy", image_ocv)
-        # Perform gray world assumption on image
-        #image_ocv = gray_world(image_ocv)
-
         # Find any objects in the image
         height, width, channels = image_ocv.shape   # shape of the image
-        outputs = detect_objects(image_ocv)   # get raw detection data
-        class_ids, confs, boxes = get_box_dimensions(outputs, height, width)
-
-        # log("ml_node", "DEBUG", 'ml_node - ' + str(len(class_ids)) + ' detections')
+        outputs = model(image_ocv, size=width)   # get raw detection data
+        detections = outputs.xyxy[0].cpu().numpy()   # get the detections
 
         # Draw any bounding boxes and display the image
+        # results.show()
+
+
+
         #byte_data = struct.unpack(const_unpack, message.depth.data)
 
-        for i in range(Targets.COUNT.value):
-            object_position_response = ObjectPositionResponse()
-            object_position_response.found = False
-            recent_positions[i] = object_position_response
-
-        for i, id in enumerate(class_ids):
+        # Report detection result
+        print(detections)
+        print('TIME: ', str((time.time() - start)))
+        
+        for i, detection in enumerate(detections):
             object_position_response = ObjectPositionResponse()
             object_position_response.found = True
+        
+            box = detections[i][:4]
+            fov_x = 110
+            fov_y = 70
 
-            box = boxes[i] # grab the first box in the list
-
-            if len(box) != 0:
-                print("made detection")
-
-                # print("saving box: ", box)
-                # np.save("/home/mrobosub/box.npy", box)
-                object_position_response.x_percent = float(box[0]) / (width + 1e-10) # TODO: this should not cause an error
-                object_position_response.y_percent = float(box[1]) / (height + 1e-10)
-                object_position_response.x_diff = (float(box[0]) - (width / 2)) / (width / 2)
-                object_position_response.y_diff = ((height / 2) - float(box[1])) / (height / 2)
-                object_position_response.box_size = float(box[2]) / width
-                object_position_response.distance = 0.0  # TODO: fix get_avg_depth(message.depth, box)
-                object_position_response.confidence = confs[i]
-                # print(id)
-                # print("confidence: " + str(object_position.confidence))
-
-                recent_positions[id] = object_position_response
+            x_pos = int((box[0] + box[2]) / 2)
+            y_pos = int((box[1] + box[3]) / 2)
+            
+            d_x = x_pos - (width / 2)
+            d_y = y_pos - (height / 2)
+            
+            theta_x = (d_x * fov_x) / width
+            theta_y = (d_y * fov_y) / height
+            
+            conf = detections[i][4]
+            
+            print(x_pos, y_pos, theta_x, theta_y)
+           
+            object_position_response.x_position = x_pos
+            object_position_response.y_position = y_pos
+            object_position_response.x_theta    = theta_x
+            object_position_response.y_theta    = theta_y
+            object_position_response.confidence = conf
+        
+        
+            idx = int(detections[i][5])
+            recent_positions[idx] = object_position_response
+            print(idx)
+            print(recent_positions[idx])
+            recent_positions[id] = object_position_response
 
         print(f"processed in {time.time() - start}")
         # THIS PRINTS a lOT
@@ -219,7 +152,7 @@ def handle_obj_request(idx, msg):
 
 # Load the model
 #model, classes, colors, output_layers = load_yolo()
-model, output_layers = load_yolo()
+model = load_yolo()
 obj_pos_pub = None
 bounding_pub = None
 print("model loaded")
@@ -229,6 +162,7 @@ if __name__ == '__main__':
     rospy.init_node('ml_server', anonymous=False)
     print(sys.version)
     print("node initialized")
+    
 
     # Intialize ros services for each of the objects
     mk_service = lambda name, idx: rospy.Service(f'object_position/{name}', ObjectPosition, lambda msg : handle_obj_request(idx.value, msg))

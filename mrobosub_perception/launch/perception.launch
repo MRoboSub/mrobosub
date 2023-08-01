@@ -1,0 +1,4 @@
+<launch>
+    <node name="ml_srv_node" pkg="mrobosub_perception" type="ml_srv_node.py" />
+    <include file="$(find zed_wrapper)/launch/zed2.launch" />
+</launch>
