@@ -5,18 +5,12 @@
     name="webcam_pub"
     output="screen"
   />
-  <!-- <node
-    pkg="mrobosub_perception"
-    type="webcam_sub.py"
-    name="webcam_sub"
-    output="screen"
-  /> -->
   <node
     pkg="mrobosub_perception"
     type="hsv_tuner.py"
     name="hsv_tuner"
     output="screen"
   >
-    <param textfile="$(find mrobosub_perception)/params/pathmarker.yaml" type="yaml" name="hsv_tuner" />
+    <rosparam command="load" file="$(find mrobosub_perception)/params/pathmarker.yaml" />
   </node>
 </launch>

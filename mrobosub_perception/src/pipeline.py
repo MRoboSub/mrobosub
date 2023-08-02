@@ -16,25 +16,25 @@ class PathmarkerPipeline:
         """
         self.source = None
 
-        self.__blur_type = BlurType.Box_Blur
-        self.__blur_radius = 5.148004411577104
+        self._blur_type = BlurType.Box_Blur
+        self._blur_radius = 5.148004411577104
 
         self.blur_output = None
 
-        self.__hsv_threshold_input = self.blur_output
-        self.__hsv_threshold_hue = [0.0, 45]
-        self.__hsv_threshold_saturation = [46, 151]
-        self.__hsv_threshold_value = [63, 255.0]
+        self._hsv_threshold_input = self.blur_output
+        self._hsv_threshold_hue = [0.0, 45]
+        self._hsv_threshold_saturation = [46, 151]
+        self._hsv_threshold_value = [63, 255.0]
 
         self.hsv_threshold_output = None
 
-        self.__find_lines_input = self.hsv_threshold_output
+        self._find_lines_input = self.hsv_threshold_output
 
         self.find_lines_output = None
 
-        self.__filter_lines_lines = self.find_lines_output
-        self.__filter_lines_min_length = 100.0
-        self.__filter_lines_angle = [0, 360]
+        self._filter_lines_lines = self.find_lines_output
+        self._filter_lines_min_length = 100.0
+        self._filter_lines_angle = [0, 360]
 
         self.filter_lines_output = None
 
@@ -51,15 +51,15 @@ class PathmarkerPipeline:
         """
         self.source = source0
         # Step Blur0:
-        self.__blur_input = source0
-        (self.blur_output) = self.__blur(self.__blur_input, self.__blur_type, self.__blur_radius)
+        self._blur_input = source0
+        (self.blur_output) = self._blur(self._blur_input, self._blur_type, self._blur_radius)
 
         # Step HSV_Threshold0:
-        self.__hsv_threshold_input = self.blur_output
-        (self.hsv_threshold_output) = self.__hsv_threshold(self.__hsv_threshold_input, self.__hsv_threshold_hue, self.__hsv_threshold_saturation, self.__hsv_threshold_value)
+        self._hsv_threshold_input = self.blur_output
+        (self.hsv_threshold_output) = self._hsv_threshold(self._hsv_threshold_input, self._hsv_threshold_hue, self._hsv_threshold_saturation, self._hsv_threshold_value)
         # Step Find_Lines0:
-        self.__find_lines_input = self.hsv_threshold_output
-        (self.find_lines_output) = self.__find_lines(self.__find_lines_input)
+        self._find_lines_input = self.hsv_threshold_output
+        (self.find_lines_output) = self._find_lines(self._find_lines_input)
 
         _lines_x = []
         _lines_y = []
@@ -83,8 +83,8 @@ class PathmarkerPipeline:
 
 
         # Step Filter_Lines0:
-        self.__filter_lines_lines = self.find_lines_output
-        (self.filter_lines_output) = self.__filter_lines(self.__filter_lines_lines, self.__filter_lines_min_length, self.__filter_lines_angle)
+        self._filter_lines_lines = self.find_lines_output
+        (self.filter_lines_output) = self._filter_lines(self._filter_lines_lines, self._filter_lines_min_length, self._filter_lines_angle)
 
         # for line in self.filter_lines_output:
         #     cv2.line(source0, (line.x1, line.y1), (line.x2, line.y2), (255,0,0))
@@ -130,7 +130,7 @@ class PathmarkerPipeline:
 
 
     @staticmethod
-    def __blur(src, type, radius):
+    def _blur(src, type, radius):
         """Softens an image using one of several filters.
         Args:
             src: The source mat (numpy.ndarray).
@@ -152,7 +152,7 @@ class PathmarkerPipeline:
             return cv2.bilateralFilter(src, -1, round(radius), round(radius))
 
     @staticmethod
-    def __hsv_threshold(input, hue, sat, val):
+    def _hsv_threshold(input, hue, sat, val):
         """Segment an image based on hue, saturation, and value ranges.
         Args:
             input: A BGR numpy.ndarray.
@@ -182,7 +182,7 @@ class PathmarkerPipeline:
             else:
                 return math.degrees(math.atan2(self.y1 - self.y2, self.x1 - self.x2))
     @staticmethod
-    def __find_lines(input):
+    def _find_lines(input):
         """Finds all line segments in an image.
         Args:
             input: A numpy.ndarray.
@@ -205,7 +205,7 @@ class PathmarkerPipeline:
         return output
 
     @staticmethod
-    def __filter_lines(inputs, min_length, angle):
+    def _filter_lines(inputs, min_length, angle):
         """Filters out lines that do not meet certain criteria.
         Args:
             inputs: A list of Lines.

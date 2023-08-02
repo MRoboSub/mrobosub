@@ -41,6 +41,7 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>mrobosub_msgs</depend>
+  <depend>dynamic_reconfigure</depend>
 
   <depend>rospy</depend>
   <!-- <depend>cv_bridge</depend> -->

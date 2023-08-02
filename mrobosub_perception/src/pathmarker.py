@@ -27,17 +27,17 @@ class Pathmarker(Node):
 
     def __init__(self):
         super().__init__('pathmarker')
-        self.service = rospy.Service('pathmarker/angle', PathmarkerAngle, handle_request)
+        self.service = rospy.Service('pathmarker/angle', PathmarkerAngle, self.handle_request)
         rospy.Subscriber("bot_cam", Image, self.handle_frame, queue_size=1)
 
         self.pipeline = PathmarkerPipeline()
         self.br = CvBridge()
 
-        self.pipeline.__hsv_threshold_hue = [self.hue_lo, self.hue_hi]
-        self.pipeline.__hsv_threshold_saturation = [self.sat_lo, self.sat_hi]
-        self.pipeline.__hsv_threshold_value = [self.val_lo, self.val_hi]
-        self.pipeline.__filter_lines_min_length = self.lines_min_len
-        self.pipeline.__filter_lines_angle = [self.lines_angle_lo, self.lines_angle_hi]
+        self.pipeline._hsv_threshold_hue = [self.hue_lo, self.hue_hi]
+        self.pipeline._hsv_threshold_saturation = [self.sat_lo, self.sat_hi]
+        self.pipeline._hsv_threshold_value = [self.val_lo, self.val_hi]
+        self.pipeline._filter_lines_min_length = self.lines_min_len
+        self.pipeline._filter_lines_angle = [self.lines_angle_lo, self.lines_angle_hi]
 
         self.resp = PathmarkerAngleResponse()
 
@@ -46,8 +46,8 @@ class Pathmarker(Node):
         image_ocv = self.br.imgmsg_to_cv2(data, desired_encoding='passthrough')
 
         self.pipeline.process(image_ocv)
-        self.resp.found = pipeline.found
-        self.resp.angle = pipeline.angle
+        self.resp.found = self.pipeline.found
+        self.resp.angle = self.pipeline.angle
 
 
     def handle_request(self, msg):

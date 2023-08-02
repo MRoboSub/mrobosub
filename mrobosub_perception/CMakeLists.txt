@@ -7,7 +7,7 @@ project(mrobosub_perception)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS mrobosub_msgs)
+find_package(catkin REQUIRED COMPONENTS mrobosub_msgs dynamic_reconfigure)
 generate_dynamic_reconfigure_options(
     cfg/hsv_params.cfg
 )
