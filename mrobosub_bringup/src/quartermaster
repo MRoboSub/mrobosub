@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import RPi.GPIO as gpio
 from enum import Enum
 import time
 import roslaunch
@@ -15,24 +14,7 @@ class RobotState(Enum):
     ready = 1
     running = 2
 
-def gpio_to_binary(inp):
-    if inp == gpio.HIGH:
-        return 1
-    else:
-        return 0
-
-STRANGE_CONTROLLER_PIN = 3
-CHARM_CONTROLLER_PIN = 5
-
-ON_INDICATOR_PIN = 32
-STRANGE_INDICATOR_PIN = 37
-CHARM_INDICATOR_PIN = 36
-
 rospy.init_node('quartermaster')
-
-gpio.setmode(gpio.BOARD)
-gpio.setup((STRANGE_CONTROLLER_PIN, CHARM_CONTROLLER_PIN), gpio.IN)
-gpio.setup((ON_INDICATOR_PIN, STRANGE_INDICATOR_PIN, CHARM_INDICATOR_PIN), gpio.OUT)
 
 curr_state = RobotState.ambient
 
@@ -47,9 +29,13 @@ arm_srv = rospy.ServiceProxy('/arming/cmd', SetBool)
 rospy.wait_for_service('/localization/zero_state')
 zero_srv = rospy.ServiceProxy('/localization/zero_state', Trigger)
 
-gpio.output(ON_INDICATOR_PIN, gpio.HIGH)
-
 rate = rospy.Rate(10)
+
+led_strange_pub = rospy.Publisher('/led/strange', Bool, queue_size=1)
+led_charm_pub = rospy.Publisher('/led/charm', Bool, queue_size=1)
+led_on_pub = rospy.Publisher('/led/on', Bool, queue_size=1)
+
+led_on_pub.publish(true)
 
 hall_effect_inputs = {'strange': False, 'charm': False}
 
@@ -93,8 +79,8 @@ while not rospy.is_shutdown():
         )
         capt_launch.start()
 
-    gpio.output(STRANGE_INDICATOR_PIN, bool(strange_input))
-    gpio.output(CHARM_INDICATOR_PIN, bool(charm_input))
+    led_strange_pub.publish(bool(strange_input))
+    led_charm_pub.publish(bool(charm_input))
 
     rate.sleep()
 
