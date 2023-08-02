@@ -49,7 +49,7 @@ latest_request_time = None
 def imgmsg_to_cv2(img_msg):
     dtype = np.dtype("uint8") # Hardcode to 8 bits...
     dtype = dtype.newbyteorder('>' if img_msg.is_bigendian else '<')
-    image_opencv = np.ndarray(shape=(img_msg.height, img_msg.width, 4), # and three channels of data. Since OpenCV works with bgr natively, we don't need to reorder the channels.
+    image_opencv = np.ndarray(shape=(img_msg.height, img_msg.width, 3), # and three channels of data. Since OpenCV works with bgr natively, we don't need to reorder the channels.
                     dtype=dtype, buffer=img_msg.data)
     # If the byt order is different between the message and the system.
     if img_msg.is_bigendian == (sys.byteorder == 'little'):
@@ -83,7 +83,7 @@ def zed_callback(message):
         image_ocv = imgmsg_to_cv2(message)
 
         # Remove the 4th channel (transparency)
-        image_ocv = image_ocv[:,:,:3]
+        # image_ocv = image_ocv[:,:,:3]
 
         # Find any objects in the image
         height, width, channels = image_ocv.shape   # shape of the image
@@ -100,6 +100,11 @@ def zed_callback(message):
         # Report detection result
         print(detections)
         print('TIME: ', str((time.time() - start)))
+
+        for i in range(len(recent_positions)):
+            msg = ObjectPositionResponse()
+            msg.found = False
+            recent_positions[i] = msg
         
         for i, detection in enumerate(detections):
             object_position_response = ObjectPositionResponse()
@@ -122,6 +127,7 @@ def zed_callback(message):
             
             print(x_pos, y_pos, theta_x, theta_y)
            
+            object_position_response.found      = True
             object_position_response.x_position = x_pos
             object_position_response.y_position = y_pos
             object_position_response.x_theta    = theta_x
@@ -133,7 +139,7 @@ def zed_callback(message):
             recent_positions[idx] = object_position_response
             print(idx)
             print(recent_positions[idx])
-            recent_positions[id] = object_position_response
+            recent_positions[idx] = object_position_response
 
         print(f"processed in {time.time() - start}")
         # THIS PRINTS a lOT
@@ -147,7 +153,7 @@ def handle_obj_request(idx, msg):
     global latest_request_time
     latest_request_time = rospy.get_time()
     while recent_positions[idx] == None:
-        rospy.sleep(5)
+        rospy.sleep(0.005)
     return recent_positions[idx]
 
 # Load the model
