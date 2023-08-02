@@ -85,6 +85,8 @@ class HsvTuner(Node):
 
 
 
+if __name__ == '__main__':
+    HsvTuner().run()
 
 
 

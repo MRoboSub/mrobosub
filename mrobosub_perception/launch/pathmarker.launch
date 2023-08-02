@@ -16,5 +16,7 @@
     type="pathmarker.py"
     name="pathmarker"
     output="screen"
-  />
+  >
+    <param textfile="$(find mrobosub_perception)/params/pathmarker.yaml" type="yaml" name="pathmarker" />
+  </node> 
 </launch>
