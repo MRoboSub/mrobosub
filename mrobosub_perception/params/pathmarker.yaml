@@ -1,0 +1,9 @@
+hue_lo: 0
+hue_hi: 45
+sat_lo: 46
+sat_hi: 151
+val_lo: 63
+val_hi: 255
+lines_min_len: 100
+lines_angle_lo: 0
+lines_angle_hi: 360

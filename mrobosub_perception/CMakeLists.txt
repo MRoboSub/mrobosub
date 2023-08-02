@@ -8,6 +8,9 @@ project(mrobosub_perception)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS mrobosub_msgs)
+generate_dynamic_reconfigure_options(
+    cfg/hsv_params.cfg
+)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -100,8 +103,8 @@ find_package(catkin REQUIRED COMPONENTS mrobosub_msgs)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS mrobosub_msgs
+  LIBRARIES ${PROJECT_NAME}
+  CATKIN_DEPENDS mrobosub_msgs dynamic_reconfigure
   DEPENDS python-numpy python-cv2 python-cv_bridge
 )
 
