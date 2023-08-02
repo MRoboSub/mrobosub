@@ -6,6 +6,7 @@ import time
 import roslaunch
 import rospkg
 import rospy
+from std_msgs.msg import Bool
 from std_srvs.srv import SetBool, Trigger
 from pathlib import Path
 
@@ -42,7 +43,7 @@ capt_launch = None
 rospy.wait_for_service('/arming/cmd')
 arm_srv = rospy.ServiceProxy('/arming/cmd', SetBool)
 
-
+# /buttons/[strange/charm]
 rospy.wait_for_service('/localization/zero_state')
 zero_srv = rospy.ServiceProxy('/localization/zero_state', Trigger)
 
@@ -50,11 +51,22 @@ gpio.output(ON_INDICATOR_PIN, gpio.HIGH)
 
 rate = rospy.Rate(10)
 
+hall_effect_inputs = {'strange': False, 'charm': False}
+
+def set_strange(new_value: Bool):
+    hall_effect_inputs['strange'] = new_value.data
+
+def set_charm(new_value: Bool):
+    hall_effect_inputs['charm'] = new_value.data
+
+rospy.Subscriber('/buttons/strange', Bool, set_strange)
+rospy.Subscriber('/buttons/charm', Bool, set_charm)
+
 while not rospy.is_shutdown():
     prev_state = curr_state
 
-    strange_input = gpio_to_binary(gpio.input(STRANGE_CONTROLLER_PIN))
-    charm_input = gpio_to_binary(gpio.input(CHARM_CONTROLLER_PIN))
+    strange_input = hall_effect_inputs['strange']
+    charm_input = hall_effect_inputs['charm']
 
     curr_state = RobotState(strange_input + charm_input)
 
