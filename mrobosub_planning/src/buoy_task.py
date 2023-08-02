@@ -36,7 +36,7 @@ class ApproachBuoyOpen(TimedState):
         PIO.set_target_pose_yaw(self.target_yaw)
         PIO.set_target_twist_surge(self.surge_speed)
         
-        seen_glyph_outcome = search_for_glyph(first_glyph())
+        seen_glyph_outcome = search_for_glyph(preferred_glyph())
         hit = PIO.buoy_collision
 
         if seen_glyph_outcome:
@@ -98,9 +98,13 @@ class ApproachBuoyClosed(TimedState):
         hit = PIO.buoy_collision
         
         if hit:
-            return HitBuoySecond() if Gbl.second_glpyh else HitBuoyFirst()
-        
-        return self.NotReached()
+            if not Gbl.second_glpyh:
+                Gbl.second_glpyh = True
+                return HitBuoyFirst()
+            else:
+                return HitBuoySecond()
+        else:
+            return self.NotReached()
 
     def handle_once_timedout(self) -> None:
         PIO.set_target_twist_surge(0)
