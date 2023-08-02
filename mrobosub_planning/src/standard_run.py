@@ -29,7 +29,7 @@ transitions = {
     FallBackTurn.Unaligned: FallbackTurn,
     FallBackTurn.Aligned: ApproachBuoyOpen,
 
-    SeenGlyph:ApproachBuoyClosed,
+    SeenGlyph: ApproachBuoyClosed,
     HitBuoySecond: FallBack,
     HitBuoyFirst: FindGlyph,
 

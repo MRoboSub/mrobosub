@@ -1,5 +1,6 @@
 from umrsm import Outcome, TimedState, State, Param
-from periodic_io import PIO, angle_error
+from periodic_io import PIO, angle_error, Glyph
+from buoy_task import SeenGlyph
 
 FoundBuoyPathMarker = Outcome.make('FoundPathMarker', angle=float)
 SeenGateImage = Outcome.make('SeenGateImage', position=GlyphPositionResponse, glyph_seen=Glyph)
@@ -80,7 +81,7 @@ class ApproachGateImage(State):
         glpy_resp = PIO.query_glyph(Gbl.planet_seen)
         if not resp.found:
             self.times_not_seen += 1
-            if self.times_not_seen >= lost_image_threshold:
+            if self.times_not_seen >= self.lost_image_threshold:
                 return self.GoneThroughGate(planet=self.planet_seen)
         else:
             self.times_not_seen = 0
@@ -113,9 +114,14 @@ class AlignPathMarker(TimedState):
         pm_resp = PIO.query_pathmarker()
         if pm_resp is not None:
             self.last_known_angle = pm_resp
+
+        seen_glyph_outcome = search_for_glyph(first_glyph())
         
         PIO.set_target_pose_yaw(self.last_known_angle)
-        if PIO.is_yaw_within_threshold(self.yaw_theshold):
+
+        if seen_glyph_outcome:
+            return seen_glyph_outcome
+        elif PIO.is_yaw_within_threshold(self.yaw_theshold):
             return self.Aligned()
         else:
             return self.Unaligned()
@@ -129,7 +135,12 @@ class FallBackTurn(State):
     
     def handle(self) -> Outcome:
         PIO.set_target_pose_yaw(self.target_yaw)
-        if PIO.is_yaw_within_threshold(self.yaw_theshold):
+
+        seen_glyph_outcome = search_for_glyph(first_glyph())
+
+        if seen_glyph_outcome:
+            return seen_glyph_outcome
+        elif PIO.is_yaw_within_threshold(self.yaw_theshold):
             return self.Aligned()
         else:
             return self.Unaligned()

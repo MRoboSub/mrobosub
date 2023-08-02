@@ -5,6 +5,22 @@ SeenGlyph = Outcome.make('SeenGlyph', glyph_results=Mapping[Glyph, GlyphPosition
 HitBuoyFirst = Outcome.make('HitBuoyFirst')
 HitBuoySecond = Outcome.make('HitBuoySecond')
 
+
+def search_for_glyph(preference):
+    res = PIO.query_all_glyphs()
+    for g in [preference, Glyph.taurus, Glyph.serpens_caput, Glyph.auriga, Glyph.cetus]:
+        if g in res:
+            return SeenGlyph(glyph_results=res, glyph=g)
+    else:
+        return None
+
+def first_glyph():
+    if Gbl.planet_seen == Glyph.abydos_poo:
+        return Glyph.taurus
+    else:
+        return Glyph.auriga
+
+
 class ApproachBuoyOpen(TimedState):
     GlyphNotSeen = Outcome.make('GlyphNotSeen')
     TimedOut = Outcome.make('TimedOut')
@@ -20,18 +36,15 @@ class ApproachBuoyOpen(TimedState):
         PIO.set_target_pose_yaw(self.target_yaw)
         PIO.set_target_twist_surge(self.surge_speed)
         
-        res = PIO.query_all_glyphs()
+        seen_glyph_outcome = search_for_glyph(first_glyph())
         hit = PIO.buoy_collision
-        
-        if Glyph.taurus in res:
-            return SeenGlyph(glyph_results=res[Glyph.taurus], glyph = Glyph.taurus)
-        elif Glyph.auriga in res:
-            return SeenGlyph(glyph_results=res[Glyph.auriga], glyph = Glyph.auriga)
-        
-        if hit:
+
+        if seen_glyph_outcome:
+            return seen_glyph_outcome
+        elif hit:
             return HitBuoyFirst()
-        
-        return self.BuoyNotSeen()
+        else:
+            return self.GlyphNotSeen()
     
     def handle_once_timedout(self) -> None:        
         PIO.set_target_twist_surge(0)
@@ -50,12 +63,37 @@ class ApproachBuoyClosed(TimedState):
         self.most_recent_results = prev_outcome.glyph_results
         self.glyph = prev_outcome.glyph
 
+        if not Gbl.second_glpyh:
+            if Gbl.planet_seen == Glyph.abydos_poo:
+                self.preferred = Glyph.taurus
+            else:
+                self.preferred = Glyph.auriga
+        else:
+            if Gbl.planet_seen == Glyph.abydos_poo:
+                self.preferred = Glyph.serpens_caput
+            else:
+                self.preferred = Glyphh.cetus
+
+        self.seen_preferred = self.glyph == self.preferred
+
+
     def handle_if_not_timedout(self) -> Outcome:
-        self.most_recent_results.update(PIO.query_glyph(self.glyph))
+        if self.seen_preferred:
+            self.most_recent_results.update(PIO.query_glyph(self.preferred))
+        else:
+            self.most_recent_results.update(PIO.query_all_glyphs())
+            if self.preferred in self.most_recent_results:
+                self.seen_preferred = True
+                self.glyph = self.preferred
+
         # Use PID with the heave position/percentage 
-        PIO.set_target_twist_heave(self.most_recent_results.y_position * self.heave_factor)
+        PIO.set_target_twist_heave(
+            self.most_recent_results[self.glyph].y_position * self.heave_factor
+        )
         # Use setpoint for yaw angle
-        PIO.set_target_twist_heave(self.most_recent_results.x_theta * self.yaw_factor)
+        PIO.set_target_twist_yaw(
+            self.most_recent_results[self.glyph].x_theta * self.yaw_factor
+        )
         
         hit = PIO.buoy_collision
         
