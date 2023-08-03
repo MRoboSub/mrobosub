@@ -22,8 +22,8 @@ transitions = {
 
     ApproachGateImage.GoneThroughGate: FallBackTurn,
 
-    AlignPathMarker.Unaligned: ApproachBuoyOpen,
-    AlignPathMarker.Aligned: AlignPathMarker,
+    AlignPathMarker.Unaligned: AlignPathMarker,
+    AlignPathMarker.Aligned: ApproachBuoyOpen,
     AlignPathMarker.TimedOut: ApproachBuoyOpen,
 
     FallBackTurn.Unaligned: FallbackTurn,

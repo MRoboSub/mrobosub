@@ -1,6 +1,8 @@
 approachbouyopen:
   defaults:
     timeout: 20
+  alignment_test:
+    timeout: 5
 
 approachbouyclosed:
   defaults:
