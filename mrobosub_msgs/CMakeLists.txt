@@ -15,7 +15,7 @@ add_message_files(
 add_service_files(
     DIRECTORY srv
     FILES 
-    GlyphPosition.srv
+    ObjectPosition.srv
     PathmarkerAngle.srv
 )
 

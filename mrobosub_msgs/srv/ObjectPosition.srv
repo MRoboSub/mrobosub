@@ -1,4 +1,3 @@
-string glyph_name
 ---
 bool found
 float32 x_position      # Center of bounding box in pixels from left

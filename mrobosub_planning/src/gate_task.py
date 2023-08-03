@@ -1,10 +1,10 @@
 from umrsm import Outcome, TimedState, State, Param
 from periodic_io import PIO, angle_error, Glyph, Gbl
 from buoy_task import SeenGlyph
-from mrobosub_msgs.srv import GlyphPositionResponse
+from mrobosub_msgs.srv import ObjectPositionResponse
 
 FoundBuoyPathMarker = Outcome.make('FoundPathMarker', angle=float)
-SeenGateImage = Outcome.make('SeenGateImage', position=GlyphPositionResponse, glyph_seen=Glyph)
+SeenGateImage = Outcome.make('SeenGateImage', position=ObjectPositionResponse, glyph_seen=Glyph)
 
 class AlignGate(TimedState):
     Unaligned = Outcome.make('Unaligned')
@@ -37,15 +37,15 @@ class ApproachGate(TimedState):
         PIO.set_target_twist_surge(self.speed)
         pm_angle = PIO.query_pathmarker()
 
-        abydos_response = PIO.query_glyph(Glyph.abydos_poo)
-        earth_response = PIO.query_glyph(Glyph.earth_poo)
+        abydos_response = PIO.query_glyph(Glyph.abydos)
+        earth_response = PIO.query_glyph(Glyph.earth)
 
         if pm_angle is not None:
             return FoundBuoyPathMarker(angle=pm_angle)
         elif abydos_response.found:
-            return SeenGateImage(position=abydos_response, glyph_seen=Glyph.abydos_poo)
+            return SeenGateImage(position=abydos_response, glyph_seen=Glyph.abydos)
         elif earth_response.found:
-            return SeenGateImage(position=earth_response, glyph_seen=Glyph.earth_poo)
+            return SeenGateImage(position=earth_response, glyph_seen=Glyph.earth)
         else:
             self.Unreached()
     

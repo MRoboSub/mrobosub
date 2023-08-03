@@ -1,6 +1,6 @@
 import rospy
 from std_msgs.msg import Float64, Bool
-from mrobosub_msgs.srv import GlyphPosition, GlyphPositionResponse, PathmarkerAngle
+from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, PathmarkerAngle
 from typing import Type, Mapping, Optional, Tuple
 from enum import Enum
 
@@ -37,9 +37,9 @@ def angle_error(setpoint, state):
 Namespace = Type
 
 Glyph = Enum('Glyph', [
-    'abydos_poo', 'earth_poo',
-    'taurus', 'serpens_caput', 'capricornus', 'monoceros', 'sagittarius', 'orion', # abydos
-    'auriga', 'cetus', 'centaurus', 'cancer', 'scutum', 'eridanus', # earth
+    'abydos', 'earth',
+    'taurus', 'serpens_caput', # 'capricornus', 'monoceros', 'sagittarius', 'orion', # abydos
+    'auriga', 'cetus', # 'centaurus', 'cancer', 'scutum', 'eridanus', # earth
 ])
 
 class Gbl:
@@ -48,7 +48,7 @@ class Gbl:
 
     @classmethod
     def glyphs_of_planet(cls, planet: Optional[Glyph]) -> Tuple[Glyph, Glyph]:
-        if planet == Glyph.earth_poo:
+        if planet == Glyph.earth:
             return (Glyph.auriga, Glyph.cetus)
         else:
             return (Glyph.taurus, Glyph.serpens_caput)
@@ -162,11 +162,11 @@ class PIO:
             return None
 
     @classmethod
-    def query_glyph(cls, glyph: Glyph) -> GlyphPositionResponse:
-        return cls._glyph_srv(str(glyph))
+    def query_glyph(cls, glyph: Glyph) -> ObjectPositionResponse:
+        return cls._object_position_srvs[glyph.name]()
     
     @classmethod
-    def query_all_glyphs(cls) -> Mapping[Glyph, GlyphPositionResponse]:
+    def query_all_glyphs(cls) -> Mapping[Glyph, ObjectPositionResponse]:
         """ query all 12 glyphs and return a dict from any found glyphs to their position. """
         results = { }
         for g in Glyph:
@@ -197,4 +197,7 @@ class PIO:
     
     # Services
     _pathmarker_srv = rospy.ServiceProxy('pathmarker/angle', PathmarkerAngle, persistent=True)
-    _glyph_srv = rospy.ServiceProxy('glyph', GlyphPosition, persistent=True)
+    _object_position_srvs = {}
+    for g in Glyph:
+        _object_position_srvs[g.name] = rospy.ServiceProxy(f'/object_position/{g.name}', ObjectPosition, persistent=True)
+        

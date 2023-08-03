@@ -1,9 +1,9 @@
 from umrsm import Outcome, TimedState, State, Param
 from periodic_io import PIO, Gbl, angle_error, Glyph
-from mrobosub_msgs.srv import GlyphPositionResponse
+from mrobosub_msgs.srv import ObjectPositionResponse
 from typing import Mapping
 
-SeenGlyph = Outcome.make('SeenGlyph', glyph_results=Mapping[Glyph, GlyphPositionResponse], glyph = Glyph)
+SeenGlyph = Outcome.make('SeenGlyph', glyph_results=Mapping[Glyph, ObjectPositionResponse], glyph = Glyph)
 HitBuoyFirst = Outcome.make('HitBuoyFirst')
 HitBuoySecond = Outcome.make('HitBuoySecond')
 
@@ -17,7 +17,7 @@ def search_for_glyph(preference):
         return None
 
 def first_glyph():
-    if Gbl.planet_seen == Glyph.abydos_poo:
+    if Gbl.planet_seen == Glyph.abydos:
         return Glyph.taurus
     else:
         return Glyph.auriga
@@ -76,7 +76,7 @@ class ApproachBuoyClosed(TimedState):
 
     def handle_if_not_timedout(self) -> Outcome:
         if self.seen_preferred:
-            self.most_recent_results.update(PIO.query_glyph(self.preferred))
+            self.most_recent_results[self.preferred] = PIO.query_glyph(self.preferred)
         else:
             self.most_recent_results.update(PIO.query_all_glyphs())
             if self.preferred in self.most_recent_results:
