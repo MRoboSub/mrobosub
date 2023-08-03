@@ -1,0 +1,3 @@
+<launch>
+    <node name="dummy_ml_srv_node" pkg="mrobosub_perception" type="dummy_ml_srv_node.py" />
+</launch>
