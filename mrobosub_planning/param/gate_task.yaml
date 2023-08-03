@@ -15,6 +15,8 @@ approachgateimage:
 alignpathmarker:
   defaults:
     timeout: 10
+  alignment_test:
+    timeout: 20
 
 fallbackturn:
   defaults:

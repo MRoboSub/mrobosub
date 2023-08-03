@@ -7,27 +7,8 @@ transitions = {
     Start.Complete: Submerge,
 
     Submerge.Unreached: Submerge,
-    Submerge.Submerged: AlignGate,
-    Submerge.TimedOut: AlignGate,
-
-    AlignGate.Unaligned: AlignGate,
-    AlignGate.ReachedAngle: ApproachGate,
-    AlignGate.TimedOut: ApproachGate,
-
-    ApproachGate.Unreached: ApproachGate,
-    ApproachGate.TimedOut: FallBackTurn,
-
-    SeenGateImage: ApproachGateImage,
-    FoundBuoyPathMarker: AlignPathMarker,
-
-    ApproachGateImage.GoneThroughGate: FallBackTurn,
-
-    AlignPathMarker.Unaligned: AlignPathMarker,
-    AlignPathMarker.Aligned: ApproachBuoyOpen,
-    AlignPathMarker.TimedOut: ApproachBuoyOpen,
-
-    FallBackTurn.Unaligned: FallbackTurn,
-    FallBackTurn.Aligned: ApproachBuoyOpen,
+    Submerge.Submerged: ApproachBuoyOpen,
+    Submerge.TimedOut: ApproachBuoyOpen,
 
     SeenGlyph: ApproachBuoyClosed,
     HitBuoySecond: FallBack,

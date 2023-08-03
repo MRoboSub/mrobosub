@@ -32,7 +32,7 @@ class Zed(ControlLoopNode):
 
         if success:
             frame_chopped = self.chop(frame)
-            img = self.br.cv2_to_imgmsg(frame_chopped, encoding='rgb8')
+            img = self.br.cv2_to_imgmsg(frame_chopped, encoding='bgr8')
             self.pub.publish(img)
 
             
