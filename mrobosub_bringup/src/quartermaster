@@ -70,7 +70,13 @@ while not rospy.is_shutdown():
             res = soft_stop()
         zero_srv()
         arm_resp = arm_srv(True)
-        rospy.loginfo(f'arming response: {arm_resp.success}; {arm_resp.message}')
+
+        retries = 0
+        while not arm_resp.succes and retries < 10:
+            arm_resp = arm_srv(True)
+            retries += 1
+
+        rospy.loginfo(f'arming response: {arm_resp.success}; {arm_resp.message}; {retries} retries')
     else:
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         roslaunch.configure_logging(uuid)
