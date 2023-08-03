@@ -1,6 +1,7 @@
 from umrsm import Outcome, TimedState, State, Param
-from periodic_io import PIO, angle_error, Glyph
-from buoy_task import SeenGlyph
+from periodic_io import PIO, angle_error, Glyph, Gbl
+from buoy_task import SeenGlyphh
+from mrobosub_msgs.srv import GlyphPositionResponse
 
 FoundBuoyPathMarker = Outcome.make('FoundPathMarker', angle=float)
 SeenGateImage = Outcome.make('SeenGateImage', position=GlyphPositionResponse, glyph_seen=Glyph)
@@ -37,7 +38,7 @@ class ApproachGate(TimedState):
         pm_angle = PIO.query_pathmarker()
 
         abydos_response = PIO.query_glyph(Glyph.abydos_poo)
-        earth_response = PIO.query_glyph(Glpyh.earth_poo)
+        earth_response = PIO.query_glyph(Glyph.earth_poo)
 
         if pm_angle is not None:
             return FoundBuoyPathMarker(angle=pm_angle)
@@ -78,7 +79,7 @@ class ApproachGateImage(State):
         self.times_not_seen = 0
 
     def handle(self) -> Outcome:
-        glpy_resp = PIO.query_glyph(Gbl.planet_seen)
+        resp = PIO.query_glyph(Gbl.planet_seen)
         if not resp.found:
             self.times_not_seen += 1
             if self.times_not_seen >= self.lost_image_threshold:
@@ -105,7 +106,7 @@ class AlignPathMarker(TimedState):
     yaw_threshold: Param[float]
     timeout: Param[int]
 
-    def initialize(prev_outcome: FoundBuoyPathMarker) -> None:
+    def initialize(self, prev_outcome: FoundBuoyPathMarker) -> None:
         super().initialize()
         self.last_known_angle = prev_outcome.angle
 
@@ -115,7 +116,7 @@ class AlignPathMarker(TimedState):
         if pm_resp is not None:
             self.last_known_angle = pm_resp
 
-        seen_glyph_outcome = search_for_glyph(first_glyph())
+        seen_glyph_outcome = PIO.search_for_glyph(Gbl.preferred_glyph())
         
         PIO.set_target_pose_yaw(self.last_known_angle)
 
@@ -136,7 +137,7 @@ class FallBackTurn(State):
     def handle(self) -> Outcome:
         PIO.set_target_pose_yaw(self.target_yaw)
 
-        seen_glyph_outcome = search_for_glyph(first_glyph())
+        seen_glyph_outcome = PIO.search_for_glyph(Gbl.preferred_glyph())
 
         if seen_glyph_outcome:
             return seen_glyph_outcome

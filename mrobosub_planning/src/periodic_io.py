@@ -42,28 +42,26 @@ Glyph = Enum('Glyph', [
     'auriga', 'cetus', 'centaurus', 'cancer', 'scutum', 'eridanus', # earth
 ])
 
-
-def glyphs_of_planet(planet: Optional[Glyph]) -> Tuple[Glyph, Glyph]:
-    if planet == Glyph.earth_poo:
-        return (Glyph.auriga, Glyph.cetus)
-    else:
-        return (Glyph.taurus, Glyph.serpens_caput)
-
-
-def preferred_glyph(gate_planet: Optional[Glyph]=Gbl.planet_seen, 
-                    first_hit: Optional[Glyph]=Gbl.first_hit_glyph) -> Glyph:
-    fst, snd = glyphs_of_planet(gate_planet)
-    if first_hit == fst:
-        return snd
-    elif first_hit == snd:
-        return fst
-    else:
-        return fst
-
-
 class Gbl:
     planet_seen: Optional[Glyph] = None
     first_hit_glyph: Optional[Glyph] = None
+
+    @classmethod
+    def glyphs_of_planet(cls, planet: Optional[Glyph]) -> Tuple[Glyph, Glyph]:
+        if planet == Glyph.earth_poo:
+            return (Glyph.auriga, Glyph.cetus)
+        else:
+            return (Glyph.taurus, Glyph.serpens_caput)
+
+    @classmethod
+    def preferred_glyph(cls) -> Glyph:
+        fst, snd = cls.glyphs_of_planet(Gbl.planet_seen)
+        if Gbl.first_hit_glyph == fst:
+            return snd
+        elif Gbl.first_hit_glyph == snd:
+            return fst
+        else:
+            return fst
 
 # Look at this!
 class PIO:
