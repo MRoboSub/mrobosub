@@ -1,3 +1,5 @@
 *.swp
 *.pyc
+*.pt
+*.onnx
 __pycache__
