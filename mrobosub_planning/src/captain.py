@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 from umrsm import StateMachine, State
 import common
-# import standard_run
+import standard_run
 # import prequal_strafe
 import prequal_turn
+import buoy_run
 import rospy
 import sys
 
@@ -14,7 +15,8 @@ transition_maps = {
     'standard': standard_run.transitions,
     # 'prequal_strafe': prequal_strafe.transitions,
     'prequal_turn': prequal_turn.transitions,
-    # ...
+    'buoy_run': buoy_run.transitions,
+    #
 }
 
 
