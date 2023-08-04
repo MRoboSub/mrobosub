@@ -5,7 +5,7 @@ aligngate:
 
 approachgate:
   defaults:
-    timeout: 15
+    timeout: 25
 
 
 approachgateimage:

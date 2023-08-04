@@ -155,7 +155,12 @@ class PIO:
             angle of path marker in global frame (i.e. same frame as the Pose.yaw) if found
             None otherwise. 
         """
-        resp = cls._pathmarker_srv()
+        
+        try:
+            resp = cls._pathmarker_srv()
+        except:
+            return None
+
         if resp.found:
             return (90 - resp.angle) + cls.Pose.yaw
         else:

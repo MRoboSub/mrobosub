@@ -47,7 +47,7 @@ class ApproachGate(TimedState):
         elif earth_response.found:
             return SeenGateImage(position=earth_response, glyph_seen=Glyph.earth)
         else:
-            self.Unreached()
+            return self.Unreached()
     
     def handle_once_timedout(self) -> None:
         PIO.set_target_twist_surge(0)
@@ -75,6 +75,7 @@ class ApproachGateImage(TimedState):
     yaw_theshold: Param[float]
 
     def initialize(self, prev_outcome: SeenGateImage) -> None:
+        super().initialize(prev_outcome)
         Gbl.planet_seen = prev_outcome.glyph_seen
         self.last_target_yaw = PIO.Pose.yaw + prev_outcome.position.x_theta
         self.times_not_seen = 0
@@ -84,14 +85,14 @@ class ApproachGateImage(TimedState):
         if not resp.found:
             self.times_not_seen += 1
             if self.times_not_seen >= self.lost_image_threshold:
-                return self.GoneThroughGate(planet=self.planet_seen)
+                return self.GoneThroughGate(planet=Gbl.planet_seen)
         else:
             self.times_not_seen = 0
             self.last_target_yaw = PIO.Pose.yaw + resp.x_theta
 
-        pm_angle = self.query_pathmarker()
-        if pm_angle is not None:
-            return FoundBuoyPathMarker(angle=pm_angle)
+        #pm_angle = self.query_pathmarker()
+        #if pm_angle is not None:
+        #    return FoundBuoyPathMarker(angle=pm_angle)
 
         PIO.set_target_pose_yaw(self.last_target_yaw)
         return SeenGateImage(glyph_seen=Gbl.planet_seen, position=resp)        
@@ -132,7 +133,10 @@ class FallBackTurn(State):
 
     target_yaw: Param[float]
     yaw_threshold: Param[float]
-    
+   
+    def initialize(self, prev_outcome: FoundBuoyPathMarker) -> None:
+        super().initialize(prev_outcome)
+ 
     def handle(self) -> Outcome:
         PIO.set_target_pose_yaw(self.target_yaw)
 

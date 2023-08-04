@@ -2,9 +2,9 @@
 
 
 import cv2
+from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 import rospy
-from cv_bridge import CvBridge
 
 from mrobosub_lib.lib import ControlLoopNode, Param
 
@@ -18,6 +18,7 @@ class Zed(ControlLoopNode):
         super().__init__('zed')
         self.br = CvBridge()
         self.cap = cv2.VideoCapture(self.device_path)
+        self.raw_pub = rospy.Publisher('/zed/raw', Image, queue_size=1)
         self.pub = rospy.Publisher(
             '/zed2/zed_node/rgb/image_rect_color', 
             Image, queue_size=1
@@ -31,6 +32,7 @@ class Zed(ControlLoopNode):
         success, frame = self.cap.read()
 
         if success:
+            self.raw_pub.publish(self.br.cv2_to_imgmsg(frame, encoding='bgr8'))
             frame_chopped = self.chop(frame)
             img = self.br.cv2_to_imgmsg(frame_chopped, encoding='bgr8')
             self.pub.publish(img)

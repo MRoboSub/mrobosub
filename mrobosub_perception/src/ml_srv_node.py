@@ -6,6 +6,7 @@ import rospy
 import rospkg
 from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse
 import cv2
+from cv_bridge import CvBridge
 from zed_interfaces.msg import RGBDSensors
 import numpy as np
 import time
@@ -18,7 +19,6 @@ import torch
 import struct
 import os
 from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
 
 # height = 376
 # width = 1344

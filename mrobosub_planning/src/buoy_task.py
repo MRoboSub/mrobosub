@@ -91,6 +91,7 @@ class ApproachBuoyClosed(TimedState):
         PIO.set_target_twist_yaw(
             self.most_recent_results[self.glyph].x_theta * self.yaw_factor
         )
+        print(self.most_recent_results[self.glyph].x_theta)  
         
         hit = PIO.buoy_collision
         

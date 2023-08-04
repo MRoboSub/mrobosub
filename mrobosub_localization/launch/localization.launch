@@ -1,4 +1,7 @@
 <launch>
   <node name="localization" pkg="mrobosub_localization" type="localization.py">
   </node>
+  <node name="collision" pkg="mrobosub_localization" type="collision.py">
+    <rosparam command="load" file="$(find mrobosub_localization)/params/collision.yaml" />
+  </node>
 </launch>

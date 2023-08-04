@@ -4,8 +4,8 @@ import rospy
 from std_msgs.msg import Float64
 from sensor_msgs.msg import Image
 from mrobosub_lib.lib import Node
-from cv_bridge import CvBridge
 import cv2
+from cv_bridge import CvBridge
 from mrobosub_msgs.srv import PathmarkerAngle, PathmarkerAngleResponse
 import numpy as np
 

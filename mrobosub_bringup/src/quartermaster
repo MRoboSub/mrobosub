@@ -25,17 +25,16 @@ capt_launch = None
 rospy.wait_for_service('/arming/cmd')
 arm_srv = rospy.ServiceProxy('/arming/cmd', SetBool)
 
-# /buttons/[strange/charm]
 rospy.wait_for_service('/localization/zero_state')
 zero_srv = rospy.ServiceProxy('/localization/zero_state', Trigger)
+
+rospy.wait_for_service('/object_position/earth')
 
 rate = rospy.Rate(10)
 
 led_strange_pub = rospy.Publisher('/led/strange', Bool, queue_size=1)
 led_charm_pub = rospy.Publisher('/led/charm', Bool, queue_size=1)
 led_on_pub = rospy.Publisher('/led/on', Bool, queue_size=1)
-
-led_on_pub.publish(true)
 
 hall_effect_inputs = {'strange': False, 'charm': False}
 
@@ -48,7 +47,9 @@ def set_charm(new_value: Bool):
 rospy.Subscriber('/buttons/strange', Bool, set_strange)
 rospy.Subscriber('/buttons/charm', Bool, set_charm)
 
-while not rospy.is_shutdown():
+while not rospy.is_shutdown(): 
+    led_on_pub.publish(True)
+
     prev_state = curr_state
 
     strange_input = hall_effect_inputs['strange']
@@ -57,6 +58,7 @@ while not rospy.is_shutdown():
     curr_state = RobotState(strange_input + charm_input)
 
     if curr_state == prev_state:
+        rate.sleep()
         continue
     elif curr_state == RobotState.ambient:
         arm_resp = arm_srv(False)
@@ -72,7 +74,7 @@ while not rospy.is_shutdown():
         arm_resp = arm_srv(True)
 
         retries = 0
-        while not arm_resp.succes and retries < 10:
+        while not arm_resp.success and retries < 10:
             arm_resp = arm_srv(True)
             retries += 1
 
@@ -90,6 +92,4 @@ while not rospy.is_shutdown():
 
     rate.sleep()
 
-
-gpio.cleanup()
 
