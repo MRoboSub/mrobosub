@@ -1,6 +1,6 @@
 from umrsm import Outcome, TimedState, State, Param
 from periodic_io import PIO, angle_error, Glyph, Gbl
-from buoy_task import SeenGlyph
+from buoy_task import SeenGlyph, search_for_glyph
 from mrobosub_msgs.srv import ObjectPositionResponse
 
 FoundBuoyPathMarker = Outcome.make('FoundPathMarker', angle=float)
@@ -18,7 +18,7 @@ class AlignGate(TimedState):
     def handle_if_not_timedout(self) -> Outcome:
         PIO.set_target_pose_yaw(self.target_yaw)
 
-        if PIO.is_yaw_within_threshold(self.yaw_theshold):
+        if PIO.is_yaw_within_threshold(self.yaw_threshold):
             return self.ReachedAngle()
         else:
             return self.Unaligned()
@@ -31,10 +31,10 @@ class ApproachGate(TimedState):
     TimedOut = Outcome.make('TimedOut')
     
     timeout: Param[int]
-    speed: Param[float]
+    surge_speed: Param[float]
 
     def handle_if_not_timedout(self) -> Outcome:
-        PIO.set_target_twist_surge(self.speed)
+        PIO.set_target_twist_surge(self.surge_speed)
         pm_angle = PIO.query_pathmarker()
 
         abydos_response = PIO.query_glyph(Glyph.abydos)
@@ -66,19 +66,20 @@ class ApproachGate(TimedState):
 #         else:
 #             return self.NotFound()
 
-class ApproachGateImage(State):
+class ApproachGateImage(TimedState):
     GoneThroughGate = Outcome.make('GoneThroughGate', planet=Glyph)
+    TimedOut = Outcome.make('TimedOut')
 
+    timeout: Param[float]
     lost_image_threshold: Param[int]
     yaw_theshold: Param[float]
-    submerge_depth: Param[float]
 
     def initialize(self, prev_outcome: SeenGateImage) -> None:
         Gbl.planet_seen = prev_outcome.glyph_seen
         self.last_target_yaw = PIO.Pose.yaw + prev_outcome.position.x_theta
         self.times_not_seen = 0
 
-    def handle(self) -> Outcome:
+    def handle_if_not_timedout(self) -> Outcome:
         resp = PIO.query_glyph(Gbl.planet_seen)
         if not resp.found:
             self.times_not_seen += 1
@@ -93,9 +94,7 @@ class ApproachGateImage(State):
             return FoundBuoyPathMarker(angle=pm_angle)
 
         PIO.set_target_pose_yaw(self.last_target_yaw)
-        PIO.set_target_pose_heave(self.submerge_depth)
-        return SeenGateImage(glyph_seen=Gbl.planet_seen, position=resp)
-        
+        return SeenGateImage(glyph_seen=Gbl.planet_seen, position=resp)        
 
 
 class AlignPathMarker(TimedState):
@@ -107,7 +106,7 @@ class AlignPathMarker(TimedState):
     timeout: Param[int]
 
     def initialize(self, prev_outcome: FoundBuoyPathMarker) -> None:
-        super().initialize()
+        super().initialize(prev_outcome)
         self.last_known_angle = prev_outcome.angle
 
 
@@ -116,13 +115,13 @@ class AlignPathMarker(TimedState):
         if pm_resp is not None:
             self.last_known_angle = pm_resp
 
-        seen_glyph_outcome = PIO.search_for_glyph(Gbl.preferred_glyph())
+        seen_glyph_outcome = search_for_glyph(Gbl.preferred_glyph())
         
         PIO.set_target_pose_yaw(self.last_known_angle)
 
         if seen_glyph_outcome:
             return seen_glyph_outcome
-        elif PIO.is_yaw_within_threshold(self.yaw_theshold):
+        elif PIO.is_yaw_within_threshold(self.yaw_threshold):
             return self.Aligned()
         else:
             return self.Unaligned()

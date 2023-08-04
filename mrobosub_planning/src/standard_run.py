@@ -22,6 +22,7 @@ transitions = {
     FoundBuoyPathMarker: AlignPathMarker,
 
     ApproachGateImage.GoneThroughGate: FallBackTurn,
+    ApproachGateImage.TimedOut: ApproachBuoyOpen,
 
     AlignPathMarker.Unaligned: AlignPathMarker,
     AlignPathMarker.Aligned: ApproachBuoyOpen,

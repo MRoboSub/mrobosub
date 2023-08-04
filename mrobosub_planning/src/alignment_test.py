@@ -8,8 +8,12 @@ transitions = {
     Start.Complete: Submerge,
 
     Submerge.Unreached: Submerge,
-    Submerge.Submerged: AlignPathMarker,
-    Submerge.TimedOut: AlignPathMarker,
+    Submerge.Submerged: ApproachGate,
+    Submerge.TimedOut: ApproachGate,
+
+    ApproachGate.Unreached: AlignPathMarker,
+    ApproachGate.TimedOut: Surface,
+    FoundBuoyPathMarker: AlignPathMarker,
 
     AlignPathMarker.Unaligned: AlignPathMarker,
     AlignPathMarker.Aligned: ApproachBuoyOpen,

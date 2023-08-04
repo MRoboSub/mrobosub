@@ -10,6 +10,7 @@ approachgate:
 
 approachgateimage:
   defaults:
+    timeout: 10
     lost_image_threshold: 15 
 
 alignpathmarker:

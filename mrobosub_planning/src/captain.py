@@ -16,8 +16,8 @@ transition_maps = {
     'standard': standard_run.transitions,
     # 'prequal_strafe': prequal_strafe.transitions,
     'prequal_turn': prequal_turn.transitions,
-    'buoy_run': buoy_run.transitions,
-    'alignment_test': alignment_test.transitions,
+    'buoy': buoy_run.transitions,
+    'alignment': alignment_test.transitions,
     #
 }
 
