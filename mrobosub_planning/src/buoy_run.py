@@ -11,19 +11,23 @@ transitions = {
     Submerge.Submerged: ApproachBuoyOpen,
     Submerge.TimedOut: ApproachBuoyOpen,
 
-    SeenGlyph: ApproachBuoyClosed,
-    HitBuoySecond: FallBack,
+    SeenGlyph: CenterHeaveGlyph,
     HitBuoyFirst: FindGlyph,
+    HitBuoySecond: FallBack,
 
     ApproachBuoyOpen.GlyphNotSeen: ApproachBuoyOpen, 
     ApproachBuoyOpen.TimedOut: Surface,
 
-    ApproachBuoyClosed.NotReached: ApproachBuoyClosed,
-    ApproachBuoyClosed.TimedOut: Surface,
+    CenterHeaveGlyph.NotCentered: CenterHeaveGlyph,
+    CenterHeaveGlyph.Centered: CenterYawGlyph,
+    CenterHeaveGlyph.TimedOut: CenterYawGlyph,
+
+    CenterYawGlyph.NotReached: CenterYawGlyph,
+    CenterYawGlyph.TimedOut: Surface,
 
     FindGlyph.GlyphNotSeen: FindGlyph,
     FindGlyph.TimedOut: Pause,
-    
+
     Pause.TimedOut: ContingencySubmerge,
     
     ContingencySubmerge.Submerging: ContingencySubmerge,
@@ -37,5 +41,4 @@ transitions = {
 
     Surface.Submerged: Surface,
     Surface.Surfaced: Stop     
-
 }
