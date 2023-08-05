@@ -62,11 +62,11 @@ class ApproachBuoyOpen(TimedState):
 class CenterHeaveGlyph(TimedState):
     NotCentered = Outcome.make('NotCentered')
     Centered = Outcome.make('Centered', glyph=Glyph, last_data=ObjectPositionResponse)
-    TimedOut = Outcome.make('TimedOut')
+    TimedOut = Outcome.make('TimedOut', glyph=Glyph, last_data=ObjectPositionResponse)
 
     heave_down_speed: Param[float] 
     heave_up_speed: Param[float]
-    deadband: Param[int] # pixels
+    deadband: Param[float] # pixels
     timeout: Param[float]
 
 
@@ -74,23 +74,33 @@ class CenterHeaveGlyph(TimedState):
         super().initialize(prev_outcome)
         self.most_recent_results = prev_outcome.glyph_results
         self.glyph = prev_outcome.glyph
-        self.glyph_y_diff = self.most_recent_results[self.glyph].y_position
+        self.glyph_y_diff = self.most_recent_results[self.glyph].y_theta
+        self.preferred = Gbl.preferred_glyph()
+
 
     def handle_if_not_timedout(self):
+        if self.glyph == self.preferred:
+            self.glpyh = self.preferred
+
         query_res = PIO.query_glyph(self.glyph)
         if query_res.found:
-            self.glyph_y_diff = query_res.y_position
+            self.glyph_y_diff = query_res.y_theta
             self.most_recent_results[self.glyph] = query_res
 
         # use updated info if we have it, otherwise continue with old info? is this bad
         if abs(self.glyph_y_diff) < self.deadband:
             return self.Centered(self.glyph, self.most_recent_results[self.glyph])
-        elif self.y_position > 0: # TODO: check sign?
-            PIO.set_target_twist_heave(heave_down_speed)
+        elif self.glyph_y_diff > 0: # TODO: check sign?
+            print(f'Setting heave {self.heave_down_speed}')
+            PIO.set_target_twist_heave(self.heave_down_speed)
         else:
-            PIO.set_target_twist_heave(heave_up_speed)
+            PIO.set_target_twist_heave(self.heave_up_speed)
+        PIO.set_target_twist_surge(0)
 
         return self.NotCentered()
+
+    def handle_once_timedout(self):
+        return self.TimedOut(self.glyph, self.most_recent_results[self.glyph])   
 
 
 
