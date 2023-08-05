@@ -7,7 +7,7 @@ approachbouyopen:
 approachbuoyclosed:
   defaults:
     timeout: 10
-    heave_factor: 0.001 
+    heave_factor: 0.002 
     yaw_factor: 0.004
 
 fallback:

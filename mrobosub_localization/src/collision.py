@@ -14,9 +14,10 @@ class CollisionDetector(Node):
 
     def __init__(self):
         super().__init__("collision")
-        self.sub = rospy.Subscriber('/imu/data', Imu, self.filter_callback)
+        self.sub = rospy.Subscriber('/mavros/imu/data', Imu, self.filter_callback)
         self.pub_filtered = rospy.Publisher('/collision/filtered_accel', Float64, queue_size = 10)
         self.pub_collision = rospy.Publisher('/collision/collision', Bool, queue_size = 10)
+        self.pub_collision_float = rospy.Publisher('/collision/collision_float', Float64, queue_size = 10)
         self.last_value = 0
         self.last_time = 0
 
@@ -34,6 +35,7 @@ class CollisionDetector(Node):
         output = (self.last_value - msg.linear_acceleration.x) * a + msg.linear_acceleration.x
         self.pub_filtered.publish(output)
         self.pub_collision.publish(-output > self.threshold)
+        self.pub_collision_float.publish(-output > self.threshold)
         self.last_time = next_time
         self.last_value = output
 
