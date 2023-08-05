@@ -1,4 +1,4 @@
-from umrsm import Outcome, TimedState, State, Param
+from umrsm import Outcome, TimedState, State, Param, TurnToYaw
 from periodic_io import PIO, angle_error, Glyph, Gbl
 from buoy_task import SeenGlyph, search_for_glyph
 from mrobosub_msgs.srv import ObjectPositionResponse
@@ -22,7 +22,7 @@ class AlignGate(TimedState):
             return self.ReachedAngle()
         else:
             return self.Unaligned()
-    
+
     def handle_once_timedout(self) -> None:
         PIO.set_target_pose_yaw(0)
 
@@ -163,24 +163,17 @@ class Spin(TimedState):
         return self.Unreached        
     
     def handle_once_timedout(self) -> None:
-        pass
+        PIO.set_target_twist_yaw(0)
+        return self.TimedOut()
 
-class SpinFinish(TimedState):
+class SpinFinish(TurnToYaw):
     timeout: Param[float]
 
     Unreached = Outcome.make('Unreached')
+    Reached = Outcome.make('Reached')
     TimedOut = Outcome.make('TimedOut')
 
-    def initialize(self, prev_outcome: Outcome) -> None:
-        super().initialize(prev_outcome)
-
-    def handle_if_not_timedout(self) -> Outcome:
-        PIO.set_target_pose_yaw(0)
-
-        if PIO.is_yaw_within_threshold(self.yaw_threshold):
-            return self.ReachedAngle()
-        else:
-            return self.Unaligned()
-    
-    def handle_once_timedout(self) -> None:
-        pass
+    target_yaw : Param[float]
+    yaw_threshold: Param[float]
+    settle_time: Param[float]
+    timeout : Param[float]

@@ -6,6 +6,7 @@ import standard_run
 # import prequal_turn
 import buoy_run
 import alignment_test
+import spin_test
 import rospy
 import sys
 
@@ -18,7 +19,7 @@ transition_maps = {
     # 'prequal_turn': prequal_turn.transitions,
     'buoy': buoy_run.transitions,
     'alignment': alignment_test.transitions,
-    #
+    'spin': spin_test.transitions,
 }
 
 
