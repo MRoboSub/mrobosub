@@ -37,21 +37,18 @@ class Stop(State):
     Submerged = Outcome.make("Submerged")
 
     def initialize(self, prev_outcome: Outcome) -> None:
-        self.rate = rospy.Rate(50)
-        PIO.set_target_twist_heave(0)
+        PIO.set_target_pose_heave(0)
         PIO.set_target_twist_yaw(0)
         PIO.set_target_twist_surge(0)
         PIO.set_target_twist_roll(0)
         PIO.set_target_twist_sway(0)
     
     def handle(self)->Outcome:
-        for _ in range(50):
-            PIO.set_target_twist_heave(0)
-            PIO.set_target_twist_yaw(0)
-            PIO.set_target_twist_surge(0)
-            PIO.set_target_twist_roll(0)
-            PIO.set_target_twist_sway(0)
-            self.rate.sleep()
+        PIO.set_target_pose_heave(0)
+        PIO.set_target_twist_yaw(0)
+        PIO.set_target_twist_surge(0)
+        PIO.set_target_twist_roll(0)
+        PIO.set_target_twist_sway(0)
         return self.Submerged()
 
 Surface = Stop

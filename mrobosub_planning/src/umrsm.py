@@ -142,14 +142,11 @@ class TimedState(State):
     """
     def initialize(self, prev_outcome: Outcome) -> None:
         self.start_time = rospy.get_time()
-
+    
     def handle(self) -> Outcome:
         if rospy.get_time() - self.start_time >= self.timeout:
-            handle_resp = self.handle_once_timedout()
-            if handle_resp:
-                return handle_resp
-            else:
-                return self.TimedOut()
+            self.handle_once_timedout()
+            return self.TimedOut()
         else:
             return self.handle_if_not_timedout()
 

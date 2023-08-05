@@ -3,7 +3,7 @@ from umrsm import StateMachine, State
 import common
 import standard_run
 # import prequal_strafe
-# import prequal_turn
+import prequal_turn
 import buoy_run
 import alignment_test
 import spin_test
@@ -16,7 +16,7 @@ import sys
 transition_maps = {
     'standard': standard_run.transitions,
     # 'prequal_strafe': prequal_strafe.transitions,
-    # 'prequal_turn': prequal_turn.transitions,
+    'prequal_turn': prequal_turn.transitions,
     'buoy': buoy_run.transitions,
     'alignment': alignment_test.transitions,
     'spin': spin_test.transitions,

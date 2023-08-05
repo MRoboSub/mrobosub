@@ -7,16 +7,16 @@ approachbouyopen:
 
 centerheaveglyph:
   defaults:
-    heave_down_speed: 0.25
+    heave_down_speed: 0.2
     heave_up_speed: 0
-    deadband: 1.0
+    deadband: 50
     timeout: 15
 
 centeryawglyph:
   defaults:
     surge_speed: 0.2
     yaw_factor: 0.004
-    timeout: 25
+    timeout: 10
 
 approachbuoyclosed:
   defaults:
