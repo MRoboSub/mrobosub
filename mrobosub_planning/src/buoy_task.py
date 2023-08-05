@@ -41,10 +41,12 @@ class ApproachBuoyOpen(TimedState):
         PIO.set_target_pose_yaw(self.target_yaw)
         PIO.set_target_twist_surge(self.surge_speed)
         
+
         seen_glyph_outcome = search_for_glyph(Gbl.preferred_glyph())
         hit = PIO.buoy_collision
 
         if seen_glyph_outcome:
+            # possible change: add some counter to increase the likelihood that we get our preferred glyph?
             return seen_glyph_outcome
         elif hit:
             return HitBuoyFirst()
@@ -54,8 +56,86 @@ class ApproachBuoyOpen(TimedState):
     def handle_once_timedout(self) -> None:        
         PIO.set_target_twist_surge(0)
 
+
+
+
+class CenterHeaveGlyph(TimedState):
+    NotCentered = Outcome.make('NotCentered')
+    Centered = Outcome.make('Centered', glyph=Glyph, last_data=ObjectPositionResponse)
+    TimedOut = Outcome.make('TimedOut')
+
+    heave_down_speed: Param[float] 
+    heave_up_speed: Param[float]
+    deadband: Param[int] # pixels
+    timeout: Param[float]
+
+
+    def initialize(self, prev_outcome: SeenGlyph) -> None:
+        super().initialize(prev_outcome)
+        self.most_recent_results = prev_outcome.glyph_results
+        self.glyph = prev_outcome.glyph
+        self.glyph_y_diff = self.most_recent_results[self.glyph].y_position
+
+    def handle_if_not_timedout(self):
+        query_res = PIO.query_glyph(self.glyph)
+        if query_res.found:
+            self.glyph_y_diff = query_res.y_position
+            self.most_recent_results[self.glyph] = query_res
+
+        # use updated info if we have it, otherwise continue with old info? is this bad
+        if abs(self.glyph_y_diff) < self.deadband:
+            return self.Centered(self.glyph, self.most_recent_results[self.glyph])
+        elif self.y_position > 0: # TODO: check sign?
+            PIO.set_target_twist_heave(heave_down_speed)
+        else:
+            PIO.set_target_twist_heave(heave_up_speed)
+
+        return self.NotCentered()
+
+
+
+class CenterYawGlyph(TimedState):
+    NotReached = Outcome.make('NotReached')
+    TimedOut = Outcome.make('TimedOut')
+
+    surge_speed: Param[float]
+    yaw_factor: Param[float]
+    timeout: Param[int]
+
+    def initialize(self, prev_outcome: CenterHeaveGlyph.Centered):
+        super().initialize(prev_outcome)
+        self.glyph = prev_outcome.glyph
+        self.angle_diff = prev_outcome.last_data.x_theta
+        self.target_heave = PIO.Pose.heave
+
+    def handle_if_not_timedout(self):
+        query_res = PIO.query_glyph(self.glyph)
+        if query_res.found:
+            self.angle_diff = query_res.x_theta
+
+        PIO.set_target_pose_heave(self.target_heave)
+        PIO.set_target_twist_surge(self.surge_speed)
+
+        # Use setpoint for yaw angle
+        PIO.set_target_twist_yaw(self.angle_diff * self.yaw_factor)
         
-class ApproachBuoyClosed(TimedState):
+        hit = PIO.buoy_collision
+        
+        if hit:
+            if not Gbl.second_glpyh:
+                Gbl.second_glpyh = True
+                return HitBuoyFirst()
+            else:
+                return HitBuoySecond()
+        else:
+            return self.NotReached()
+
+    def handle_once_timedout(self) -> None:
+        PIO.set_target_twist_surge(0)
+
+        
+
+class OldApproachBuoyClosed(TimedState):
     NotReached = Outcome.make('NotReached')
     TimedOut = Outcome.make('TimedOut')
     
@@ -76,6 +156,7 @@ class ApproachBuoyClosed(TimedState):
 
     def handle_if_not_timedout(self) -> Outcome:
         if self.seen_preferred:
+            # TODO: check if found before setting it, otherwise we lose info
             self.most_recent_results[self.preferred] = PIO.query_glyph(self.preferred)
         else:
             self.most_recent_results.update(PIO.query_all_glyphs())

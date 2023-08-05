@@ -31,15 +31,19 @@ transitions = {
     FallBackTurn.Unaligned: FallBackTurn,
     FallBackTurn.Aligned: ApproachBuoyOpen,
 
-    SeenGlyph: ApproachBuoyClosed,
-    HitBuoySecond: FallBack,
+    SeenGlyph: CenterHeaveGlyph,
     HitBuoyFirst: FindGlyph,
+    HitBuoySecond: FallBack,
 
     ApproachBuoyOpen.GlyphNotSeen: ApproachBuoyOpen, 
     ApproachBuoyOpen.TimedOut: Surface,
 
-    ApproachBuoyClosed.NotReached: ApproachBuoyClosed,
-    ApproachBuoyClosed.TimedOut: Surface,
+    CenterHeaveGlyph.NotCentered: CenterHeaveGlyph,
+    CenterHeaveGlyph.Centered: CenterYawGlyph,
+    CenterHeaveGlyph.TimedOut: CenterYawGlyph,
+
+    CenterYawGlyph.NotReached: CenterYawGlyph,
+    CenterYawGlyph.TimedOut: Surface,
 
     FindGlyph.GlyphNotSeen: FindGlyph,
     FindGlyph.TimedOut: Pause,
