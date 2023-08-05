@@ -168,8 +168,13 @@ class PIO:
 
     @classmethod
     def query_glyph(cls, glyph: Glyph) -> ObjectPositionResponse:
-        return cls._object_position_srvs[glyph.name]()
-    
+        try:
+            return cls._object_position_srvs[glyph.name]()
+        except:
+            obj_msg = ObjectPositionResponse()
+            obj_msg.found = False
+            return obj_msg
+ 
     @classmethod
     def query_all_glyphs(cls) -> Mapping[Glyph, ObjectPositionResponse]:
         """ query all 12 glyphs and return a dict from any found glyphs to their position. """

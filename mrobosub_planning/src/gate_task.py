@@ -72,7 +72,7 @@ class ApproachGateImage(TimedState):
 
     timeout: Param[float]
     lost_image_threshold: Param[int]
-    yaw_theshold: Param[float]
+    yaw_threshold: Param[float]
 
     def initialize(self, prev_outcome: SeenGateImage) -> None:
         super().initialize(prev_outcome)
@@ -140,11 +140,11 @@ class FallBackTurn(State):
     def handle(self) -> Outcome:
         PIO.set_target_pose_yaw(self.target_yaw)
 
-        seen_glyph_outcome = PIO.search_for_glyph(Gbl.preferred_glyph())
+        seen_glyph_outcome = search_for_glyph(Gbl.preferred_glyph())
 
         if seen_glyph_outcome:
             return seen_glyph_outcome
-        elif PIO.is_yaw_within_threshold(self.yaw_theshold):
+        elif PIO.is_yaw_within_threshold(self.yaw_threshold):
             return self.Aligned()
         else:
             return self.Unaligned()
