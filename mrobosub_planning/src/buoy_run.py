@@ -29,16 +29,16 @@ transitions = {
     FindGlyph.TimedOut: Pause,
 
     Pause.TimedOut: ContingencySubmerge,
-    
+
     ContingencySubmerge.Submerging: ContingencySubmerge,
     ContingencySubmerge.Submerged: ContingencyApproach,
 
     ContingencyApproach.Approaching: ContingencyApproach,
     ContingencyApproach.TimedOut: Surface,
-    
+
     FallBack.NotReached: FallBack,
     FallBack.TimedOut: Surface,
 
     Surface.Submerged: Surface,
-    Surface.Surfaced: Stop     
+    Surface.Surfaced: Stop
 }
