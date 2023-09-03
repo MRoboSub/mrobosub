@@ -2,6 +2,8 @@
 
 Consolidated repo for the mrobosub ros network
 
+[Check out the wiki!](https://gitlab.eecs.umich.edu/mrobosub/mrobosub/-/wikis/home)
+
 ## Install
 ```console
 $ rosdep install --from-paths src --ignore-src -r -y
