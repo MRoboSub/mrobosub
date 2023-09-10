@@ -10,6 +10,8 @@ RUN apt-get update && \
                         screen \
 			python3-tk
 
+RUN pip install mypy -U
+
 SHELL ["/bin/bash", "-c"] 
 
 # Create workspace structure
