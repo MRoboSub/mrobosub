@@ -70,7 +70,7 @@ class CenterHeaveGlyph(TimedState):
     def initialize(self, prev_outcome: SeenGlyph) -> None:
         super().initialize(prev_outcome)
         self.deadband = 50
-        self.timeout = 40
+        self.timeout = 40.0
         self.most_recent_results = prev_outcome.glyph_results
         self.glyph = prev_outcome.glyph
         self.glyph_y_diff = self.most_recent_results[self.glyph].y_position
@@ -185,8 +185,8 @@ class OldApproachBuoyClosed(TimedState):
         hit = PIO.buoy_collision
         
         if hit:
-            if not Gbl.second_glpyh:
-                Gbl.second_glpyh = True
+            if not Gbl.second_glyph:
+                Gbl.second_glyph = True
                 return HitBuoyFirst()
             else:
                 return HitBuoySecond()

@@ -167,7 +167,7 @@ class PIO:
             return None
 
     @classmethod
-    def query_glyph(cls, glyph: Glyph) -> ObjectPositionResponse:
+    def query_glyph(cls, glyph: Optional[Glyph]) -> ObjectPositionResponse:
         try:
             return cls._object_position_srvs[glyph.name]()
         except:
