@@ -1,10 +1,12 @@
 """Contains the state machine implementation. You probably shouldn't read this unless you want to deal with wierd
 Python metaprogramming."""
 
+# mypy: disable-error-code="attr-defined, arg-type, type-abstract"
+
 from __future__ import annotations
 from abc import ABC, ABCMeta, abstractmethod
 from dataclasses import make_dataclass, field
-from typing import Mapping, Type, Final, cast
+from typing import Mapping, Type, Final, cast, Generic, Text, TypeVar, Any
 import rospy
 from std_msgs.msg import String
 from std_srvs.srv import Trigger, TriggerRequest
@@ -17,7 +19,10 @@ SOFT_STOP_SERVICE = 'captain/soft_stop'
 
 __all__ = ('Outcome', 'State', 'TimedState', 'ForwardAndWait', 'TurnToYaw', 'StateMachine', 'Param')
 
-Param = Final
+T = TypeVar('T')
+class Param(Generic[T]):
+    pass
+    
 """ Param generic type used for annotations. The annotations themselves do nothing at runtime. 
 
 parameters are loaded as class variables into State subclasses and should be accessed using self.{name}
@@ -69,7 +74,7 @@ class Outcome(ABC):
     """
 
     @classmethod
-    def make(cls, name: str, **kwargs: Mapping[str, Type]) -> Type[Outcome]:
+    def make(cls, name: str, **kwargs) -> Type[Outcome]:
         """Returns a dataclass type (not an instance of a class, but a new class type) which is a subclass of Outcome
         and has the fields (with types) specified by kwargs
 
@@ -150,8 +155,8 @@ class TimedState(State):
                 return handle_resp
             else:
                 return self.TimedOut()
-        else:
-            return self.handle_if_not_timedout()
+        
+        return self.handle_if_not_timedout()
 
     @abstractmethod
     def handle_if_not_timedout(self) -> Outcome:

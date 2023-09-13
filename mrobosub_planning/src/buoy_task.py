@@ -205,7 +205,7 @@ class FallBack(TimedState):
     speed: Param[float]
 
     def handle_if_not_timedout(self) -> Outcome:
-        PIO.set_target_twist_surge(-1*self.speed) 
+        PIO.set_target_twist_surge(-1.0 * self.speed) 
 
         return self.NotReached()
 

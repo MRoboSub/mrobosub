@@ -80,14 +80,14 @@ class PIO:
     # roll = 0
 
     class Pose:
-        yaw = 0
-        heave = 0
-        roll = 0
+        yaw = 0.0
+        heave = 0.0
+        roll = 0.0
 
     class TargetPose:
-        yaw = 0
-        heave = 0
-        roll = 0
+        yaw = 0.0
+        heave = 0.0
+        roll = 0.0
     
     buoy_collision = False
 
