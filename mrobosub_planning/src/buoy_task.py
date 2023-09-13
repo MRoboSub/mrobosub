@@ -280,8 +280,7 @@ class Pause(TimedState):
             return SeenGlyph(glyph_results=res[Glyph.taurus])
         elif Glyph.auriga in res:
             return SeenGlyph(glyph_results=res[Glyph.auriga])
-    
-            
+
 class ContingencySubmerge(State):
     Submerged = Outcome.make('Submerged')
     Submerging = Outcome.make('Submerging')

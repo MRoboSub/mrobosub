@@ -6,7 +6,7 @@ Python metaprogramming."""
 from __future__ import annotations
 from abc import ABC, ABCMeta, abstractmethod
 from dataclasses import make_dataclass, field
-from typing import Mapping, Type, Final, cast, Generic, Text, TypeVar, Any
+from typing import Mapping, Type, Final, cast, Generic, Text, TypeVar, Any, Tuple
 import rospy
 from std_msgs.msg import String
 from std_srvs.srv import Trigger, TriggerRequest
@@ -291,7 +291,7 @@ class StateMachine:
             print(f'\t{key}: {value}')
             setattr(state, key, value)  # read-only constants
 
-    def soft_stop(self, data: TriggerRequest) -> Tuple[bool, string]:
+    def soft_stop(self, data: TriggerRequest) -> Tuple[bool, str]:
         self.stop_signal_recvd = True
         return True, type(self.current_state).__qualname__
 
