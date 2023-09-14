@@ -8,7 +8,7 @@ services:
     volumes:
       - .:/root/catkin_ws/src/mrobosub
     environment:
-      - DISPLAY=$DISPLAY
+      - DISPLAY=host.docker.internal:0.0
       - LIBGL_ALWAYS_INDIRECT=0
       - QT_X11_NO_MITSHM=1
     tty: true
