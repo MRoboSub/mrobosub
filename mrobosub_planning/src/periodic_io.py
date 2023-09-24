@@ -168,9 +168,9 @@ class PIO:
 
     @classmethod
     def query_glyph(cls, glyph: Optional[Glyph]) -> ObjectPositionResponse:
-        try:
-             return cls._object_position_srvs[glyph.name]()
-        except:
+        if glyph is not None:
+            return cls._object_position_srvs[glyph.name]()
+        else:
             obj_msg = ObjectPositionResponse()
             obj_msg.found = False
             return obj_msg

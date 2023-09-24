@@ -3,20 +3,28 @@ from periodic_io import PIO, angle_error, Glyph, Gbl
 from buoy_task import SeenGlyph, search_for_glyph
 from mrobosub_msgs.srv import ObjectPositionResponse
 import rospy
+from typing import NamedTuple, Union
 
-FoundBuoyPathMarker = Outcome.make('FoundPathMarker', angle=float)
-SeenGateImage = Outcome.make('SeenGateImage', position=ObjectPositionResponse, glyph_seen=Glyph)
+class FoundPathMarker(NamedTuple):
+    angle: float
+
+class SeenGateImage(NamedTuple):
+    position: ObjectPositionResponse
+    glyph_seen: Glyph
 
 class AlignGate(TimedState):
-    Unaligned = Outcome.make('Unaligned')
-    ReachedAngle = Outcome.make('ReachedAngle')
-    TimedOut = Outcome.make('TimedOut')
+    class Unaligned(NamedTuple):
+        pass
+    class ReachedAngle(NamedTuple):
+        pass 
+    class TimedOut(NamedTuple):
+        pass
 
     target_yaw: Param[float]
     timeout: Param[int]
     yaw_threshold: Param[float]
 
-    def handle_if_not_timedout(self) -> Outcome:
+    def handle_if_not_timedout(self) -> Union[ReachedAngle, Unaligned]:
         PIO.set_target_pose_yaw(self.target_yaw)
 
         if PIO.is_yaw_within_threshold(self.yaw_threshold):
@@ -24,7 +32,7 @@ class AlignGate(TimedState):
         else:
             return self.Unaligned()
 
-    def handle_once_timedout(self) -> Outcome:
+    def handle_once_timedout(self) -> TimedOut:
         PIO.set_target_pose_yaw(0)
         
         return self.TimedOut()
