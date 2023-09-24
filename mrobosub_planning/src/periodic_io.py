@@ -80,14 +80,14 @@ class PIO:
     # roll = 0
 
     class Pose:
-        yaw = 0
-        heave = 0
-        roll = 0
+        yaw = 0.0
+        heave = 0.0
+        roll = 0.0
 
     class TargetPose:
-        yaw = 0
-        heave = 0
-        roll = 0
+        yaw = 0.0
+        heave = 0.0
+        roll = 0.0
     
     buoy_collision = False
 
@@ -167,7 +167,7 @@ class PIO:
             return None
 
     @classmethod
-    def query_glyph(cls, glyph: Glyph) -> ObjectPositionResponse:
+    def query_glyph(cls, glyph: Optional[Glyph]) -> ObjectPositionResponse:
         try:
             return cls._object_position_srvs[glyph.name]()
         except:
