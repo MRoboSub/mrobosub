@@ -52,8 +52,10 @@ class ApproachBuoyOpen(TimedState):
         else:
             return self.GlyphNotSeen()
 
-    def handle_once_timedout(self) -> None:        
+    def handle_once_timedout(self) -> Outcome:        
         PIO.set_target_twist_surge(0)
+        
+        return self.TimedOut()
 
 
 class CenterHeaveGlyph(TimedState):
@@ -75,7 +77,7 @@ class CenterHeaveGlyph(TimedState):
         self.glyph = prev_outcome.glyph
         self.glyph_y_diff = self.most_recent_results[self.glyph].y_position
 
-    def handle_if_not_timedout(self):
+    def handle_if_not_timedout(self) -> Outcome:
         query_res = PIO.query_glyph(self.glyph)
         if query_res.found:
             self.glyph_y_diff = query_res.y_position
@@ -92,7 +94,7 @@ class CenterHeaveGlyph(TimedState):
 
         return self.NotCentered()
 
-    def handle_once_timedout(self):
+    def handle_once_timedout(self) -> Outcome:
         return self.TimedOut(self.glyph, self.most_recent_results[self.glyph])
 
 
@@ -114,7 +116,7 @@ class CenterYawGlyph(TimedState):
         self.angle_diff = prev_outcome.last_data.x_theta
         self.target_heave = PIO.Pose.heave
 
-    def handle_if_not_timedout(self):
+    def handle_if_not_timedout(self) -> Outcome:
         
         print(self.glyph)
         query_res = PIO.query_glyph(self.glyph)
@@ -138,8 +140,10 @@ class CenterYawGlyph(TimedState):
         else:
             return self.NotReached()
 
-    def handle_once_timedout(self) -> None:
+    def handle_once_timedout(self) -> Outcome:
         PIO.set_target_twist_surge(0)
+        
+        return self.TimedOut()
 
         
 
@@ -193,8 +197,10 @@ class OldApproachBuoyClosed(TimedState):
         else:
             return self.NotReached()
 
-    def handle_once_timedout(self) -> None:
+    def handle_once_timedout(self) -> Outcome:
         PIO.set_target_twist_surge(0)
+        
+        return self.TimedOut()
 
 
 class FallBack(TimedState):
@@ -209,14 +215,16 @@ class FallBack(TimedState):
 
         return self.NotReached()
 
-    def handle_once_timedout(self) -> None:
+    def handle_once_timedout(self) -> Outcome:
         PIO.set_target_twist_surge(0) 
+        
+        return self.TimedOut()
 
 
 class Ascend(TimedState):
-    NotReached = Outcome.make("Unreached")
-    Reached = Outcome.make("Reached")
-    TimedOut = Outcome.make("TimedOut")
+    NotReached = Outcome.make('Unreached')
+    Reached = Outcome.make('Reached')
+    TimedOut = Outcome.make('TimedOut')
     
     target_depth: Param[float]
     timeout: Param[int]
@@ -228,6 +236,9 @@ class Ascend(TimedState):
             return self.Reached()
         else:
             return self.NotReached()
+        
+    def handle_once_timedout(self) -> Outcome:
+        return self.TimedOut()
 
 
 class PassBuoy(TimedState):
@@ -242,8 +253,11 @@ class PassBuoy(TimedState):
 
         return self.NotReached()
 
-    def handle_once_timedout(self) -> None:
+    def handle_once_timedout(self) -> Outcome:
         PIO.set_target_twist_surge(0) 
+        
+        return self.TimedOut()
+        
 
 
 class FindGlyph(TimedState):
@@ -263,8 +277,10 @@ class FindGlyph(TimedState):
 
         return self.GlyphNotSeen()
 
-    def handle_once_timedout(self) -> None:
+    def handle_once_timedout(self) -> Outcome:
         PIO.set_target_twist_surge(0) 
+        
+        return self.TimedOut()
 
 
 class Pause(TimedState):
@@ -273,13 +289,15 @@ class Pause(TimedState):
     timeout: Param[float]
 
     def handle_if_not_timedout(self) -> Outcome:
-        
         res = PIO.query_all_glyphs()
 
         if Glyph.taurus in res:
             return SeenGlyph(glyph_results=res[Glyph.taurus])
         elif Glyph.auriga in res:
             return SeenGlyph(glyph_results=res[Glyph.auriga])
+        
+    def handle_once_timedout(self) -> Outcome:
+        return self.TimedOut()
 
 class ContingencySubmerge(State):
     Submerged = Outcome.make('Submerged')
@@ -321,5 +339,7 @@ class ContingencyApproach(TimedState):
         
         return self.Approaching()
     
-    def handle_once_timedout(self) -> None:        
+    def handle_once_timedout(self) -> Outcome:        
         PIO.set_target_twist_surge(0)
+        
+        return self.TimedOut()

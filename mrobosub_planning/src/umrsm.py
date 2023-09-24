@@ -150,11 +150,7 @@ class TimedState(State):
     
     def handle(self) -> Outcome:
         if rospy.get_time() - self.start_time >= self.timeout:
-            handle_resp = self.handle_once_timedout()
-            if handle_resp is not None:
-                return handle_resp
-            else:
-                return self.TimedOut()
+            return self.handle_once_timedout()
         
         return self.handle_if_not_timedout()
 
@@ -162,7 +158,8 @@ class TimedState(State):
     def handle_if_not_timedout(self) -> Outcome:
         pass
 
-    def handle_once_timedout(self) -> None:
+    @abstractmethod
+    def handle_once_timedout(self) -> Outcome:
         pass
 
 class ForwardAndWait(State):

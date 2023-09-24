@@ -24,8 +24,10 @@ class AlignGate(TimedState):
         else:
             return self.Unaligned()
 
-    def handle_once_timedout(self) -> None:
+    def handle_once_timedout(self) -> Outcome:
         PIO.set_target_pose_yaw(0)
+        
+        return self.TimedOut()
 
 class ApproachGate(TimedState):
     Unreached = Outcome.make('Unreached')
@@ -58,8 +60,10 @@ class ApproachGate(TimedState):
         self.times_seen += 1
         return self.Unreached()
     
-    def handle_once_timedout(self) -> None:
+    def handle_once_timedout(self) -> Outcome:
         PIO.set_target_twist_surge(0)
+
+        return self.TimedOut()
 
     
 # class Scan(TimedState):
@@ -74,6 +78,9 @@ class ApproachGate(TimedState):
 #             return self.FoundPathMarker()
 #         else:
 #             return self.NotFound()
+
+#     def handle_once_timedout(self) -> Outcome:
+#         return self.TimedOut()
 
 class ApproachGateImage(TimedState):
     GoneThroughGate = Outcome.make('GoneThroughGate', planet=Glyph)
@@ -107,6 +114,8 @@ class ApproachGateImage(TimedState):
         PIO.set_target_pose_yaw(self.last_target_yaw)
         return SeenGateImage(glyph_seen=Gbl.planet_seen, position=resp)        
 
+    def handle_once_timedout(self) -> Outcome:
+        return self.TimedOut()
 
 class AlignPathMarker(TimedState):
     Unaligned = Outcome.make('Unaligned')
@@ -136,6 +145,9 @@ class AlignPathMarker(TimedState):
             return self.Aligned()
         else:
             return self.Unaligned()
+        
+    def handle_once_timedout(self) -> Outcome:
+        return self.TimedOut()
 
 class FallBackTurn(State):
     Unaligned = Outcome.make('Unaligned')
@@ -174,8 +186,9 @@ class Spin(TimedState):
         PIO.set_target_pose_heave(1)
         return self.Unreached
 
-    def handle_once_timedout(self) -> None:
+    def handle_once_timedout(self) -> Outcome:
         PIO.set_target_twist_yaw(0)
+
         return self.TimedOut()
 
 class SpinFinish(TimedState):
@@ -203,3 +216,6 @@ class SpinFinish(TimedState):
         unreached = self.Unreached()
         unreached.angle = target_yaw
         return unreached
+
+    def handle_once_timedout(self) -> Outcome:
+        return self.TimedOut()

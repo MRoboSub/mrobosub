@@ -1,3 +1,4 @@
+from mrobosub_planning.src.umrsm import Outcome
 from umrsm import *
 from periodic_io import PIO
 import rospy
@@ -31,6 +32,9 @@ class Submerge(TimedState):
             return self.Submerged()
         else:
             return self.Unreached()
+        
+    def handle_once_timedout(self) -> Outcome:
+        return self.TimedOut()
 
 class Stop(State):
     Surfaced = Outcome.make("Surface")

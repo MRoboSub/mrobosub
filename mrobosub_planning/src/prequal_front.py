@@ -1,10 +1,9 @@
 #!/usr/bin/env python
+from mrobosub_planning.src.umrsm import Outcome
 from periodic_io import PIO, angle_error
 from umrsm import *
 from common import *
 import rospy
-
-# TODO: switch a bunch of these states to use TimedState rather than manually managing the timeout
 
 class AlignGate(TimedState):
     Unreached = Outcome.make('Unreached')
@@ -23,6 +22,8 @@ class AlignGate(TimedState):
         else:
             return self.Unreached()
     
+    def handle_once_timedout(self) -> Outcome:
+        return self.TimedOut()
         
 class ApproachGate(ForwardAndWait):
     Unreached = Outcome.make('Unreached')

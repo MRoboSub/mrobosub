@@ -169,7 +169,7 @@ class PIO:
     @classmethod
     def query_glyph(cls, glyph: Optional[Glyph]) -> ObjectPositionResponse:
         try:
-            return cls._object_position_srvs[glyph.name]()
+             return cls._object_position_srvs[glyph.name]()
         except:
             obj_msg = ObjectPositionResponse()
             obj_msg.found = False
