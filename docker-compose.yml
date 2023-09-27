@@ -7,6 +7,7 @@ services:
       - "10000:10000"
     volumes:
       - .:/root/catkin_ws/src/mrobosub
+      - /tmp/.X11-unix:/tmp/.X11-unix
     environment:
       - DISPLAY=host.docker.internal:0.0
       - LIBGL_ALWAYS_INDIRECT=0
