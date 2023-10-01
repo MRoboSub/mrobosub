@@ -1,10 +1,10 @@
 from umrsm import Outcome, TimedState, State, Param
 from periodic_io import PIO, Gbl, angle_error, Glyph
 from mrobosub_msgs.srv import ObjectPositionResponse
-from typing import Mapping, NamedTuple, Union, Type
+from typing import Dict, NamedTuple, Union
 
 class SeenGlyph(NamedTuple):
-    glyph_results: Mapping[Glyph, ObjectPositionResponse]
+    glyph_results: Dict[Glyph, ObjectPositionResponse]
     glyph: Glyph
 
 class HitBuoyFirst(NamedTuple):
@@ -140,7 +140,7 @@ class CenterYawGlyph(TimedState):
         self.angle_diff = prev_outcome.last_data.x_theta
         self.target_heave = PIO.Pose.heave
 
-    def handle_if_not_timedout(self) -> Outcome:
+    def handle_if_not_timedout(self) -> Union[HitBuoyFirst, HitBuoySecond, NotReached]:
         
         print(self.glyph)
         query_res = PIO.query_glyph(self.glyph)
@@ -156,8 +156,8 @@ class CenterYawGlyph(TimedState):
         hit = PIO.buoy_collision
         
         if hit:
-            if not Gbl.second_glpyh:
-                Gbl.second_glpyh = True
+            if not Gbl.second_glyph:
+                Gbl.second_glyph = True
                 return HitBuoyFirst()
             else:
                 return HitBuoySecond()

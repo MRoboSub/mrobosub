@@ -45,6 +45,7 @@ Glyph = Enum('Glyph', [
 class Gbl:
     planet_seen: Optional[Glyph] = None
     first_hit_glyph: Optional[Glyph] = None
+    second_glyph = False
 
     @classmethod
     def glyphs_of_planet(cls, planet: Optional[Glyph]) -> Tuple[Glyph, Glyph]:

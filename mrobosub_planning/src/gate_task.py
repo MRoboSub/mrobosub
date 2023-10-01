@@ -21,7 +21,7 @@ class AlignGate(TimedState):
         pass
 
     target_yaw: Param[float]
-    timeout: Param[int]
+    m_timeout: Param[float]
     yaw_threshold: Param[float]
 
     def handle_if_not_timedout(self) -> Union[ReachedAngle, Unaligned]:
@@ -36,20 +36,27 @@ class AlignGate(TimedState):
         PIO.set_target_pose_yaw(0)
         
         return self.TimedOut()
+    
+    def timeout(self):
+        return self.m_timeout
 
 class ApproachGate(TimedState):
-    Unreached = Outcome.make('Unreached')
-    TimedOut = Outcome.make('TimedOut')
+    class Unreached(NamedTuple):
+        pass
+    class TimedOut(NamedTuple):
+        pass
     
-    timeout: Param[int]
+    m_timeout: Param[float]
     surge_speed: Param[float]
 
-    def initialize(self, prev_outcome: SeenGateImage) -> None:
+    def initialize(self, prev_outcome: NamedTuple):
+        if type(prev_outcome) != SeenGateImage:
+            raise TypeError(prev_outcome)
         super().initialize(prev_outcome)
         self.found_image_threshold = 50
         self.times_seen = 0
 
-    def handle_if_not_timedout(self) -> Outcome:
+    def handle_if_not_timedout(self) -> Union[Unreached, SeenGateImage]:
         PIO.set_target_twist_surge(self.surge_speed)
 
         abydos_response = PIO.query_glyph(Glyph.abydos)
@@ -68,10 +75,13 @@ class ApproachGate(TimedState):
         self.times_seen += 1
         return self.Unreached()
     
-    def handle_once_timedout(self) -> Outcome:
+    def handle_once_timedout(self) -> TimedOut:
         PIO.set_target_twist_surge(0)
 
         return self.TimedOut()
+    
+    def timeout(self) -> float:
+        return self.m_timeout
 
     
 # class Scan(TimedState):
@@ -91,21 +101,29 @@ class ApproachGate(TimedState):
 #         return self.TimedOut()
 
 class ApproachGateImage(TimedState):
-    GoneThroughGate = Outcome.make('GoneThroughGate', planet=Glyph)
-    TimedOut = Outcome.make('TimedOut')
+    class GoneThroughGate(NamedTuple):
+        planet: Glyph
+    class TimedOut(NamedTuple):
+        pass
 
-    timeout: Param[float]
+    m_timeout: Param[float]
     lost_image_threshold: Param[int]
     yaw_threshold: Param[float]
 
-    def initialize(self, prev_outcome: SeenGateImage) -> None:
+    def initialize(self, prev_outcome: NamedTuple) -> None:
+        if type(prev_outcome) != SeenGateImage:
+            raise TypeError(prev_outcome)
         super().initialize(prev_outcome)
         Gbl.planet_seen = prev_outcome.glyph_seen
         self.last_target_yaw = PIO.Pose.yaw + prev_outcome.position.x_theta
         self.lost_image_threshold = 300
         self.times_not_seen = 0
 
-    def handle_if_not_timedout(self) -> Outcome:
+    def handle_if_not_timedout(self) -> Union[GoneThroughGate, SeenGateImage]:
+        # Precondition: you have already seen a glyph. You are trying to update
+        if type(Gbl.planet_seen) != Glyph:
+            raise TypeError(Gbl.planet_seen)
+        
         resp = PIO.query_glyph(Gbl.planet_seen)
         if not resp.found:
             self.times_not_seen += 1
@@ -122,94 +140,111 @@ class ApproachGateImage(TimedState):
         PIO.set_target_pose_yaw(self.last_target_yaw)
         return SeenGateImage(glyph_seen=Gbl.planet_seen, position=resp)        
 
-    def handle_once_timedout(self) -> Outcome:
+    def handle_once_timedout(self) -> TimedOut:
         return self.TimedOut()
 
-class AlignPathMarker(TimedState):
-    Unaligned = Outcome.make('Unaligned')
-    Aligned = Outcome.make('Aligned')
-    TimedOut = Outcome.make('TimedOut')
+    def timeout(self):
+        return self.m_timeout
 
-    yaw_threshold: Param[float]
-    timeout: Param[int]
+# class AlignPathMarker(TimedState):
+#     class Unaligned(NamedTuple):
+#         pass
+#     class Aligned(NamedTuple):
+#         pass
+#     class TimedOut(NamedTuple):
+#         pass
 
-    def initialize(self, prev_outcome: FoundBuoyPathMarker) -> None:
-        super().initialize(prev_outcome)
-        self.last_known_angle = prev_outcome.angle
+#     yaw_threshold: Param[float]
+#     m_timeout: Param[int]
+
+#     def initialize(self, prev_outcome: FoundBuoyPathMarker) -> None:
+#         super().initialize(prev_outcome)
+#         self.last_known_angle = prev_outcome.angle
 
 
-    def handle_if_not_timedout(self) -> Outcome:
-        pm_resp = PIO.query_pathmarker()
-        if pm_resp is not None:
-            self.last_known_angle = pm_resp
+#     def handle_if_not_timedout(self) -> Outcome:
+#         pm_resp = PIO.query_pathmarker()
+#         if pm_resp is not None:
+#             self.last_known_angle = pm_resp
 
-        seen_glyph_outcome = search_for_glyph(Gbl.preferred_glyph())
+#         seen_glyph_outcome = search_for_glyph(Gbl.preferred_glyph())
         
-        PIO.set_target_pose_yaw(self.last_known_angle)
+#         PIO.set_target_pose_yaw(self.last_known_angle)
 
-        if seen_glyph_outcome:
-            return seen_glyph_outcome
-        elif PIO.is_yaw_within_threshold(self.yaw_threshold):
-            return self.Aligned()
-        else:
-            return self.Unaligned()
+#         if seen_glyph_outcome:
+#             return seen_glyph_outcome
+#         elif PIO.is_yaw_within_threshold(self.yaw_threshold):
+#             return self.Aligned()
+#         else:
+#             return self.Unaligned()
         
-    def handle_once_timedout(self) -> Outcome:
-        return self.TimedOut()
+#     def handle_once_timedout(self) -> Outcome:
+#         return self.TimedOut()
+    
+#     def timeout(self):
+#         return self.m_timeout
 
-class FallBackTurn(State):
-    Unaligned = Outcome.make('Unaligned')
-    Aligned = Outcome.make('Aligned', angle=float)   
+# class FallBackTurn(State):
+#     Unaligned = Outcome.make('Unaligned')
+#     Aligned = Outcome.make('Aligned', angle=float)   
 
-    target_yaw: Param[float]
-    yaw_threshold: Param[float]
+#     target_yaw: Param[float]
+#     yaw_threshold: Param[float]
    
-    def initialize(self, prev_outcome: FoundBuoyPathMarker) -> None:
-        super().initialize(prev_outcome)
+#     def initialize(self, prev_outcome: FoundBuoyPathMarker) -> None:
+#         super().initialize(prev_outcome)
  
-    def handle(self) -> Outcome:
-        PIO.set_target_pose_yaw(self.target_yaw)
+#     def handle(self) -> Outcome:
+#         PIO.set_target_pose_yaw(self.target_yaw)
 
-        seen_glyph_outcome = search_for_glyph(Gbl.preferred_glyph())
+#         seen_glyph_outcome = search_for_glyph(Gbl.preferred_glyph())
 
-        if seen_glyph_outcome:
-            return seen_glyph_outcome
-        elif PIO.is_yaw_within_threshold(self.yaw_threshold):
-            return self.Aligned()
-        else:
-            return self.Unaligned()
+#         if seen_glyph_outcome:
+#             return seen_glyph_outcome
+#         elif PIO.is_yaw_within_threshold(self.yaw_threshold):
+#             return self.Aligned()
+#         else:
+#             return self.Unaligned()
 
 class Spin(TimedState):
-    timeout: Param[float]
+    m_timeout: Param[float]
 
-    Unreached = Outcome.make('Unreached')
-    TimedOut = Outcome.make('TimedOut')
+    class Unreached(NamedTuple):
+        pass
+    class TimedOut(NamedTuple):
+        pass
 
-    def initialize(self, prev_outcome: Outcome) -> None:
+    def initialize(self, prev_outcome) -> None:
         super().initialize(prev_outcome)
-        self.timeout = 15.0
+        self.m_timeout = 15.0
 
-    def handle_if_not_timedout(self) -> Outcome:
+    def handle_if_not_timedout(self) -> Unreached:
         PIO.set_target_twist_yaw(0.12)
         PIO.set_target_pose_heave(1)
-        return self.Unreached
+        return self.Unreached()
 
-    def handle_once_timedout(self) -> Outcome:
+    def handle_once_timedout(self) -> TimedOut:
         PIO.set_target_twist_yaw(0)
 
         return self.TimedOut()
+    
+    def timeout(self):
+        return self.m_timeout
 
 class SpinFinish(TimedState):
-    Unreached = Outcome.make('Unreached')
-    Reached = Outcome.make('Reached')
-    TimedOut = Outcome.make('TimedOut')
+    class Unreached(NamedTuple):
+        pass
+    class Reached(NamedTuple):
+        pass
+    class TimedOut(NamedTuple):
+        pass
 
     target_yaw: Param[float]
     yaw_threshold: Param[float]
     settle_time: Param[float]
-    timeout: Param[float]
+    m_timeout: Param[float]
 
-    def handle_if_not_timedout(self) -> Outcome:
+    def handle_if_not_timedout(self):
         target_yaw = 0
         PIO.set_target_pose_yaw(target_yaw)
 
@@ -225,5 +260,8 @@ class SpinFinish(TimedState):
         unreached.angle = target_yaw
         return unreached
 
-    def handle_once_timedout(self) -> Outcome:
+    def handle_once_timedout(self):
         return self.TimedOut()
+    
+    def timeout(self):
+        return self.m_timeout
