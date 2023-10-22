@@ -54,10 +54,10 @@ class ApproachGate(ForwardAndWait):
     def target_heave(self) -> float:
         return -1.0
 
-    def reached_state(self):
+    def reached_outcome(self):
         return self.Reached()
 
-    def unreached_state(self):
+    def unreached_outcome(self):
         return self.Unreached()
 
         
@@ -69,28 +69,15 @@ class ApproachMarker(ForwardAndWait):
     class Reached(NamedTuple):
         pass
 
-    m_target_surge_time: Param[float]
-    m_surge_speed: Param[float]
-    m_wait_time: Param[float]
-
-    def target_surge_time(self) -> float:
-        return self.m_target_surge_time
-    
-    def surge_speed(self) -> float:
-        return self.m_surge_speed
-    
-    def wait_time(self) -> float:
-        return self.m_wait_time
+    target_surge_time: Param[float]
+    surge_speed: Param[float]
+    wait_time: Param[float]
+    unreached: Unreached = Unreached()
+    reached: Reached = Reached()
     
     # TODO
     def target_heave(self) -> float:
         return -1.0
-
-    def reached_state(self):
-        return self.Reached()
-
-    def unreached_state(self):
-        return self.Unreached()
 
 transitions: Dict[Type[NamedTuple], Type[State]] = {
     Start.Complete: Submerge,

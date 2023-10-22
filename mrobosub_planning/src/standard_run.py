@@ -23,10 +23,10 @@ transitions = {
     ApproachGateImage.GoneThroughGate: Spin,
     ApproachGateImage.TimedOut: Surface,
 
-    # should be unused
-    AlignPathMarker.Unaligned: AlignPathMarker,
-    AlignPathMarker.Aligned: ApproachBuoyOpen,
-    AlignPathMarker.TimedOut: ApproachBuoyOpen,
+    # # should be unused
+    # AlignPathMarker.Unaligned: AlignPathMarker,
+    # AlignPathMarker.Aligned: ApproachBuoyOpen,
+    # AlignPathMarker.TimedOut: ApproachBuoyOpen,
 
     Spin.Unreached: Spin,
     Spin.TimedOut: SpinFinish,
@@ -35,9 +35,9 @@ transitions = {
     SpinFinish.Reached: ApproachBuoyOpen,
     SpinFinish.TimedOut: ApproachBuoyOpen,
 
-    # should be unused
-    FallBackTurn.Unaligned: FallBackTurn,
-    FallBackTurn.Aligned: ApproachBuoyOpen,
+    # # should be unused
+    # FallBackTurn.Unaligned: FallBackTurn,
+    # FallBackTurn.Aligned: ApproachBuoyOpen,
 
     SeenGlyph: CenterHeaveGlyph,
     HitBuoyFirst: FindGlyph,

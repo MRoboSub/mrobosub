@@ -11,13 +11,13 @@ transitions = {
     Submerge.Submerged: ApproachGate,
     Submerge.TimedOut: ApproachGate,
 
-    ApproachGate.Unreached: AlignPathMarker,
+    # ApproachGate.Unreached: AlignPathMarker,
     ApproachGate.TimedOut: Surface,
-    FoundBuoyPathMarker: AlignPathMarker,
+    # FoundBuoyPathMarker: AlignPathMarker,
 
-    AlignPathMarker.Unaligned: AlignPathMarker,
-    AlignPathMarker.Aligned: ApproachBuoyOpen,
-    AlignPathMarker.TimedOut: Surface,
+    # AlignPathMarker.Unaligned: AlignPathMarker,
+    # AlignPathMarker.Aligned: ApproachBuoyOpen,
+    # AlignPathMarker.TimedOut: Surface,
 
     ApproachBuoyOpen.GlyphNotSeen: ApproachBuoyOpen, 
     ApproachBuoyOpen.TimedOut: Surface,

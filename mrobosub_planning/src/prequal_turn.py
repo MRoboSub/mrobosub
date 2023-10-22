@@ -5,9 +5,12 @@ import prequal_front
 import rospy
 
 class TurnAroundMarker(TurnToYaw):
-    Unreached = Outcome.make("Unreached")
-    Reached = Outcome.make("Reached")
-    TimedOut = Outcome.make("TimedOut")
+    class Unreached(NamedTuple):
+        pass
+    class Reached(NamedTuple):
+        pass
+    class TimedOut(NamedTuple):
+        pass
 
     target_yaw: Param[float]
     yaw_threshold: Param[float]
@@ -16,18 +19,22 @@ class TurnAroundMarker(TurnToYaw):
     
         
 class MovePastMarker(ForwardAndWait):
-    Unreached = Outcome.make("MovePastMarker")
-    Reached = Outcome.make("TurnToGate")
+    class Unreached(NamedTuple):
+        pass
+    class Reached(NamedTuple):
+        pass
     
     target_surge_time: Param[float]
     surge_speed: Param[float]
     wait_time: Param[float]
-        
-       
+
 class TurnToGate(TurnToYaw):
-    Unreached = Outcome.make("Unreached")
-    Reached = Outcome.make("Reached")
-    TimedOut = Outcome.make("TimedOut")
+    class Unreached(NamedTuple):
+        pass
+    class Reached(NamedTuple):
+        pass
+    class TimedOut(NamedTuple):
+        pass
 
     target_yaw: Param[float]
     yaw_threshold: Param[float]
@@ -35,16 +42,20 @@ class TurnToGate(TurnToYaw):
     settle_time: Param[float]
         
 class LeaveMarker(ForwardAndWait):
-    Unreached = Outcome.make("Unreached")
-    Reached = Outcome.make("Reached")
+    class Unreached(NamedTuple):
+        pass
+    class Reached(NamedTuple):
+        pass
     
     target_surge_time: Param[float]
     surge_speed: Param[float]
     wait_time: Param[float]
     
 class ReturnToGate(ForwardAndWait):
-    Unreached = Outcome.make("Unreached")
-    Reached = Outcome.make("Reached")
+    class Unreached(NamedTuple):
+        pass
+    class Reached(NamedTuple):
+        pass
     
     target_surge_time: Param[float]
     surge_speed: Param[float]

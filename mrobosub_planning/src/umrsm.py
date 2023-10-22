@@ -113,23 +113,8 @@ class State(ABC):
             can be accessed using self. Data that should be shared between calls of handle should be 
             set as an instance variable.
     """
-
     def __init__(self, prev_outcome: NamedTuple):
-        self.initialize(prev_outcome)
-
-    @abstractmethod
-    def initialize(self, prev_outcome: NamedTuple) -> None:
-        """Runs when the state is initialized.
-
-        This is run whenever the same state isn't run consecutively, for example in the following flow initialize is
-        run for states prefixed with *:
-
-            *Start -> *StateA -> StateA -> *StateB -> StateB -> *StateA -> *End
-
-        prev_outcome is the Outcome object returned by the previous state, which may be used for initializing
-                any instance variables, if you would like.
-        """
-        pass
+        self.prev_outcome = prev_outcome
 
     @abstractmethod
     def handle(self) -> NamedTuple:
@@ -146,17 +131,14 @@ class TimedState(State):
         expects an outcome called TimedOut and parameter named timeout.
         override handle_once_timedout iff cleanup is needed after timeout
     """
-    def initialize(self, prev_outcome: NamedTuple) -> None:
+    def __init__(self, prev_outcome: NamedTuple):
+        super().__init__(prev_outcome)
         self.start_time = rospy.get_time()
     
     def handle(self) -> NamedTuple:
-        if rospy.get_time() - self.start_time >= self.timeout():
+        if rospy.get_time() - self.start_time >= self.timeout:
             return self.handle_once_timedout()
         return self.handle_if_not_timedout()
-    
-    @abstractmethod
-    def timeout(self) -> float:
-        pass
 
     @abstractmethod
     def handle_if_not_timedout(self) -> NamedTuple:
@@ -164,6 +146,11 @@ class TimedState(State):
 
     @abstractmethod
     def handle_once_timedout(self) -> NamedTuple:
+        pass
+
+    @property
+    @abstractmethod
+    def timeout(self) -> float:
         pass
 
 class ForwardAndWait(State):
@@ -177,49 +164,54 @@ class ForwardAndWait(State):
     wait_time: float
     surge_speed: float
     """
-    def initialize(self, prev_outcome: NamedTuple) -> None:
+    def __init__(self, prev_outcome: NamedTuple):
+        super().__init__(prev_outcome)
         self.start_time = rospy.get_time()
         self.waiting = False
 
     def handle(self) -> NamedTuple:
         if not self.waiting:
-            PIO.set_target_twist_surge(self.surge_speed())
-            PIO.set_target_pose_heave(self.target_heave())
+            PIO.set_target_twist_surge(self.surge_speed)
+            PIO.set_target_pose_heave(self.target_heave)
 
-            if rospy.get_time() - self.start_time >= self.target_surge_time():
+            if rospy.get_time() - self.start_time >= self.target_surge_time:
                 PIO.set_target_twist_surge(0)
                 self.waiting = True
                 self.start_time = rospy.get_time()
         else:
             PIO.set_target_twist_surge(0)
         
-            if rospy.get_time() - self.start_time >= self.wait_time():
-                return self.reached_state()
+            if rospy.get_time() - self.start_time >= self.wait_time:
+                return self.handle_reached()
         
-        return self.unreached_state()
+        return self.handle_unreached()
     
+    @abstractmethod
+    def handle_reached(self) -> NamedTuple:
+        pass
+
+    @abstractmethod
+    def handle_unreached(self) -> NamedTuple:
+        pass
+
+    @property
     @abstractmethod
     def target_heave(self) -> float:
         pass
-
+    
+    @property
     @abstractmethod
     def target_surge_time(self) -> float:
         pass
 
+    @property
     @abstractmethod
     def wait_time(self) -> float:
         pass
 
+    @property
     @abstractmethod
     def surge_speed(self) -> float:
-        pass
-
-    @abstractmethod
-    def reached_state(self) -> NamedTuple:
-        pass
-
-    @abstractmethod
-    def unreached_state(self) -> NamedTuple:
         pass
         
 class DoubleTimedState(State):
@@ -232,7 +224,8 @@ class DoubleTimedState(State):
     phase_one_time: float
     phase_two_time: float
     """
-    def initialize(self, prev_outcome: NamedTuple) -> None:
+    def __init__(self, prev_outcome: NamedTuple):
+        super().__init__(prev_outcome)
         self.start_time = rospy.get_time()
         self.timed_out_first = False
 
@@ -260,14 +253,6 @@ class DoubleTimedState(State):
     @abstractmethod
     def handle_once_timedout(self) -> NamedTuple:
         pass
-
-    @abstractmethod
-    def reached_state(self) -> NamedTuple:
-        pass
-
-    @abstractmethod
-    def unreached_state(self) -> NamedTuple:
-        pass
         
 
 class TurnToYaw(TimedState):
@@ -284,38 +269,42 @@ class TurnToYaw(TimedState):
     timeout: float
     """
     def handle_if_not_timedout(self) -> NamedTuple:
-        PIO.set_target_pose_yaw(self.target_yaw())
+        PIO.set_target_pose_yaw(self.target_yaw)
         
         if not PIO.is_yaw_within_threshold(self.yaw_threshold):
             self.timer = rospy.get_time()
 
-        if rospy.get_time() - self.timer >= self.settle_time():
-            return self.reached_state()
+        if rospy.get_time() - self.timer >= self.settle_time:
+            return self.handle_reached()
 
-        return self.unreached_state()
+        return self.handle_unreached()
     
+    @property
     @abstractmethod
     def target_yaw(self) -> float:
         pass
 
+    @property
     @abstractmethod
     def yaw_threhold(self) -> float:
         pass
 
+    @property
     @abstractmethod
     def settle_time(self) -> float:
         pass
 
+    @property
     @abstractmethod
     def timeout(self) -> float:
         pass
 
     @abstractmethod
-    def reached_state(self) -> NamedTuple:
+    def handle_reached(self) -> NamedTuple:
         pass
 
     @abstractmethod
-    def unreached_state(self) -> NamedTuple:
+    def handle_unreached(self) -> NamedTuple:
         pass
 
 class StateMachine:
