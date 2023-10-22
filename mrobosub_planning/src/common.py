@@ -8,9 +8,6 @@ class Start(State):
     class Complete(NamedTuple):
         pass
     
-    def initialize(self, prev_outcome) -> None:
-        pass
-    
     def handle(self):
         return self.Complete()
 
@@ -22,11 +19,11 @@ class Submerge(TimedState):
     class TimedOut(NamedTuple):
         pass
     
-    target_heave: Param[float]
-    heave_threshold: Param[float]
-    m_timeout: Param[float]
-    yaw_threshold: Param[float]
-    target_yaw: Param[float]
+    target_heave: float = 0.35
+    heave_threshold: float = 0.1
+    timeout: float = 15
+    yaw_threshold: float = 0
+    target_yaw: float = 2
     
     def handle_if_not_timedout(self):
         PIO.set_target_pose_heave(self.target_heave)
@@ -40,9 +37,6 @@ class Submerge(TimedState):
     
     def handle_once_timedout(self):
         return self.TimedOut()
-    
-    def timeout(self) -> float:
-        return self.m_timeout
 
 class Stop(State):
     class Surfaced(NamedTuple):
@@ -50,7 +44,8 @@ class Stop(State):
     class Submerged(NamedTuple):
         pass
 
-    def initialize(self, prev_outcome) -> None:
+    def __init__(self, prev_outcome):
+        super().__init__(prev_outcome)
         PIO.set_target_twist_heave(0)
         PIO.set_target_twist_yaw(0)
         PIO.set_target_twist_surge(0)
