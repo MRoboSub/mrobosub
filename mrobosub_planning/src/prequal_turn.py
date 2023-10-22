@@ -1,3 +1,4 @@
+from typing import NamedTuple
 from periodic_io import PIO, angle_error
 from umrsm import *
 from common import *
@@ -12,10 +13,19 @@ class TurnAroundMarker(TurnToYaw):
     class TimedOut(NamedTuple):
         pass
 
-    target_yaw: Param[float]
-    yaw_threshold: Param[float]
-    timeout: Param[float]
-    settle_time: Param[float]
+    target_yaw: float = 90
+    yaw_threshold: float = 2 
+    timeout: float = 10
+    settle_time: float = 1
+
+    def handle_reached(self) -> NamedTuple:
+        return self.Reached()
+    
+    def handle_unreached(self) -> NamedTuple:
+        return self.Unreached()
+    
+    def handle_once_timedout(self) -> NamedTuple:
+        return self.TimedOut()
     
         
 class MovePastMarker(ForwardAndWait):
@@ -24,9 +34,16 @@ class MovePastMarker(ForwardAndWait):
     class Reached(NamedTuple):
         pass
     
-    target_surge_time: Param[float]
-    surge_speed: Param[float]
-    wait_time: Param[float]
+    target_heave: float = 1.2
+    target_surge_time: float = 8
+    surge_speed: float = 0.2
+    wait_time: float = 1
+
+    def handle_reached(self) -> NamedTuple:
+        return self.Reached()
+    
+    def handle_unreached(self) -> NamedTuple:
+        return self.Unreached()
 
 class TurnToGate(TurnToYaw):
     class Unreached(NamedTuple):
@@ -36,10 +53,10 @@ class TurnToGate(TurnToYaw):
     class TimedOut(NamedTuple):
         pass
 
-    target_yaw: Param[float]
-    yaw_threshold: Param[float]
-    timeout: Param[float]
-    settle_time: Param[float]
+    target_yaw: float = -175
+    yaw_threshold: float = 2
+    timeout: float = 10
+    settle_time: float = 1
         
 class LeaveMarker(ForwardAndWait):
     class Unreached(NamedTuple):
@@ -47,9 +64,10 @@ class LeaveMarker(ForwardAndWait):
     class Reached(NamedTuple):
         pass
     
-    target_surge_time: Param[float]
-    surge_speed: Param[float]
-    wait_time: Param[float]
+    target_heave: float = 1.2
+    target_surge_time: float = 10
+    surge_speed: float = 0.2
+    wait_time: float = 1
     
 class ReturnToGate(ForwardAndWait):
     class Unreached(NamedTuple):
@@ -57,9 +75,10 @@ class ReturnToGate(ForwardAndWait):
     class Reached(NamedTuple):
         pass
     
-    target_surge_time: Param[float]
-    surge_speed: Param[float]
-    wait_time: Param[float]
+    target_heave: float = 1.9
+    target_surge_time: float = 224
+    surge_speed: float = 0.2
+    wait_time: float = 1
 
 transitions = prequal_front.transitions
 transitions.update({
