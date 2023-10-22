@@ -12,10 +12,10 @@ class AlignGate(TimedState):
         pass
     class TimedOut(NamedTuple):
         pass
-
-    target_yaw: Param[float]
-    yaw_threshold: Param[float]
-    m_timeout: Param[float]
+    
+    target_yaw: float = 0.0
+    yaw_threshold: float = 2.0
+    timeout: float = 10.0
 
     def handle_if_not_timedout(self):
         PIO.set_target_pose_yaw(self.target_yaw)
@@ -27,9 +27,6 @@ class AlignGate(TimedState):
     
     def handle_once_timedout(self):
         return self.TimedOut()
-
-    def timeout(self) -> float:
-        return self.m_timeout
         
 class ApproachGate(ForwardAndWait):
     class Unreached(NamedTuple):
@@ -37,27 +34,14 @@ class ApproachGate(ForwardAndWait):
     class Reached(NamedTuple):
         pass
  
-    m_target_surge_time: Param[float]
-    m_surge_speed: Param[float]
-    m_wait_time: Param[float]
+    target_surge_time: float = 10.0
+    surge_speed: float = 0.2
+    wait_time: float = 1.0
 
-    def target_surge_time(self) -> float:
-        return self.m_target_surge_time
-    
-    def surge_speed(self) -> float:
-        return self.m_surge_speed
-    
-    def wait_time(self) -> float:
-        return self.m_wait_time
-    
-    # TODO
-    def target_heave(self) -> float:
-        return -1.0
-
-    def reached_outcome(self):
+    def handle_reached(self) -> NamedTuple:
         return self.Reached()
 
-    def unreached_outcome(self):
+    def handle_unreached(self) -> NamedTuple:
         return self.Unreached()
 
         
@@ -69,17 +53,13 @@ class ApproachMarker(ForwardAndWait):
     class Reached(NamedTuple):
         pass
 
-    target_surge_time: Param[float]
-    surge_speed: Param[float]
-    wait_time: Param[float]
+    target_surge_time: float = 22.0
+    surge_speed: float = 0.2
+    wait_time: float = 1.0
     unreached: Unreached = Unreached()
     reached: Reached = Reached()
     
-    # TODO
-    def target_heave(self) -> float:
-        return -1.0
-
-transitions: Dict[Type[NamedTuple], Type[State]] = {
+transitions = {
     Start.Complete: Submerge,
 
     Submerge.Unreached: Submerge,
