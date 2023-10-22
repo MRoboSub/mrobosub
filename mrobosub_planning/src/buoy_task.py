@@ -1,4 +1,4 @@
-from umrsm import Outcome, TimedState, State, Param
+from umrsm import Outcome, TimedState, State
 from periodic_io import PIO, Gbl, angle_error, Glyph
 from mrobosub_msgs.srv import ObjectPositionResponse
 from typing import Dict, NamedTuple, Union
@@ -35,11 +35,11 @@ class ApproachBuoyOpen(TimedState):
     class TimedOut(NamedTuple):
         pass
     
-    surge_speed: Param[float]
-    m_timeout: Param[float]
+    surge_speed: float = 0.2
+    timeout: float = 20
 
-    def initialize(self, prev_outcome) -> None:
-        super().initialize(prev_outcome)
+    def __init__(self, prev_outcome) -> None:
+        super().__init__(prev_outcome)
         if hasattr(prev_outcome, 'angle'):
             self.target_yaw = prev_outcome.angle
         else:
@@ -64,10 +64,6 @@ class ApproachBuoyOpen(TimedState):
         PIO.set_target_twist_surge(0)
         return self.TimedOut()
     
-    def timeout(self) -> float:
-        return self.m_timeout
-
-
 class CenterHeaveGlyph(TimedState):
     class NotCentered(NamedTuple):
         pass
@@ -78,18 +74,18 @@ class CenterHeaveGlyph(TimedState):
         glyph: Glyph
         last_data: ObjectPositionResponse
 
-    heave_down_speed: Param[float] 
-    heave_up_speed: Param[float]
-    deadband: Param[int] # pixels
-    m_timeout: Param[float]
+    heave_down_speed: float  = 0.2
+    heave_up_speed: float = 0.0
+    deadband: int = 50 # pixels
+    timeout: float = 15.0
 
 
-    def initialize(self, prev_outcome) -> None:
-        super().initialize(prev_outcome)
+    def __init__(self, prev_outcome) -> None:
+        super().__init__(prev_outcome)
         if type(prev_outcome) != SeenGlyph:
             raise TypeError(type(prev_outcome))
         self.deadband = 50
-        self.m_timeout = 40.0
+        self.timeout = 40.0
         self.most_recent_results = prev_outcome.glyph_results
         self.glyph = prev_outcome.glyph
         self.glyph_y_diff = self.most_recent_results[self.glyph].y_position
@@ -113,11 +109,6 @@ class CenterHeaveGlyph(TimedState):
 
     def handle_once_timedout(self) -> TimedOut:
         return self.TimedOut(self.glyph, self.most_recent_results[self.glyph])
-    
-    def timeout(self) -> float:
-        return self.m_timeout
-
-
 
 class CenterYawGlyph(TimedState):
     class NotReached(NamedTuple):
@@ -125,17 +116,17 @@ class CenterYawGlyph(TimedState):
     class TimedOut(NamedTuple):
         pass
 
-    surge_speed: Param[float]
-    yaw_factor: Param[float]
-    m_timeout: Param[float]
+    surge_speed: float = 0.2
+    yaw_factor: float = 0.004
+    timeout: float = 10.0
 
-    def initialize(self, prev_outcome):
+    def __init__(self, prev_outcome):
         if type(prev_outcome) != CenterHeaveGlyph.Centered:
             raise TypeError(type(prev_outcome))
         self.surge_speed = 0.2
         self.yaw_factor = 0.004
-        self.m_timeout = 40
-        super().initialize(prev_outcome)
+        self.timeout = 40
+        super().__init__(prev_outcome)
         self.glyph = prev_outcome.glyph
         self.angle_diff = prev_outcome.last_data.x_theta
         self.target_heave = PIO.Pose.heave
@@ -167,11 +158,6 @@ class CenterYawGlyph(TimedState):
     def handle_once_timedout(self):
         PIO.set_target_twist_surge(0)
         return self.TimedOut()
-    
-    def timeout(self):
-        return self.m_timeout
-
-        
 
 class OldApproachBuoyClosed(TimedState):
     class NotReached(NamedTuple):
@@ -179,13 +165,13 @@ class OldApproachBuoyClosed(TimedState):
     class TimedOut(NamedTuple):
         pass
     
-    surge_speed: Param[float]
-    heave_factor: Param[float]
-    yaw_factor: Param[float]
-    m_timeout: Param[float]
+    surge_speed: float = 0.2
+    heave_factor: float = 0.002
+    yaw_factor: float = 0.004
+    timeout: float = 10.0
 
-    def initialize(self, prev_outcome) -> None:
-        super().initialize(prev_outcome)
+    def __init__(self, prev_outcome) -> None:
+        super().__init__(prev_outcome)
         self.most_recent_results = prev_outcome.glyph_results
         self.glyph = prev_outcome.glyph
 
@@ -228,10 +214,6 @@ class OldApproachBuoyClosed(TimedState):
     def handle_once_timedout(self):
         PIO.set_target_twist_surge(0)
         return self.TimedOut()
-    
-    def timeout(self) -> float:
-        return self.m_timeout
-
 
 class FallBack(TimedState):
     class NotReached(NamedTuple):
@@ -239,8 +221,8 @@ class FallBack(TimedState):
     class TimedOut(NamedTuple):
         pass
 
-    m_timeout: Param[float]
-    speed: Param[float]
+    timeout: float = 3.0
+    speed: float = 0.2
 
     def handle_if_not_timedout(self):
         PIO.set_target_twist_surge(-1.0 * self.speed) 
@@ -250,10 +232,6 @@ class FallBack(TimedState):
         PIO.set_target_twist_surge(0)
         return self.TimedOut() 
     
-    def timeout(self) -> float:
-        return self.m_timeout
-
-
 class Ascend(TimedState):
     class NotReached(NamedTuple):
         pass
@@ -262,8 +240,8 @@ class Ascend(TimedState):
     class TimedOut(NamedTuple):
         pass
     
-    target_depth: Param[float]
-    m_timeout: Param[float]
+    target_depth: float = 0.25
+    timeout: float = 3.0
     
     def handle_if_not_timedout(self):
         PIO.set_target_pose_heave(self.target_depth)
@@ -275,9 +253,6 @@ class Ascend(TimedState):
         
     def handle_once_timedout(self):
         return self.TimedOut()
-    
-    def timeout(self) -> float:
-        return self.m_timeout
 
 
 class PassBuoy(TimedState):
@@ -286,8 +261,8 @@ class PassBuoy(TimedState):
     class TimedOut(NamedTuple):
         pass
 
-    m_timeout: Param[float]
-    speed: Param[float]
+    timeout: float = 5.0
+    speed: float = 0.2
 
     def handle_if_not_timedout(self):
         PIO.set_target_twist_surge(self.speed) 
@@ -297,9 +272,6 @@ class PassBuoy(TimedState):
     def handle_once_timedout(self):
         PIO.set_target_twist_surge(0)
         return self.TimedOut() 
-    
-    def timeout(self) -> float:
-        return self.m_timeout
 
 
 class FindGlyph(TimedState):
@@ -308,8 +280,8 @@ class FindGlyph(TimedState):
     class TimedOut(NamedTuple):
         pass
 
-    m_timeout: Param[float]
-    speed: Param[float]
+    timeout: float = 7.0
+    speed: float = 0.2
 
     def handle_if_not_timedout(self):
         PIO.set_target_twist_surge(-self.speed)
@@ -325,14 +297,11 @@ class FindGlyph(TimedState):
         PIO.set_target_twist_surge(0)
         return self.TimedOut() 
 
-    def timeout(self) -> float:
-        return self.m_timeout
-
 class Pause(TimedState):
     class TimedOut(NamedTuple):
         pass
 
-    m_timeout: Param[float]
+    timeout: float = 3.0
 
     def handle_if_not_timedout(self):
         
@@ -347,9 +316,6 @@ class Pause(TimedState):
         
     def handle_once_timedout(self):
         return self.TimedOut()
-    
-    def timeout(self) -> float:
-        return self.m_timeout
 
 class ContingencySubmerge(State):
     class Submerged(NamedTuple):
@@ -357,8 +323,8 @@ class ContingencySubmerge(State):
     class Submerging(NamedTuple):
         pass
 
-    target_depth: Param[float]
-    threshold: Param[float]
+    target_depth: float = 15.0
+    threshold: float = 2.0
 
     def handle(self):
         PIO.set_target_pose_heave(self.target_depth)
@@ -382,8 +348,8 @@ class ContingencyApproach(TimedState):
     class TimedOut(NamedTuple):
         pass
 
-    surge_speed: Param[float]
-    m_timeout: Param[float]
+    surge_speed: float = 0.2
+    timeout: float = 15.0
 
     def handle_if_not_timedout(self):
         PIO.set_target_twist_surge(self.surge_speed)
@@ -398,6 +364,3 @@ class ContingencyApproach(TimedState):
     def handle_once_timedout(self):        
         PIO.set_target_twist_surge(0)
         return self.TimedOut()
-    
-    def timeout(self) -> float:
-        return self.m_timeout
