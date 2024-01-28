@@ -2,9 +2,10 @@
 from gate_task import *
 from buoy_task import *
 from common import *
+from umrsm import TransitionMap
 
 
-transitions = {
+transitions: TransitionMap = {
     Start.Complete: Submerge,
 
     Submerge.Unreached: Submerge,

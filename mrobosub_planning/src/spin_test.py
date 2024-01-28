@@ -1,7 +1,8 @@
 from common import Start, Submerge, Surface, Stop
 from gate_task import Spin, SpinFinish
+from umrsm import TransitionMap
 
-transitions = {
+transitions: TransitionMap = {
     Start.Complete: Submerge,
 
     Submerge.Unreached: Submerge,

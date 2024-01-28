@@ -1,4 +1,4 @@
-from umrsm import Outcome, TimedState, State, TurnToYaw
+from umrsm import TimedState, State, TurnToYaw
 from periodic_io import PIO, angle_error, Glyph, Gbl
 from buoy_task import SeenGlyph, search_for_glyph
 from mrobosub_msgs.srv import ObjectPositionResponse

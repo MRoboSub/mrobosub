@@ -1,4 +1,4 @@
-from umrsm import Outcome, TimedState, State
+from umrsm import TimedState, State
 from periodic_io import PIO, Gbl, angle_error, Glyph
 from mrobosub_msgs.srv import ObjectPositionResponse
 from typing import Dict, NamedTuple, Union

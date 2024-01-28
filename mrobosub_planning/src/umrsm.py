@@ -6,7 +6,7 @@ Python metaprogramming."""
 from __future__ import annotations
 from abc import ABC, ABCMeta, abstractmethod
 from dataclasses import make_dataclass, field
-from typing import Mapping, Type, Final, cast, Generic, Text, TypeVar, Any, Tuple
+from typing import Dict, Mapping, Type, Final, TypeAlias, cast, Generic, Text, TypeVar, Any, Tuple
 import rospy
 from std_msgs.msg import String
 from std_srvs.srv import Trigger, TriggerRequest
@@ -22,88 +22,40 @@ __all__ = ('Outcome', 'State', 'TimedState', 'ForwardAndWait', 'TurnToYaw', 'Sta
 
 T = TypeVar('T')
 class Param(Generic[T]):
-    pass
-    
-""" Param generic type used for annotations. The annotations themselves do nothing at runtime. 
+    """ Param generic type used for annotations. The annotations themselves do nothing at runtime. 
 
-parameters are loaded as class variables into State subclasses and should be accessed using self.{name}
+    parameters are loaded as class variables into State subclasses and should be accessed using self.{name}
 
-they are loaded in the following order, where later values with the same name will overwrite earlier ones.
+    they are loaded in the following order, where later values with the same name will overwrite earlier ones.
 
-loaded into all states:
-1. ~globals/defaults
-2. ~globals/{machine}
+    loaded into all states:
+    1. ~globals/defaults
+    2. ~globals/{machine}
 
-loaded into all states in a particular module:
-3. ~{module}/mod/defaults
-4. ~{module}/mod/{machine}
-the module __main__ [i.e. the module of the file which gets launched rather than imported] 
-    uses the module name 'globals'. 
+    loaded into all states in a particular module:
+    3. ~{module}/mod/defaults
+    4. ~{module}/mod/{machine}
+    the module __main__ [i.e. the module of the file which gets launched rather than imported] 
+        uses the module name 'globals'. 
 
-loaded into the particular state:
-5. ~{module}/{state}/defaults
-6. ~{module}/{state}/{machine}
-the state name is converted to all lowercase without spaces or underscores. 
+    loaded into the particular state:
+    5. ~{module}/{state}/defaults
+    6. ~{module}/{state}/{machine}
+    the state name is converted to all lowercase without spaces or underscores. 
 
-the purpose of loading parameters both for the defaults and {machine} namespaces is so that states shared
-    between multiple state machines can override parameters when used in a particular machine if necessary.
-    you should generally prefer to use 'defaults' unless there is a good reason not to.
+    the purpose of loading parameters both for the defaults and {machine} namespaces is so that states shared
+        between multiple state machines can override parameters when used in a particular machine if necessary.
+        you should generally prefer to use 'defaults' unless there is a good reason not to.
 
-the purpose of loading parameters from the '{module}/mod' namespace is for parameters which are needed across 
-    all states in a particular module, but not necessarily all states in a machine. it is often the case 
-    that states for a machine are divided across different files for logical organization, so it may also 
-    be the case that these states have shared state
+    the purpose of loading parameters from the '{module}/mod' namespace is for parameters which are needed across 
+        all states in a particular module, but not necessarily all states in a machine. it is often the case 
+        that states for a machine are divided across different files for logical organization, so it may also 
+        be the case that these states have shared state
 
-the purpose of loading parameters for the 'global' namespace is for parameters shared across all states.
-    it is rarely the case that such parameters exist, but the namespace can also be used for defaults
-    which are overrided for particular states [e.g. a default threshold which is only overridden when necessary]
-"""
-
-class Outcome(ABC):
-    """Abstract base classes for state outcomes.
-
-    Outcomes are used to decide which state to run next. This decision is based only on the type of outcome, and not on
-    any data that the outcome contains. In the following example, instances of outcomeA map to the same State, while
-    outcomeB will map to a different state.
-
-    Example:
-        >>> OutcomeA = Outcome.make('OutcomeA', offset=int)
-        >>> OutcomeB = Outcome.make('OutcomeB')
-        >>> outcome_a_1 = OutcomeA(offset=10)
-        >>> outcome_a_2 = OutcomeA(offset=-5)
-        >>> outcome_b = OutcomeB()
+    the purpose of loading parameters for the 'global' namespace is for parameters shared across all states.
+        it is rarely the case that such parameters exist, but the namespace can also be used for defaults
+        which are overrided for particular states [e.g. a default threshold which is only overridden when necessary]
     """
-
-    @classmethod
-    def make(cls, name: str, **kwargs) -> Type[Outcome]:
-        """Returns a dataclass type (not an instance of a class, but a new class type) which is a subclass of Outcome
-        and has the fields (with types) specified by kwargs
-
-        Args:
-            name: The name of the outcome; should always be the same as the variable it's assigned to.
-
-        Example:
-            >>> ReachedTargetOutcome = Outcome.make('ReachedTargetOutcome', duration=int)
-            >>> current_outcome = ReachedTargetOutcome(duration=10)
-            >>> current_outcome
-            'ReachedTargetOutcome(duration=10)'
-            >>> current_outcome = ReachedTargetOutcome()
-            'ReachedTargetOutcome(duration=0)'
-        """
-        fields = [(key, val, field()) for key, val in kwargs.items()]
-        dataclass = make_dataclass(name, fields, bases=(cls, ))
-        return cast(Type[Outcome], dataclass)  # purely for better type hinting, no actual effect
-
-
-class StateMeta(ABCMeta):
-    def __new__(mcls: type[StateMeta], name: str, bases: tuple[type, ...], namespace: dict[str, Any], **kwargs: Any) -> StateMeta:
-        try:
-            for var, type_ in namespace["__annotations__"].items():
-                if type_ is Outcome:
-                    namespace[var] = Outcome.make(name + var)
-        except AttributeError:
-            pass
-        return super().__new__(name, bases, namespace, **kwargs)
 
 
 class State(ABC):
@@ -160,6 +112,7 @@ class ForwardAndWait(State):
     Reached
 
     Must specify the following parameters:
+    target_heave: float
     target_surge_time: float
     wait_time: float
     surge_speed: float
@@ -185,7 +138,7 @@ class ForwardAndWait(State):
                 return self.handle_reached()
         
         return self.handle_unreached()
-    
+
     @abstractmethod
     def handle_reached(self) -> NamedTuple:
         pass
@@ -198,7 +151,7 @@ class ForwardAndWait(State):
     @abstractmethod
     def target_heave(self) -> float:
         pass
-    
+
     @property
     @abstractmethod
     def target_surge_time(self) -> float:
@@ -213,7 +166,7 @@ class ForwardAndWait(State):
     @abstractmethod
     def surge_speed(self) -> float:
         pass
-        
+
 class DoubleTimedState(State):
     """
     Must specify the following outcomes:
@@ -286,7 +239,7 @@ class TurnToYaw(TimedState):
 
     @property
     @abstractmethod
-    def yaw_threhold(self) -> float:
+    def yaw_threshold(self) -> float:
         pass
 
     @property
@@ -361,20 +314,29 @@ class StateMachine:
         rate = rospy.Rate(50)
         publisher = rospy.Publisher(STATE_TOPIC, String, queue_size=1)
         self.current_state = self.StartState(None)
-        while type(self.current_state) != self.StopState:
-            publisher.publish(type(self.current_state).__qualname__)
-            outcome = self.current_state.handle()
-            outcome_type = type(outcome) if isinstance(outcome, NamedTuple) else outcome
-            outcome_name = outcome_type.__qualname__
-            if self.stop_signal_recvd:
-                NextState = self.StopState
-                outcome_name = '!! Abort !!'
-            else:
-                NextState = self.transitions[outcome_type]
-            rospy.logdebug(f'{type(self.current_state).__qualname__} -> {NextState.__qualname__}')
-            if type(self.current_state) != NextState:
-                rospy.loginfo(f'transition {type(self.current_state).__qualname__} --[{outcome_name}]--> {NextState.__qualname__}')
-                self.current_state = NextState(outcome)
+        while not isinstance(self.current_state, self.StopState):
+            self.run_once(publisher)
             rate.sleep()
         publisher.publish(type(self.current_state).__qualname__)
-        return self.current_state.handle()  # handle stop state
+        return self.current_state.handle()
+
+    def run_once(self, state_topic_pub: rospy.Publisher):
+        """ Runs one iteration of the state machine
+        """
+        state_topic_pub.publish(type(self.current_state).__qualname__)
+        outcome = self.current_state.handle()
+        outcome_type = type(outcome) if isinstance(outcome, NamedTuple) else outcome
+        outcome_name = outcome_type.__qualname__
+        if self.stop_signal_recvd:
+            NextState = self.StopState
+            outcome_name = '!! Abort !!'
+        else:
+            NextState = self.transitions[outcome_type]
+        rospy.logdebug(f'{type(self.current_state).__qualname__} -> {NextState.__qualname__}')
+        if type(self.current_state) != NextState:
+            rospy.loginfo(f'transition {type(self.current_state).__qualname__} --[{outcome_name}]--> {NextState.__qualname__}')
+            self.current_state = NextState(outcome) # handle stop state
+
+
+Outcome = Type[NamedTuple]
+TransitionMap = Dict[Outcome, Type[State]]

@@ -4,14 +4,13 @@ from periodic_io import PIO, angle_error
 from umrsm import *
 from common import *
 import rospy
+from umrsm import TransitionMap
+
 
 class AlignGate(TimedState):
-    class Unreached(NamedTuple):
-        pass
-    class Reached(NamedTuple):
-        pass
-    class TimedOut(NamedTuple):
-        pass
+    class Unreached(NamedTuple): pass
+    class Reached(NamedTuple): pass
+    class TimedOut(NamedTuple): pass
     
     target_yaw: float = 0.0
     yaw_threshold: float = 2.0
@@ -24,16 +23,16 @@ class AlignGate(TimedState):
             return self.Reached()
         else:
             return self.Unreached()
-    
+
     def handle_once_timedout(self):
         return self.TimedOut()
-        
+
+
 class ApproachGate(ForwardAndWait):
-    class Unreached(NamedTuple):
-        pass
-    class Reached(NamedTuple):
-        pass
- 
+    class Unreached(NamedTuple): pass
+    class Reached(NamedTuple): pass
+
+    target_heave: float = 2 # TODO
     target_surge_time: float = 10.0
     surge_speed: float = 0.2
     wait_time: float = 1.0
@@ -44,22 +43,26 @@ class ApproachGate(ForwardAndWait):
     def handle_unreached(self) -> NamedTuple:
         return self.Unreached()
 
-        
+
 # Concerns: -drift during submerge, poor movement on sway &surge axes, drift during surge.
 
 class ApproachMarker(ForwardAndWait):
-    class Unreached(NamedTuple):
-        pass
-    class Reached(NamedTuple):
-        pass
+    class Unreached(NamedTuple): pass
+    class Reached(NamedTuple): pass
 
+    target_heave: float = 2 # TODO
     target_surge_time: float = 22.0
     surge_speed: float = 0.2
     wait_time: float = 1.0
-    unreached: Unreached = Unreached()
-    reached: Reached = Reached()
-    
-transitions = {
+
+    def handle_reached(self) -> NamedTuple:
+        return self.Reached()
+
+    def handle_unreached(self) -> NamedTuple:
+        return self.Unreached()
+
+
+transitions: TransitionMap = {
     Start.Complete: Submerge,
 
     Submerge.Unreached: Submerge,

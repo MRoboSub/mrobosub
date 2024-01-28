@@ -1,23 +1,18 @@
-from mrobosub_planning.src.umrsm import Outcome
 from umrsm import *
 from periodic_io import PIO
 import rospy
 from typing import NamedTuple
 
 class Start(State):
-    class Complete(NamedTuple):
-        pass
+    class Complete(NamedTuple): pass
     
     def handle(self):
         return self.Complete()
 
 class Submerge(TimedState):
-    class Unreached(NamedTuple):
-        pass
-    class Submerged(NamedTuple):
-        pass
-    class TimedOut(NamedTuple):
-        pass
+    class Unreached(NamedTuple): pass
+    class Submerged(NamedTuple): pass
+    class TimedOut(NamedTuple): pass
     
     target_heave: float = 0.35
     heave_threshold: float = 0.1
@@ -39,27 +34,17 @@ class Submerge(TimedState):
         return self.TimedOut()
 
 class Stop(State):
-    class Surfaced(NamedTuple):
-        pass
-    class Submerged(NamedTuple):
-        pass
+    class Surfaced(NamedTuple): pass
+    class Submerged(NamedTuple): pass
 
-    def __init__(self, prev_outcome):
+    def __init__(self, prev_outcome: NamedTuple):
         super().__init__(prev_outcome)
-        PIO.set_target_twist_heave(0)
-        PIO.set_target_twist_yaw(0)
-        PIO.set_target_twist_surge(0)
-        PIO.set_target_twist_roll(0)
-        PIO.set_target_twist_sway(0)
+        PIO.reset_target_twist()
         self.rate = rospy.Rate(50)
     
     def handle(self):
         for _ in range(20):
-            PIO.set_target_twist_heave(0)
-            PIO.set_target_twist_yaw(0)
-            PIO.set_target_twist_surge(0)
-            PIO.set_target_twist_roll(0)
-            PIO.set_target_twist_sway(0)
+            PIO.reset_target_twist()
             self.rate.sleep()
         return self.Submerged()
 

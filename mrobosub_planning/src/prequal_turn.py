@@ -4,14 +4,12 @@ from umrsm import *
 from common import *
 import prequal_front 
 import rospy
+from umrsm import TransitionMap
 
 class TurnAroundMarker(TurnToYaw):
-    class Unreached(NamedTuple):
-        pass
-    class Reached(NamedTuple):
-        pass
-    class TimedOut(NamedTuple):
-        pass
+    class Unreached(NamedTuple): pass
+    class Reached(NamedTuple): pass
+    class TimedOut(NamedTuple): pass
 
     target_yaw: float = 90
     yaw_threshold: float = 2 
@@ -20,10 +18,10 @@ class TurnAroundMarker(TurnToYaw):
 
     def handle_reached(self) -> NamedTuple:
         return self.Reached()
-    
+
     def handle_unreached(self) -> NamedTuple:
         return self.Unreached()
-    
+
     def handle_once_timedout(self) -> NamedTuple:
         return self.TimedOut()
     
@@ -57,6 +55,15 @@ class TurnToGate(TurnToYaw):
     yaw_threshold: float = 2
     timeout: float = 10
     settle_time: float = 1
+
+    def handle_unreached(self) -> NamedTuple:
+        return self.Unreached()
+
+    def handle_reached(self) -> NamedTuple:
+        return self.Reached()
+
+    def handle_once_timedout(self) -> NamedTuple:
+        return self.TimedOut()
         
 class LeaveMarker(ForwardAndWait):
     class Unreached(NamedTuple):
@@ -68,6 +75,12 @@ class LeaveMarker(ForwardAndWait):
     target_surge_time: float = 10
     surge_speed: float = 0.2
     wait_time: float = 1
+
+    def handle_reached(self) -> NamedTuple:
+        return self.Reached()
+
+    def handle_unreached(self) -> NamedTuple:
+        return self.Unreached()
     
 class ReturnToGate(ForwardAndWait):
     class Unreached(NamedTuple):
@@ -80,7 +93,13 @@ class ReturnToGate(ForwardAndWait):
     surge_speed: float = 0.2
     wait_time: float = 1
 
-transitions = prequal_front.transitions
+    def handle_unreached(self) -> NamedTuple:
+        return self.Unreached()
+
+    def handle_reached(self) -> NamedTuple:
+        return self.Reached()
+
+transitions: TransitionMap = prequal_front.transitions.copy()
 transitions.update({
     prequal_front.ApproachMarker.Reached: TurnAroundMarker,
 
