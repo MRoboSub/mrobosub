@@ -1,17 +1,12 @@
 """Contains the state machine implementation. You probably shouldn't read this unless you want to deal with wierd
 Python metaprogramming."""
 
-# mypy: disable-error-code="attr-defined, arg-type, type-abstract"
-
 from __future__ import annotations
-from abc import ABC, ABCMeta, abstractmethod
-from dataclasses import make_dataclass, field
+from abc import abstractmethod
 from typing import (
     Dict,
     Mapping,
     Type,
-    Generic,
-    TypeVar,
     Tuple,
 )
 import rospy
@@ -31,50 +26,17 @@ __all__ = (
     "ForwardAndWait",
     "TurnToYaw",
     "StateMachine",
-    "Param",
 )
 
-T = TypeVar("T")
+
+Outcome = NamedTuple
 
 
-class Param(Generic[T]):
-    """ Param generic type used for annotations. The annotations themselves do nothing at runtime. 
-
-    parameters are loaded as class variables into State subclasses and should be accessed using self.{name}
-
-    they are loaded in the following order, where later values with the same name will overwrite earlier ones.
-
-    loaded into all states:
-    1. ~globals/defaults
-    2. ~globals/{machine}
-
-    loaded into all states in a particular module:
-    3. ~{module}/mod/defaults
-    4. ~{module}/mod/{machine}
-    the module __main__ [i.e. the module of the file which gets launched rather than imported] 
-        uses the module name 'globals'. 
-
-    loaded into the particular state:
-    5. ~{module}/{state}/defaults
-    6. ~{module}/{state}/{machine}
-    the state name is converted to all lowercase without spaces or underscores. 
-
-    the purpose of loading parameters both for the defaults and {machine} namespaces is so that states shared
-        between multiple state machines can override parameters when used in a particular machine if necessary.
-        you should generally prefer to use 'defaults' unless there is a good reason not to.
-
-    the purpose of loading parameters from the '{module}/mod' namespace is for parameters which are needed across 
-        all states in a particular module, but not necessarily all states in a machine. it is often the case 
-        that states for a machine are divided across different files for logical organization, so it may also 
-        be the case that these states have shared state
-
-    the purpose of loading parameters for the 'global' namespace is for parameters shared across all states.
-        it is rarely the case that such parameters exist, but the namespace can also be used for defaults
-        which are overrided for particular states [e.g. a default threshold which is only overridden when necessary]
-    """
+class InitTransition(Outcome):
+    pass
 
 
-class State(ABC):
+class State:
     """States contain logic that will be executed by the StateMachine.
 
         Each State also contains class variables for each parameter on the parameter server, which
@@ -294,10 +256,6 @@ class TurnToYaw(TimedState):
         pass
 
 
-class InitState(NamedTuple):
-    pass
-
-
 class StateMachine:
     """ The main interface for running a system. """
 
@@ -368,7 +326,7 @@ class StateMachine:
         """
         rate = rospy.Rate(50)
         publisher = rospy.Publisher(STATE_TOPIC, String, queue_size=1)
-        self.current_state = self.StartState(InitState())
+        self.current_state = self.StartState(InitTransition())
         while type(self.current_state) != self.StopState:
             self.run_once(publisher)
             rate.sleep()
@@ -397,5 +355,4 @@ class StateMachine:
             self.current_state = NextState(outcome)  # handle stop state
 
 
-Outcome = NamedTuple
 TransitionMap = Dict[Type[Outcome], Type[State]]

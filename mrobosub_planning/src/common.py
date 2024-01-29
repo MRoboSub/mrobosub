@@ -1,18 +1,17 @@
 from umrsm import *
 from periodic_io import PIO
 import rospy
-from typing import NamedTuple
 
 class Start(State):
-    class Complete(NamedTuple): pass
+    class Complete(Outcome): pass
     
     def handle(self):
         return self.Complete()
 
 class Submerge(TimedState):
-    class Unreached(NamedTuple): pass
-    class Submerged(NamedTuple): pass
-    class TimedOut(NamedTuple): pass
+    class Unreached(Outcome): pass
+    class Submerged(Outcome): pass
+    class TimedOut(Outcome): pass
     
     target_heave: float = 0.35
     heave_threshold: float = 0.1
@@ -34,10 +33,10 @@ class Submerge(TimedState):
         return self.TimedOut()
 
 class Stop(State):
-    class Surfaced(NamedTuple): pass
-    class Submerged(NamedTuple): pass
+    class Surfaced(Outcome): pass
+    class Submerged(Outcome): pass
 
-    def __init__(self, prev_outcome: NamedTuple):
+    def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
         PIO.reset_target_twist()
         self.rate = rospy.Rate(50)

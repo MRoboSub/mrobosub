@@ -1,35 +1,32 @@
-from typing import NamedTuple
-from periodic_io import PIO, angle_error
 from umrsm import *
 from common import *
 import prequal_front 
-import rospy
 from umrsm import TransitionMap
 
 class TurnAroundMarker(TurnToYaw):
-    class Unreached(NamedTuple): pass
-    class Reached(NamedTuple): pass
-    class TimedOut(NamedTuple): pass
+    class Unreached(Outcome): pass
+    class Reached(Outcome): pass
+    class TimedOut(Outcome): pass
 
     target_yaw: float = 90
     yaw_threshold: float = 2 
     timeout: float = 10
     settle_time: float = 1
 
-    def handle_reached(self) -> NamedTuple:
+    def handle_reached(self) -> Outcome:
         return self.Reached()
 
-    def handle_unreached(self) -> NamedTuple:
+    def handle_unreached(self) -> Outcome:
         return self.Unreached()
 
-    def handle_once_timedout(self) -> NamedTuple:
+    def handle_once_timedout(self) -> Outcome:
         return self.TimedOut()
     
         
 class MovePastMarker(ForwardAndWait):
-    class Unreached(NamedTuple):
+    class Unreached(Outcome):
         pass
-    class Reached(NamedTuple):
+    class Reached(Outcome):
         pass
     
     target_heave: float = 1.2
@@ -37,18 +34,18 @@ class MovePastMarker(ForwardAndWait):
     surge_speed: float = 0.2
     wait_time: float = 1
 
-    def handle_reached(self) -> NamedTuple:
+    def handle_reached(self) -> Outcome:
         return self.Reached()
     
-    def handle_unreached(self) -> NamedTuple:
+    def handle_unreached(self) -> Outcome:
         return self.Unreached()
 
 class TurnToGate(TurnToYaw):
-    class Unreached(NamedTuple):
+    class Unreached(Outcome):
         pass
-    class Reached(NamedTuple):
+    class Reached(Outcome):
         pass
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     target_yaw: float = -175
@@ -56,19 +53,19 @@ class TurnToGate(TurnToYaw):
     timeout: float = 10
     settle_time: float = 1
 
-    def handle_unreached(self) -> NamedTuple:
+    def handle_unreached(self) -> Outcome:
         return self.Unreached()
 
-    def handle_reached(self) -> NamedTuple:
+    def handle_reached(self) -> Outcome:
         return self.Reached()
 
-    def handle_once_timedout(self) -> NamedTuple:
+    def handle_once_timedout(self) -> Outcome:
         return self.TimedOut()
         
 class LeaveMarker(ForwardAndWait):
-    class Unreached(NamedTuple):
+    class Unreached(Outcome):
         pass
-    class Reached(NamedTuple):
+    class Reached(Outcome):
         pass
     
     target_heave: float = 1.2
@@ -76,16 +73,16 @@ class LeaveMarker(ForwardAndWait):
     surge_speed: float = 0.2
     wait_time: float = 1
 
-    def handle_reached(self) -> NamedTuple:
+    def handle_reached(self) -> Outcome:
         return self.Reached()
 
-    def handle_unreached(self) -> NamedTuple:
+    def handle_unreached(self) -> Outcome:
         return self.Unreached()
     
 class ReturnToGate(ForwardAndWait):
-    class Unreached(NamedTuple):
+    class Unreached(Outcome):
         pass
-    class Reached(NamedTuple):
+    class Reached(Outcome):
         pass
     
     target_heave: float = 1.9
@@ -93,10 +90,10 @@ class ReturnToGate(ForwardAndWait):
     surge_speed: float = 0.2
     wait_time: float = 1
 
-    def handle_unreached(self) -> NamedTuple:
+    def handle_unreached(self) -> Outcome:
         return self.Unreached()
 
-    def handle_reached(self) -> NamedTuple:
+    def handle_reached(self) -> Outcome:
         return self.Reached()
 
 transitions = prequal_front.transitions.copy()

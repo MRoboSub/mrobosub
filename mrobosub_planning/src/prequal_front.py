@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from typing import NamedTuple, Dict, Type
 from periodic_io import PIO, angle_error
 from umrsm import *
 from common import *
@@ -8,9 +7,9 @@ from umrsm import TransitionMap
 
 
 class AlignGate(TimedState):
-    class Unreached(NamedTuple): pass
-    class Reached(NamedTuple): pass
-    class TimedOut(NamedTuple): pass
+    class Unreached(Outcome): pass
+    class Reached(Outcome): pass
+    class TimedOut(Outcome): pass
     
     target_yaw: float = 0.0
     yaw_threshold: float = 2.0
@@ -29,36 +28,36 @@ class AlignGate(TimedState):
 
 
 class ApproachGate(ForwardAndWait):
-    class Unreached(NamedTuple): pass
-    class Reached(NamedTuple): pass
+    class Unreached(Outcome): pass
+    class Reached(Outcome): pass
 
     target_heave: float = 2 # TODO
     target_surge_time: float = 10.0
     surge_speed: float = 0.2
     wait_time: float = 1.0
 
-    def handle_reached(self) -> NamedTuple:
+    def handle_reached(self) -> Outcome:
         return self.Reached()
 
-    def handle_unreached(self) -> NamedTuple:
+    def handle_unreached(self) -> Outcome:
         return self.Unreached()
 
 
 # Concerns: -drift during submerge, poor movement on sway &surge axes, drift during surge.
 
 class ApproachMarker(ForwardAndWait):
-    class Unreached(NamedTuple): pass
-    class Reached(NamedTuple): pass
+    class Unreached(Outcome): pass
+    class Reached(Outcome): pass
 
     target_heave: float = 2 # TODO
     target_surge_time: float = 22.0
     surge_speed: float = 0.2
     wait_time: float = 1.0
 
-    def handle_reached(self) -> NamedTuple:
+    def handle_reached(self) -> Outcome:
         return self.Reached()
 
-    def handle_unreached(self) -> NamedTuple:
+    def handle_unreached(self) -> Outcome:
         return self.Unreached()
 
 

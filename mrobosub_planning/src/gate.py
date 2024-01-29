@@ -15,13 +15,14 @@ transitions = {
     AlignGate.ReachedAngle: ApproachGate,
     AlignGate.TimedOut: ApproachGate,
 
+    ApproachGate.SeenGateImage: ApproachGateImage,
     ApproachGate.Unreached: ApproachGate,
     ApproachGate.TimedOut: Surface,
 
-    SeenGateImage: ApproachGateImage,
     # FoundBuoyPathMarker: AlignPathMarker,
 
     # ApproachGateImage.GoneThroughGate: FallBackTurn,
+    ApproachGateImage.SeenGateImage: ApproachGateImage,
     ApproachGateImage.TimedOut: ApproachBuoyOpen,
 
     # AlignPathMarker.Unaligned: AlignPathMarker,

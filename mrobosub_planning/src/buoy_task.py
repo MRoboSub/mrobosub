@@ -1,10 +1,10 @@
 from umrsm import TimedState, State, Outcome
 from periodic_io import PIO, Gbl, GlyphDetections, angle_error, Glyph
 from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
-from typing import Dict, NamedTuple, Optional, Protocol, Tuple, Union
+from typing import Dict, Optional, Tuple, Union
 
 
-class SeenGlyphType(NamedTuple):
+class SeenGlyphType(Outcome):
     glyph_results: Dict[Glyph, ObjectPositionResponse]
     glyph: Glyph
 
@@ -28,10 +28,10 @@ class ApproachBuoyOpen(TimedState):
     class SeenGlyph(SeenGlyphType):
         pass
 
-    class GlyphNotSeen(NamedTuple):
+    class GlyphNotSeen(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     surge_speed: float = 0.2
@@ -62,14 +62,14 @@ class ApproachBuoyOpen(TimedState):
 
 
 class CenterHeaveGlyph(TimedState):
-    class NotCentered(NamedTuple):
+    class NotCentered(Outcome):
         pass
 
-    class Centered(NamedTuple):
+    class Centered(Outcome):
         glyph: Glyph
         last_data: ObjectPositionResponse
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         glyph: Glyph
         last_data: ObjectPositionResponse
 
@@ -109,16 +109,16 @@ class CenterHeaveGlyph(TimedState):
 
 
 class CenterYawGlyph(TimedState):
-    class HitBuoyFirst(NamedTuple):
+    class HitBuoyFirst(Outcome):
         pass
 
-    class HitBuoySecond(NamedTuple):
+    class HitBuoySecond(Outcome):
         pass
 
-    class NotReached(NamedTuple):
+    class NotReached(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     surge_speed: float = 0.2
@@ -166,16 +166,16 @@ class CenterYawGlyph(TimedState):
 
 
 class OldApproachBuoyClosed(TimedState):
-    class HitBuoyFirst(NamedTuple):
+    class HitBuoyFirst(Outcome):
         pass
 
-    class HitBuoySecond(NamedTuple):
+    class HitBuoySecond(Outcome):
         pass
 
-    class NotReached(NamedTuple):
+    class NotReached(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     surge_speed: float = 0.2
@@ -229,10 +229,10 @@ class OldApproachBuoyClosed(TimedState):
 
 
 class FallBack(TimedState):
-    class NotReached(NamedTuple):
+    class NotReached(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     timeout: float = 3.0
@@ -248,13 +248,13 @@ class FallBack(TimedState):
 
 
 class Ascend(TimedState):
-    class NotReached(NamedTuple):
+    class NotReached(Outcome):
         pass
 
-    class Reached(NamedTuple):
+    class Reached(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     target_depth: float = 0.25
@@ -273,10 +273,10 @@ class Ascend(TimedState):
 
 
 class PassBuoy(TimedState):
-    class NotReached(NamedTuple):
+    class NotReached(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     timeout: float = 5.0
@@ -296,10 +296,10 @@ class FindGlyph(TimedState):
     class SeenGlyph(SeenGlyphType):
         pass
 
-    class GlyphNotSeen(NamedTuple):
+    class GlyphNotSeen(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     timeout: float = 7.0
@@ -324,7 +324,10 @@ class Pause(TimedState):
     class SeenGlyph(SeenGlyphType):
         pass
 
-    class TimedOut(NamedTuple):
+    # class GlyphNotSeen(Outcome): # TODO
+    #     pass
+
+    class TimedOut(Outcome):
         pass
 
     timeout: float = 3.0
@@ -346,10 +349,10 @@ class ContingencySubmerge(State):
     class SeenGlyph(SeenGlyphType):
         pass
 
-    class Submerging(NamedTuple):
+    class Submerging(Outcome):
         pass
 
-    class Submerged(NamedTuple):
+    class Submerged(Outcome):
         pass
 
     target_depth: float = 15.0
@@ -372,13 +375,13 @@ class ContingencySubmerge(State):
 
 
 class ContingencyApproach(TimedState):
-    class HitBuoySecond(NamedTuple):
+    class HitBuoySecond(Outcome):
         pass
 
-    class Approaching(NamedTuple):
+    class Approaching(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     surge_speed: float = 0.2

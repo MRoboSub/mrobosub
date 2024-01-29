@@ -16,11 +16,13 @@ transitions: TransitionMap = {
     AlignGate.ReachedAngle: ApproachGate,
     AlignGate.TimedOut: ApproachGate,
 
+    ApproachGate.SeenGateImage: ApproachGateImage,
     ApproachGate.Unreached: ApproachGate,
     ApproachGate.TimedOut: Spin,
 
-    SeenGateImage: ApproachGateImage,
+    # SeenGateImage: ApproachGateImage,
 
+    ApproachGateImage.SeenGateImage: ApproachGateImage,
     ApproachGateImage.GoneThroughGate: Spin,
     ApproachGateImage.TimedOut: Surface,
 
