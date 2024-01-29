@@ -91,16 +91,18 @@ class Outcome(ABC):
 
 class StateMeta(ABCMeta):
     def __new__(mcls: type[StateMeta], name: str, bases: tuple[type, ...], namespace: dict[str, Any], **kwargs: Any) -> StateMeta:
+        cls = super().__new__(mcls, name, bases, namespace, **kwargs)
         try:
-            for var, type_ in namespace["__annotations__"].items():
-                if type_ is Outcome:
-                    namespace[var] = Outcome.make(name + var)
+            for var in namespace.values():
+                if isinstance(var, type) and issubclass(var, Outcome):
+                    var._classname = name
+                    var._class = cls
         except AttributeError:
             pass
-        return super().__new__(name, bases, namespace, **kwargs)
+        return cls
 
 
-class State(ABC):
+class State(metaclass=StateMeta):
     """States contain logic that will be executed by the StateMachine.
 
         Each State also contains class variables for each parameter on the parameter server, which
