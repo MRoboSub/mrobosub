@@ -31,24 +31,31 @@ transitions = {
     # FallBackTurn.Unaligned: FallBackTurn,
     # FallBackTurn.Aligned: ApproachBuoyOpen,
 
-    SeenGlyph: OldApproachBuoyClosed,
-    HitBuoySecond: FallBack,
-    HitBuoyFirst: FindGlyph,
+    # SeenGlyph: OldApproachBuoyClosed,
+    # HitBuoyFirst: FindGlyph,
+    # HitBuoySecond: FallBack,
 
+    ApproachBuoyOpen.SeenGlyph: OldApproachBuoyClosed,
     ApproachBuoyOpen.GlyphNotSeen: ApproachBuoyOpen, 
     ApproachBuoyOpen.TimedOut: Surface,
 
+    OldApproachBuoyClosed.HitBuoyFirst: FindGlyph,
+    OldApproachBuoyClosed.HitBuoySecond: FallBack,
     OldApproachBuoyClosed.NotReached: OldApproachBuoyClosed,
     OldApproachBuoyClosed.TimedOut: Surface,
 
+    FindGlyph.SeenGlyph: OldApproachBuoyClosed,
     FindGlyph.GlyphNotSeen: FindGlyph,
     FindGlyph.TimedOut: Pause,
-    
+
+    Pause.SeenGlyph: OldApproachBuoyClosed,
     Pause.TimedOut: ContingencySubmerge,
-    
+
+    ContingencySubmerge.SeenGlyph: OldApproachBuoyClosed,
     ContingencySubmerge.Submerging: ContingencySubmerge,
     ContingencySubmerge.Submerged: ContingencyApproach,
 
+    ContingencyApproach.HitBuoySecond: FallBack,
     ContingencyApproach.Approaching: ContingencyApproach,
     ContingencyApproach.TimedOut: Surface,
     

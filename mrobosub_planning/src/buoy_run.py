@@ -12,10 +12,11 @@ transitions: TransitionMap = {
     Submerge.Submerged: ApproachBuoyOpen,
     Submerge.TimedOut: ApproachBuoyOpen,
 
-    SeenGlyph: CenterHeaveGlyph,
-    HitBuoyFirst: FindGlyph,
-    HitBuoySecond: FallBack,
+    # SeenGlyph: CenterHeaveGlyph,
+    # HitBuoyFirst: FindGlyph,
+    # HitBuoySecond: FallBack,
 
+    ApproachBuoyOpen.SeenGlyph: CenterHeaveGlyph,
     ApproachBuoyOpen.GlyphNotSeen: ApproachBuoyOpen, 
     ApproachBuoyOpen.TimedOut: Surface,
 
@@ -23,17 +24,23 @@ transitions: TransitionMap = {
     CenterHeaveGlyph.Centered: CenterYawGlyph,
     CenterHeaveGlyph.TimedOut: CenterYawGlyph,
 
+    CenterYawGlyph.HitBuoyFirst: FindGlyph,
+    CenterYawGlyph.HitBuoySecond: FallBack,
     CenterYawGlyph.NotReached: CenterYawGlyph,
     CenterYawGlyph.TimedOut: Surface,
 
+    FindGlyph.SeenGlyph: CenterHeaveGlyph,
     FindGlyph.GlyphNotSeen: FindGlyph,
     FindGlyph.TimedOut: Pause,
 
+    Pause.SeenGlyph: CenterHeaveGlyph,
     Pause.TimedOut: ContingencySubmerge,
 
+    ContingencySubmerge.SeenGlyph: CenterHeaveGlyph,
     ContingencySubmerge.Submerging: ContingencySubmerge,
     ContingencySubmerge.Submerged: ContingencyApproach,
 
+    ContingencyApproach.HitBuoySecond: FallBack,
     ContingencyApproach.Approaching: ContingencyApproach,
     ContingencyApproach.TimedOut: Surface,
 

@@ -99,7 +99,7 @@ class ReturnToGate(ForwardAndWait):
     def handle_reached(self) -> NamedTuple:
         return self.Reached()
 
-transitions: TransitionMap = prequal_front.transitions.copy()
+transitions = prequal_front.transitions.copy()
 transitions.update({
     prequal_front.ApproachMarker.Reached: TurnAroundMarker,
 

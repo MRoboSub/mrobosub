@@ -1,7 +1,6 @@
 from umrsm import TimedState, State, TurnToYaw
 from periodic_io import PIO, angle_error, Glyph, Gbl
-from buoy_task import SeenGlyph, search_for_glyph
-from mrobosub_msgs.srv import ObjectPositionResponse
+from mrobosub_msgs.srv import ObjectPositionResponse # type: ignore
 import rospy
 from typing import NamedTuple, Union
 
@@ -56,8 +55,8 @@ class ApproachGate(TimedState):
     def handle_if_not_timedout(self) -> Union[Unreached, SeenGateImage]:
         PIO.set_target_twist_surge(self.surge_speed)
 
-        abydos_response = PIO.query_glyph(Glyph.abydos)
-        earth_response = PIO.query_glyph(Glyph.earth)
+        abydos_response = PIO.query_glyph(Glyph.ABYDOS)
+        earth_response = PIO.query_glyph(Glyph.EARTH)
         res_exists = abydos_response.found or earth_response.found
 
         if not res_exists:
@@ -65,9 +64,9 @@ class ApproachGate(TimedState):
 
         if self.times_seen >= self.found_image_threshold:
             if abydos_response.found:
-                return SeenGateImage(position=abydos_response, glyph_seen=Glyph.abydos)
+                return SeenGateImage(position=abydos_response, glyph_seen=Glyph.ABYDOS)
             else:
-                return SeenGateImage(position=earth_response, glyph_seen=Glyph.earth)
+                return SeenGateImage(position=earth_response, glyph_seen=Glyph.EARTH)
     
         self.times_seen += 1
         return self.Unreached()
@@ -217,9 +216,9 @@ class Spin(TimedState):
     
 class SpinFinish(TimedState):
     class Unreached(NamedTuple):
-        pass
+        angle: float
     class Reached(NamedTuple):
-        pass
+        angle: float
     class TimedOut(NamedTuple):
         pass
 
@@ -234,13 +233,9 @@ class SpinFinish(TimedState):
             self.timer = rospy.get_time()
 
         if rospy.get_time() - self.timer >= 1:
-            reached = self.Reached()
-            reached.angle = target_yaw
-            return self.Reached()
+            return self.Reached(target_yaw)
 
-        unreached = self.Unreached()
-        unreached.angle = target_yaw
-        return unreached
+        return self.Unreached(target_yaw)
 
     def handle_once_timedout(self):
         return self.TimedOut()

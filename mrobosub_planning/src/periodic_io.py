@@ -1,8 +1,8 @@
 import rospy
 from std_msgs.msg import Float64, Bool
-from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, PathmarkerAngle
-from typing import Type, Mapping, Optional, Tuple
-from enum import Enum
+from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, PathmarkerAngle # type: ignore
+from typing import Dict, Type, Mapping, Optional, Tuple
+from enum import Enum, auto
 
 # TODO: where to put angle error and util repository?
 
@@ -36,11 +36,16 @@ def angle_error(setpoint, state):
 
 Namespace = Type
 
-Glyph = Enum('Glyph', [
-    'abydos', 'earth',
-    'taurus', 'serpens_caput', # 'capricornus', 'monoceros', 'sagittarius', 'orion', # abydos
-    'auriga', 'cetus', # 'centaurus', 'cancer', 'scutum', 'eridanus', # earth
-])
+class Glyph(Enum):
+    ABYDOS = auto()
+    EARTH = auto()
+    TAURUS = auto()
+    SERPENS_CAPUT = auto()
+    AURIGA = auto()
+    CETUS = auto()
+
+GlyphDetections = Dict[Glyph, ObjectPositionResponse]
+
 
 class Gbl:
     planet_seen: Optional[Glyph] = None
@@ -49,10 +54,10 @@ class Gbl:
 
     @classmethod
     def glyphs_of_planet(cls, planet: Optional[Glyph]) -> Tuple[Glyph, Glyph]:
-        if planet == Glyph.earth:
-            return (Glyph.auriga, Glyph.cetus)
+        if planet == Glyph.EARTH:
+            return (Glyph.AURIGA, Glyph.CETUS)
         else:
-            return (Glyph.taurus, Glyph.serpens_caput)
+            return (Glyph.TAURUS, Glyph.SERPENS_CAPUT)
 
     @classmethod
     def preferred_glyph(cls) -> Glyph:
@@ -185,7 +190,7 @@ class PIO:
             return obj_msg
  
     @classmethod
-    def query_all_glyphs(cls) -> Mapping[Glyph, ObjectPositionResponse]:
+    def query_all_glyphs(cls) -> GlyphDetections:
         """ query all 12 glyphs and return a dict from any found glyphs to their position. """
         results = { }
         for g in Glyph:

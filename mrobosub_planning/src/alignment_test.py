@@ -20,11 +20,12 @@ transitions: TransitionMap = {
     # AlignPathMarker.Aligned: ApproachBuoyOpen,
     # AlignPathMarker.TimedOut: Surface,
 
+    ApproachBuoyOpen.SeenGlyph: Surface,
     ApproachBuoyOpen.GlyphNotSeen: ApproachBuoyOpen, 
     ApproachBuoyOpen.TimedOut: Surface,
 
-    SeenGlyph: Surface,
-    HitBuoyFirst: Surface,
+    # SeenGlyph: Surface,
+    # HitBuoyFirst: Surface,
 
     Surface.Submerged: Surface,
     Surface.Surfaced: Stop
