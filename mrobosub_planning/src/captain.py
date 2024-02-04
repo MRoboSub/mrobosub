@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-from typing import Dict, NamedTuple, Type
-from umrsm import StateMachine, State, TransitionMap
+from umrsm import StateMachine, State
 import common
 import standard_run
 # import prequal_strafe
@@ -15,7 +14,7 @@ import traceback
 
 
 # maybe change this to something hacky like getting .transitions from the machine name module?
-transition_maps: Dict[str, TransitionMap] = {
+transition_maps = {
     'standard': standard_run.transitions,
     # 'prequal_strafe': prequal_strafe.transitions,
     'prequal_turn': prequal_turn.transitions,
@@ -31,8 +30,7 @@ if __name__ == '__main__':
     machine = StateMachine(
         machine_name,
         transition_maps[machine_name],
-        common.Start,
-        common.Stop,
+        common.Start, common.Stop
     )
     try:
         machine.run()
@@ -40,5 +38,9 @@ if __name__ == '__main__':
         print(traceback.format_exc())
         rate = rospy.Rate(50)
         for _ in range(20):
-            PIO.reset_target_twist()
+            PIO.set_target_twist_heave(0)
+            PIO.set_target_twist_yaw(0)
+            PIO.set_target_twist_surge(0)
+            PIO.set_target_twist_roll(0)
+            PIO.set_target_twist_sway(0)
             rate.sleep()

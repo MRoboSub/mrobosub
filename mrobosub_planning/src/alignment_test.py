@@ -1,28 +1,30 @@
-from gate_task import ApproachGate
-from buoy_task import ApproachBuoyOpen
-from common import Start, Submerge, Surface, Stop
-from umrsm import TransitionMap
+
+from gate_task import *
+from buoy_task import *
+from common import *
 
 
-transitions: TransitionMap = {
+transitions = {
     Start.Complete: Submerge,
 
+    Submerge.Unreached: Submerge,
     Submerge.Submerged: ApproachGate,
     Submerge.TimedOut: ApproachGate,
 
-    # ApproachGate.Unreached: AlignPathMarker,
+    ApproachGate.Unreached: AlignPathMarker,
     ApproachGate.TimedOut: Surface,
-    # FoundBuoyPathMarker: AlignPathMarker,
+    FoundBuoyPathMarker: AlignPathMarker,
 
-    # AlignPathMarker.Unaligned: AlignPathMarker,
-    # AlignPathMarker.Aligned: ApproachBuoyOpen,
-    # AlignPathMarker.TimedOut: Surface,
+    AlignPathMarker.Unaligned: AlignPathMarker,
+    AlignPathMarker.Aligned: ApproachBuoyOpen,
+    AlignPathMarker.TimedOut: Surface,
 
-    ApproachBuoyOpen.SeenGlyph: Surface,
+    ApproachBuoyOpen.GlyphNotSeen: ApproachBuoyOpen, 
     ApproachBuoyOpen.TimedOut: Surface,
 
-    # SeenGlyph: Surface,
-    # HitBuoyFirst: Surface,
+    SeenGlyph: Surface,
+    HitBuoyFirst: Surface,
 
+    Surface.Submerged: Surface,
     Surface.Surfaced: Stop
 }

@@ -1,38 +1,44 @@
 #!/usr/bin/env python
-from common import Start, Submerge, Surface, Stop
-from buoy_task import ApproachBuoyOpen, CenterHeaveGlyph, CenterYawGlyph, FindGlyph, FallBack, ContingencySubmerge, ContingencyApproach, Pause
-from umrsm import TransitionMap
+from common import *
+from gate_task import *
+from buoy_task import *
 
 
-transitions: TransitionMap = {
+transitions = {
     Start.Complete: Submerge,
 
+    Submerge.Unreached: Submerge,
     Submerge.Submerged: ApproachBuoyOpen,
     Submerge.TimedOut: ApproachBuoyOpen,
 
-    ApproachBuoyOpen.SeenGlyph: CenterHeaveGlyph,
+    SeenGlyph: CenterHeaveGlyph,
+    HitBuoyFirst: Backup,
+    HitBuoySecond: FallBack,
+
+    ApproachBuoyOpen.GlyphNotSeen: ApproachBuoyOpen, 
     ApproachBuoyOpen.TimedOut: Surface,
 
+    CenterHeaveGlyph.NotCentered: CenterHeaveGlyph,
     CenterHeaveGlyph.Centered: CenterYawGlyph,
     CenterHeaveGlyph.TimedOut: CenterYawGlyph,
 
-    CenterYawGlyph.HitBuoyFirst: FindGlyph,
-    CenterYawGlyph.HitBuoySecond: FallBack,
+    CenterYawGlyph.NotReached: CenterYawGlyph,
     CenterYawGlyph.TimedOut: Surface,
 
-    FindGlyph.SeenGlyph: CenterHeaveGlyph,
-    FindGlyph.TimedOut: Pause,
+    Backup.GlyphNotSeen: Backup,
+    Backup.TimedOut: Pause,
 
-    Pause.SeenGlyph: CenterHeaveGlyph,
     Pause.TimedOut: ContingencySubmerge,
 
-    ContingencySubmerge.SeenGlyph: CenterHeaveGlyph,
+    ContingencySubmerge.Submerging: ContingencySubmerge,
     ContingencySubmerge.Submerged: ContingencyApproach,
 
-    ContingencyApproach.HitBuoySecond: FallBack,
+    ContingencyApproach.Approaching: ContingencyApproach,
     ContingencyApproach.TimedOut: Surface,
 
+    FallBack.NotReached: FallBack,
     FallBack.TimedOut: Surface,
 
+    Surface.Submerged: Surface,
     Surface.Surfaced: Stop
 }
