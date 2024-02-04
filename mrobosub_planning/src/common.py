@@ -1,57 +1,49 @@
-from umrsm import *
+from typing import Union
+from umrsm import State, NamedTuple
+from abstract_states import TimedState
 from periodic_io import PIO
 import rospy
 
 class Start(State):
-    Complete = Outcome.make("Complete")
+    class Complete(NamedTuple): pass
     
-    def initialize(self, prev_outcome: Outcome) -> None:
-        pass
-    
-    def handle(self) -> Outcome:
+    def handle(self):
         return self.Complete()
 
 class Submerge(TimedState):
-    Unreached = Outcome.make("Unreached")
-    Submerged = Outcome.make("Submerged")
-    TimedOut = Outcome.make("TimedOut")
+    class Submerged(NamedTuple): pass
+    class TimedOut(NamedTuple): pass
     
-    target_heave: Param[float]
-    heave_threshold: Param[float]
-    timeout: Param[int]
-    yaw_threshold: Param[float]
-    target_yaw: Param[float]
+    target_heave: float = 0.35
+    heave_threshold: float = 0.1
+    timeout: float = 15
+    yaw_threshold: float = 0
+    target_yaw: float = 2
     
-    def handle_if_not_timedout(self) -> Outcome:
+    def handle_if_not_timedout(self) -> Union[Submerged, None]:
         PIO.set_target_pose_heave(self.target_heave)
         PIO.set_target_pose_yaw(self.target_yaw)
 
         if (PIO.is_heave_within_threshold(self.heave_threshold) and 
                 PIO.is_yaw_within_threshold(self.yaw_threshold)):
             return self.Submerged()
-        else:
-            return self.Unreached()
+        return None
+
+    def handle_once_timedout(self) -> TimedOut:
+        return self.TimedOut()
 
 class Stop(State):
-    Surfaced = Outcome.make("Surface")
-    Submerged = Outcome.make("Submerged")
+    class Surfaced(NamedTuple): pass
 
-    def initialize(self, prev_outcome: Outcome) -> None:
-        PIO.set_target_twist_heave(0)
-        PIO.set_target_twist_yaw(0)
-        PIO.set_target_twist_surge(0)
-        PIO.set_target_twist_roll(0)
-        PIO.set_target_twist_sway(0)
+    def __init__(self, prev_outcome: NamedTuple):
+        super().__init__(prev_outcome)
+        PIO.reset_target_twist()
         self.rate = rospy.Rate(50)
     
-    def handle(self)->Outcome:
+    def handle(self) -> None:
         for _ in range(20):
-            PIO.set_target_twist_heave(0)
-            PIO.set_target_twist_yaw(0)
-            PIO.set_target_twist_surge(0)
-            PIO.set_target_twist_roll(0)
-            PIO.set_target_twist_sway(0)
+            PIO.reset_target_twist()
             self.rate.sleep()
-        return self.Submerged()
+        return None
 
 Surface = Stop
