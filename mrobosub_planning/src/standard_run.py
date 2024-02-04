@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from common import Start, Submerge, Surface, Stop
-from gate_task import AlignGate, ApproachGate, Spin, ApproachGateImage, SpinFinish
+from gate_task import AlignGate, AlignPathMarker, ApproachGate, Spin, ApproachGateImage, SpinFinish
 from buoy_task import ApproachBuoyOpen, CenterHeaveGlyph, CenterYawGlyph, FallBack, FindGlyph, PassBuoy, Pause, ContingencyApproach, ContingencySubmerge, Ascend
 from umrsm import TransitionMap
 
@@ -19,6 +19,10 @@ transitions: TransitionMap = {
 
     ApproachGateImage.GoneThroughGate: Spin,
     ApproachGateImage.TimedOut: Surface,
+
+    # AlignPathMarker.SeenGlyph: CenterHeaveGlyph,
+    # AlignPathMarker.Aligned: ApproachBuoyOpen,
+    # AlignPathMarker.TimedOut: ApproachBuoyOpen,
 
     Spin.TimedOut: SpinFinish,
 

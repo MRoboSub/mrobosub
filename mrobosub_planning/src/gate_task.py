@@ -1,5 +1,6 @@
 from abstract_states import TimedState
 from periodic_io import PIO, Glyph, Gbl
+from buoy_task import search_for_glyph, SeenGlyphType
 from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
 import rospy
 from typing import NamedTuple, Union
@@ -79,6 +80,9 @@ class ApproachGateImage(TimedState):
     class GoneThroughGate(NamedTuple):
         planet: Glyph
 
+    class FoundBuoyPathMarker(NamedTuple):
+        angle: float
+
     class TimedOut(NamedTuple):
         pass
 
@@ -111,12 +115,50 @@ class ApproachGateImage(TimedState):
 
         # pm_angle = self.query_pathmarker()
         # if pm_angle is not None:
-        #    return FoundBuoyPathMarker(angle=pm_angle)
+        #    return self.FoundBuoyPathMarker(angle=pm_angle)
 
         PIO.set_target_pose_yaw(self.last_target_yaw)
         return None
 
     def handle_once_timedout(self) -> TimedOut:
+        return self.TimedOut()
+
+
+class AlignPathMarker(TimedState):
+    class SeenGlyph(SeenGlyphType):
+        pass
+    class Aligned(NamedTuple):
+        pass
+    class TimedOut(NamedTuple):
+        pass
+
+    yaw_threshold: float = 2.0
+    timeout: int = 10
+
+    def __init__(self, prev_outcome: NamedTuple) -> None:
+        super().__init__(prev_outcome)
+        if not isinstance(prev_outcome, ApproachGateImage.FoundBuoyPathMarker):
+            raise TypeError(f"Expected type FoundBuoyPathMarker, received {prev_outcome}")
+        self.last_known_angle = prev_outcome.angle
+
+
+    def handle_if_not_timedout(self) -> Union[SeenGlyph, Aligned, TimedOut, None]:
+        pm_resp = PIO.query_pathmarker()
+        if pm_resp is not None:
+            self.last_known_angle = pm_resp
+
+        seen_glyph_outcome = search_for_glyph(Gbl.preferred_glyph())
+
+        PIO.set_target_pose_yaw(self.last_known_angle)
+
+        if seen_glyph_outcome:
+            return self.SeenGlyph(*seen_glyph_outcome)
+        elif PIO.is_yaw_within_threshold(self.yaw_threshold):
+            return self.Aligned()
+        else:
+            return None
+
+    def handle_once_timedout(self) -> NamedTuple:
         return self.TimedOut()
 
 
