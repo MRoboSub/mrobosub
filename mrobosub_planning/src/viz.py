@@ -1,18 +1,14 @@
 from umrsm import *
 import graphviz
 
-from common import *
-from prequal_front import *
-from prequal_turn import *
 import standard_run
-import prequal_turn
 
 from typing import Mapping, Type
 import os
 
 from pathlib import Path
 
-def generate_graph(name: str, transitions: Mapping[Type[Outcome], Type[State]]) -> graphviz.Digraph:
+def generate_graph(name: str, transitions: Mapping[Type[NamedTuple], Type[State]]) -> graphviz.Digraph:
     dot = graphviz.Digraph(name)
     dot.attr('graph', diredgeconstraints='true')
 

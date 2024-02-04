@@ -6,33 +6,27 @@ from abc import abstractmethod
 from typing import (
     Dict,
     Mapping,
+    Optional,
     Type,
     Tuple,
 )
 import rospy
 from std_msgs.msg import String
 from std_srvs.srv import Trigger, TriggerRequest
-from periodic_io import PIO
 from typing import NamedTuple
 
 STATE_TOPIC = "captain/current_state"
 SOFT_STOP_SERVICE = "captain/soft_stop"
 
 __all__ = (
-    "Outcome",
+    "NamedTuple",
     "TransitionMap",
     "State",
-    "TimedState",
-    "ForwardAndWait",
-    "TurnToYaw",
     "StateMachine",
 )
 
 
-Outcome = NamedTuple
-
-
-class InitTransition(Outcome):
+class InitTransition(NamedTuple):
     pass
 
 
@@ -44,215 +38,15 @@ class State:
             set as an instance variable.
     """
 
-    def __init__(self, prev_outcome: Outcome):
+    def __init__(self, prev_outcome: NamedTuple):
         self.prev_outcome = prev_outcome
 
     @abstractmethod
-    def handle(self) -> Outcome:
+    def handle(self) -> Optional[NamedTuple]:
         """Contains the logic to be run for a particular state.
 
         Is called repeatedly for each iteration of the state, including the first one.
         """
-        pass
-
-
-class TimedState(State):
-    """ base class for States which can be timed out. 
-
-        expects an outcome called TimedOut and parameter named timeout.
-        override handle_once_timedout iff cleanup is needed after timeout
-    """
-
-    def __init__(self, prev_outcome: Outcome):
-        super().__init__(prev_outcome)
-        self.start_time = rospy.get_time()
-
-    def handle(self) -> Outcome:
-        if rospy.get_time() - self.start_time >= self.timeout:
-            return self.handle_once_timedout()
-        return self.handle_if_not_timedout()
-
-    @abstractmethod
-    def handle_if_not_timedout(self) -> Outcome:
-        pass
-
-    @abstractmethod
-    def handle_once_timedout(self) -> Outcome:
-        pass
-
-    @property
-    @abstractmethod
-    def timeout(self) -> float:
-        pass
-
-
-class ForwardAndWait(State):
-    """
-    Must specify the following outcomes:
-    Unreached
-    Reached
-
-    Must specify the following parameters:
-    target_heave: float
-    target_surge_time: float
-    wait_time: float
-    surge_speed: float
-    """
-
-    def __init__(self, prev_outcome: Outcome):
-        super().__init__(prev_outcome)
-        self.start_time = rospy.get_time()
-        self.waiting = False
-
-    def handle(self) -> Outcome:
-        if not self.waiting:
-            PIO.set_target_twist_surge(self.surge_speed)
-            PIO.set_target_pose_heave(self.target_heave)
-
-            if rospy.get_time() - self.start_time >= self.target_surge_time:
-                PIO.set_target_twist_surge(0)
-                self.waiting = True
-                self.start_time = rospy.get_time()
-        else:
-            PIO.set_target_twist_surge(0)
-
-            if rospy.get_time() - self.start_time >= self.wait_time:
-                return self.handle_reached()
-
-        return self.handle_unreached()
-
-    @abstractmethod
-    def handle_reached(self) -> Outcome:
-        pass
-
-    @abstractmethod
-    def handle_unreached(self) -> Outcome:
-        pass
-
-    @property
-    @abstractmethod
-    def target_heave(self) -> float:
-        pass
-
-    @property
-    @abstractmethod
-    def target_surge_time(self) -> float:
-        pass
-
-    @property
-    @abstractmethod
-    def wait_time(self) -> float:
-        pass
-
-    @property
-    @abstractmethod
-    def surge_speed(self) -> float:
-        pass
-
-
-class DoubleTimedState(State):
-    """
-    Must specify the following outcomes:
-    Unreached
-    Reached
-
-    Must specify the following parameters:
-    phase_one_time: float
-    phase_two_time: float
-    """
-
-    def __init__(self, prev_outcome: Outcome):
-        super().__init__(prev_outcome)
-        self.start_time = rospy.get_time()
-        self.timed_out_first = False
-
-    def handle(self) -> Outcome:
-        if not self.timed_out_first:
-            outcome = self.handle_first_phase()
-            if rospy.get_time() - self.start_time >= self.phase_one_time:
-                self.timed_out_first = True
-                self.start_time = rospy.get_time()
-        else:
-            outcome = self.handle_second_phase()
-            if rospy.get_time() - self.start_time >= self.phase_two_time:
-                outcome = self.handle_once_timedout()
-
-        return outcome
-
-    @abstractmethod
-    def handle_first_phase(self) -> Outcome:
-        pass
-
-    @abstractmethod
-    def handle_second_phase(self) -> Outcome:
-        pass
-
-    @abstractmethod
-    def handle_once_timedout(self) -> Outcome:
-        pass
-
-    @property
-    @abstractmethod
-    def phase_one_time(self) -> float:
-        pass
-
-    @property
-    @abstractmethod
-    def phase_two_time(self) -> float:
-        pass
-
-
-class TurnToYaw(TimedState):
-    """
-    Must specify following outcomes:
-    Unreached
-    Reached
-    TimedOut
-
-    Must specify following parameters:
-    target_yaw: float
-    yaw_threshold: float
-    settle_time: float
-    timeout: float
-    """
-
-    def handle_if_not_timedout(self) -> Outcome:
-        PIO.set_target_pose_yaw(self.target_yaw)
-
-        if not PIO.is_yaw_within_threshold(self.yaw_threshold):
-            self.timer = rospy.get_time()
-
-        if rospy.get_time() - self.timer >= self.settle_time:
-            return self.handle_reached()
-
-        return self.handle_unreached()
-
-    @property
-    @abstractmethod
-    def target_yaw(self) -> float:
-        pass
-
-    @property
-    @abstractmethod
-    def yaw_threshold(self) -> float:
-        pass
-
-    @property
-    @abstractmethod
-    def settle_time(self) -> float:
-        pass
-
-    @property
-    @abstractmethod
-    def timeout(self) -> float:
-        pass
-
-    @abstractmethod
-    def handle_reached(self) -> Outcome:
-        pass
-
-    @abstractmethod
-    def handle_unreached(self) -> Outcome:
         pass
 
 
@@ -262,7 +56,7 @@ class StateMachine:
     def __init__(
         self,
         name: str,
-        transitions: Mapping[Type[Outcome], Type[State]],
+        transitions: Mapping[Type[NamedTuple], Type[State]],
         StartState: Type[State],
         StopState: Type[State],
     ):
@@ -319,7 +113,7 @@ class StateMachine:
         self.stop_signal_recvd = True
         return True, type(self.current_state).__qualname__
 
-    def run(self) -> Outcome:
+    def run(self) -> Optional[NamedTuple]:
         """ Performs a run, beginning with the StartState and ending when it reaches StopState.
             
             Returns the Outcome from calling handle() on StopState.
@@ -334,25 +128,30 @@ class StateMachine:
         return self.current_state.handle()
 
     def run_once(self, state_topic_pub: rospy.Publisher):
-        """ Runs one iteration of the state machine
-        """
+        """Runs one iteration of the state machine"""
         state_topic_pub.publish(type(self.current_state).__qualname__)
+
         outcome = self.current_state.handle()
-        outcome_type = type(outcome) if isinstance(outcome, Outcome) else outcome
+        if outcome is None:
+            return
+        outcome_type = type(outcome)
         outcome_name = outcome_type.__qualname__
+
         if self.stop_signal_recvd:
             NextState = self.StopState
             outcome_name = "!! Abort !!"
         else:
             NextState = self.transitions[outcome_type]
-        rospy.logdebug(
-            f"{type(self.current_state).__qualname__} -> {NextState.__qualname__}"
-        )
-        if type(self.current_state) != NextState:
-            rospy.loginfo(
-                f"transition {type(self.current_state).__qualname__} --[{outcome_name}]--> {NextState.__qualname__}"
+
+        if type(self.current_state) == NextState:
+            rospy.logdebug(
+                f"{type(self.current_state).__qualname__} contains a type which returns itself!"
             )
-            self.current_state = NextState(outcome)  # handle stop state
+
+        rospy.loginfo(
+            f"transition {type(self.current_state).__qualname__} --[{outcome_name}]--> {NextState.__qualname__}"
+        )
+        self.current_state = NextState(outcome)  # handle stop state
 
 
-TransitionMap = Dict[Type[Outcome], Type[State]]
+TransitionMap = Dict[Type[NamedTuple], Type[State]]
