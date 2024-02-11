@@ -45,6 +45,9 @@ class ApproachBuoyOpen(TimedState):
         PIO.set_target_twist_surge(self.surge_speed)
 
         seen_glyph_outcome = search_for_glyph(Gbl.preferred_glyph())
+        if seen_glyph_outcome is not None:
+            print(seen_glyph_outcome.glyph)
+        # hit = PIO.buoy_collision
 
         if seen_glyph_outcome is not None:
             # possible change: add some counter to increase the likelihood that we get our preferred glyph?
@@ -125,7 +128,7 @@ class CenterYawGlyph(TimedState):
             raise TypeError(type(prev_outcome))
         self.hit_time_thold = 2
         self.bbox_area = prev_outcome.last_data.x_position
-        self.frames_unseen = 0
+        self.unseen_time = rospy.get_time()
 
         self.glyph = prev_outcome.glyph
         self.angle_diff = prev_outcome.last_data.x_theta
@@ -139,23 +142,26 @@ class CenterYawGlyph(TimedState):
         if query_res.found:
             self.angle_diff = query_res.x_theta
             self.bbox_area = query_res.x_position
-            self.frames_unseen = 0
-        else:
-            self.frames_unseen += 1
+            self.unseen_time = rospy.get_time()
 
         PIO.set_target_pose_heave(self.target_heave)
         PIO.set_target_twist_surge(self.surge_speed)
 
         # Use setpoint for yaw angle
-        PIO.set_target_pose_yaw(PIO.Pose.yaw + self.angle_diff)
+        if query_res.found:
+            PIO.set_target_pose_yaw(PIO.Pose.yaw + self.angle_diff/2 - 10.0)
+            # print(PIO.Pose.yaw + self.angle_diff/2)
         
         # hit = PIO.buoy_collision and \
         #     (self.bbox_area >= self.bbox_area_thold or self.frames_unseen >= self.unseen_thold)
         
         if (
-            (self.bbox_area >= self.bbox_area_thold or self.frames_unseen >= self.unseen_thold)
+            # (self.bbox_area >= self.bbox_area_thold or 
+            rospy.get_time() - self.unseen_time >= self.unseen_thold
             and self.hit_start_time is None
         ):
+            if(self.bbox_area >= self.bbox_area_thold): print(f"BBOX AT {self.bbox_area}")
+            if(rospy.get_time() - self.unseen_time >= self.unseen_thold): print(f"UNSEEN FOR {self.unseen_thold}")
             self.hit_start_time = rospy.get_time()
             
         if self.hit_start_time is not None and rospy.get_time() - self.hit_start_time >= self.hit_time_thold:
@@ -294,7 +300,7 @@ class FindGlyph(TimedState):
         pass
 
     timeout: float = 7.0
-    speed: float = 0.2
+    speed: float = 0.15
 
     def handle_if_not_timedout(self) -> Union[SeenGlyph, None]:
         PIO.set_target_twist_surge(-self.speed)
@@ -331,6 +337,8 @@ class Pause(TimedState):
     def handle_once_timedout(self):
         return self.TimedOut()
 
+
+        return self.Pausing
 
 class ContingencySubmerge(State):
     class SeenGlyph(SeenGlyphType):

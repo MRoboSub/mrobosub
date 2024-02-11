@@ -15,7 +15,7 @@ centerheaveglyph:
 centeryawglyph:
   defaults:
     bbox_area_thold: 0.05
-    unseen_thold: 10
+    unseen_thold: 6
     surge_speed: 0.2
     yaw_factor: 0.004
     timeout: 10
@@ -41,7 +41,7 @@ passbouy:
 
 backup:
   defaults:
-    timeout: 7
+    timeout: 12
 
 pause:
   defaults:
