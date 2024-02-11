@@ -1,11 +1,9 @@
 from umrsm import Outcome, TimedState, State, Param
-from periodic_io import PIO, Gbl, angle_error, Glyph
+from periodic_io import PIO, Gbl
 from mrobosub_msgs.srv import ObjectPositionResponse
 import math 
-from typing import Mapping
 
-
-class CenterYawGlyph(TimedState):
+class CenterToBin(TimedState):
     NotReached = Outcome.make('NotReached')
     TimedOut = Outcome.make('TimedOut')
     Reached = Outcome.make('Reached')
@@ -13,7 +11,7 @@ class CenterYawGlyph(TimedState):
     surge_speed: Param[float]
     yaw_factor: Param[float]
     timeout: Param[int]
-    max_pixel_dist = 500 #
+    max_pixel_dist = 500.0 #maximum pixel distance we could see sqrt(maxPixelX**2+maxPixelY**2)
     centered_pixel_dist_thresh = 20 #threshold distance in pixels within which we say we have centered appropriately
 
     def initialize(self):
@@ -32,7 +30,7 @@ class CenterYawGlyph(TimedState):
         dist_to_bin = math.sqrt(bin_camera_position.y**2 + bin_camera_position.x**2)
 
 
-        PIO.set_target_twist_surge(self.surge_speed)
+        PIO.set_target_twist_surge(self.surge_speed*dist_to_bin/self.max_pixel_dist)
 
         # Use setpoint for yaw angle
         PIO.set_target_twist_yaw(self.angle_to_bin * self.yaw_factor)
@@ -40,6 +38,7 @@ class CenterYawGlyph(TimedState):
 
         
         if dist_to_bin < self.centered_pixel_dist_thresh:
+            PIO.set_target_twist_surge(0)
             return self.Reached()
         else:
             return self.NotReached()
