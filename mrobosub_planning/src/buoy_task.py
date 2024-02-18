@@ -46,7 +46,7 @@ class ApproachBuoyOpen(TimedState):
 
         seen_glyph_outcome = search_for_glyph(Gbl.preferred_glyph())
         if seen_glyph_outcome is not None:
-            print(seen_glyph_outcome[1])
+            print(seen_glyph_outcome.glyph)
         # hit = PIO.buoy_collision
 
         if seen_glyph_outcome is not None:
@@ -137,7 +137,7 @@ class CenterYawGlyph(TimedState):
         self.hit_start_time = None
 
     def handle_if_not_timedout(self) -> Union[HitBuoyFirst, HitBuoySecond, None]:
-        # print(self.glyph)
+        print(self.glyph)
         query_res = PIO.query_glyph(self.glyph)
         if query_res.found:
             self.angle_diff = query_res.x_theta
@@ -337,6 +337,8 @@ class Pause(TimedState):
     def handle_once_timedout(self):
         return self.TimedOut()
 
+
+        return self.Pausing
 
 class ContingencySubmerge(State):
     class SeenGlyph(SeenGlyphType):
