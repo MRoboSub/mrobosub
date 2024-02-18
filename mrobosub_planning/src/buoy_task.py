@@ -173,7 +173,7 @@ class CenterYawGlyph(TimedState):
                 return self.HitBuoySecond()
         return None
 
-    def handle_once_timedout(self):
+    def handle_once_timedout(self) -> TimedOut:
         PIO.set_target_twist_surge(0)
         PIO.set_target_twist_yaw(0)
         return self.TimedOut()

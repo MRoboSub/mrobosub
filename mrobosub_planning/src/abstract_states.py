@@ -26,7 +26,7 @@ class TimedState(State):
         pass
 
     @abstractmethod
-    def handle_once_timedout(self) -> Optional[NamedTuple]:
+    def handle_once_timedout(self) -> NamedTuple:
         pass
 
     @property

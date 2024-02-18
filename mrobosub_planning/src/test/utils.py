@@ -83,12 +83,11 @@ class TargetReader:
         setattr(self, f'target_twist_{key}', msg.data)
         # setattr(self, f'target_pose_{key}', None)
 
-
-if __name__ == '__main__':
+def main():
     rospy.init_node('test_sim')
     started = False
     def set_started(msg: String):
-        global started, sub
+        nonlocal started, sub
         if started:
             return
         print(msg.data)
@@ -124,15 +123,19 @@ if __name__ == '__main__':
     seen.confidence = 1.
     ml_srvs.set_seen_glyphs({Glyph.EARTH: seen})
 
-    for i in range(20*8):
+    for i in range(20*5):
         sleep(0.05)
 
     ml_srvs.set_seen_glyphs({})
 
-    for i in range(20*5):
+    for i in range(20*8):
         sleep(0.05)
 
     ml_srvs.set_seen_glyphs({Glyph.ABYDOS: seen})
 
     for i in range(20*60):
         sleep(0.05)
+
+
+if __name__ == '__main__':
+    main()

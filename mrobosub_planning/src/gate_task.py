@@ -43,10 +43,10 @@ class ApproachGate(TimedState):
 
     timeout: float = 26.0
     surge_speed: float = 0.2
+    found_image_threshold = 50
 
     def __init__(self, prev_outcome: NamedTuple):
         super().__init__(prev_outcome)
-        self.found_image_threshold = 50
         self.times_seen = 0
 
     def handle_if_not_timedout(self) -> Union[SeenGateImage, None]:
@@ -85,7 +85,7 @@ class ApproachGateImage(TimedState):
         pass
 
     timeout: float = 25.0
-    lost_image_threshold: int = 15
+    lost_image_threshold: int = 300
     yaw_threshold: float = 2.0
 
     def __init__(self, prev_outcome: NamedTuple) -> None:
@@ -94,7 +94,6 @@ class ApproachGateImage(TimedState):
             raise TypeError(f"Expected type SeenGateImageType, received {prev_outcome}")
         Gbl.planet_seen = prev_outcome.glyph_seen
         self.last_target_yaw = PIO.Pose.yaw + prev_outcome.position.x_theta
-        self.lost_image_threshold = 300
         self.times_not_seen = 0
 
     def handle_if_not_timedout(self) -> Union[GoneThroughGate, None]:
@@ -156,7 +155,7 @@ class AlignPathMarker(TimedState):
         else:
             return None
 
-    def handle_once_timedout(self) -> NamedTuple:
+    def handle_once_timedout(self) -> TimedOut:
         return self.TimedOut()
 
 
@@ -190,11 +189,18 @@ class SpinFinish(TimedState):
     yaw_threshold: float = 2.0
     timeout: float = 30.0
 
+    def __init__(self, prev_outcome: NamedTuple):
+        super().__init__(prev_outcome)
+        self.timer = rospy.get_time()
+
     def handle_if_not_timedout(self) -> Union[Reached, None]:
         target_yaw = 0
         PIO.set_target_pose_yaw(target_yaw)
 
-        if PIO.is_yaw_within_threshold(self.yaw_threshold):
+        if not PIO.is_yaw_within_threshold(self.yaw_threshold):
+            self.timer = rospy.get_time()
+
+        if rospy.get_time() - self.timer >= 1:
             return self.Reached(target_yaw)
         return None
 
