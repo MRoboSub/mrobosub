@@ -8,7 +8,7 @@ import os
 
 from pathlib import Path
 
-def generate_graph(name: str, transitions: Mapping[Type[NamedTuple], Type[State]]) -> graphviz.Digraph:
+def generate_graph(name: str, transitions: TransitionMap) -> graphviz.Digraph:
     dot = graphviz.Digraph(name)
     dot.attr('graph', diredgeconstraints='true')
 
