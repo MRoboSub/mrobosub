@@ -30,11 +30,17 @@ def generate_graph(name: str, transitions: TransitionMap) -> graphviz.Digraph:
 def main():
     parser = argparse.ArgumentParser(description="Create a state machine visualization")
     parser.add_argument("map_name", type=str, help="The name of the transition map from captain to be visualized")
-    parser.add_argument("--output", "-o", type=Path, default='machine.dot', required=False, help="The location to save the visualization ('.dot' format)")
+    parser.add_argument("--output", "-o", type=Path, default="machine", help="The location to save the visualization")
+    parser.add_argument("--save-src", "-s", action="store_true")
+    parser.add_argument("--type", "-t", type=str, default="png")
+
     args = parser.parse_args()
 
     graph = generate_graph('Standard Run', transition_maps[args.map_name])
-    graph.save(args.output)
+    if args.save_src:
+        graph.save(f'{args.output}.dot')
+    else:
+        graph.render(args.output, format=args.type, cleanup=True)
 
 if __name__ == "__main__":
     import argparse
