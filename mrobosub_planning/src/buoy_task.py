@@ -338,8 +338,6 @@ class Pause(TimedState):
         return self.TimedOut()
 
 
-        return self.Pausing
-
 class ContingencySubmerge(State):
     class SeenGlyph(SeenGlyphType):
         pass

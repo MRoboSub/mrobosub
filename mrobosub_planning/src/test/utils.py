@@ -90,12 +90,12 @@ def main():
     def set_started(msg: String):
         nonlocal started, sub
         if started:
-            print(msg.data)
             return
         print(msg.data)
         started = True
+        if sub is not None:
+            sub.unregister()
         del sub
-        gc.collect()
     sub = rospy.Subscriber('/captain/current_state', String, set_started)
 
     while not started:
