@@ -1,7 +1,7 @@
 from umrsm import *
 import graphviz
 
-import standard_run
+from captain import transition_maps
 
 from typing import Mapping, Type
 import os
@@ -27,8 +27,15 @@ def generate_graph(name: str, transitions: TransitionMap) -> graphviz.Digraph:
 
     return dot
 
-graph = generate_graph('Standard Run', standard_run.transitions)
-graph.save(os.getcwd() + '/machine.dot')
+def main():
+    parser = argparse.ArgumentParser(description="Create a state machine visualization")
+    parser.add_argument("map_name", type=str, help="The name of the transition map from captain to be visualized")
+    parser.add_argument("--output", "-o", type=Path, default='machine.dot', required=False, help="The location to save the visualization ('.dot' format)")
+    args = parser.parse_args()
 
-# graph = generate_graph('Prequal', prequal_turn.transitions)
-# graph.save('/root/catkin_ws/src/mrobosub/prequal_turn.dot')
+    graph = generate_graph('Standard Run', transition_maps[args.map_name])
+    graph.save(args.output)
+
+if __name__ == "__main__":
+    import argparse
+    main()
