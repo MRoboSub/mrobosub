@@ -50,13 +50,16 @@ class State:
         pass
 
 
+TransitionMap = Dict[Type[NamedTuple], Type[State]]
+
+
 class StateMachine:
     """ The main interface for running a system. """
 
     def __init__(
         self,
         name: str,
-        transitions: Mapping[Type[NamedTuple], Type[State]],
+        transitions: TransitionMap,
         StartState: Type[State],
         StopState: Type[State],
     ):
@@ -121,6 +124,3 @@ class StateMachine:
             f"transition {type(self.current_state).__qualname__} --[{outcome_name}]--> {NextState.__qualname__}"
         )
         self.current_state = NextState(outcome)  # handle stop state
-
-
-TransitionMap = Dict[Type[NamedTuple], Type[State]]
