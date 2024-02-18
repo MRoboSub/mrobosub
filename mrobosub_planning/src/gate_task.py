@@ -202,6 +202,7 @@ class SpinFinish(TimedState):
 
         if rospy.get_time() - self.timer >= 1:
             return self.Reached(target_yaw)
+
         return None
 
     def handle_once_timedout(self) -> TimedOut:

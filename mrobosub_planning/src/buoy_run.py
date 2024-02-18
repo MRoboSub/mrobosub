@@ -25,6 +25,7 @@ transitions: TransitionMap = {
 
     Pause.SeenGlyph: CenterHeaveGlyph,
     Pause.TimedOut: ContingencySubmerge,
+    Pause.Pausing: Pause,
 
     ContingencySubmerge.SeenGlyph: CenterHeaveGlyph,
     ContingencySubmerge.Submerged: ContingencyApproach,
