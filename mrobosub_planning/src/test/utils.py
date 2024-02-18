@@ -21,7 +21,7 @@ class Glyph(Enum):
 
 class ObjectPositionServiceMock:
     def __init__(self) -> None:
-        self._visible_glyphs = {}
+        self._visible_glyphs: Dict[Glyph, ObjectPositionResponse] = {}
         mk_service = lambda name, glyph: rospy.Service(f'object_position/{name}', ObjectPosition, lambda _msg : self._handle_obj_request(glyph))
         self.services = {glyph: mk_service(glyph.name.lower(), glyph) for glyph in Glyph}
 
@@ -86,9 +86,11 @@ class TargetReader:
 def main():
     rospy.init_node('test_sim')
     started = False
+    sub = None
     def set_started(msg: String):
         nonlocal started, sub
         if started:
+            print(msg.data)
             return
         print(msg.data)
         started = True

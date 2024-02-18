@@ -5,18 +5,6 @@ from typing import Dict, Type, Mapping, Optional, Tuple
 from enum import Enum, auto
 
 
-def _yaw_callback(msg : Float64) -> None:
-    PIO.Pose.yaw = msg.data
-
-def _heave_callback(msg : Float64) -> None:
-    PIO.Pose.heave = msg.data
-
-def _roll_callback(msg : Float64) -> None:
-    PIO.Pose.roll = msg.data
-
-def _collision_callback(msg : Bool) -> None:
-    PIO.buoy_collision = msg.data
-
 def angle_error(setpoint, state):
         return (setpoint - state + 180) % 360 - 180
 
@@ -186,12 +174,28 @@ class PIO:
         return results
 
 # private:
+    class Callbacks:
+        @staticmethod
+        def yaw_callback(msg : Float64) -> None:
+            PIO.Pose.yaw = msg.data
+
+        @staticmethod
+        def heave_callback(msg : Float64) -> None:
+            PIO.Pose.heave = msg.data
+
+        @staticmethod
+        def roll_callback(msg : Float64) -> None:
+            PIO.Pose.roll = msg.data
+
+        @staticmethod
+        def collision_callback(msg : Bool) -> None:
+            PIO.buoy_collision = msg.data
 
     # Subscribers
-    rospy.Subscriber('/pose/yaw', Float64, _yaw_callback)
-    rospy.Subscriber('/pose/heave', Float64, _heave_callback)
-    rospy.Subscriber('/pose/roll', Float64, _roll_callback)
-    rospy.Subscriber('/collision/collision', Bool, _collision_callback)
+    rospy.Subscriber('/pose/yaw', Float64, Callbacks.yaw_callback)
+    rospy.Subscriber('/pose/heave', Float64, Callbacks.heave_callback)
+    rospy.Subscriber('/pose/roll', Float64, Callbacks.roll_callback)
+    rospy.Subscriber('/collision/collision', Bool, Callbacks.collision_callback)
 
 
     # Publishers
