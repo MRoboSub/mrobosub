@@ -19,6 +19,27 @@ $ docker compose up -d
 $ docker compose exec mrobosub bash
 ```
 
+### RQT
+
+To run RQT in the Docker, you need to setup an XServer.
+
+#### Windows
+
+1. Download and install [VcXsrv](https://sourceforge.net/projects/vcxsrv/)
+2. The program to run is called "XLaunch." When running it, make sure to check "Disable access control"
+
+#### Mac
+
+Instructions based on [this GitHub Gist comment](https://gist.github.com/cschiewek/246a244ba23da8b9f0e7b11a68bf3285?permalink_comment_id=3477013#gistcomment-3477013)
+
+1. Download and install [XQuartz](https://www.xquartz.org/)
+2. Run XQuartz and open Settings. In the security tab, enable "Allow connections from network clients". Then Restart XQuartz
+3. Run the following commands in the XQuartz terminal. 
+You may need to run these commands each time you start XQuartz
+
+        export DISPLAY=:0
+        /opt/X11/bin/xhost +
+
 ## Package Structure
 
 - `mrobosub` - The metapackage which depends on all other packages. Only need to modify this when creating a new package
