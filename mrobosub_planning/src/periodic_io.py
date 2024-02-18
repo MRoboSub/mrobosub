@@ -1,6 +1,6 @@
 import rospy
 from std_msgs.msg import Float64, Bool
-from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, PathmarkerAngle
+from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, PathmarkerAngle, BinCamPos
 from typing import Type, Mapping, Optional, Tuple
 from enum import Enum
 
@@ -91,9 +91,29 @@ class PIO:
     
     buoy_collision = False
 
+
     # @classmethod
     # def heading_within_threshold(cls, threshold):
     #     return angle_error_abs(PIO.heading_value, PIO.current_heading) <= threshold
+
+    @classmethod
+    def query_BinCamPos(cls) -> Optional[float]:
+        """ Request the x, y position on the camera of the bin, and found which is True if we have data
+
+        Returns: 
+            x, y position on the camera of the bin and found
+            None otherwise. 
+        """
+        
+        try:
+            resp = cls._bin_cam_pos_srv()
+        except:
+            return None
+        if(resp.found):
+            return resp
+        else:
+            return None
+
 
     @classmethod
     def is_yaw_within_threshold(cls, threshold):
@@ -207,6 +227,7 @@ class PIO:
     
     # Services
     _pathmarker_srv = rospy.ServiceProxy('pathmarker/angle', PathmarkerAngle, persistent=True)
+    _bin_cam_pos_srv = rospy.ServiceProxy('bin_cam_pos', BinCamPos, persistent = True)
     _object_position_srvs = {}
     for g in Glyph:
         _object_position_srvs[g.name] = rospy.ServiceProxy(f'/object_position/{g.name}', ObjectPosition, persistent=True)

@@ -5,6 +5,7 @@ import standard_run
 # import prequal_strafe
 import prequal_turn
 import buoy_run
+import bin_transitions
 import alignment_test
 import spin_test
 import rospy
@@ -15,6 +16,7 @@ from periodic_io import PIO
 # maybe change this to something hacky like getting .transitions from the machine name module?
 transition_maps = {
     'standard': standard_run.transitions,
+    'bin_test': bin_transitions.transitions,
     # 'prequal_strafe': prequal_strafe.transitions,
     'prequal_turn': prequal_turn.transitions,
     'buoy': buoy_run.transitions,

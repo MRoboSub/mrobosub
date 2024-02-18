@@ -3,45 +3,52 @@ from periodic_io import PIO, Gbl
 from mrobosub_msgs.srv import ObjectPositionResponse
 import math 
 
-class CenterToBin(TimedState):
+surge_speed = 0.2 #max surge speed
+yaw_factor = 0.004
+timeout = 40
+max_pixel_dist = 500.0 #maximum pixel distance we could see sqrt(maxPixelX**2+maxPixelY**2)
+centered_pixel_dist_thresh = 50 #threshold distance in pixels within which we say we have centered appropriatclass CenterToBinFromFar(TimedState):
+
+class CenterToBinFromFar(TimedState):
     NotReached = Outcome.make('NotReached')
     TimedOut = Outcome.make('TimedOut')
     Reached = Outcome.make('Reached')
+    
 
-    surge_speed: Param[float]
-    yaw_factor: Param[float]
-    timeout: Param[int]
-    max_pixel_dist = 500.0 #maximum pixel distance we could see sqrt(maxPixelX**2+maxPixelY**2)
-    centered_pixel_dist_thresh = 20 #threshold distance in pixels within which we say we have centered appropriately
+    def initialize(self, prev_outcome):
+        super().initialize(prev_outcome)
+        self.dist_to_bin  = max_pixel_dist
+        self.angle_to_bin = PIO.Pose.yaw
 
-    def initialize(self):
-        self.surge_speed = 0.2 #max surge speed
-        self.yaw_factor = 0.004
-        self.timeout = 40
-        self.target_heave = PIO.Pose.heave
-       
 
     def handle_if_not_timedout(self):
-        
-        bin_camera_position = PIO.get_camera_pos() #TODO: make the PIO func return a tuple of x, y camera pos as pixels as center 0,0, found that is bool 
-        if bin_camera_position.found: 
+        bin_camera_position = PIO.query_BinCamPos() #TODO: make the PIO func return a tuple of x, y camera pos as pixels and bool of if found center for pixels is (0,0)
+        if bin_camera_position and bin_camera_position.found: 
             self.angle_to_bin = math.atan2(bin_camera_position.y, bin_camera_position.x) 
-
-        dist_to_bin = math.sqrt(bin_camera_position.y**2 + bin_camera_position.x**2)
-
-
-        PIO.set_target_twist_surge(self.surge_speed*dist_to_bin/self.max_pixel_dist)
-
-        # Use setpoint for yaw angle
-        PIO.set_target_twist_yaw(self.angle_to_bin * self.yaw_factor)
+            self.dist_to_bin = math.sqrt(bin_camera_position.y**2 + bin_camera_position.x**2)
+            PIO.set_target_twist_surge(surge_speed*(self.dist_to_bin/max_pixel_dist)) #set surge speed decreases as closer to centered
+            # Use setpoint for yaw angle
+            PIO.set_target_twist_yaw(self.angle_to_bin * yaw_factor)
+        
+        
         
 
-        
-        if dist_to_bin < self.centered_pixel_dist_thresh:
+        if self.dist_to_bin < centered_pixel_dist_thresh:
             PIO.set_target_twist_surge(0)
+            PIO.set_target_twist_yaw(PIO.Pose.yaw)
             return self.Reached()
         else:
             return self.NotReached()
+        
 
     def handle_once_timedout(self) -> None:
         PIO.set_target_twist_surge(0)
+        PIO.set_target_twist_yaw(PIO.Pose.yaw)
+        
+# class CenterToBInWhenClose(TimedState):
+#     NotReached = Outcome.make('NotReached')
+#     TimedOut = Outcome.make('TimedOut')
+#     Reached = Outcome.make('Reached')
+
+#     def initialize(self):
+        
