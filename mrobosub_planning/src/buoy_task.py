@@ -44,14 +44,14 @@ class ApproachBuoyOpen(TimedState):
         PIO.set_target_pose_yaw(self.target_yaw)
         PIO.set_target_twist_surge(self.surge_speed)
 
-        seen_glyph_outcome = search_for_glyph(Gbl.preferred_glyph())
-        if seen_glyph_outcome is not None:
-            print(seen_glyph_outcome.glyph)
+        seen_glyph = search_for_glyph(Gbl.preferred_glyph())
+        if seen_glyph is not None:
+            print(seen_glyph[1])
         # hit = PIO.buoy_collision
 
-        if seen_glyph_outcome is not None:
+        if seen_glyph is not None:
             # possible change: add some counter to increase the likelihood that we get our preferred glyph?
-            return self.SeenGlyph(*seen_glyph_outcome)
+            return self.SeenGlyph(*seen_glyph)
         return None
 
     def handle_once_timedout(self) -> TimedOut:
@@ -173,7 +173,7 @@ class CenterYawGlyph(TimedState):
                 return self.HitBuoySecond()
         return None
 
-    def handle_once_timedout(self):
+    def handle_once_timedout(self) -> TimedOut:
         PIO.set_target_twist_surge(0)
         PIO.set_target_twist_yaw(0)
         return self.TimedOut()

@@ -1,14 +1,14 @@
 from umrsm import *
 import graphviz
 
-import standard_run
+from captain import transition_maps
 
 from typing import Mapping, Type
 import os
 
 from pathlib import Path
 
-def generate_graph(name: str, transitions: Mapping[Type[NamedTuple], Type[State]]) -> graphviz.Digraph:
+def generate_graph(name: str, transitions: TransitionMap) -> graphviz.Digraph:
     dot = graphviz.Digraph(name)
     dot.attr('graph', diredgeconstraints='true')
 
@@ -27,8 +27,21 @@ def generate_graph(name: str, transitions: Mapping[Type[NamedTuple], Type[State]
 
     return dot
 
-graph = generate_graph('Standard Run', standard_run.transitions)
-graph.save(os.getcwd() + '/machine.dot')
+def main():
+    parser = argparse.ArgumentParser(description="Create a state machine visualization")
+    parser.add_argument("map_name", type=str, help="The name of the transition map from captain to be visualized")
+    parser.add_argument("--output", "-o", type=Path, default="machine", help="The location to save the visualization")
+    parser.add_argument("--save-src", "-s", action="store_true")
+    parser.add_argument("--type", "-t", type=str, default="png")
 
-# graph = generate_graph('Prequal', prequal_turn.transitions)
-# graph.save('/root/catkin_ws/src/mrobosub/prequal_turn.dot')
+    args = parser.parse_args()
+
+    graph = generate_graph('Standard Run', transition_maps[args.map_name])
+    if args.save_src:
+        graph.save(f'{args.output}.dot')
+    else:
+        graph.render(args.output, format=args.type, cleanup=True)
+
+if __name__ == "__main__":
+    import argparse
+    main()
