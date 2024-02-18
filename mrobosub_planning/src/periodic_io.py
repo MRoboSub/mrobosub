@@ -169,7 +169,7 @@ class PIO:
     @classmethod
     def query_glyph(cls, glyph: Optional[Glyph]) -> ObjectPositionResponse:
         if glyph is not None:
-            return cls._object_position_srvs[glyph]()
+            return cls._object_position_srvs[glyph.name]()
         else:
             obj_msg = ObjectPositionResponse()
             obj_msg.found = False
@@ -209,4 +209,5 @@ class PIO:
     _pathmarker_srv = rospy.ServiceProxy('pathmarker/angle', PathmarkerAngle, persistent=True)
     _object_position_srvs = {}
     for g in Glyph:
-        _object_position_srvs[g] = rospy.ServiceProxy(f'/object_position/{g.name.lower()}', ObjectPosition, persistent=True)
+        _object_position_srvs[g.name] = rospy.ServiceProxy(f'/object_position/{g.name}', ObjectPosition, persistent=True)
+        

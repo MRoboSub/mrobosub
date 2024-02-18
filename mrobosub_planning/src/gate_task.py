@@ -46,6 +46,8 @@ class ApproachGate(TimedState):
 
     def __init__(self, prev_outcome: NamedTuple):
         super().__init__(prev_outcome)
+        if not isinstance(prev_outcome, SeenGateImageType):
+            raise TypeError(f"Expected type SeenGateImageType, received {prev_outcome}")
         self.found_image_threshold = 50
         self.times_seen = 0
 
@@ -194,8 +196,12 @@ class SpinFinish(TimedState):
         target_yaw = 0
         PIO.set_target_pose_yaw(target_yaw)
 
-        if PIO.is_yaw_within_threshold(self.yaw_threshold):
+        if not PIO.is_yaw_within_threshold(5):
+            self.timer = rospy.get_time()
+
+        if rospy.get_time() - self.timer >= 1:
             return self.Reached(target_yaw)
+
         return None
 
     def handle_once_timedout(self) -> TimedOut:
