@@ -1,168 +1,209 @@
-from umrsm import Outcome, TimedState, State, Param
-from periodic_io import PIO, Gbl, angle_error, Glyph
-from mrobosub_msgs.srv import ObjectPositionResponse
-from typing import Mapping
-
-SeenGlyph = Outcome.make('SeenGlyph', glyph_results=Mapping[Glyph, ObjectPositionResponse], glyph = Glyph)
-HitBuoyFirst = Outcome.make('HitBuoyFirst')
-HitBuoySecond = Outcome.make('HitBuoySecond')
+import rospy
+from umrsm import State
+from abstract_states import TimedState
+from periodic_io import PIO, Gbl, GlyphDetections, Glyph
+from mrobosub_msgs.srv import ObjectPositionResponse # type: ignore
+from typing import Dict, Optional, Tuple, Union, NamedTuple
 
 
-def search_for_glyph(preference):
+class SeenGlyphType(NamedTuple):
+    glyph_results: Dict[Glyph, ObjectPositionResponse]
+    glyph: Glyph
+
+
+def search_for_glyph(preference) -> Optional[Tuple[GlyphDetections, Glyph]]:
     res = PIO.query_all_glyphs()
-    for g in [preference, Glyph.taurus, Glyph.serpens_caput, Glyph.auriga, Glyph.cetus]:
+    for g in [preference, Glyph.TAURUS, Glyph.SERPENS_CAPUT, Glyph.ABYDOS, Glyph.CETUS]:
         if g in res:
-            return SeenGlyph(glyph_results=res, glyph=g)
-    else:
-        return None
+            return res, g
+    return None
+
 
 def first_glyph():
-    if Gbl.planet_seen == Glyph.abydos:
-        return Glyph.taurus
+    if Gbl.planet_seen == Glyph.ABYDOS:
+        return Glyph.TAURUS
     else:
-        return Glyph.auriga
+        return Glyph.AURIGA
 
 
 class ApproachBuoyOpen(TimedState):
-    GlyphNotSeen = Outcome.make('GlyphNotSeen')
-    TimedOut = Outcome.make('TimedOut')
-    
-    surge_speed: Param[float]
-    timeout: Param[int]
+    class SeenGlyph(SeenGlyphType):
+        pass
 
-    def initialize(self, prev_outcome) -> None:
-        super().initialize(prev_outcome)
-        if hasattr(prev_outcome, 'angle'):
-            self.target_yaw = prev_outcome.angle
-        else:
-            self.target_yaw = PIO.Pose.yaw
+    class TimedOut(NamedTuple):
+        pass
 
-    def handle_if_not_timedout(self) -> Outcome:
+    surge_speed: float = 0.2
+    timeout: float = 20
+
+    def __init__(self, prev_outcome) -> None:
+        super().__init__(prev_outcome)
+        self.target_yaw = getattr(prev_outcome, "angle", PIO.Pose.yaw)
+
+    def handle_if_not_timedout(self) -> Union[SeenGlyph, None]:
         PIO.set_target_pose_yaw(self.target_yaw)
         PIO.set_target_twist_surge(self.surge_speed)
 
-        seen_glyph_outcome = search_for_glyph(Gbl.preferred_glyph())
+        seen_glyph = search_for_glyph(Gbl.preferred_glyph())
+        if seen_glyph is not None:
+            print(seen_glyph[1])
         # hit = PIO.buoy_collision
 
-        if seen_glyph_outcome:
+        if seen_glyph is not None:
             # possible change: add some counter to increase the likelihood that we get our preferred glyph?
-            return seen_glyph_outcome
-        # elif hit:
-        #     return HitBuoyFirst()
-        else:
-            return self.GlyphNotSeen()
+            return self.SeenGlyph(*seen_glyph)
+        return None
 
-    def handle_once_timedout(self) -> None:        
+    def handle_once_timedout(self) -> TimedOut:
         PIO.set_target_twist_surge(0)
+        return self.TimedOut()
 
 
 class CenterHeaveGlyph(TimedState):
-    NotCentered = Outcome.make('NotCentered')
-    Centered = Outcome.make('Centered', glyph=Glyph, last_data=ObjectPositionResponse)
-    TimedOut = Outcome.make('TimedOut', glyph=Glyph, last_data=ObjectPositionResponse)
+    class Centered(NamedTuple):
+        glyph: Glyph
+        last_data: ObjectPositionResponse
 
-    heave_down_speed: Param[float] 
-    heave_up_speed: Param[float]
-    deadband: Param[int] # pixels
-    timeout: Param[float]
+    class TimedOut(NamedTuple):
+        glyph: Glyph
+        last_data: ObjectPositionResponse
 
+    heave_down_speed: float = 0.2
+    heave_up_speed: float = 0.0
+    deadband: int = 50 # pixels, or maybe 5 degrees
+    timeout: float = 40.0
 
-    def initialize(self, prev_outcome: SeenGlyph) -> None:
-        super().initialize(prev_outcome)
-        self.deadband = 50
-        self.timeout = 40.0
+    def __init__(self, prev_outcome) -> None:
+        super().__init__(prev_outcome)
+        if not isinstance(prev_outcome, SeenGlyphType):
+            raise TypeError(
+                f"Expected a SeenGlyph-like outcome, received {prev_outcome}"
+            )
         self.most_recent_results = prev_outcome.glyph_results
         self.glyph = prev_outcome.glyph
-        self.glyph_y_diff = self.most_recent_results[self.glyph].y_position
+        self.glyph_y_theta = self.most_recent_results[self.glyph].y_theta
+        self.preferred = Gbl.preferred_glyph()
 
-    def handle_if_not_timedout(self):
+
+    def handle_if_not_timedout(self) -> Union[Centered, None]:
         query_res = PIO.query_glyph(self.glyph)
         if query_res.found:
-            self.glyph_y_diff = query_res.y_position
+            self.glyph_y_theta = query_res.y_theta
             self.most_recent_results[self.glyph] = query_res
 
         # use updated info if we have it, otherwise continue with old info? is this bad
-        if abs(self.glyph_y_diff) < self.deadband:
+        if abs(self.glyph_y_theta) < self.deadband:
             return self.Centered(self.glyph, self.most_recent_results[self.glyph])
-        elif self.glyph_y_diff > 0: # TODO: check sign?
-
+        elif self.glyph_y_theta > 0:
             PIO.set_target_twist_heave(0.17)
         else:
-            PIO.set_target_twist_heave(0)
+            PIO.set_target_twist_heave(0.0)
+        PIO.set_target_twist_surge(0)
 
-        return self.NotCentered()
+        return None
 
-    def handle_once_timedout(self):
+    def handle_once_timedout(self) -> TimedOut:
         return self.TimedOut(self.glyph, self.most_recent_results[self.glyph])
 
 
-
 class CenterYawGlyph(TimedState):
-    NotReached = Outcome.make('NotReached')
-    TimedOut = Outcome.make('TimedOut')
+    class HitBuoyFirst(NamedTuple):
+        pass
 
-    surge_speed: Param[float]
-    yaw_factor: Param[float]
-    timeout: Param[int]
+    class HitBuoySecond(NamedTuple):
+        pass
 
-    def initialize(self, prev_outcome: CenterHeaveGlyph.Centered):
-        self.surge_speed = 0.2
-        self.yaw_factor = 0.004
-        self.timeout = 40
-        super().initialize(prev_outcome)
+    class TimedOut(NamedTuple):
+        pass
+
+    bbox_area_thold: float = 0.05
+    unseen_thold: float = 10.
+    surge_speed: float = 0.2
+    yaw_factor: float = 0.0005
+    timeout: float = 40.0
+
+    def __init__(self, prev_outcome):
+        super().__init__(prev_outcome)
+        if type(prev_outcome) != CenterHeaveGlyph.Centered:
+            raise TypeError(type(prev_outcome))
+        self.hit_time_thold = 2
+        self.bbox_area = prev_outcome.last_data.x_position
+        self.unseen_time = rospy.get_time()
+
         self.glyph = prev_outcome.glyph
         self.angle_diff = prev_outcome.last_data.x_theta
         self.target_heave = PIO.Pose.heave
 
-    def handle_if_not_timedout(self):
-        
+        self.hit_start_time = None
+
+    def handle_if_not_timedout(self) -> Union[HitBuoyFirst, HitBuoySecond, None]:
         print(self.glyph)
         query_res = PIO.query_glyph(self.glyph)
         if query_res.found:
             self.angle_diff = query_res.x_theta
+            self.bbox_area = query_res.x_position
+            self.unseen_time = rospy.get_time()
 
         PIO.set_target_pose_heave(self.target_heave)
         PIO.set_target_twist_surge(self.surge_speed)
 
         # Use setpoint for yaw angle
-        PIO.set_target_twist_yaw(self.angle_diff * self.yaw_factor)
+        if query_res.found:
+            PIO.set_target_pose_yaw(PIO.Pose.yaw + self.angle_diff/2 - 10.0)
+            # print(PIO.Pose.yaw + self.angle_diff/2)
         
-        hit = PIO.buoy_collision
+        # hit = PIO.buoy_collision and \
+        #     (self.bbox_area >= self.bbox_area_thold or self.frames_unseen >= self.unseen_thold)
         
-        if hit:
-            if not Gbl.second_glpyh:
-                Gbl.second_glpyh = True
-                return HitBuoyFirst()
+        if (
+            # (self.bbox_area >= self.bbox_area_thold or 
+            rospy.get_time() - self.unseen_time >= self.unseen_thold
+            and self.hit_start_time is None
+        ):
+            if(self.bbox_area >= self.bbox_area_thold): print(f"BBOX AT {self.bbox_area}")
+            if(rospy.get_time() - self.unseen_time >= self.unseen_thold): print(f"UNSEEN FOR {self.unseen_thold}")
+            self.hit_start_time = rospy.get_time()
+            
+        if self.hit_start_time is not None and rospy.get_time() - self.hit_start_time >= self.hit_time_thold:
+            if not Gbl.second_glyph:
+                Gbl.second_glyph = True
+                Gbl.first_hit_glyph = self.glyph
+                return self.HitBuoyFirst()
             else:
-                return HitBuoySecond()
-        else:
-            return self.NotReached()
+                return self.HitBuoySecond()
+        return None
 
-    def handle_once_timedout(self) -> None:
+    def handle_once_timedout(self) -> TimedOut:
         PIO.set_target_twist_surge(0)
+        PIO.set_target_twist_yaw(0)
+        return self.TimedOut()
 
-        
 
 class OldApproachBuoyClosed(TimedState):
-    NotReached = Outcome.make('NotReached')
-    TimedOut = Outcome.make('TimedOut')
-    
-    surge_speed: Param[float]
-    heave_factor: Param[float]
-    yaw_factor: Param[float]
-    timeout: Param[int]
+    class HitBuoyFirst(NamedTuple):
+        pass
 
-    def initialize(self, prev_outcome) -> None:
-        super().initialize(prev_outcome)
-        self.most_recent_results = prev_outcome.glyph_results
-        self.glyph = prev_outcome.glyph
+    class HitBuoySecond(NamedTuple):
+        pass
+
+    class TimedOut(NamedTuple):
+        pass
+
+    surge_speed: float = 0.2
+    heave_factor: float = 0.002
+    yaw_factor: float = 0.004
+    timeout: float = 10.0
+
+    def __init__(self, prev_outcome) -> None:
+        super().__init__(prev_outcome)
+        self.most_recent_results = getattr(prev_outcome, "glyph_results")
+        self.glyph = getattr(prev_outcome, "glyph")
 
         self.preferred = Gbl.preferred_glyph()
 
         self.seen_preferred = self.glyph == self.preferred
 
-
-    def handle_if_not_timedout(self) -> Outcome:
+    def handle_if_not_timedout(self) -> Union[HitBuoyFirst, HitBuoySecond, None]:
         if self.seen_preferred:
             # TODO: check if found before setting it, otherwise we lose info
             self.most_recent_results[self.preferred] = PIO.query_glyph(self.preferred)
@@ -172,7 +213,7 @@ class OldApproachBuoyClosed(TimedState):
                 self.seen_preferred = True
                 self.glyph = self.preferred
 
-        # Use PID with the heave position/percentage 
+        # Use PID with the heave position/percentage
         PIO.set_target_twist_heave(
             self.most_recent_results[self.glyph].y_position * self.heave_factor
         )
@@ -180,146 +221,167 @@ class OldApproachBuoyClosed(TimedState):
         PIO.set_target_twist_yaw(
             self.most_recent_results[self.glyph].x_theta * self.yaw_factor
         )
-        print(self.glyph.name, self.most_recent_results[self.glyph].x_theta)  
-        
+        print(self.glyph.name, self.most_recent_results[self.glyph].x_theta)
+
         hit = PIO.buoy_collision
-        
+
         if hit:
             if not Gbl.second_glyph:
                 Gbl.second_glyph = True
-                return HitBuoyFirst()
+                return self.HitBuoyFirst()
             else:
-                return HitBuoySecond()
+                return self.HitBuoySecond()
         else:
-            return self.NotReached()
+            return None
 
-    def handle_once_timedout(self) -> None:
+    def handle_once_timedout(self) -> TimedOut:
         PIO.set_target_twist_surge(0)
+        return self.TimedOut()
 
 
 class FallBack(TimedState):
-    NotReached = Outcome.make('NotReached')
-    TimedOut = Outcome.make('TimedOut')
+    class TimedOut(NamedTuple):
+        pass
 
-    timeout: Param[int]
-    speed: Param[float]
+    timeout: float = 3.0
+    speed: float = 0.2
 
-    def handle_if_not_timedout(self) -> Outcome:
-        PIO.set_target_twist_surge(-1.0 * self.speed) 
+    def handle_if_not_timedout(self) -> None:
+        PIO.set_target_twist_surge(-self.speed)
+        return None
 
-        return self.NotReached()
-
-    def handle_once_timedout(self) -> None:
-        PIO.set_target_twist_surge(0) 
+    def handle_once_timedout(self) -> TimedOut:
+        PIO.set_target_twist_surge(0)
+        return self.TimedOut()
 
 
 class Ascend(TimedState):
-    NotReached = Outcome.make("Unreached")
-    Reached = Outcome.make("Reached")
-    TimedOut = Outcome.make("TimedOut")
-    
-    target_depth: Param[float]
-    timeout: Param[int]
-    
-    def handle_if_not_timedout(self) -> Outcome:
+    class Reached(NamedTuple):
+        pass
+
+    class TimedOut(NamedTuple):
+        pass
+
+    target_depth: float = 0.25
+    timeout: float = 3.0
+
+    def handle_if_not_timedout(self) -> Union[Reached, None]:
         PIO.set_target_pose_heave(self.target_depth)
 
         if PIO.Pose.heave < self.target_depth:
             return self.Reached()
-        else:
-            return self.NotReached()
+        return None
+
+    def handle_once_timedout(self) -> TimedOut:
+        return self.TimedOut()
 
 
 class PassBuoy(TimedState):
-    NotReached = Outcome.make('NotReached')
-    TimedOut = Outcome.make('TimedOut')
+    class TimedOut(NamedTuple):
+        pass
 
-    timeout: Param[int]
-    speed: Param[float]
+    timeout: float = 5.0
+    speed: float = 0.2
 
-    def handle_if_not_timedout(self) -> Outcome:
-        PIO.set_target_twist_surge(self.speed) 
+    def handle_if_not_timedout(self) -> None:
+        PIO.set_target_twist_surge(self.speed)
+        return None
 
-        return self.NotReached()
-
-    def handle_once_timedout(self) -> None:
-        PIO.set_target_twist_surge(0) 
+    def handle_once_timedout(self) -> TimedOut:
+        PIO.set_target_twist_surge(0)
+        return self.TimedOut()
 
 
 class FindGlyph(TimedState):
-    GlyphNotSeen = Outcome.make('GlyphNotSeen')
-    TimedOut = Outcome.make('TimedOut')
+    class SeenGlyph(SeenGlyphType):
+        pass
 
-    timeout: Param[int]
-    speed: Param[float]
+    class TimedOut(NamedTuple):
+        pass
 
-    def handle_if_not_timedout(self) -> Outcome:
+    timeout: float = 7.0
+    speed: float = 0.15
+
+    def handle_if_not_timedout(self) -> Union[SeenGlyph, None]:
         PIO.set_target_twist_surge(-self.speed)
 
         res = search_for_glyph(Gbl.preferred_glyph())
 
         if res is not None:
-            return res
+            return self.SeenGlyph(*res)
+        return None
 
-        return self.GlyphNotSeen()
-
-    def handle_once_timedout(self) -> None:
-        PIO.set_target_twist_surge(0) 
+    def handle_once_timedout(self) -> TimedOut:
+        PIO.set_target_twist_surge(0)
+        return self.TimedOut()
 
 
 class Pause(TimedState):
-    TimedOut = Outcome.make('TimedOut')
+    class SeenGlyph(SeenGlyphType):
+        pass
 
-    timeout: Param[float]
+    class TimedOut(NamedTuple):
+        pass
 
-    def handle_if_not_timedout(self) -> Outcome:
-        
+    timeout: float = 3.0
+
+    def handle_if_not_timedout(self) -> Union[SeenGlyph, None]:
         res = PIO.query_all_glyphs()
 
-        if Glyph.taurus in res:
-            return SeenGlyph(glyph_results=res[Glyph.taurus])
-        elif Glyph.auriga in res:
-            return SeenGlyph(glyph_results=res[Glyph.auriga])
+        if Glyph.TAURUS in res:
+            return self.SeenGlyph(res, Glyph.TAURUS)
+        elif Glyph.AURIGA:
+            return self.SeenGlyph(res, Glyph.AURIGA)
+        return None
+
+    def handle_once_timedout(self):
+        return self.TimedOut()
+
 
 class ContingencySubmerge(State):
-    Submerged = Outcome.make('Submerged')
-    Submerging = Outcome.make('Submerging')
+    class SeenGlyph(SeenGlyphType):
+        pass
 
-    target_depth: Param[float]
-    threshold: Param[float]
+    class Submerged(NamedTuple):
+        pass
 
-    def handle(self) -> Outcome:
+    target_depth: float = 15.0
+    threshold: float = 2.0
+
+    def handle(self) -> Union[SeenGlyph, Submerged, None]:
         PIO.set_target_pose_heave(self.target_depth)
-        
+
         res = PIO.query_all_glyphs()
-        
-        if Glyph.taurus in res:
-            return SeenGlyph(glyph_results=res[Glyph.taurus])
-        elif Glyph.auriga in res:
-            return SeenGlyph(glyph_results=res[Glyph.auriga])
-        
+
+        if Glyph.TAURUS in res:
+            return self.SeenGlyph(res, Glyph.TAURUS)
+        elif Glyph.AURIGA in res:
+            return self.SeenGlyph(res, Glyph.AURIGA)
+
         if PIO.is_heave_within_threshold(threshold=self.threshold):
             return self.Submerged()
-
-        return self.Submerging()
+        return None
 
 
 class ContingencyApproach(TimedState):
-    Approaching = Outcome.make('Approaching')
-    TimedOut = Outcome.make('TimedOut')
+    class HitBuoySecond(NamedTuple):
+        pass
 
-    surge_speed: Param[float]
-    timeout: Param[int]
+    class TimedOut(NamedTuple):
+        pass
 
-    def handle_if_not_timedout(self) -> Outcome:
+    surge_speed: float = 0.2
+    timeout: float = 15.0
+
+    def handle_if_not_timedout(self) -> Union[HitBuoySecond, None]:
         PIO.set_target_twist_surge(self.surge_speed)
-        
+
         hit = PIO.buoy_collision
-        
+
         if hit:
-            return HitBuoySecond()
-        
-        return self.Approaching()
-    
-    def handle_once_timedout(self) -> None:        
+            return self.HitBuoySecond()
+        return None
+
+    def handle_once_timedout(self) -> TimedOut:
         PIO.set_target_twist_surge(0)
+        return self.TimedOut()

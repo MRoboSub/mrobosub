@@ -1,57 +1,37 @@
 import rospy
 from std_msgs.msg import Float64, Bool
-from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, PathmarkerAngle, BinCamPos
-from typing import Type, Mapping, Optional, Tuple
-from enum import Enum
+from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, PathmarkerAngle, BinCamPos # type: ignore
+from typing import Dict, Type, Mapping, Optional, Tuple
+from enum import Enum, auto
 
-# TODO: where to put angle error and util repository?
-
-# Don't look at these
-# def _gate_position_callback(msg: Float64) -> None:
-#     PIO.gate_position = msg
-#
-# def _gman_position_callback(msg : Float64) -> None:
-#     PIO.gate_position = msg
-#
-# def _bootlegger_position_callback(msg : Float64) -> None:
-#     PIO.gate_position = msg
-#
-# def _gun_position_callback(msg : Float64) -> None:
-#     PIO.gun_position = msg
-#
-def _yaw_callback(msg : Float64) -> None:
-    PIO.Pose.yaw = msg.data
-
-def _heave_callback(msg : Float64) -> None:
-    PIO.Pose.heave = msg.data
-
-def _roll_callback(msg : Float64) -> None:
-    PIO.Pose.roll = msg.data
-
-def _collision_callback(msg : Bool) -> None:
-    PIO.buoy_collision = msg.data
 
 def angle_error(setpoint, state):
         return (setpoint - state + 180) % 360 - 180
 
 Namespace = Type
 
-Glyph = Enum('Glyph', [
-    'abydos', 'earth',
-    'taurus', 'serpens_caput', # 'capricornus', 'monoceros', 'sagittarius', 'orion', # abydos
-    'auriga', 'cetus', # 'centaurus', 'cancer', 'scutum', 'eridanus', # earth
-])
+class Glyph(Enum):
+    ABYDOS = auto()
+    EARTH = auto()
+    TAURUS = auto()
+    SERPENS_CAPUT = auto()
+    AURIGA = auto()
+    CETUS = auto()
+
+GlyphDetections = Dict[Glyph, ObjectPositionResponse]
+
 
 class Gbl:
     planet_seen: Optional[Glyph] = None
     first_hit_glyph: Optional[Glyph] = None
+    second_glyph: bool = False
 
     @classmethod
     def glyphs_of_planet(cls, planet: Optional[Glyph]) -> Tuple[Glyph, Glyph]:
-        if planet == Glyph.earth:
-            return (Glyph.auriga, Glyph.cetus)
+        if planet == Glyph.EARTH:
+            return (Glyph.AURIGA, Glyph.CETUS)
         else:
-            return (Glyph.taurus, Glyph.serpens_caput)
+            return (Glyph.TAURUS, Glyph.SERPENS_CAPUT)
 
     @classmethod
     def preferred_glyph(cls) -> Glyph:
@@ -163,6 +143,14 @@ class PIO:
     def set_target_twist_heave(cls, override_heave: float) -> None:
         cls._target_twist_heave_pub.publish(override_heave)
 
+    @classmethod
+    def reset_target_twist(cls) -> None:
+        cls.set_target_twist_heave(0)
+        cls.set_target_twist_yaw(0)
+        cls.set_target_twist_surge(0)
+        cls.set_target_twist_roll(0)
+        cls.set_target_twist_sway(0)
+
     # @classmethod
     # def get_pose(cls) -> Namespace[Pose]:
     #     return cls.Pose
@@ -188,15 +176,15 @@ class PIO:
 
     @classmethod
     def query_glyph(cls, glyph: Optional[Glyph]) -> ObjectPositionResponse:
-        try:
-            return cls._object_position_srvs[glyph.name]()
-        except:
+        if glyph is not None:
+            return cls._object_position_srvs[glyph]()
+        else:
             obj_msg = ObjectPositionResponse()
             obj_msg.found = False
             return obj_msg
  
     @classmethod
-    def query_all_glyphs(cls) -> Mapping[Glyph, ObjectPositionResponse]:
+    def query_all_glyphs(cls) -> GlyphDetections:
         """ query all 12 glyphs and return a dict from any found glyphs to their position. """
         results = { }
         for g in Glyph:
@@ -206,12 +194,28 @@ class PIO:
         return results
 
 # private:
+    class Callbacks:
+        @staticmethod
+        def yaw_callback(msg : Float64) -> None:
+            PIO.Pose.yaw = msg.data
+
+        @staticmethod
+        def heave_callback(msg : Float64) -> None:
+            PIO.Pose.heave = msg.data
+
+        @staticmethod
+        def roll_callback(msg : Float64) -> None:
+            PIO.Pose.roll = msg.data
+
+        @staticmethod
+        def collision_callback(msg : Bool) -> None:
+            PIO.buoy_collision = msg.data
 
     # Subscribers
-    rospy.Subscriber('/pose/yaw', Float64, _yaw_callback)
-    rospy.Subscriber('/pose/heave', Float64, _heave_callback)
-    rospy.Subscriber('/pose/roll', Float64, _roll_callback)
-    rospy.Subscriber('/collision/collision', Bool, _collision_callback)
+    rospy.Subscriber('/pose/yaw', Float64, Callbacks.yaw_callback)
+    rospy.Subscriber('/pose/heave', Float64, Callbacks.heave_callback)
+    rospy.Subscriber('/pose/roll', Float64, Callbacks.roll_callback)
+    rospy.Subscriber('/collision/collision', Bool, Callbacks.collision_callback)
 
 
     # Publishers
@@ -228,7 +232,6 @@ class PIO:
     # Services
     _pathmarker_srv = rospy.ServiceProxy('pathmarker/angle', PathmarkerAngle, persistent=True)
     _bin_cam_pos_srv = rospy.ServiceProxy('bin_cam_pos', BinCamPos, persistent = True)
-    _object_position_srvs = {}
-    for g in Glyph:
-        _object_position_srvs[g.name] = rospy.ServiceProxy(f'/object_position/{g.name}', ObjectPosition, persistent=True)
-        
+    _object_position_srvs: Dict[Glyph, rospy.ServiceProxy] = {}
+    for glyph in Glyph:
+        _object_position_srvs[glyph] = rospy.ServiceProxy(f'/object_position/{glyph.name.lower()}', ObjectPosition, persistent=True)

@@ -119,6 +119,10 @@ def zed_callback(message):
             fov_x = 110
             fov_y = 70
 
+            bbox_width = abs(box[0] - box[2])
+            bbox_height = abs(box[1] - box[3])
+            bbox_area = (bbox_width * bbox_height) / (width * height)
+
             x_pos = int((box[0] + box[2]) / 2)
             y_pos = int((box[1] + box[3]) / 2)
             
@@ -133,7 +137,8 @@ def zed_callback(message):
             print(x_pos, y_pos, theta_x, theta_y)
            
             object_position_response.found      = True
-            object_position_response.x_position = x_pos
+            # object_position_response.x_position = x_pos
+            object_position_response.x_position = bbox_area # TODO: change this. for competition
             object_position_response.y_position = y_pos
             object_position_response.x_theta    = theta_x
             object_position_response.y_theta    = theta_y
