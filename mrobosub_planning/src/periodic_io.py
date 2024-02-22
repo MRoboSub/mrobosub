@@ -1,6 +1,6 @@
 import rospy
 from std_msgs.msg import Float64, Bool
-from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, PathmarkerAngle, BinCamPos # type: ignore
+from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, PathmarkerAngle, BinCamPos, BinCamPosResponse # type: ignore
 from typing import Dict, Type, Mapping, Optional, Tuple
 from enum import Enum, auto
 
@@ -77,7 +77,7 @@ class PIO:
     #     return angle_error_abs(PIO.heading_value, PIO.current_heading) <= threshold
 
     @classmethod
-    def query_BinCamPos(cls) -> Optional[float]:
+    def query_BinCamPos(cls) -> Optional[BinCamPosResponse]:
         """ Request the x, y position on the camera of the bin, and found which is True if we have data
 
         Returns: 

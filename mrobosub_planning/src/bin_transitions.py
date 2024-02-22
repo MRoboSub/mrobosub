@@ -1,18 +1,16 @@
 from common import *
 from bin_states import *
+from umrsm import TransitionMap
 
 
-transitions = {
+transitions:TransitionMap = {
     Start.Complete: Submerge,
 
-    Submerge.Unreached: Submerge,
     Submerge.Submerged: CenterToBinFromFar,
     Submerge.TimedOut: CenterToBinFromFar,
 
-    CenterToBinFromFar.NotReached: CenterToBinFromFar,
     CenterToBinFromFar.Reached: Surface,
     CenterToBinFromFar.TimedOut: Surface,
 
-    Surface.Submerged: Surface,
     Surface.Surfaced: Stop
 }

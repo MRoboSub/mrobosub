@@ -1,6 +1,8 @@
-from umrsm import Outcome, TimedState, State, Param
+from umrsm import State
+from abstract_states import TimedState
 from periodic_io import PIO, Gbl
 from mrobosub_msgs.srv import ObjectPositionResponse
+from typing import NamedTuple, Union
 import math 
 
 surge_speed = 0.2 #max surge speed
@@ -10,18 +12,19 @@ max_pixel_dist = 500.0 #maximum pixel distance we could see sqrt(maxPixelX**2+ma
 centered_pixel_dist_thresh = 50 #threshold distance in pixels within which we say we have centered appropriatclass CenterToBinFromFar(TimedState):
 
 class CenterToBinFromFar(TimedState):
-    NotReached = Outcome.make('NotReached')
-    TimedOut = Outcome.make('TimedOut')
-    Reached = Outcome.make('Reached')
-    
+    class TimedOut(NamedTuple):
+        pass
+    class Reached(NamedTuple):
+        pass
+    timeout: float = 10.0
 
-    def initialize(self, prev_outcome):
-        super().initialize(prev_outcome)
+    def __init__(self, prev_outcome):
+        super().__init__(prev_outcome)
         self.dist_to_bin  = max_pixel_dist
         self.angle_to_bin = PIO.Pose.yaw
 
 
-    def handle_if_not_timedout(self):
+    def handle_if_not_timedout(self) -> Union[None, Reached]:
         bin_camera_position = PIO.query_BinCamPos() #TODO: make the PIO func return a tuple of x, y camera pos as pixels and bool of if found center for pixels is (0,0)
         if bin_camera_position and bin_camera_position.found: 
             self.angle_to_bin = math.atan2(bin_camera_position.y, bin_camera_position.x) 
@@ -38,12 +41,13 @@ class CenterToBinFromFar(TimedState):
             PIO.set_target_twist_yaw(PIO.Pose.yaw)
             return self.Reached()
         else:
-            return self.NotReached()
+            return None
         
 
-    def handle_once_timedout(self) -> None:
+    def handle_once_timedout(self) -> TimedOut:
         PIO.set_target_twist_surge(0)
         PIO.set_target_twist_yaw(PIO.Pose.yaw)
+        return self.TimedOut()
         
 # class CenterToBInWhenClose(TimedState):
 #     NotReached = Outcome.make('NotReached')
