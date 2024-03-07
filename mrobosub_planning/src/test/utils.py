@@ -2,9 +2,10 @@
 
 from enum import Enum, auto
 import gc
+from dataclasses import dataclass
 from typing import Dict, List
 from std_msgs.msg import Float64, String
-from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse # type: ignore
+from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, BinCamPos, BinCamPosResponse  # type: ignore
 from time import sleep
 from functools import partial
 import rospy
@@ -18,6 +19,17 @@ class Glyph(Enum):
     AURIGA = auto()
     CETUS = auto()
 
+
+class binCamPosServiceMock:
+    def __init__(self) -> None:
+        self.position = BinCamPosResponse() ## dummy position
+        self.service = rospy.Service('bin_cam_pos', BinCamPos, self.handle_obj_request)
+
+    def handle_obj_request(self, _msg):
+        return self.position
+    
+    def set_position(self, pos: BinCamPosResponse):
+        self.position = pos
 
 class ObjectPositionServiceMock:
     def __init__(self) -> None:
@@ -48,21 +60,23 @@ class PoseMock:
         self._roll_pub.publish(self.roll)
         self._yaw_pub.publish(self.yaw)
 
+@dataclass
 class TargetReader:
-    def __init__(self) -> None:
-        self.target_pose_heave = 0.
-        self.target_pose_roll = 0.
-        self.target_pose_yaw = 0.
-        self.target_pose_surge = 0.
-        self.target_pose_sway = 0.
-        self.target_pose_pitch = 0.
+    target_pose_heave: int = 0.
+    target_pose_roll: int = 0.
+    target_pose_yaw: int = 0.
+    target_pose_surge: int = 0.
+    target_pose_sway: int = 0.
+    target_pose_pitch: int = 0.
 
-        self.target_twist_heave = 0.
-        self.target_twist_roll = 0.
-        self.target_twist_yaw = 0.
-        self.target_twist_surge = 0.
-        self.target_twist_sway = 0.
-        self.target_twist_pitch = 0.
+    target_twist_heave: int = 0.
+    target_twist_roll: int = 0.
+    target_twist_yaw: int = 0.
+    target_twist_surge: int = 0.
+    target_twist_sway: int = 0.
+    target_twist_pitch: int = 0.
+
+    def __init__(self, *args, **kwargs) -> None:
 
         self._pose_heave_sub = rospy.Subscriber('/target_pose/heave', Float64, partial(self._pose_callback, 'heave'))
         self._pose_roll_sub = rospy.Subscriber('/target_pose/roll', Float64, partial(self._pose_callback, 'roll'))
