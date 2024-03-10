@@ -1,6 +1,6 @@
 from enum import Enum, auto
 import gc
-from utils import binCamPosServiceMock, TargetReader
+from utils import binCamPosServiceMock, TargetReader, PoseMock
 from typing import Dict, List
 from std_msgs.msg import Float64, String
 from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, BinCamPosResponse  # type: ignore
@@ -30,18 +30,44 @@ def main():
 
     bin_cam_mock = binCamPosServiceMock()
     reader = TargetReader()
+    pose = PoseMock()
+
+    pose.heave = 0.
+
+    while pose.heave < reader.target_pose_heave:
+        pose.heave += 0.005
+        #print(f"{pose.heave=}")
+        sleep(0.05)
+        pose.publish_update()
+
+    for i in range(20*3):
+        sleep(0.05)
 
     bin_cam_instance = BinCamPosResponse()
     bin_cam_instance.found = True
-    bin_cam_instance.x = -150
-    bin_cam_instance.y = 150
+    bin_cam_instance.x = -100
+    bin_cam_instance.y = 173
 
     bin_cam_mock.set_position(bin_cam_instance)
 
-    for i in range(20*20):
+    pose.yaw = 50
+    pose.publish_update()
+
+    for i in range(20*3):
+        
         sleep(0.05)
-        print(f"{reader=}")
-        print(f"{reader.target_twist_yaw=}")
+        
+        #print(f"{reader=}")
+        print(f"{reader.target_pose_yaw=}")
+
+    # bin_cam_instance.x *= -1
+    # bin_cam_mock.set_position(bin_cam_instance)
+
+    # for i in range(20*3):
+    #     sleep(0.05)
+    #     #print(f"{reader=}")
+    #     print(f"{reader.target_pose_yaw=}")
+
 
 
 
