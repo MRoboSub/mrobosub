@@ -25,7 +25,7 @@ class CenterToBinFromFar(TimedState):
 
 
     def handle_if_not_timedout(self) -> Union[None, Reached]:
-        bin_camera_position = PIO.query_BinCamPos() #: make the PIO func return a tuple of x, y camera pos as pixels and bool of if found center for pixels is (0,0)
+        bin_camera_position = PIO.query_BinCamPos() 
         #print(f"{bin_camera_position=}")
         if bin_camera_position and bin_camera_position.found: 
             #print(f"{bin_camera_position.x=}")
