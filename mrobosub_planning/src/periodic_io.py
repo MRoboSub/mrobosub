@@ -1,3 +1,4 @@
+import rosgraph
 import rospy
 from std_msgs.msg import Float64, Bool
 from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, PathmarkerAngle, BinCamPos, BinCamPosResponse # type: ignore
@@ -177,11 +178,14 @@ class PIO:
     @classmethod
     def query_glyph(cls, glyph: Optional[Glyph]) -> ObjectPositionResponse:
         if glyph is not None:
-            return cls._object_position_srvs[glyph]()
-        else:
-            obj_msg = ObjectPositionResponse()
-            obj_msg.found = False
-            return obj_msg
+            try:
+                return cls._object_position_srvs[glyph]()
+            except:
+                pass
+
+        obj_msg = ObjectPositionResponse()
+        obj_msg.found = False
+        return obj_msg
  
     @classmethod
     def query_all_glyphs(cls) -> GlyphDetections:
