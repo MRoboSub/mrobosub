@@ -1,9 +1,15 @@
+#!/usr/bin/env python
+
 #hsv_filter
 import cv2
+from cv_bridge import CvBridge
 import numpy as np
 import rospy
-from sensor_msgs.msg import Image, ImageResponse
+from dynamic_reconfigure.server import Server
+from sensor_msgs.msg import Image
 from mrobosub_lib.lib import Node, Param
+from mrobosub_perception.cfg import hsv_paramsConfig
+
 
 class HsvFilter(Node):
     hue_lo: Param[float]
@@ -12,17 +18,33 @@ class HsvFilter(Node):
     sat_hi: Param[float]
     val_lo: Param[float]
     val_hi: Param[float]
-    topic_name: Param[str]
+    sub_name: Param[str]
+    pub_name: Param[str]
 
-    def _init_(self):
+    def __init__(self):
         super().__init__('hsv_filter')
-        self.service = rospy.Service(self.topic_name+"/out", Image, self.handle_request)
-        rospy.Subscriber(self.topic_name+"/in", Image, self.handle_frame, queue_size=1)
+        
+        self.br = CvBridge()
+        self.sub = rospy.Subscriber(self.sub_name, Image, self.handle_frame, queue_size=1)
+        self.pub = rospy.Publisher(self.pub_name, Image, queue_size=1)
 
-        self.response = ImageResponse()
+        srv = Server(hsv_paramsConfig, self.reconfigure_callback)
 
-    def handle_request(self, _msg):
+        # for testing dynamic reconfigure
+        # while  not rospy.is_shutdown():
+        #     print(self.hue_lo)
+        #     rospy.sleep(.25)
 
+    def handle_frame(self, msg):
+        bgr_img = self.br.imgmsg_tocv2(msg, desired_encoding='bgr8')
+        frame_HSV = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2HSV)
+        frame_threshold = cv2.inRange(frame_HSV, (self.hue_lo, self.sat_lo, self.val_lo), (self.hue_hi, self.sat_hi, self.val_hi))
+        self.pub.publish(self.br.cv2_to_imgmsg(frame_threshold, encoding='mono8'))
 
-    def handle_frame(self, data):
+    def reconfigure_callback(self, config, level):
+        for k, v in config.items():
+            setattr(self, k, v)
+        return config
 
+if __name__=='__main__' :
+    HsvFilter().run()
