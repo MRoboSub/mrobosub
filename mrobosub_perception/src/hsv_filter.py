@@ -30,13 +30,15 @@ class HsvFilter(Node):
 
         srv = Server(hsv_paramsConfig, self.reconfigure_callback)
 
+        rospy.spin()
+
         # for testing dynamic reconfigure
         # while  not rospy.is_shutdown():
         #     print(self.hue_lo)
         #     rospy.sleep(.25)
 
     def handle_frame(self, msg):
-        bgr_img = self.br.imgmsg_tocv2(msg, desired_encoding='bgr8')
+        bgr_img = self.br.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         frame_HSV = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2HSV)
         frame_threshold = cv2.inRange(frame_HSV, (self.hue_lo, self.sat_lo, self.val_lo), (self.hue_hi, self.sat_hi, self.val_hi))
         self.pub.publish(self.br.cv2_to_imgmsg(frame_threshold, encoding='mono8'))
