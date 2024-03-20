@@ -1,10 +1,15 @@
+#!/usr/bin/env python
+
 #hsv_filter
 import cv2
 from cv_bridge import CvBridge
 import numpy as np
 import rospy
+from dynamic_reconfigure.server import Server
 from sensor_msgs.msg import Image
 from mrobosub_lib.lib import Node, Param
+from mrobosub_perception.cfg import hsv_paramsConfig
+
 
 class HsvFilter(Node):
     hue_lo: Param[float]
@@ -16,7 +21,7 @@ class HsvFilter(Node):
     sub_name: Param[str]
     pub_name: Param[str]
 
-    def _init_(self):
+    def __init__(self):
         super().__init__('hsv_filter')
 
         self.br = CvBridge()
@@ -32,3 +37,10 @@ class HsvFilter(Node):
         self.pub.publish(self.br.cv2_to_imgmsg(frame_threshold, encoding='mono8'))
         
 
+    def reconfigure_callback(self, config, level):
+        for k, v in config.items():
+            setattr(self, k, v)
+        return config
+
+if __name__=='__main__' :
+    HsvFilter().run()

@@ -3,7 +3,7 @@
 import rospy
 from mrobosub_lib.lib import Node, Param
 from dynamic_reconfigure.server import Server
-from mrobosub_perception.cfg import hsv_paramsConfig
+from mrobosub_perception.cfg import pathmarker_paramsConfig
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
@@ -41,7 +41,7 @@ class HsvTuner(Node):
         self.found_pub = rospy.Publisher('/tuner/found', Bool, queue_size=1)
         self.angle_pub = rospy.Publisher('/tuner/angle', Float64, queue_size=1)
 
-        srv = Server(hsv_paramsConfig, self.reconfigure_callback)
+        srv = Server(pathmarker_paramsConfig, self.reconfigure_callback)
 
     def set_pipeline_params(self):
         self.pipeline._hsv_threshold_hue = [self.hue_lo, self.hue_hi]
