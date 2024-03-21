@@ -4,32 +4,27 @@ import rospy
 
 class TimedService():
     
-    def __init__(self, serviceName, ObjectType, ResponseType, bufferSize, timingThreshold):
-        srv = rospy.Service(serviceName, ObjectType, self.handle_obj_request())
+    def __init__(self, service_name:str, ObjectType, ResponseType, timing_threshold:float):
+        srv = rospy.Service(service_name, ObjectType, self.handle_obj_request())
         self.last_time = rospy.get_time()
-        self.buffer_size =  bufferSize
-        self.buffer = []
-        self.object_type = ObjectType
-        self.threshold = timingThreshold
+        self.buffer = None
+        self.objectType = ObjectType
+        self.threshold = timing_threshold
 
 
     def handle_obj_request(self):
         self.last_time = rospy.get_time()
-        if len(self.buffer) != 0:
-           return self.buffer.pop(0)
+        if self.buffer != None:
+           return self.buffer
         else:
-            return self.object_type()
+            return self.objectType()
 
-    def set_buffer(self, result):
-        if len(self.buffer) < self.buffer_size:
-            self.buffer.append(result)
-        else:
-            self.buffer.pop(0)
-            self.buffer.append(result)
+    def set_result(self, result):
+       buffer = result
 
     def should_run(self) -> bool:
         if((rospy.get_time() - self.last_time) > self.threshold):
-            self.buffer.clear()
+            self.buffer = None
             return False
         else:
             return True
