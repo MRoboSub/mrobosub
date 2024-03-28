@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(mrobosub_msgs)
 
 find_package(catkin REQUIRED 
-    COMPONENTS std_msgs message_generation)
+    COMPONENTS std_msgs sensor_msgs message_generation)
 
 
 add_message_files(
@@ -18,9 +18,13 @@ add_service_files(
     BinCamPos.srv
     ObjectPosition.srv
     PathmarkerAngle.srv
+    HsvFilterImage.srv
 )
 
-generate_messages()
+generate_messages(
+    DEPENDENCIES
+    sensor_msgs
+)
 
 
 catkin_package(

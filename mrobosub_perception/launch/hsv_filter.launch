@@ -6,7 +6,7 @@
     output="screen"
   >
     <param name="sub_name" type="str" value="/zed2/zed_node/rgb/image_rect_color" />
-    <param name="pub_name" type="str" value="/hsv_filter_output" />
+    <param name="serv_name" type="str" value="/hsv_filter_1" />
     <rosparam command="load" file="$(find mrobosub_perception)/params/hsv_filter_1.yaml" />
   </node> 
 </launch>
