@@ -10,11 +10,11 @@ class TimedService():
         self.objectType = ObjectType
         self.threshold = timing_threshold
 
-        self.srv = rospy.ServiceProxy(service_name, ObjectType, self.handle_obj_request())
+        self.srv = rospy.Service(service_name, ObjectType, self.handle_obj_request)
         
 
 
-    def handle_obj_request(self):
+    def handle_obj_request(self, _):
         self.last_time = rospy.get_time()
         while self.buffer != None:
             rospy.sleep(.005)

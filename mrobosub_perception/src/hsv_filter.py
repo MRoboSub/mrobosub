@@ -32,6 +32,7 @@ class HsvFilter(Node):
         self.sub = rospy.Subscriber(self.sub_name, Image, self.handle_frame, queue_size=1)
         #self.pub = rospy.Publisher(self.pub_name, Image, queue_size=1)
         self.serv = TimedService(self.serv_name, HsvFilterImage, self.timing_threshold)
+        #print("Timed Service", self.serv)
         
 
     def handle_frame(self, msg):
