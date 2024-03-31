@@ -24,6 +24,8 @@ def publish_message():
   # Used to convert between ROS and OpenCV images
   br = CvBridge()
 
+  #print(type(img))
+
   # While ROS is still running.
   while not rospy.is_shutdown():
     pub.publish(br.cv2_to_imgmsg(img, encoding='bgr8'))
