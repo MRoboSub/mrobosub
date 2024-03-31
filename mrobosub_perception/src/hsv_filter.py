@@ -33,20 +33,25 @@ class HsvFilter(Node):
         #self.pub = rospy.Publisher(self.pub_name, Image, queue_size=1)
         self.serv = TimedService(self.serv_name, HsvFilterImage, self.timing_threshold)
         #print("Timed Service", self.serv)
-        
+        self.pub = rospy.Publisher(self.serv_name + '_', Image, queue_size=1)
+        self.srv = Server(hsv_paramsConfig, self.reconfigure_callback)
 
     def handle_frame(self, msg):
         if(self.serv.should_run()):
             bgr_img = self.br.imgmsg_to_cv2(msg, desired_encoding='bgr8')
             frame_HSV = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2HSV)
             frame_threshold = cv2.inRange(frame_HSV, (self.hue_lo, self.sat_lo, self.val_lo), (self.hue_hi, self.sat_hi, self.val_hi))
-            img = HsvFilterImageResponse(self.br.cv2_to_imgmsg(frame_threshold, encoding='mono8'))
-            self.serv.set_result(img)
+            img = self.br.cv2_to_imgmsg(frame_threshold, encoding='mono8')
+            hsv_res = HsvFilterImageResponse(img)
+            self.pub.publish(img)
+            self.serv.set_result(hsv_res)
         
 
     def reconfigure_callback(self, config, level):
+        print("Recieved reconfigure")
         for k, v in config.items():
             setattr(self, k, v)
+        print("Returning")
         return config
 
 if __name__=='__main__' :
