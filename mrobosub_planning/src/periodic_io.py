@@ -176,26 +176,15 @@ class PIO:
             return None
 
     @classmethod
-    def query_glyph(cls, glyph: Optional[Glyph]) -> ObjectPositionResponse:
-        if glyph is not None:
-            try:
-                return cls._object_position_srvs[glyph]()
-            except:
-                pass
+    def query_buoy(cls) -> ObjectPositionResponse:
+        try:
+            return cls._hsv_buoy_position_srv()
+        except:
+            pass
 
         obj_msg = ObjectPositionResponse()
         obj_msg.found = False
         return obj_msg
- 
-    @classmethod
-    def query_all_glyphs(cls) -> GlyphDetections:
-        """ query all 12 glyphs and return a dict from any found glyphs to their position. """
-        results = { }
-        for g in Glyph:
-            resp = cls.query_glyph(g)
-            if resp.found:
-                results[g] = resp
-        return results
 
 # private:
     class Callbacks:
@@ -236,6 +225,4 @@ class PIO:
     # Services
     _pathmarker_srv = rospy.ServiceProxy('pathmarker/angle', PathmarkerAngle, persistent=True)
     _bin_cam_pos_srv = rospy.ServiceProxy('bin_cam_pos', BinCamPos, persistent = True)
-    _object_position_srvs: Dict[Glyph, rospy.ServiceProxy] = {}
-    for glyph in Glyph:
-        _object_position_srvs[glyph] = rospy.ServiceProxy(f'/object_position/{glyph.name.lower()}', ObjectPosition, persistent=True)
+    _hsv_buoy_position_srv = rospy.ServiceProxy('hsv_buoy_position', ObjectPosition, persistent=True)

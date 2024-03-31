@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from common import Start, Submerge, Surface, Stop
-from buoy_task import ApproachBuoyOpen, CenterHeaveGlyph, CenterYawGlyph, FindGlyph, FallBack, ContingencySubmerge, ContingencyApproach, Pause
+from buoy_task import ApproachBuoyOpen, CenterHeaveBuoy, CenterYawBuoy
 from umrsm import TransitionMap
 
 
@@ -10,29 +10,14 @@ transitions: TransitionMap = {
     Submerge.Submerged: ApproachBuoyOpen,
     Submerge.TimedOut: ApproachBuoyOpen,
 
-    ApproachBuoyOpen.SeenGlyph: CenterHeaveGlyph,
+    ApproachBuoyOpen.SeenBuoy: CenterHeaveBuoy,
     ApproachBuoyOpen.TimedOut: Surface,
 
-    CenterHeaveGlyph.Centered: CenterYawGlyph,
-    CenterHeaveGlyph.TimedOut: CenterYawGlyph,
+    CenterHeaveBuoy.Centered: CenterYawBuoy,
+    CenterHeaveBuoy.TimedOut: CenterYawBuoy,
 
-    CenterYawGlyph.HitBuoyFirst: FindGlyph,
-    CenterYawGlyph.HitBuoySecond: FallBack,
-    CenterYawGlyph.TimedOut: Surface,
-
-    FindGlyph.SeenGlyph: CenterHeaveGlyph,
-    FindGlyph.TimedOut: Pause,
-
-    Pause.SeenGlyph: CenterHeaveGlyph,
-    Pause.TimedOut: ContingencySubmerge,
-
-    ContingencySubmerge.SeenGlyph: CenterHeaveGlyph,
-    ContingencySubmerge.Submerged: ContingencyApproach,
-
-    ContingencyApproach.HitBuoySecond: FallBack,
-    ContingencyApproach.TimedOut: Surface,
-
-    FallBack.TimedOut: Surface,
+    CenterYawBuoy.CloseToBuoy: Surface,
+    CenterYawBuoy.TimedOut: Surface,
 
     Surface.Surfaced: Stop
 }
