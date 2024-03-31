@@ -1,0 +1,7 @@
+hue_lo: 17.0
+hue_hi: 123.0
+sat_lo: 71.4
+sat_hi: 255.0
+val_lo: 61.09
+val_hi: 255.0
+timing_threshold: 5.0
