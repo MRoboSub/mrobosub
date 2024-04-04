@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from common import Start, Submerge, Surface, Stop
-from buoy_task import ApproachBuoyOpen, CenterHeaveBuoy, CenterYawBuoy
+from buoy_states import ApproachBuoyOpen, CenterHeaveBuoy, CenterYawBuoy
 from umrsm import TransitionMap
 
 

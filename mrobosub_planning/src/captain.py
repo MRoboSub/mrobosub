@@ -5,7 +5,7 @@ import common
 import standard_run
 # import prequal_strafe
 import prequal_turn
-import buoy_run
+import buoy_transitions
 import bin_transitions
 import alignment_test
 import spin_test
@@ -21,7 +21,7 @@ transition_maps: Dict[str, TransitionMap] = {
     'bin_test': bin_transitions.transitions,
     # 'prequal_strafe': prequal_strafe.transitions,
     'prequal_turn': prequal_turn.transitions,
-    'buoy': buoy_run.transitions,
+    'buoy': buoy_transitions.transitions,
     'alignment': alignment_test.transitions,
     'spin': spin_test.transitions,
 }

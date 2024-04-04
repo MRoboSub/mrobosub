@@ -1,6 +1,6 @@
 from abstract_states import TimedState
 from periodic_io import PIO, Glyph, Gbl
-from buoy_task import search_for_glyph, SeenGlyphType
+from buoy_states import search_for_glyph, SeenGlyphType
 from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
 import rospy
 from typing import NamedTuple, Union
