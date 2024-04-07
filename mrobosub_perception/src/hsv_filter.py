@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 #hsv_filter
+from typing import Tuple
 import cv2
 import sys
 
@@ -16,6 +17,7 @@ from mrobosub_lib.lib import Node, Param
 from mrobosub_perception.cfg import hsv_paramsConfig
 
 from hsv_pipeline import HsvPipeline
+import utils
 
 class HsvFilter(Node):
     hue_lo: Param[float]
@@ -55,7 +57,7 @@ class HsvFilter(Node):
                 int(self.sat_hi), int(self.val_lo), int(self.val_hi))
             mask = pipeline.filter_image(bgr_img)
             detection = pipeline.find_circular_object(mask)
-            
+
             if detection is not None:
                 annotated_img = cv2.circle(bgr_img, (detection.x,detection.y), int(detection.radius), (255,255,255), 2)
             else:
@@ -66,9 +68,14 @@ class HsvFilter(Node):
             
             response = ObjectPositionResponse()
             if detection is not None:
+                x_theta, y_theta = utils.pixels_to_angles(bgr_img, detection.x, detection.y)
                 response.found = True
                 response.x_position = detection.x
                 response.y_position = detection.y
+                response.x_theta = x_theta
+                response.y_theta = y_theta
+                # TODO add raidus to service type
+                response.confidence = detection.radius
 
             self.serv.set_result(response)
         
@@ -79,6 +86,7 @@ class HsvFilter(Node):
             setattr(self, k, v)
         print("Returning")
         return config
+    
 
 if __name__=='__main__' :
     filter = HsvFilter()
