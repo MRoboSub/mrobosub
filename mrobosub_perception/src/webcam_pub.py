@@ -15,21 +15,23 @@ def publish_message():
 
   # Node is publishing to the video_frames topic using
   # the message type Image
-  pub = rospy.Publisher('bot_cam', Image, queue_size=10)
+  pub = rospy.Publisher('bot_cam', Image, queue_size=1)
 
   # Tells rospy the name of the node.
   # Anonymous = True makes sure the node has a unique name. Random
   # numbers are added to the end of the name.
   rospy.init_node('bot_pub_py', anonymous=True)
 
-  # Go through the loop 10 times per second
-  rate = rospy.Rate(10) # 10hz
+  # Go through the loop 30 times per second
+  rate = rospy.Rate(30) # 30hz
 
   # Create a VideoCapture object
-  # The argument '0' gets the default webcam.
-  cap = cv2.VideoCapture("/dev/botcam")
-  cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
-  #cap.set(cv2.CAP_PROP_EXPOSURE, -8)
+  cap = cv2.VideoCapture("/dev/video10")
+  # https://stackoverflow.com/a/66279297
+  cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
+  cap.set(cv2.CAP_PROP_EXPOSURE, 100)
+  #cap.set(cv2.CAP_PROP_FPS,30)
+  #cap.set(cv2.CAP_PROP_BUFFERSIZE,1)
 
   # Used to convert between ROS and OpenCV images
   br = CvBridge()
