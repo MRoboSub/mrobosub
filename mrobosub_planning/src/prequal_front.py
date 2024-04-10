@@ -29,9 +29,9 @@ class AlignGate(TimedState):
 class ApproachGate(ForwardAndWait):
     class Reached(NamedTuple): pass
 
-    target_heave: float = 2 # TODO
-    target_surge_time: float = 10.0
-    surge_speed: float = 0.2
+    target_heave: float = 1.4 # TODO
+    target_surge_time: float = 5.0
+    surge_speed: float = 0.5
     wait_time: float = 1.0
 
     def handle_reached(self) -> Reached:
@@ -46,9 +46,9 @@ class ApproachGate(ForwardAndWait):
 class ApproachMarker(ForwardAndWait):
     class Reached(NamedTuple): pass
 
-    target_heave: float = 2 # TODO
-    target_surge_time: float = 22.0
-    surge_speed: float = 0.2
+    target_heave: float = 1.4 # TODO
+    target_surge_time: float = 56.0/2
+    surge_speed: float = 0.5
     wait_time: float = 1.0
 
     def handle_reached(self) -> Reached:
