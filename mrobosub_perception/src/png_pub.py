@@ -9,7 +9,7 @@ def publish_message():
 
   # Node is publishing to the video_frames topic using
   # the message type Image
-  pub = rospy.Publisher('zed2/zed_node/rgb/image_rect_color', Image, queue_size=10)
+  pub = rospy.Publisher('/zed2/zed_node/rgb/image_rect_color', Image, queue_size=10)
 
   rospy.init_node('png_pub_py', anonymous=True)
 
@@ -18,11 +18,13 @@ def publish_message():
 
   # Create a VideoCapture object
   # The argument '0' gets the default webcam.
-  img = cv2.imread("./test_ml.png")
+  img = cv2.imread("./bbox.png")
   #cap.set(cv2.CAP_PROP_EXPOSURE, -8)
 
   # Used to convert between ROS and OpenCV images
   br = CvBridge()
+
+  #print(type(img))
 
   # While ROS is still running.
   while not rospy.is_shutdown():

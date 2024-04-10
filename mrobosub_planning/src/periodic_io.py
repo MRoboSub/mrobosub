@@ -1,6 +1,7 @@
+import rosgraph
 import rospy
 from std_msgs.msg import Float64, Bool
-from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, PathmarkerAngle # type: ignore
+from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, PathmarkerAngle, BinCamPos, BinCamPosResponse # type: ignore
 from typing import Dict, Type, Mapping, Optional, Tuple
 from enum import Enum, auto
 
@@ -71,9 +72,29 @@ class PIO:
     
     buoy_collision = False
 
+
     # @classmethod
     # def heading_within_threshold(cls, threshold):
     #     return angle_error_abs(PIO.heading_value, PIO.current_heading) <= threshold
+
+    @classmethod
+    def query_BinCamPos(cls) -> Optional[BinCamPosResponse]:
+        """ Request the x, y position on the camera of the bin, and found which is True if we have data
+
+        Returns: 
+            x, y position on the camera of the bin and found
+            None otherwise. 
+        """
+        
+        try:
+            resp = cls._bin_cam_pos_srv()
+        except:
+            return None
+        if(resp.found):
+            return resp
+        else:
+            return None
+
 
     @classmethod
     def is_yaw_within_threshold(cls, threshold):
@@ -157,11 +178,14 @@ class PIO:
     @classmethod
     def query_glyph(cls, glyph: Optional[Glyph]) -> ObjectPositionResponse:
         if glyph is not None:
-            return cls._object_position_srvs[glyph]()
-        else:
-            obj_msg = ObjectPositionResponse()
-            obj_msg.found = False
-            return obj_msg
+            try:
+                return cls._object_position_srvs[glyph]()
+            except:
+                pass
+
+        obj_msg = ObjectPositionResponse()
+        obj_msg.found = False
+        return obj_msg
  
     @classmethod
     def query_all_glyphs(cls) -> GlyphDetections:
@@ -211,6 +235,7 @@ class PIO:
     
     # Services
     _pathmarker_srv = rospy.ServiceProxy('pathmarker/angle', PathmarkerAngle, persistent=True)
+    _bin_cam_pos_srv = rospy.ServiceProxy('bin_cam_pos', BinCamPos, persistent = True)
     _object_position_srvs: Dict[Glyph, rospy.ServiceProxy] = {}
     for glyph in Glyph:
         _object_position_srvs[glyph] = rospy.ServiceProxy(f'/object_position/{glyph.name.lower()}', ObjectPosition, persistent=True)
