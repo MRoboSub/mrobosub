@@ -1,6 +1,5 @@
 from abstract_states import TimedState
 from periodic_io import PIO, Glyph, Gbl
-from buoy_states import search_for_glyph, SeenGlyphType
 from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
 import rospy
 from typing import NamedTuple, Union
@@ -122,8 +121,8 @@ class ApproachGateImage(TimedState):
 
 
 class AlignPathMarker(TimedState):
-    class SeenGlyph(SeenGlyphType):
-        pass
+    # class SeenGlyph(SeenGlyphType):
+    #     pass
     class Aligned(NamedTuple):
         pass
     class TimedOut(NamedTuple):
@@ -139,21 +138,20 @@ class AlignPathMarker(TimedState):
         self.last_known_angle = prev_outcome.angle
 
 
-    def handle_if_not_timedout(self) -> Union[SeenGlyph, Aligned, TimedOut, None]:
+    def handle_if_not_timedout(self) -> Union[Aligned, TimedOut, None]:
         pm_resp = PIO.query_pathmarker()
         if pm_resp is not None:
             self.last_known_angle = pm_resp
 
-        seen_glyph_outcome = search_for_glyph(Gbl.preferred_glyph())
+        # seen_glyph_outcome = search_for_glyph(Gbl.preferred_glyph())
 
         PIO.set_target_pose_yaw(self.last_known_angle)
 
-        if seen_glyph_outcome:
-            return self.SeenGlyph(*seen_glyph_outcome)
-        elif PIO.is_yaw_within_threshold(self.yaw_threshold):
+        # if seen_glyph_outcome:
+        #     return self.SeenGlyph(*seen_glyph_outcome)
+        if PIO.is_yaw_within_threshold(self.yaw_threshold):
             return self.Aligned()
-        else:
-            return None
+        return None
 
     def handle_once_timedout(self) -> TimedOut:
         return self.TimedOut()

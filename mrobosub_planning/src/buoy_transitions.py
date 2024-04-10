@@ -14,7 +14,7 @@ transitions: TransitionMap = {
     ApproachBuoyOpen.TimedOut: Surface,
 
     CenterHeaveBuoy.Centered: CenterYawBuoy,
-    CenterHeaveBuoy.TimedOut: CenterYawBuoy,
+    CenterHeaveBuoy.TimedOut: Surface,
 
     CenterYawBuoy.CloseToBuoy: Surface,
     CenterYawBuoy.TimedOut: Surface,
