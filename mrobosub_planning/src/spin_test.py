@@ -1,5 +1,5 @@
-from common import Start, Submerge, Surface, Stop
-from gate_task import Spin, SpinFinish
+from common_states import Start, Submerge, Surface, Stop
+from gate_states import Spin, SpinFinish
 from umrsm import TransitionMap
 
 transitions: TransitionMap = {

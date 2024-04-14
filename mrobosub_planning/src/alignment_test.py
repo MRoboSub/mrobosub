@@ -1,6 +1,6 @@
-from gate_task import AlignPathMarker, ApproachGate
+from gate_states import AlignPathMarker, ApproachGate
 from buoy_states import ApproachBuoyOpen
-from common import Start, Submerge, Surface, Stop
+from common_states import Start, Submerge, Surface, Stop
 from umrsm import TransitionMap
 
 

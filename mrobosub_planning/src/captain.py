@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from typing import Dict, NamedTuple, Type
 from umrsm import StateMachine, State, TransitionMap
-import common
+import common_states
 import standard_run
 # import prequal_strafe
 import prequal_turn
@@ -33,8 +33,8 @@ if __name__ == '__main__':
     machine = StateMachine(
         machine_name,
         transition_maps[machine_name],
-        common.Start,
-        common.Stop,
+        common_states.Start,
+        common_states.Stop,
     )
     try:
         machine.run()

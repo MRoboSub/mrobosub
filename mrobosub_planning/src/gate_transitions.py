@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-from common import Start, Submerge, Surface, Stop
-from gate_task import AlignGate, AlignPathMarker, ApproachGate, ApproachGateImage
+from common_states import Start, Submerge, Surface, Stop
+from gate_states import AlignGate, AlignPathMarker, ApproachGate, ApproachGateImage
 # from buoy_states import ApproachBuoyOpen, OldApproachBuoyClosed, FindGlyph, FallBack, PassBuoy, Pause, ContingencyApproach, ContingencySubmerge, Ascend
 
 
