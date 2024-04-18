@@ -7,7 +7,7 @@ from enum import Enum, auto
 
 
 def angle_error(setpoint, state):
-        return (setpoint - state + 180) % 360 - 180
+        return (((setpoint - state) % 360) + 360) % 360
 
 Namespace = Type
 
@@ -180,7 +180,8 @@ class PIO:
         try:
             return cls._hsv_buoy_position_srv()
         except:
-            pass
+            print("[ERROR] Failed to call buoy position service")
+            raise Exception()
 
         obj_msg = ObjectPositionResponse()
         obj_msg.found = False
@@ -246,7 +247,7 @@ class PIO:
     # Services
     _pathmarker_srv = rospy.ServiceProxy('pathmarker/angle', PathmarkerAngle, persistent=True)
     _bin_cam_pos_srv = rospy.ServiceProxy('bin_cam_pos', BinCamPos, persistent = True)
-    _hsv_buoy_position_srv = rospy.ServiceProxy('hsv_buoy_position', ObjectPosition, persistent=True)
+    _hsv_buoy_position_srv = rospy.ServiceProxy('/hsv_buoy_position', ObjectPosition, persistent=True)
 
     #also old
     _object_position_srvs: Dict[Glyph, rospy.ServiceProxy] = {}

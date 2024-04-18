@@ -30,7 +30,7 @@ class CircumnavigateOpenContinuous(TimedState):
 
 
 class CircumnavigateOpenDiscreteData(NamedTuple):
-    final_angle: float
+    cum_angle: float
     curr_angle: float
     ccw: bool
 
@@ -46,10 +46,10 @@ class CircumnavigateOpenDiscreteDiamondTurns(TurnToYaw):
         pass
 
     timeout: float = 25.
-    yaw_threshold: float = 2.5
-    settle_time: float = 2.
-    angle_per_iter: float = 360. / 4.
-    initial_turn: float = 360. / 8.
+    yaw_threshold: float = 7.5
+    settle_time: float = 1.
+    angle_per_iter: float = 360. / 4. + 10. # add 10 degrees ech turn to account for drift
+    initial_turn: float = angle_per_iter / 2.
 
     @property
     def target_yaw(self) -> float:
@@ -63,10 +63,10 @@ class CircumnavigateOpenDiscreteDiamondTurns(TurnToYaw):
             self.dir = 1
 
         if not isinstance(prev_outcome, CircumnavigateOpenDiscreteData):
-            self.final_target = PIO.Pose.yaw % 360
-            self._target_yaw = (self.final_target - self.initial_turn * self.dir) % 360
+            self.cum_angle = 0.
+            self._target_yaw = (self.cum_angle - self.initial_turn * self.dir) % 360
         else:
-            self.final_target = prev_outcome.final_angle
+            self.cum_angle = prev_outcome.cum_angle + abs(self.angle_per_iter)
             self._target_yaw = (prev_outcome.curr_angle + self.angle_per_iter * self.dir) % 360
 
     def handle_unreached(self) -> None:
@@ -74,9 +74,9 @@ class CircumnavigateOpenDiscreteDiamondTurns(TurnToYaw):
         return None
 
     def handle_reached(self) -> Optional[Union[FinishedStep, Complete]]:
-        if self.target_yaw == self.final_target:
+        if self.cum_angle >= 350.:
             return self.Complete()
-        return self.FinishedStep(self.final_target, self.target_yaw, self.dir == -1)
+        return self.FinishedStep(self.cum_angle, self.target_yaw, self.dir == -1)
 
     def handle_once_timedout(self) -> TimedOut:
         return self.TimedOut()
@@ -134,13 +134,13 @@ class CircumnavigateOpenDiscreteMove(TimedState):
         pass
 
     timeout: float = 10.
-    surge_twist: float = 0.1
+    surge_twist: float = 0.15
 
     def __init__(self, prev_outcome: NamedTuple):
         super().__init__(prev_outcome)
         if not isinstance(prev_outcome, CircumnavigateOpenDiscreteData):
             raise TypeError(f"Expected type CircumnavigateOpenDiscreteData, received {prev_outcome}")
-        self.final_target = prev_outcome.final_angle
+        self.cum_angle = prev_outcome.cum_angle
         self.curr_yaw = prev_outcome.curr_angle
         self.ccw = prev_outcome.ccw
 
@@ -149,4 +149,4 @@ class CircumnavigateOpenDiscreteMove(TimedState):
         PIO.set_target_twist_surge(self.surge_twist)
 
     def handle_once_timedout(self) -> FinishedStep:
-        return self.FinishedStep(self.final_target, self.curr_yaw, self.ccw)
+        return self.FinishedStep(self.cum_angle, self.curr_yaw, self.ccw)

@@ -7,6 +7,7 @@ from umrsm import TransitionMap
 
 transitions: TransitionMap = {
     Start.Complete: Submerge,
+    # Start.Complete: CircumnavigateOpenDiscreteDiamondTurns,
 
     Submerge.Submerged: ApproachBuoyOpen,
     Submerge.TimedOut: ApproachBuoyOpen,
