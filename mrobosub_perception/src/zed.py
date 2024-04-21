@@ -13,7 +13,9 @@ from std_srvs.srv import SetBool, SetBoolRequest
 
 class Zed(ControlLoopNode):
     device_path = Param[str]
-    on = False
+
+    def __init__(self) -> None:
+        self.on = False
 
     def handle_on_service(self, req: SetBoolRequest):
         self.on = req.data
