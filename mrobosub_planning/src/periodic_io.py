@@ -171,7 +171,12 @@ class PIO:
             return None
 
         if resp.found:
-            return (90 - resp.angle) + cls.Pose.yaw
+            convertedAngle = (90 + resp.angle) + cls.Pose.yaw
+            if convertedAngle > 90: #if pointing behind us flip 180
+                convertedAngle -= 180
+            elif convertedAngle < -90:
+                convertedAngle += 180
+            return convertedAngle
         else:
             return None
 

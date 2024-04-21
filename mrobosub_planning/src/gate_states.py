@@ -133,9 +133,12 @@ class AlignPathMarker(TimedState):
 
     def __init__(self, prev_outcome: NamedTuple) -> None:
         super().__init__(prev_outcome)
-        if not isinstance(prev_outcome, ApproachGateImage.FoundBuoyPathMarker):
-            raise TypeError(f"Expected type FoundBuoyPathMarker, received {prev_outcome}")
-        self.last_known_angle = prev_outcome.angle
+        self.last_known_angle = None
+        if isinstance(prev_outcome, ApproachGateImage.FoundBuoyPathMarker):
+            self.last_known_angle = prev_outcome.angle
+        else:
+            print(f"Expected type FoundBuoyPathMarker, received {prev_outcome}") 
+        
 
 
     def handle_if_not_timedout(self) -> Union[Aligned, TimedOut, None]:
@@ -143,12 +146,11 @@ class AlignPathMarker(TimedState):
         if pm_resp is not None:
             self.last_known_angle = pm_resp
 
-        # seen_glyph_outcome = search_for_glyph(Gbl.preferred_glyph())
+        if self.last_known_angle != None:
+            PIO.set_target_pose_yaw(self.last_known_angle)
+        else:
+            return None
 
-        PIO.set_target_pose_yaw(self.last_known_angle)
-
-        # if seen_glyph_outcome:
-        #     return self.SeenGlyph(*seen_glyph_outcome)
         if PIO.is_yaw_within_threshold(self.yaw_threshold):
             return self.Aligned()
         return None
