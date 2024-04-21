@@ -1,5 +1,5 @@
 <launch>
-    <arg name="machine" default="buoy" />
+    <arg name="machine" default="prequal_turn" />
     <node name="captain" pkg="mrobosub_planning" type="captain.py" 
         output="screen" args="$(arg machine)">
         <param 

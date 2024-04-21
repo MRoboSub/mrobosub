@@ -27,8 +27,8 @@ class MovePastMarker(ForwardAndWait):
     class Reached(NamedTuple):
         pass
     
-    target_heave: float = 1.2
-    target_surge_time: float = 8
+    target_heave: float = 1.4
+    target_surge_time: float = 5
     surge_speed: float = 0.2
     wait_time: float = 1
 
@@ -62,7 +62,7 @@ class LeaveMarker(ForwardAndWait):
     class Reached(NamedTuple):
         pass
     
-    target_heave: float = 1.2
+    target_heave: float = 1.4
     target_surge_time: float = 10
     surge_speed: float = 0.2
     wait_time: float = 1
@@ -77,7 +77,7 @@ class ReturnToGate(ForwardAndWait):
     class Reached(NamedTuple):
         pass
     
-    target_heave: float = 1.9
+    target_heave: float = 1.4
     target_surge_time: float = 224
     surge_speed: float = 0.2
     wait_time: float = 1

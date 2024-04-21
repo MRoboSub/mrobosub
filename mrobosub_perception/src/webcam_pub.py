@@ -20,11 +20,15 @@ class WebcamPub():
         pub = rospy.Publisher('bot_cam', Image, queue_size=10)
         rospy.Service('/bot_cam/on', SetBool, self.handle_on_service)
 
-        rate = rospy.Rate(10)
+        # Create a VideoCapture object
+        cap = cv2.VideoCapture("/dev/video10")
+        # https://stackoverflow.com/a/66279297
+        cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
+        cap.set(cv2.CAP_PROP_EXPOSURE, 100)
+        #cap.set(cv2.CAP_PROP_FPS,10)
+        #cap.set(cv2.CAP_PROP_BUFFERSIZE,1)
 
-        cap = cv2.VideoCapture("/dev/botcam")
-        cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
-        #cap.set(cv2.CAP_PROP_EXPOSURE, -8)
+        rate = rospy.Rate(10)
 
         br = CvBridge()
 
