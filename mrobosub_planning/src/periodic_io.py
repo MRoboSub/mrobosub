@@ -89,7 +89,7 @@ class PIO:
         
         try:
             resp = cls._bin_cam_pos_srv()
-        except:
+        except rospy.service.ServiceException as e:
             return None
         if(resp.found):
             return resp
@@ -168,7 +168,7 @@ class PIO:
         
         try:
             resp = cls._pathmarker_srv()
-        except:
+        except rospy.service.ServiceException as e:
             return None
 
         if resp.found:
@@ -181,7 +181,7 @@ class PIO:
         if glyph is not None:
             try:
                 return cls._object_position_srvs[glyph]()
-            except:
+            except rospy.service.ServiceException as e:
                 pass
 
         obj_msg = ObjectPositionResponse()
@@ -216,8 +216,8 @@ class PIO:
         try:
             cls._zed_on_srv(zed_on)
             cls._bot_cam_on_srv(bot_cam_on)
-        except:
-            print(error_msg)
+        except rospy.service.ServiceException as e:
+            print(f'Error: {error_msg}, {e}')
 
 # private:
     class Callbacks:
