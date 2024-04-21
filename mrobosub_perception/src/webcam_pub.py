@@ -12,9 +12,11 @@ class WebcamPub():
         self.on = False
 
     def handle_on_service(self, req: SetBoolRequest):
-        if req.data and not self.on:
+        if req.data == self.on: return SetBoolResponse(success=True)
+
+        if req.data:
             self.open_capture()
-        elif not req.data and self.on:
+        else:
             self.close_capture()
         self.on = req.data
         return SetBoolResponse(success=True)
