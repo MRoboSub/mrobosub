@@ -8,7 +8,8 @@ from cv_bridge import CvBridge
 from std_srvs.srv import SetBool, SetBoolRequest
 
 class WebcamPub():
-    on = False
+    def __init__(self) -> None:
+        self.on = False
 
     def handle_on_service(self, req: SetBoolRequest):
         self.on = req.data
