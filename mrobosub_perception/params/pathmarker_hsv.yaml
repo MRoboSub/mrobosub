@@ -1,15 +1,16 @@
-hue_lo: 100 
-hue_hi: 120
-sat_lo: 205
-sat_hi: 255
-val_lo: 177
-val_hi: 255
-wb_shift: 30
-wb_scale: 55
-white_balance: True
-histogram_equalization: True
-erode_radius: 1
-dilate_radius: 1
-median_radius: 15
-gaussian_radius: 5
+hsv_params:
+  hue_lo: 100 
+  hue_hi: 120
+  sat_lo: 205
+  sat_hi: 255
+  val_lo: 177
+  val_hi: 255
+  wb_shift: 30
+  wb_scale: 55
+  white_balance: True
+  histogram_equalization: True
+  erode_radius: 1
+  dilate_radius: 1
+  median_radius: 15
+  gaussian_radius: 5
 timing_threshold: 5.0

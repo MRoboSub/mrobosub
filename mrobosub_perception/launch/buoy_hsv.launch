@@ -1,0 +1,12 @@
+<launch>
+  <arg name="always_run" default="0" />
+  <node 
+    pkg="mrobosub_perception"
+    type="buoy_hsv.py"
+    name="buoy_hsv"
+    output="screen"
+    args="$(arg always_run)"
+  >
+    <rosparam command="load" file="$(find mrobosub_perception)/params/buoy_hsv.yaml" />
+  </node> 
+</launch>
