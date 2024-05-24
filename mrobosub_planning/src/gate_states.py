@@ -84,7 +84,7 @@ class ApproachGateImage(TimedState):
         pass
 
     timeout: float = 25.0
-    lost_image_threshold: int = 300
+    lost_image_threshold: int = 50
     yaw_threshold: float = 2.0
 
     def __init__(self, prev_outcome: NamedTuple) -> None:
