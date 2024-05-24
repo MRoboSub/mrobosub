@@ -5,9 +5,7 @@ from typing import Tuple
 import cv2
 import sys
 
-from matplotlib.pyplot import annotate
 from cv_bridge import CvBridge
-import numpy as np
 import rospy
 from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse
 from timed_service import TimedService
@@ -19,42 +17,27 @@ from mrobosub_perception.cfg import hsv_paramsConfig
 from hsv_pipeline import HsvPipeline
 import utils
 
-class HsvFilter(Node):
-    hue_lo: Param[float]
-    hue_hi: Param[float]
-    sat_lo: Param[float]
-    sat_hi: Param[float]
-    val_lo: Param[float]
-    val_hi: Param[float]
-    sub_name: Param[str]
-    serv_name: Param[str]
+class BuoyHsv(Node):
+    hsv_params: Param[dict]
     timing_threshold: Param[float]
 
     def __init__(self):
-        super().__init__('hsv_filter')
+        super().__init__('buoy_hsv')
 
         self.br = CvBridge()
 
-        print(rospy.myargv(sys.argv))
-        if(rospy.myargv(sys.argv)[1] != "0"): #input 1 for always_run to not have to do service calls always_run:=1
-            self.always_run = True
-        else:
-            self.always_run = False
+        self.always_run = rospy.myargv(sys.argv)[1] != "0" #input 1 for always_run to not have to do service calls always_run:=1
 
-        self.sub = rospy.Subscriber(self.sub_name, Image, self.handle_frame, queue_size=1)
-        #self.pub = rospy.Publisher(self.pub_name, Image, queue_size=1)
-        self.serv = TimedService(self.serv_name, ObjectPosition, self.timing_threshold)
-        #print("Timed Service", self.serv)
-        self.mask_pub = rospy.Publisher(f'{self.serv_name}_mask', Image, queue_size=1)
-        self.annotated_pub = rospy.Publisher(f'{self.serv_name}_annotated', Image, queue_size=1)
-        self.srv = Server(hsv_paramsConfig, self.reconfigure_callback)
+        self.sub = rospy.Subscriber('/zed2/zed_node/rgb/image_rect_color', Image, self.handle_frame, queue_size=1)
+        self.serv = TimedService('/buoy_object_position', ObjectPosition, self.timing_threshold)
+        self.mask_pub = rospy.Publisher(f'/buoy_mask', Image, queue_size=1)
+        self.annotated_pub = rospy.Publisher(f'/buoy_annotated', Image, queue_size=1)
+        self.srv = Server(hsv_paramsConfig, self.reconfigure_callback, 'hsv_params')
 
     def handle_frame(self, msg):
         if(self.serv.should_run() or self.always_run):
             bgr_img = self.br.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-            pipeline = HsvPipeline(
-                int(self.hue_lo), int(self.hue_hi), int(self.sat_lo),
-                int(self.sat_hi), int(self.val_lo), int(self.val_hi))
+            pipeline = HsvPipeline(**self.hsv_params)
             mask = pipeline.filter_image(bgr_img)
             detection = pipeline.find_circular_object(mask)
 
@@ -70,7 +53,7 @@ class HsvFilter(Node):
             if detection is not None:
                 x_theta, y_theta = utils.pixels_to_angles(bgr_img, detection.x, detection.y)
                 response.found = True
-                response.x_position = detection.x
+                response.x_position = detection.radius
                 response.y_position = detection.y
                 response.x_theta = x_theta
                 response.y_theta = y_theta
@@ -81,13 +64,10 @@ class HsvFilter(Node):
         
 
     def reconfigure_callback(self, config, level):
-        print("Recieved reconfigure")
-        for k, v in config.items():
-            setattr(self, k, v)
-        print("Returning")
+        self.hsv_params.update({k: v for k, v in config.items() if k in self.hsv_params})
         return config
     
 
 if __name__=='__main__' :
-    filter = HsvFilter()
+    node = BuoyHsv()
     rospy.spin()

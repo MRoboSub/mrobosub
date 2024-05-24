@@ -2,7 +2,7 @@
 from periodic_io import PIO, angle_error
 from umrsm import *
 from umrsm import TransitionMap
-from common import *
+from common_states import *
 from abstract_states import ForwardAndWait
 from typing import NamedTuple
 

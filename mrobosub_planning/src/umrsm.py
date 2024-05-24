@@ -104,7 +104,7 @@ class StateMachine:
         state_topic_pub.publish(type(self.current_state).__qualname__)
 
         outcome = self.current_state.handle()
-        if outcome is None:
+        if outcome is None and not self.stop_signal_recvd:
             return
         outcome_type = type(outcome)
         outcome_name = outcome_type.__qualname__
