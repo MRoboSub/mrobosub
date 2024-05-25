@@ -80,7 +80,8 @@ class PIO:
 
     @classmethod
     def query_BinCamPos(cls) -> Optional[BinCamPosResponse]:
-        """ Request the x, y position on the camera of the bin, and found which is True if we have data
+        """ Request the x, y position on the camera of the bin (0,0) being the center +y is up and +x is right,
+          and found which is True if we have data
 
         Returns: 
             x, y position on the camera of the bin and found

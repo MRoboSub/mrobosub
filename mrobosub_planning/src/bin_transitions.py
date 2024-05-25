@@ -6,11 +6,27 @@ from umrsm import TransitionMap
 transitions:TransitionMap = {
     Start.Complete: Submerge,
 
-    Submerge.Submerged: CenterToBinFromFar,
-    Submerge.TimedOut: CenterToBinFromFar,
+    Submerge.Submerged: ApproachBin,
+    Submerge.TimedOut: ApproachBin,
 
-    CenterToBinFromFar.Reached: Surface,
-    CenterToBinFromFar.TimedOut: Surface,
+    ApproachBin.Reached: CenterCameraToBin,
+    ApproachBin.TimedOut: CenterCameraToBin,#Surface,
+
+    CenterCameraToBin.Reached: Descend,
+    CenterCameraToBin.TimedOut: Descend,#Surface,
+    
+    Descend.Reached: CenterLeftDropper,
+    Descend.TimedOut: CenterLeftDropper,#Surface,
+
+    CenterLeftDropper.Reached: DropMarker,
+    CenterLeftDropper.TimedOut:DropMarker,#Surface,
+
+    DropMarker.DroppedLeft: Spin180,
+    DropMarker.TimedOut: Spin180,#Surface,
+    DropMarker.DroppedRight: Surface,
+
+    Spin180.Reached: Surface,#DropMarker,
+    Spin180.TimedOut: Surface,
 
     Surface.Surfaced: Stop
 }
