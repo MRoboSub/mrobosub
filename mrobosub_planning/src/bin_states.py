@@ -217,8 +217,12 @@ class Spin180(TimedState):
 
     yaw_threshold = 2.5
 
+    def __init__(self, prev_outcome):
+        super().__init__(prev_outcome)
+        self.target_yaw: float  = (PIO.Pose.yaw + 180) % 360
+
     def handle_if_not_timedout(self) -> Union[Reached, None]:
-        PIO.set_target_pose_yaw((PIO.Pose.yaw + 180) % 360)
+        PIO.set_target_pose_yaw(self.target_yaw)
 
         if (PIO.is_yaw_within_threshold(self.yaw_threshold)):
             return self.Reached(False)

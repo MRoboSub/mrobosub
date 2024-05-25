@@ -10,22 +10,22 @@ transitions:TransitionMap = {
     Submerge.TimedOut: ApproachBin,
 
     ApproachBin.Reached: CenterCameraToBin,
-    ApproachBin.TimedOut: CenterCameraToBin,#Surface,
+    ApproachBin.TimedOut: Surface, #CenterCameraToBin,
 
     CenterCameraToBin.Reached: Descend,
-    CenterCameraToBin.TimedOut: Descend,#Surface,
+    CenterCameraToBin.TimedOut: Surface, #Descend,#
     
     Descend.Reached: CenterLeftDropper,
-    Descend.TimedOut: CenterLeftDropper,#Surface,
+    Descend.TimedOut: Surface, #CenterLeftDropper,#
 
     CenterLeftDropper.Reached: DropMarker,
-    CenterLeftDropper.TimedOut:DropMarker,#Surface,
+    CenterLeftDropper.TimedOut: Surface, #DropMarker,#
 
     DropMarker.DroppedLeft: Spin180,
-    DropMarker.TimedOut: Spin180,#Surface,
+    DropMarker.TimedOut: Surface, #Spin180,#
     DropMarker.DroppedRight: Surface,
 
-    Spin180.Reached: Surface,#DropMarker,
+    Spin180.Reached: DropMarker, #Surface,#
     Spin180.TimedOut: Surface,
 
     Surface.Surfaced: Stop
