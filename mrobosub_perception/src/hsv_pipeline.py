@@ -93,7 +93,7 @@ class HsvPipeline():
 
         return enhanced
 
-    def filter_image(self, frame):
+    def filter_image(self, frame, return_enhanced=False):
         enhanced = self.color_enhancement(frame)
         
         frame_hsv = cv2.cvtColor(enhanced, self.color_space)
@@ -114,7 +114,10 @@ class HsvPipeline():
         if self.dilate_radius > 0:
             mask = cv2.dilate(mask, np.ones((self.dilate_radius, self.dilate_radius), np.uint8), iterations=1)
 
-        return mask
+        if return_enhanced:
+            return mask, enhanced
+        else:
+            return mask
     
     def find_rectangular_object(self, mask):
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)

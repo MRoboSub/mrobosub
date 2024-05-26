@@ -31,6 +31,7 @@ class BinHsv(Node):
         self.sub = rospy.Subscriber('/bot_cam', Image, self.handle_frame, queue_size=1)
         self.serv = TimedService('/bin_object_position', ObjectPosition, self.timing_threshold)
         self.mask_pub = rospy.Publisher(f'/bin_mask', Image, queue_size=1)
+        self.enhanced_pub = rospy.Publisher(f'/bin_enhanced', Image, queue_size=1)
         self.annotated_pub = rospy.Publisher(f'/bin_annotated', Image, queue_size=1)
         self.srv = Server(hsv_paramsConfig, self.reconfigure_callback, 'hsv_params')
 
@@ -38,7 +39,7 @@ class BinHsv(Node):
         if(self.serv.should_run() or self.always_run):
             bgr_img = self.br.imgmsg_to_cv2(msg, desired_encoding='bgr8')
             pipeline = HsvPipeline(**self.hsv_params, color_space=cv2.COLOR_RGB2HSV)
-            mask = pipeline.filter_image(bgr_img)
+            mask, enhanced_img = pipeline.filter_image(bgr_img, return_enhanced=True)
             detection = pipeline.find_rectangular_object(mask)
 
             if detection is not None:
@@ -47,6 +48,7 @@ class BinHsv(Node):
                 annotated_img = bgr_img
 
             self.mask_pub.publish(self.br.cv2_to_imgmsg(mask, encoding='mono8'))
+            self.enhanced_pub.publish(self.br.cv2_to_imgmsg(enhanced_img, encoding='bgr8'))
             self.annotated_pub.publish(self.br.cv2_to_imgmsg(annotated_img, encoding='bgr8'))
             
             response = ObjectPositionResponse()
