@@ -1,0 +1,12 @@
+<launch>
+  <arg name="always_run" default="0" />
+  <node 
+    pkg="mrobosub_perception"
+    type="bin_hsv.py"
+    name="bin_hsv"
+    output="screen"
+    args="$(arg always_run)"
+  >
+    <rosparam command="load" file="$(find mrobosub_perception)/params/bin_hsv.yaml" />
+  </node> 
+</launch>
