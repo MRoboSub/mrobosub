@@ -29,10 +29,11 @@ class ApproachBin(TimedState):
     def handle_if_not_timedout(self) -> Union[None, Reached]:
         bin_camera_position = PIO.query_BinCamPos() 
         #print(f"{bin_camera_position=}")
-        if bin_camera_position and bin_camera_position.found: 
-            self.angle_to_bin = math.atan2(bin_camera_position.y, bin_camera_position.x) 
-            self.angle_to_bin  = math.degrees(-self.angle_to_bin  + math.pi/2)
-            self.dist_to_bin = math.sqrt(bin_camera_position.y**2 + bin_camera_position.x**2)
+        if bin_camera_position and bin_camera_position.found:
+            x, y = bin_camera_position.x_position, bin_camera_position.y_position
+            self.angle_to_bin = math.atan2(y, x) 
+            self.angle_to_bin = math.degrees(-self.angle_to_bin + math.pi/2)
+            self.dist_to_bin = math.sqrt(y**2 + x**2)
             PIO.set_target_twist_surge(self.surge_speed*(self.dist_to_bin/self.max_pixel_dist)) #set surge speed decreases as closer to centered
             
             # Use setpoint for yaw angle

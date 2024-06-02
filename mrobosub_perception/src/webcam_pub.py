@@ -52,6 +52,7 @@ class WebcamPub():
                 ret, frame = self.cap.read()
 
                 if ret == True:
+                    frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
                     pub.publish(br.cv2_to_imgmsg(frame, encoding='bgr8'))
 
             rate.sleep()

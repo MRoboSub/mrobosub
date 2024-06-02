@@ -1,7 +1,7 @@
 import rosgraph
 import rospy
 from std_msgs.msg import Float64, Bool
-from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, PathmarkerAngle, BinCamPos, BinCamPosResponse # type: ignore
+from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, PathmarkerAngle, ObjectPosition, ObjectPositionResponse # type: ignore
 from typing import Dict, Type, Mapping, Optional, Tuple
 from enum import Enum, auto
 from std_srvs.srv import SetBool
@@ -79,7 +79,7 @@ class PIO:
     #     return angle_error_abs(PIO.heading_value, PIO.current_heading) <= threshold
 
     @classmethod
-    def query_BinCamPos(cls) -> Optional[BinCamPosResponse]:
+    def query_BinCamPos(cls) -> Optional[ObjectPosition]:
         """ Request the x, y position on the camera of the bin (0,0) being the center +y is up and +x is right,
           and found which is True if we have data
 
@@ -91,6 +91,7 @@ class PIO:
         try:
             resp = cls._bin_cam_pos_srv()
         except rospy.service.ServiceException as e:
+            print('Cannot reach bin object position service')
             return None
         if(resp.found):
             return resp
@@ -274,8 +275,8 @@ class PIO:
     _target_twist_heave_pub = rospy.Publisher('/target_twist/heave', Float64, queue_size = 1)
     
     # Services
-    _pathmarker_srv = rospy.ServiceProxy('pathmarker/angle', PathmarkerAngle, persistent=True)
-    _bin_cam_pos_srv = rospy.ServiceProxy('bin_cam_pos', BinCamPos, persistent = True)
+    _pathmarker_srv = rospy.ServiceProxy('/pathmarker_angle', PathmarkerAngle, persistent=True)
+    _bin_cam_pos_srv = rospy.ServiceProxy('/bin_object_position', ObjectPosition, persistent = True)
     _hsv_buoy_position_srv = rospy.ServiceProxy('/hsv_buoy_position', ObjectPosition, persistent=True)
 
     #also old
