@@ -29,7 +29,7 @@ class WebcamPub():
         #cap.set(cv2.CAP_PROP_BUFFERSIZE,1)
         self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
         self.cap.set(cv2.CAP_PROP_EXPOSURE, 1000)
-        subprocess.call('v4l2-ctl -d /dev/video10 -c white_balance_temperature_auto=0 -c exposure_auto=1 -c exposure_absolute=2000 -c brightness=64', shell=True)
+        subprocess.call('v4l2-ctl -d /dev/botcam -c white_balance_temperature_auto=0 -c exposure_auto=1 -c exposure_absolute=2000 -c brightness=64', shell=True)
 
     def close_capture(self):
         self.cap.release()
@@ -41,7 +41,7 @@ class WebcamPub():
         rospy.Service('/bot_cam/on', SetBool, self.handle_on_service)
 
         # Create a VideoCapture object
-        self.device_path = "/dev/video10"
+        self.device_path = "/dev/botcam"
 
         rate = rospy.Rate(30)
 
