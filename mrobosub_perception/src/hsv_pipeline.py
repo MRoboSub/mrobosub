@@ -75,6 +75,11 @@ class HsvPipeline():
         y: int
         angle: float
 
+    @dataclass
+    class RectangleDetection:
+        x: int
+        y: int
+
     def color_enhancement(self, frame):
         if self.white_balance:
             enhanced = self._simple_white_balance(frame, self.wb_shift, self.wb_scale)
@@ -88,7 +93,7 @@ class HsvPipeline():
 
         return enhanced
 
-    def filter_image(self, frame):
+    def filter_image(self, frame, return_enhanced=False):
         enhanced = self.color_enhancement(frame)
         
         frame_hsv = cv2.cvtColor(enhanced, self.color_space)
@@ -109,7 +114,67 @@ class HsvPipeline():
         if self.dilate_radius > 0:
             mask = cv2.dilate(mask, np.ones((self.dilate_radius, self.dilate_radius), np.uint8), iterations=1)
 
-        return mask
+        if return_enhanced:
+            return mask, enhanced
+        else:
+            return mask
+    
+    def find_rectangular_object(self, mask):
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if (selected_contour := self._get_rectangular_object(contours)) is not None:
+            hull = cv2.convexHull(selected_contour)
+        
+            contour_area = cv2.contourArea(hull)
+            
+            rect = cv2.minAreaRect(hull)
+            box = cv2.boxPoints(rect)
+            box = np.intp(box)
+
+            epsilon = 0.02 * cv2.arcLength(box, True)
+            approxCurve = cv2.approxPolyDP(box, epsilon, True)
+
+            points = approxCurve.reshape(-1, 2)
+            points = sorted(points, key=lambda x: x[0])
+
+            if len(points) == 4:
+                left_points = sorted(points[:2], key=lambda x: x[1])
+                right_points = sorted(points[2:], key=lambda x: x[1])
+
+                corner_topLeft, corner_botLeft = left_points
+                corner_topRight, corner_botRight = right_points
+                
+                corner_topLeft = tuple(corner_topLeft)
+                corner_topRight = tuple(corner_topRight)
+                corner_botLeft = tuple(corner_botLeft)
+                corner_botRight = tuple(corner_botRight)
+
+                topSideCenter = line_center(corner_topLeft, corner_topRight)
+                botSideCenter = line_center(corner_botLeft, corner_botRight)
+                leftSideCenter = line_center(corner_topLeft, corner_botLeft)
+                rightSideCenter = line_center(corner_topRight, corner_botRight)
+
+                rectCenter = calc_intersection_points(leftSideCenter, rightSideCenter, topSideCenter, botSideCenter)
+                
+                rectCenter = tuple(int(val) for val in rectCenter)
+                topSideCenter = tuple(int(val) for val in topSideCenter)
+                rightSideCenter = tuple(int(val) for val in rightSideCenter)
+                leftSideCenter = tuple(int(val) for val in leftSideCenter)
+                botSideCenter = tuple(int(val) for val in botSideCenter)
+
+                centroid = rectCenter
+            else:
+                M = cv2.moments(hull)
+
+                if M["m00"] != 0:
+                    centroid_x = int(M["m10"] / M["m00"])
+                    centroid_y = int(M["m01"] / M["m00"])
+                    centroid = (centroid_x, centroid_y)
+                else:
+                    return None
+
+            return HsvPipeline.RectangleDetection(centroid[0], centroid[1])
+
+        return None
 
     def find_pathmarker_object(self, mask):
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -217,6 +282,25 @@ class HsvPipeline():
         result[:, :, 2] = result[:, :, 2] - ((avg_b - wb_shift) * (result[:, :, 0] / 255.0) * (wb_scale/100))
         result = cv2.cvtColor(result, cv2.COLOR_LAB2RGB)
         return result
+    
+    def _get_rectangular_object(self, contours):
+        maxHeight = 0
+        maxWidth = 0
+        best_contour = None
+
+        for contour in contours:
+            epsilon = 0.02 * cv2.arcLength(contour, True)
+            approx = cv2.approxPolyDP(contour, epsilon, True)
+
+            x, y, w, h = cv2.boundingRect(contour)
+
+            if h > maxHeight and w > maxWidth and len(approx) >= 4 and len(approx) <= 8 and \
+                h > self.contour_min_height and w > self.contour_min_width:
+                maxHeight = h
+                maxWidth = w
+                best_contour = contour
+
+        return best_contour
 
     def _get_pathmarker_object(self, contours):
         maxHeight = 0
@@ -236,7 +320,7 @@ class HsvPipeline():
                 selected_contour = contour
 
         return selected_contour
-
+    
     def _get_circular_object(self, contours):
         maxHeight = 0
         maxHwRatio = 0

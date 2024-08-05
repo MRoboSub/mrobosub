@@ -82,53 +82,6 @@ class CircumnavigateOpenDiscreteDiamondTurns(TurnToYaw):
         return self.TimedOut()
 
 
-
-class CircumnavigateOpenDiscreteTurn(TurnToYaw):
-    class FinishedStep(CircumnavigateOpenDiscreteData):
-        pass
-
-    class Complete(NamedTuple):
-        pass
-
-    class TimedOut(NamedTuple):
-        pass
-
-    timeout: float = 25.
-    yaw_threshold: float = 2.5
-    settle_time: float = 2.
-    angle_per_iter: float = 360. / 5.
-
-    @property
-    def target_yaw(self) -> float:
-        return self._target_yaw
-
-    def __init__(self, prev_outcome: NamedTuple):
-        super().__init__(prev_outcome)
-        if getattr(prev_outcome, 'ccw', False):
-            self.dir = -1
-        else:
-            self.dir = 1
-
-        if not isinstance(prev_outcome, CircumnavigateOpenDiscreteData):
-            self.final_target = PIO.Pose.yaw % 360
-            self._target_yaw = (self.final_target + self.angle_per_iter * self.dir) % 360
-        else:
-            self.final_target = prev_outcome.final_angle
-            self._target_yaw = (prev_outcome.curr_angle + self.angle_per_iter * self.dir) % 360
-
-    def handle_unreached(self) -> None:
-        PIO.set_target_twist_surge(0.)
-        return None
-
-    def handle_reached(self) -> Optional[Union[FinishedStep, Complete]]:
-        if self.target_yaw == self.final_target:
-            return self.Complete()
-        return self.FinishedStep(self.final_target, self.target_yaw, self.dir == -1)
-
-    def handle_once_timedout(self) -> TimedOut:
-        return self.TimedOut()
-
-
 class CircumnavigateOpenDiscreteMove(TimedState):
     class FinishedStep(CircumnavigateOpenDiscreteData):
         pass

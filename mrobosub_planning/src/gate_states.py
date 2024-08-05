@@ -147,7 +147,7 @@ class AlignPathmarker(TimedState):
         if pm_resp is not None:
             self.last_known_angle = pm_resp
 
-        if self.last_known_angle != None:
+        if self.last_known_angle is not None:
             PIO.set_target_pose_yaw(self.last_known_angle)
         else:
             return None

@@ -103,24 +103,25 @@ class StateMachine:
         """Runs one iteration of the state machine"""
         state_topic_pub.publish(type(self.current_state).__qualname__)
 
-        outcome = self.current_state.handle()
-        if outcome is None and not self.stop_signal_recvd:
-            return
-        outcome_type = type(outcome)
-        outcome_name = outcome_type.__qualname__
-
         if self.stop_signal_recvd:
             NextState = self.StopState
             outcome_name = "!! Abort !!"
+            rospy.loginfo(f"Aborting from state {type(self.current_state).__qualname__} and moving to stop state")
         else:
+            outcome = self.current_state.handle()
+            if outcome is None:
+                return
+            outcome_type = type(outcome)
+            outcome_name = outcome_type.__qualname__
             NextState = self.transitions[outcome_type]
 
-        if type(self.current_state) == NextState:
-            rospy.logdebug(
-                f"{type(self.current_state).__qualname__} contains a type which returns itself!"
-            )
+            if type(self.current_state) == NextState:
+                rospy.logdebug(
+                   f"{type(self.current_state).__qualname__} contains a type which returns itself!"
+                )
 
-        rospy.loginfo(
-            f"transition {type(self.current_state).__qualname__} --[{outcome_name}]--> {NextState.__qualname__}"
-        )
-        self.current_state = NextState(outcome)  # handle stop state
+            rospy.loginfo(
+                f"transition {type(self.current_state).__qualname__} --[{outcome_name}]--> {NextState.__qualname__}"
+            )
+            self.current_state = NextState(outcome)
+

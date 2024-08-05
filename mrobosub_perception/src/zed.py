@@ -9,6 +9,7 @@ import rospy
 from mrobosub_lib.lib import ControlLoopNode, Param
 
 from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
+import subprocess
 
 
 class Zed(ControlLoopNode):
@@ -26,6 +27,7 @@ class Zed(ControlLoopNode):
 
     def open_capture(self):
         self.cap = cv2.VideoCapture(self.device_path)
+        subprocess.call('v4l2-ctl -d /dev/video4 -c white_balance_temperature_auto=0 -c hue_auto=0', shell=True)
 
     def close_capture(self):
         self.cap.release()

@@ -1,0 +1,16 @@
+hsv_params:
+  hue_lo: 100
+  hue_hi: 120
+  sat_lo: 200
+  sat_hi: 305
+  val_lo: 177
+  val_hi: 317
+  wb_shift: 20
+  wb_scale: 60
+  white_balance: True
+  histogram_equalization: True
+  erode_radius: 2
+  dilate_radius: 2
+  median_radius: 20
+  gaussian_radius: 5
+timing_threshold: 5.0
