@@ -1,6 +1,6 @@
 from umrsm import State
 from abstract_states import TimedState
-from periodic_io import PIO, Gbl
+from periodic_io import PIO
 from mrobosub_msgs.srv import ObjectPositionResponse
 from typing import NamedTuple, Union
 import math 

@@ -12,38 +12,11 @@ def angle_error(setpoint, state):
 
 Namespace = Type
 
-class Glyph(Enum):
-    ABYDOS = auto()
-    EARTH = auto()
-    TAURUS = auto()
-    SERPENS_CAPUT = auto()
-    AURIGA = auto()
-    CETUS = auto()
+class ImageTarget(Enum):
+    GATE_BLUE = auto()
+    GATE_RED = auto()
 
-GlyphDetections = Dict[Glyph, ObjectPositionResponse]
-
-
-class Gbl:
-    planet_seen: Optional[Glyph] = None
-    first_hit_glyph: Optional[Glyph] = None
-    second_glyph: bool = False
-
-    @classmethod
-    def glyphs_of_planet(cls, planet: Optional[Glyph]) -> Tuple[Glyph, Glyph]:
-        if planet == Glyph.EARTH:
-            return (Glyph.AURIGA, Glyph.CETUS)
-        else:
-            return (Glyph.TAURUS, Glyph.SERPENS_CAPUT)
-
-    @classmethod
-    def preferred_glyph(cls) -> Glyph:
-        fst, snd = cls.glyphs_of_planet(Gbl.planet_seen)
-        if Gbl.first_hit_glyph == fst:
-            return snd
-        elif Gbl.first_hit_glyph == snd:
-            return fst
-        else:
-            return fst
+ImageDetections = Dict[ImageTarget, ObjectPositionResponse]
 
 # Look at this!
 class PIO:
@@ -189,29 +162,26 @@ class PIO:
         try:
             return cls._hsv_buoy_position_srv()
         except:
-            print("[ERROR] Failed to call buoy position service")
-            raise Exception()
-
-        obj_msg = ObjectPositionResponse()
-        obj_msg.found = False
-        return obj_msg
-
-    #Old need to update without glyphs
-    @classmethod
-    def query_glyph(cls, glyph: Optional[Glyph]) -> ObjectPositionResponse:
-        if glyph is not None:
-            return cls._object_position_srvs[glyph]()
-        else:
             obj_msg = ObjectPositionResponse()
             obj_msg.found = False
             return obj_msg
-    #also odl
+
     @classmethod
-    def query_all_glyphs(cls) -> GlyphDetections:
-        """ query all 12 glyphs and return a dict from any found glyphs to their position. """
+    def query_image(cls, image_type: Optional[ImageTarget]) -> ObjectPositionResponse:
+        if image_type is not None:
+            try:
+                return cls._object_position_srvs[image_type]()
+            except rospy.ServiceException:
+                pass
+        obj_msg = ObjectPositionResponse()
+        obj_msg.found = False
+        return obj_msg
+    
+    @classmethod
+    def query_all_images(cls) -> ImageDetections:
         results = { }
-        for g in Glyph:
-            resp = cls.query_glyph(g)
+        for g in ImageTarget:
+            resp = cls.query_image(g)
             if resp.found:
                 results[g] = resp
         return results
@@ -280,8 +250,8 @@ class PIO:
     _hsv_buoy_position_srv = rospy.ServiceProxy('/hsv_buoy_position', ObjectPosition, persistent=True)
 
     #also old
-    _object_position_srvs: Dict[Glyph, rospy.ServiceProxy] = {}
-    for glyph in Glyph:
+    _object_position_srvs: Dict[ImageTarget, rospy.ServiceProxy] = {}
+    for glyph in ImageTarget:
         _object_position_srvs[glyph] = rospy.ServiceProxy(f'/object_position/{glyph.name.lower()}', ObjectPosition, persistent=True)
 
     _zed_on_srv = rospy.ServiceProxy('/zed/on', SetBool)

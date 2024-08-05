@@ -1,5 +1,5 @@
 from abstract_states import TimedState
-from periodic_io import PIO, Glyph, Gbl
+from periodic_io import PIO, ImageTarget
 from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
 import rospy
 from typing import NamedTuple, Union
@@ -7,7 +7,7 @@ from typing import NamedTuple, Union
 
 class SeenGateImageType(NamedTuple):
     position: ObjectPositionResponse
-    glyph_seen: Glyph
+    image_seen: ImageTarget
 
 
 class AlignGate(TimedState):
@@ -51,18 +51,19 @@ class ApproachGate(TimedState):
     def handle_if_not_timedout(self) -> Union[SeenGateImage, None]:
         PIO.set_target_twist_surge(self.surge_speed)
 
-        abydos_response = PIO.query_glyph(Glyph.ABYDOS)
-        earth_response = PIO.query_glyph(Glyph.EARTH)
-        res_exists = abydos_response.found or earth_response.found
+        blue_response = PIO.query_image(ImageTarget.GATE_BLUE)
+        red_response = PIO.query_image(ImageTarget.GATE_RED)
+        res_exists = blue_response.found or red_response.found
 
         if not res_exists:
             return None
 
         if self.times_seen >= self.found_image_threshold:
-            if abydos_response.found:
-                return self.SeenGateImage(abydos_response, Glyph.ABYDOS)
+            if red_response.found:
+                # Prefer red because red bin is probably easier to see
+                return self.SeenGateImage(red_response, ImageTarget.GATE_RED)
             else:
-                return self.SeenGateImage(earth_response, Glyph.EARTH)
+                return self.SeenGateImage(blue_response, ImageTarget.GATE_BLUE)
 
         self.times_seen += 1
         return None
@@ -75,7 +76,7 @@ class ApproachGate(TimedState):
 
 class ApproachGateImage(TimedState):
     class GoneThroughGate(NamedTuple):
-        planet: Glyph
+        planet: ImageTarget
 
     class FoundBuoyPathMarker(NamedTuple):
         angle: float
@@ -91,20 +92,20 @@ class ApproachGateImage(TimedState):
         super().__init__(prev_outcome)
         if not isinstance(prev_outcome, SeenGateImageType):
             raise TypeError(f"Expected type SeenGateImageType, received {prev_outcome}")
-        Gbl.planet_seen = prev_outcome.glyph_seen
+        self.image_seen = prev_outcome.image_seen
         self.last_target_yaw = PIO.Pose.yaw + prev_outcome.position.x_theta
         self.times_not_seen = 0
 
     def handle_if_not_timedout(self) -> Union[GoneThroughGate, None]:
         # Precondition: you have already seen a glyph. You are trying to update
-        if Gbl.planet_seen is None:
+        if self.image_seen is None:
             raise ValueError(f"Expected to have seen a planet by now")
 
-        resp = PIO.query_glyph(Gbl.planet_seen)
+        resp = PIO.query_image(self.image_seen)
         if not resp.found:
             self.times_not_seen += 1
             if self.times_not_seen >= self.lost_image_threshold:
-                return self.GoneThroughGate(planet=Gbl.planet_seen)
+                return self.GoneThroughGate(planet=self.image_seen)
         else:
             self.times_not_seen = 0
             self.last_target_yaw = PIO.Pose.yaw + resp.x_theta * 0.5

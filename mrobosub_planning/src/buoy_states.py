@@ -1,7 +1,7 @@
 import rospy
 from umrsm import State
 from abstract_states import TimedState
-from periodic_io import PIO, Gbl, GlyphDetections, Glyph
+from periodic_io import PIO, ImageDetections, ImageTarget
 from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
 from typing import Dict, Optional, Tuple, Union, NamedTuple
 
