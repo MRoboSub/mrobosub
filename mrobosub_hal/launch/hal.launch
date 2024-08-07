@@ -1,4 +1,4 @@
 <launch>
   <include file="$(find mrobosub_hal)/launch/run_arduino.launch"/>
-  <include file="$(find sparton_ahrs8_driver)/launch/ahrs-8.launch"/>
+  <!-- <include file="$(find sparton_ahrs8_driver)/launch/ahrs-8.launch"/> -->
 </launch>

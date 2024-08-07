@@ -8,6 +8,8 @@ import rospy
 from std_msgs.msg import Int32
 
 
+
+
 class ApproachBin(TimedState):
     class TimedOut(NamedTuple):
         pass
