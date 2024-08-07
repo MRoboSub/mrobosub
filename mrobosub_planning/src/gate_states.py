@@ -23,6 +23,7 @@ class AlignGate(TimedState):
 
     def handle_if_not_timedout(self) -> Union[ReachedAngle, None]:
         PIO.set_target_pose_yaw(self.target_yaw)
+        PIO.set_target_pose_heave(0.75)
 
         if PIO.is_yaw_within_threshold(self.yaw_threshold):
             return self.ReachedAngle()
@@ -40,7 +41,7 @@ class ApproachGate(TimedState):
     class TimedOut(NamedTuple):
         pass
 
-    timeout: float = 26.0
+    timeout: float = 50.0
     surge_speed: float = 0.2
     found_image_threshold = 50
 
@@ -50,6 +51,8 @@ class ApproachGate(TimedState):
 
     def handle_if_not_timedout(self) -> Union[SeenGateImage, None]:
         PIO.set_target_twist_surge(self.surge_speed)
+        PIO.set_target_pose_heave(0.75)
+        return None
 
         blue_response = PIO.query_image(ImageTarget.GATE_BLUE)
         red_response = PIO.query_image(ImageTarget.GATE_RED)
@@ -64,6 +67,7 @@ class ApproachGate(TimedState):
                 return self.SeenGateImage(red_response, ImageTarget.GATE_RED)
             else:
                 return self.SeenGateImage(blue_response, ImageTarget.GATE_BLUE)
+
 
         self.times_seen += 1
         return None
