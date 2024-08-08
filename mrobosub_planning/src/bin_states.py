@@ -20,6 +20,7 @@ class ApproachBinOpen(TimedState):
 
     def __init__(self, prev_outcome) -> None:
         super().__init__(prev_outcome)
+        PIO.activate_bot_cam()
         self.target_yaw = getattr(prev_outcome, "angle", PIO.Pose.yaw)
 
     def handle_if_not_timedout(self) -> Union[SeenBin, None]:
@@ -52,6 +53,7 @@ class ApproachBinClosed(TimedState):
     
     def __init__(self, prev_outcome: NamedTuple):
         super().__init__(prev_outcome)
+        PIO.activate_bot_cam()
         self.angle_to_bin: float = 0.0
 
 
@@ -114,6 +116,7 @@ class CenterCameraToBin(TimedState):
 
     def __init__(self, prev_outcome: NamedTuple):
         super().__init__(prev_outcome)
+        PIO.activate_bot_cam()
         self.angle_to_bin: float = 0.0
 
     def handle_if_not_timedout(self) -> Union[None, Reached]:
@@ -172,6 +175,7 @@ class CenterLeftDropper(TimedState):
 
     def __init__(self, prev_outcome: NamedTuple):
         super().__init__(prev_outcome)
+        PIO.activate_bot_cam()
         self.angle_to_bin: float = 0.0
 
     def handle_if_not_timedout(self) -> Union[None, Reached]:
