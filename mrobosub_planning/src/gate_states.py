@@ -48,6 +48,7 @@ class ApproachGate(TimedState):
 
     def __init__(self, prev_outcome: NamedTuple):
         super().__init__(prev_outcome)
+        PIO.activate_zed()
         self.times_seen = 0
 
     def handle_if_not_timedout(self) -> Union[SeenGateImage, None]:
@@ -100,6 +101,7 @@ class ApproachGateImage(TimedState):
         self.image_seen = prev_outcome.image_seen
         self.last_target_yaw = PIO.Pose.yaw + prev_outcome.position.x_theta
         self.times_not_seen = 0
+        PIO.activate_zed()
 
     def handle_if_not_timedout(self) -> Union[GoneThroughGate, None]:
         # Precondition: you have already seen a glyph. You are trying to update
@@ -133,7 +135,9 @@ class AlignPathmarker(TimedState):
         pass
     class AlignedToBin(NamedTuple):
         pass
-    class TimedOut(NamedTuple):
+    class TimedOutBuoy(NamedTuple):
+        pass
+    class TimedOutBin(NamedTuple):
         pass
 
     yaw_threshold: float = 2.0
@@ -141,6 +145,7 @@ class AlignPathmarker(TimedState):
 
     def __init__(self, prev_outcome: NamedTuple) -> None:
         super().__init__(prev_outcome)
+        PIO.activate_bot_cam()
         self.last_known_angle: Optional[float] = None
         if isinstance(prev_outcome, SpinFinish.Reached):
             self.pathmarker_to_buoy = True
@@ -150,7 +155,7 @@ class AlignPathmarker(TimedState):
             self.pathmarker_to_buoy = True
             print(f"Expected type FoundBuoyPathMarker or CompleteCircumnavigate, received {prev_outcome}") 
 
-    def handle_if_not_timedout(self) -> Union[AlignedToBuoy, AlignedToBin, TimedOut, None]:
+    def handle_if_not_timedout(self) -> Union[AlignedToBuoy, AlignedToBin, None]:
         pm_resp = PIO.query_pathmarker()
         print(pm_resp)
         if pm_resp is not None:
@@ -168,8 +173,11 @@ class AlignPathmarker(TimedState):
                 return self.AlignedToBin()
         return None
 
-    def handle_once_timedout(self) -> TimedOut:
-        return self.TimedOut()
+    def handle_once_timedout(self) -> Union[TimedOutBin, TimedOutBuoy]:
+        if self.pathmarker_to_buoy:
+            return self.TimedOutBuoy()
+        else:
+            return self.TimedOutBin()
 
 
 class Spin(TimedState):

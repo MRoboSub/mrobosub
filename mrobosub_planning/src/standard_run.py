@@ -28,7 +28,7 @@ transitions: TransitionMap = {
     SpinFinish.TimedOut: AlignPathmarker,
     
     AlignPathmarker.AlignedToBuoy: ApproachBuoyOpen,
-    AlignPathmarker.TimedOut: ApproachBuoyOpen,
+    AlignPathmarker.TimedOutBuoy: ApproachBuoyOpen,
 
     ApproachBuoyOpen.SeenBuoy: CenterHeaveBuoy,
     ApproachBuoyOpen.TimedOut: Surface,
@@ -46,7 +46,7 @@ transitions: TransitionMap = {
     CircumnavigateOpenDiscreteMove.FinishedStep: CircumnavigateOpenDiscreteDiamondTurns,
 
     AlignPathmarker.AlignedToBin: ApproachBinOpen, #this is where we will go to bin
-    AlignPathmarker.TimedOut: ApproachBinOpen,
+    AlignPathmarker.TimedOutBin: ApproachBinOpen,
 
     ApproachBinOpen.SeenBin: ApproachBinClosed,
     ApproachBinOpen.TimedOut: Surface,

@@ -22,6 +22,7 @@ class ApproachBuoyOpen(TimedState):
 
     def __init__(self, prev_outcome) -> None:
         super().__init__(prev_outcome)
+        PIO.activate_zed()
         self.target_yaw = getattr(prev_outcome, "angle", PIO.Pose.yaw)
 
     def handle_if_not_timedout(self) -> Union[SeenBuoy, None]:
@@ -52,6 +53,7 @@ class CenterHeaveBuoy(TimedState):
 
     def __init__(self, prev_outcome) -> None:
         super().__init__(prev_outcome)
+        PIO.activate_zed()
         if not isinstance(prev_outcome, SeenBuoyType):
             raise TypeError(f"Expected a SeenBuoyType outcome, received {prev_outcome}")
         self.most_recent_results = prev_outcome.buoy_results
@@ -92,6 +94,7 @@ class CenterYawBuoy(TimedState):
 
     def __init__(self, prev_outcome) -> None:
         super().__init__(prev_outcome)
+        PIO.activate_zed()
         if type(prev_outcome) != CenterHeaveBuoy.Centered:
             raise TypeError(type(prev_outcome))
         self.bbox_area = (
