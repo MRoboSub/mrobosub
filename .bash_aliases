@@ -4,4 +4,6 @@ alias zed="rosservice call /zed/on True; rosservice call /bot_cam/on False"
 alias captain="roslaunch mrobosub_planning captain.launch"
 alias arm="rosservice call /arming/cmd True"
 alias disarm="rosservice call /arming/cmd False"
-
+alias close_droppers="rostopic pub /left_servo/angle std_msgs/Int32 90 & rostopic pub /right_servo/angle std_msgs/Int32 90"
+alias open_droppers="rostopic pub /left_servo/angle std_msgs/Int32 60 & rostopic pub /right_servo/angle std_msgs/Int32 120"
+alias stop="rosrun mrobosub_planning stop.py"
