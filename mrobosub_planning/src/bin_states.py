@@ -251,12 +251,10 @@ class DropMarker(TimedState):
         
     def handle_if_not_timedout(self) -> Union[DroppedLeft, DroppedRight]:
         if self.drop_left:
-            left_dropper_pub = rospy.Publisher('/left_servo/angle', Int32)
-            left_dropper_pub.publish(self.open_angle)
+            PIO.set_left_dropper_angle(60)
             return self.DroppedLeft()
         else:
-            right_dropper_pub = rospy.Publisher('/right_servo/angle', Int32)
-            right_dropper_pub.publish(self.open_angle)
+            PIO.set_right_dropper_angle(120)
             return self.DroppedRight()
     
     def handle_once_timedout(self) -> TimedOut:
