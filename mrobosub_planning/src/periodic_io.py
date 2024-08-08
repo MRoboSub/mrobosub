@@ -1,6 +1,6 @@
 import rosgraph
 import rospy
-from std_msgs.msg import Float64, Bool
+from std_msgs.msg import Float64, Bool, Int32
 from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, PathmarkerAngle # type: ignore
 from typing import Dict, Type, Mapping, Optional, Tuple
 from enum import Enum, auto
@@ -128,6 +128,14 @@ class PIO:
         cls.set_target_twist_roll(0)
         cls.set_target_twist_sway(0)
 
+    @classmethod
+    def set_left_dropper_angle(cls, angle: int) -> None:
+        cls._left_dropper_pub.publish(angle)
+    
+    @classmethod
+    def set_right_dropper_angle(cls, angle: int) -> None:
+        cls._right_dropper_pub.publish(angle)
+
     # @classmethod
     # def get_pose(cls) -> Namespace[Pose]:
     #     return cls.Pose
@@ -243,6 +251,9 @@ class PIO:
     _target_twist_surge_pub = rospy.Publisher('/target_twist/surge', Float64, queue_size=1)
     _target_twist_sway_pub = rospy.Publisher('/target_twist/sway', Float64, queue_size=1)
     _target_twist_heave_pub = rospy.Publisher('/target_twist/heave', Float64, queue_size = 1)
+
+    _left_dropper_pub = rospy.Publisher('/left_servo/angle', Int32)
+    _right_dropper_pub = rospy.Publisher('/right_servo/angle', Int32)
     
     # Services
     _pathmarker_srv = rospy.ServiceProxy('/pathmarker_angle', PathmarkerAngle, persistent=True)
