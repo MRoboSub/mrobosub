@@ -1,5 +1,5 @@
 <launch>
-    <arg name="machine" default="prequal_turn" />
+    <arg name="machine" default="qual" />
     <node name="captain" pkg="mrobosub_planning" type="captain.py" 
         output="screen" args="$(arg machine)">
         <param 

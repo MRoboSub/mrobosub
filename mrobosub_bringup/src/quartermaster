@@ -34,7 +34,6 @@ if USE_ML:
     rospy.wait_for_service('/object_position/earth')
 
 rate = rospy.Rate(10)
-
 target_twist_yaw_pub = rospy.Publisher('/target_twist/yaw', Float64, queue_size=1)
 target_twist_roll_pub = rospy.Publisher('/target_twist/roll', Float64, queue_size=1)
 target_twist_surge_pub = rospy.Publisher('/target_twist/surge', Float64, queue_size=1)
@@ -55,6 +54,8 @@ def set_charm(new_value: Bool):
 
 rospy.Subscriber('/buttons/strange', Bool, set_strange)
 rospy.Subscriber('/buttons/charm', Bool, set_charm)
+strange_input = False
+charm_input = False
 
 while not rospy.is_shutdown(): 
     led_on_pub.publish(True)
@@ -64,12 +65,15 @@ while not rospy.is_shutdown():
 
     prev_state = curr_state
 
-    strange_input = hall_effect_inputs['strange']
-    charm_input = hall_effect_inputs['charm']
+    strange_input = hall_effect_inputs['strange'] or strange_input
+    charm_input = hall_effect_inputs['charm'] or charm_input
+    #strange_input = charm_input = strange_input or charm_input 
 
     curr_state = RobotState(strange_input + charm_input)
+    if curr_state != prev_state:
+        print(f'{strange_input=} {charm_input=}')
 
-    if curr_state == RobotState.ready:
+    if False: # curr_state == RobotState.ready:
         target_twist_yaw_pub.publish(0.0)
         target_twist_roll_pub.publish(0.0)
         target_twist_surge_pub.publish(0.0)
@@ -84,9 +88,9 @@ while not rospy.is_shutdown():
     elif curr_state == RobotState.ready:
         zero_srv()
         
-        #if not capt_launch is None:
-        #    capt_launch.shutdown()
-        #    capt_launch = None
+        if capt_launch is not None:
+            capt_launch.shutdown()
+            capt_launch = None
         
         if prev_state == RobotState.running:
             arm_srv(True)
@@ -95,6 +99,7 @@ while not rospy.is_shutdown():
                 res = soft_stop()
             except:
                 pass
+            rospy.loginfo('Soft stopping state machine (from quartermaster)')
         else:
             arm_resp = arm_srv(True)
             retries = 0
@@ -103,6 +108,7 @@ while not rospy.is_shutdown():
                 retries += 1
             rospy.loginfo(f'arming response: {arm_resp.success}; {arm_resp.message}; {retries} retries')
     else:
+        rospy.loginfo('starting state machine (from quartermaster)')
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         roslaunch.configure_logging(uuid)
         capt_launch = roslaunch.parent.ROSLaunchParent(
