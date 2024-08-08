@@ -8,9 +8,34 @@ import rospy
 from std_msgs.msg import Int32
 
 
+class ApproachBinOpen(TimedState):
+    class SeenBin(NamedTuple):
+        pass
 
+    class TimedOut(NamedTuple):
+        pass
 
-class ApproachBin(TimedState):
+    surge_speed: float = 0.2
+    timeout: float = 20
+
+    def __init__(self, prev_outcome) -> None:
+        super().__init__(prev_outcome)
+        self.target_yaw = getattr(prev_outcome, "angle", PIO.Pose.yaw)
+
+    def handle_if_not_timedout(self) -> Union[SeenBin, None]:
+        PIO.set_target_pose_yaw(self.target_yaw)
+        PIO.set_target_twist_surge(self.surge_speed)
+
+        binPosition = PIO.query_BinCamPos()
+        if binPosition and binPosition.found:
+            return self.SeenBin()
+        return None
+
+    def handle_once_timedout(self) -> TimedOut:
+        PIO.set_target_twist_surge(0)
+        return self.TimedOut()
+
+class ApproachBinClosed(TimedState):
     class TimedOut(NamedTuple):
         pass
     class Reached(NamedTuple):
@@ -18,7 +43,7 @@ class ApproachBin(TimedState):
 
     timeout: float = 40.0
 
-    surge_speed = .6 #max surge speed
+    surge_speed = .2 #max surge speed
     yaw_factor = .2
     centered_pixel_dist_thresh = .1 #threshold distance in pixels within which we say we have centered appropriatclass CenterToBinFromFar(TimedState):
     aligned_yaw_thresh = 5 #threshold within which we consider yaw aligned
