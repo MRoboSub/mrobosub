@@ -1,4 +1,4 @@
-from abstract_states import TimedState
+from abstract_states import TimedState, TurnToYaw
 from periodic_io import PIO, ImageTarget
 from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
 import rospy
@@ -54,7 +54,6 @@ class ApproachGate(TimedState):
     def handle_if_not_timedout(self) -> Union[SeenGateImage, None]:
         PIO.set_target_twist_surge(self.surge_speed)
         PIO.set_target_pose_heave(0.75)
-        return None
 
         blue_response = PIO.query_image(ImageTarget.GATE_BLUE)
         red_response = PIO.query_image(ImageTarget.GATE_RED)
@@ -156,8 +155,9 @@ class AlignPathmarker(TimedState):
             print(f"Expected type FoundBuoyPathMarker or CompleteCircumnavigate, received {prev_outcome}") 
 
     def handle_if_not_timedout(self) -> Union[AlignedToBuoy, AlignedToBin, None]:
+        PIO.set_target_twist_surge(0)
         pm_resp = PIO.query_pathmarker()
-        print(pm_resp)
+        #print(pm_resp)
         if pm_resp is not None:
             self.last_known_angle = pm_resp
 
@@ -179,6 +179,21 @@ class AlignPathmarker(TimedState):
         else:
             return self.TimedOutBin()
 
+class GuessBuoyAngle(TurnToYaw):
+    class Reached:
+        pass
+    class TimedOut:
+        pass
+
+    target_yaw = 20.0
+    yaw_threshold = 2.0
+    settle_time = 1.0
+    timeout = 10.0
+
+    def handle_reached(self):
+        return Reached()
+    def handle_if_timedout(self):
+        return TimedOut()
 
 class Spin(TimedState):
     timeout: float = 30.0
