@@ -2,7 +2,8 @@ from abstract_states import TimedState
 from periodic_io import PIO, ImageTarget
 from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
 import rospy
-from typing import NamedTuple, Union
+from typing import NamedTuple, Union, Optional
+from circumnavigate_states import CircumnavigateOpenDiscreteDiamondTurns
 
 
 class SeenGateImageType(NamedTuple):
@@ -128,7 +129,9 @@ class ApproachGateImage(TimedState):
 class AlignPathmarker(TimedState):
     # class SeenGlyph(SeenGlyphType):
     #     pass
-    class Aligned(NamedTuple):
+    class AlignedToBuoy(NamedTuple):
+        pass
+    class AlignedToBin(NamedTuple):
         pass
     class TimedOut(NamedTuple):
         pass
@@ -138,15 +141,16 @@ class AlignPathmarker(TimedState):
 
     def __init__(self, prev_outcome: NamedTuple) -> None:
         super().__init__(prev_outcome)
-        self.last_known_angle = None
-        if isinstance(prev_outcome, ApproachGateImage.FoundBuoyPathMarker):
-            self.last_known_angle = prev_outcome.angle
+        self.last_known_angle: Optional[float] = None
+        if isinstance(prev_outcome, SpinFinish.Reached):
+            self.pathmarker_to_buoy = True
+        elif isinstance(prev_outcome, CircumnavigateOpenDiscreteDiamondTurns.Complete):
+            self.pathmarker_to_buoy = False
         else:
-            print(f"Expected type FoundBuoyPathMarker, received {prev_outcome}") 
-        
+            self.pathmarker_to_buoy = True
+            print(f"Expected type FoundBuoyPathMarker or CompleteCircumnavigate, received {prev_outcome}") 
 
-
-    def handle_if_not_timedout(self) -> Union[Aligned, TimedOut, None]:
+    def handle_if_not_timedout(self) -> Union[AlignedToBuoy, AlignedToBin, TimedOut, None]:
         pm_resp = PIO.query_pathmarker()
         print(pm_resp)
         if pm_resp is not None:
@@ -158,7 +162,10 @@ class AlignPathmarker(TimedState):
             return None
 
         if PIO.is_yaw_within_threshold(self.yaw_threshold):
-            return self.Aligned()
+            if self.pathmarker_to_buoy:
+                return self.AlignedToBuoy()
+            else:
+                return self.AlignedToBin()
         return None
 
     def handle_once_timedout(self) -> TimedOut:
