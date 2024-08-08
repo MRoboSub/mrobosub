@@ -180,9 +180,9 @@ class AlignPathmarker(TimedState):
             return self.TimedOutBin()
 
 class GuessBuoyAngle(TurnToYaw):
-    class Reached:
+    class Reached(NamedTuple):
         pass
-    class TimedOut:
+    class TimedOut(NamedTuple):
         pass
 
     target_yaw = 20.0
@@ -192,7 +192,7 @@ class GuessBuoyAngle(TurnToYaw):
 
     def handle_reached(self):
         return Reached()
-    def handle_if_timedout(self):
+    def handle_once_timedout(self):
         return TimedOut()
 
 class Spin(TimedState):
