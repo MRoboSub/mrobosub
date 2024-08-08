@@ -41,14 +41,16 @@ class PathmarkerHsv(Node):
             mask = pipeline.filter_image(bgr_img) 
             detection = pipeline.find_pathmarker_object(mask)
 
+            annotated_img = bgr_img
             if detection is not None:
                 l = 100
                 x, y, theta = detection.x, detection.y, detection.angle
                 theta_rad = np.radians(theta)
-                dx, dy = int(l * np.cos(theta_rad)), int(l * np.sin(theta_rad))
-                annotated_img = cv2.line(bgr_img, (x+dx,y+dy), (x-dx,y-dy), (255,0,0))
-            else:
-                annotated_img = bgr_img
+                try:
+                    dx, dy = int(l * np.cos(theta_rad)), int(l * np.sin(theta_rad))
+                    annotated_img = cv2.line(bgr_img, (x+dx,y+dy), (x-dx,y-dy), (255,0,0))
+                except ValueError as e:
+                    pass
 
             self.mask_pub.publish(self.br.cv2_to_imgmsg(mask, encoding='mono8'))
             self.annotated_pub.publish(self.br.cv2_to_imgmsg(annotated_img, encoding='bgr8'))
