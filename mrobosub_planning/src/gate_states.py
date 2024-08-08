@@ -133,7 +133,9 @@ class AlignPathmarker(TimedState):
         pass
     class AlignedToBin(NamedTuple):
         pass
-    class TimedOut(NamedTuple):
+    class TimedOutBuoy(NamedTuple):
+        pass
+    class TimedOutBin(NamedTuple):
         pass
 
     yaw_threshold: float = 2.0
@@ -150,7 +152,7 @@ class AlignPathmarker(TimedState):
             self.pathmarker_to_buoy = True
             print(f"Expected type FoundBuoyPathMarker or CompleteCircumnavigate, received {prev_outcome}") 
 
-    def handle_if_not_timedout(self) -> Union[AlignedToBuoy, AlignedToBin, TimedOut, None]:
+    def handle_if_not_timedout(self) -> Union[AlignedToBuoy, AlignedToBin, None]:
         pm_resp = PIO.query_pathmarker()
         print(pm_resp)
         if pm_resp is not None:
@@ -168,8 +170,11 @@ class AlignPathmarker(TimedState):
                 return self.AlignedToBin()
         return None
 
-    def handle_once_timedout(self) -> TimedOut:
-        return self.TimedOut()
+    def handle_once_timedout(self) -> Union[TimedOutBin, TimedOutBuoy]:
+        if self.pathmarker_to_buoy:
+            return self.TimedOutBuoy()
+        else:
+            return self.TimedOutBin()
 
 
 class Spin(TimedState):

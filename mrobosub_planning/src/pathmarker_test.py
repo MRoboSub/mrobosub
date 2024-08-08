@@ -12,7 +12,8 @@ transitions: TransitionMap = {
 
     AlignPathmarker.AlignedToBuoy: Surface,
     AlignPathmarker.AlignedToBin: Surface,
-    AlignPathmarker.TimedOut: Surface,
+    AlignPathmarker.TimedOutBin: Surface,
+    AlignPathmarker.TimedOutBuoy: Surface,
 
     Surface.Surfaced: Stop
 }
