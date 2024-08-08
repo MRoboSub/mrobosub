@@ -29,7 +29,7 @@ class WebcamPub():
         #cap.set(cv2.CAP_PROP_BUFFERSIZE,1)
         self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
         self.cap.set(cv2.CAP_PROP_EXPOSURE, 1000)
-        subprocess.call('v4l2-ctl -d /dev/botcam -c white_balance_temperature_auto=0 -c brightness=64', shell=True)
+        subprocess.call('v4l2-ctl -d /dev/botcam -c white_balance_temperature_auto=0 -c brightness=64 -c exposure_auto=3', shell=True)
         # subprocess.call('v4l2-ctl -d /dev/botcam -c white_balance_temperature_auto=0 -c exposure_auto=3 -c exposure_absolute=2000 -c brightness=64', shell=True)
 
     def close_capture(self):

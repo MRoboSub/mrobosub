@@ -146,6 +146,8 @@ class AlignPathmarker(TimedState):
         super().__init__(prev_outcome)
         PIO.activate_bot_cam()
         self.last_known_angle: Optional[float] = None
+        self.iter = 0
+        self.measurements = []
         if isinstance(prev_outcome, SpinFinish.Reached):
             self.pathmarker_to_buoy = True
         elif isinstance(prev_outcome, CircumnavigateOpenDiscreteDiamondTurns.Complete):
@@ -156,6 +158,39 @@ class AlignPathmarker(TimedState):
 
     def handle_if_not_timedout(self) -> Union[AlignedToBuoy, AlignedToBin, None]:
         PIO.set_target_twist_surge(0)
+        self.iter += 1
+        if self.iter < 50:
+            return None
+        if self.iter < 100:
+            pm_resp = PIO.query_pathmarker()
+            print(f'{pm_resp=}')
+            if pm_resp is not None:
+                self.measurements.append(pm_resp)
+            return None
+        if self.iter == 100:
+            print('Calculating target')
+            if not self.measurements:
+                if self.pathmarker_to_buoy:
+                    return self.TimedOutBuoy()
+                else:
+                    return self.TimedOutBin()
+            self.target_angle = sum(self.measurements) / len(self.measurements)
+            print(f'{self.target_angle=}')
+            self.yaw_threshold_count = 0
+        if self.iter >= 100:
+            PIO.set_target_pose_yaw(self.target_angle)
+            if PIO.is_yaw_within_threshold(self.yaw_threshold):
+                self.yaw_threshold_count += 1
+            else:
+                self.yaw_threshold_count = 0
+            if self.yaw_threshold_count > 50:
+                if self.pathmarker_to_buoy:
+                    return self.AlignedToBuoy()
+                else:
+                    return self.AlignedToBin()
+        return None
+
+        '''
         pm_resp = PIO.query_pathmarker()
         #print(pm_resp)
         if pm_resp is not None:
@@ -172,6 +207,7 @@ class AlignPathmarker(TimedState):
             else:
                 return self.AlignedToBin()
         return None
+        '''
 
     def handle_once_timedout(self) -> Union[TimedOutBin, TimedOutBuoy]:
         if self.pathmarker_to_buoy:
