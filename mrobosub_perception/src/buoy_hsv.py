@@ -37,7 +37,7 @@ class BuoyHsv(Node):
     def handle_frame(self, msg):
         if(self.serv.should_run() or self.always_run):
             bgr_img = self.br.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-            pipeline = HsvPipeline(**self.hsv_params)
+            pipeline = HsvPipeline(**self.hsv_params, color_space=cv2.COLOR_RGB2HSV)
             mask = pipeline.filter_image(bgr_img)
             detection = pipeline.find_circular_object(mask)
 

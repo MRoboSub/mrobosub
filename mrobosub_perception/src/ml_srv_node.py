@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from functools import partial
+from typing import List, Optional
 
 import rospy
 import rospkg
@@ -36,30 +37,9 @@ bridge = CvBridge()
 CONFIDENCE = 0.9
 TIME_THRESHOLD = 10
 
-
-class PeriodicIO():
-    bbox_pub = None
-
-
 class Targets(enum.Enum):
-    ABYDOS = 0
-    EARTH = 1
-    TAURUS = 2
-    SERPENS_CAPUT = 3
-    AURIGA = 4
-    CETUS = 5
-
-recent_positions = [None] * len(Targets)
-latest_request_time = None
-def imgmsg_to_cv2(img_msg):
-    dtype = np.dtype("uint8") # Hardcode to 8 bits...
-    dtype = dtype.newbyteorder('>' if img_msg.is_bigendian else '<')
-    image_opencv = np.ndarray(shape=(img_msg.height, img_msg.width, 3), # and three channels of data. Since OpenCV works with bgr natively, we don't need to reorder the channels.
-                    dtype=dtype, buffer=img_msg.data)
-    # If the byt order is different between the message and the system.
-    if img_msg.is_bigendian == (sys.byteorder == 'little'):
-        image_opencv = image_opencv.byteswap().newbyteorder()
-    return image_opencv[:,:,:3]
+    GATE_BLUE = 0
+    GATE_RED = 1
 
 def load_yolo():
     # load model
@@ -76,139 +56,151 @@ def load_yolo():
     model.conf = 0.25  # NMS confidence threshold
     return model
 
-def zed_callback(message):
-    global img_seen_num, img_num
-    # print('in zed callback')
-    if rospy.get_time() - latest_request_time < TIME_THRESHOLD:
-    # if True:
-        start = time.time()
+def imgmsg_to_cv2(img_msg):
+    dtype = np.dtype("uint8") # Hardcode to 8 bits...
+    dtype = dtype.newbyteorder('>' if img_msg.is_bigendian else '<')
+    image_opencv = np.ndarray(shape=(img_msg.height, img_msg.width, 3), # and three channels of data. Since OpenCV works with bgr natively, we don't need to reorder the channels.
+                    dtype=dtype, buffer=img_msg.data)
+    # If the byt order is different between the message and the system.
+    if img_msg.is_bigendian == (sys.byteorder == 'little'):
+        image_opencv = image_opencv.byteswap().newbyteorder()
+    return image_opencv[:,:,:3]
 
-        # print("zed callback")
-        # Convert the zed image to an opencv image
-        image_ocv = imgmsg_to_cv2(message)
+class Node:
+    recent_positions: List[Optional[ObjectPositionResponse]]
 
-        # Remove the 4th channel (transparency)
-        # image_ocv = image_ocv[:,:,:3]
+    def zed_callback(self, message):
+        global img_seen_num, img_num
+        # print('in zed callback')
+        if self.latest_request_time is None:
+            return
+        if rospy.get_time() - self.latest_request_time < TIME_THRESHOLD:
+        # if True:
+            start = time.time()
 
-        # Find any objects in the image
-        height, width, channels = image_ocv.shape   # shape of the image
-        outputs = model(image_ocv, size=width)   # get raw detection data
-        detections = outputs.xyxy[0].cpu().numpy()   # get the detections
+            # print("zed callback")
+            # Convert the zed image to an opencv image
+            image_ocv = imgmsg_to_cv2(message)
 
-        # Draw any bounding boxes and display the image
-        # results.show()
+            # Remove the 4th channel (transparency)
+            # image_ocv = image_ocv[:,:,:3]
+
+            # Find any objects in the image
+            height, width, channels = image_ocv.shape   # shape of the image
+            outputs = self.model(image_ocv, size=width)   # get raw detection data
+            detections = outputs.xyxy[0].cpu().numpy()   # get the detections
+
+            # Draw any bounding boxes and display the image
+            # results.show()
 
 
 
-        #byte_data = struct.unpack(const_unpack, message.depth.data)
+            #byte_data = struct.unpack(const_unpack, message.depth.data)
 
-        # Report detection result
-        print(detections)
-        print('TIME: ', str((time.time() - start)))
+            # Report detection result
+            print(detections)
+            print('TIME: ', str((time.time() - start)))
 
-        for i in range(len(recent_positions)):
-            msg = ObjectPositionResponse()
-            msg.found = False
-            recent_positions[i] = msg
-        
-        for i, detection in enumerate(detections):
-            object_position_response = ObjectPositionResponse()
-            object_position_response.found = True
-        
-            box = detections[i][:4]
-            fov_x = 110
-            fov_y = 70
-
-            bbox_width = abs(box[0] - box[2])
-            bbox_height = abs(box[1] - box[3])
-            bbox_area = (bbox_width * bbox_height) / (width * height)
-
-            x_pos = int((box[0] + box[2]) / 2)
-            y_pos = int((box[1] + box[3]) / 2)
+            for i in range(len(self.recent_positions)):
+                msg = ObjectPositionResponse()
+                msg.found = False
+                self.recent_positions[i] = msg
             
-            d_x = x_pos - (width / 2)
-            d_y = y_pos - (height / 2)
+            for i, detection in enumerate(detections):
+                object_position_response = ObjectPositionResponse()
+                object_position_response.found = True
             
-            theta_x = (d_x * fov_x) / width
-            theta_y = (d_y * fov_y) / height
+                box = detection[:4]
+                fov_x = 110
+                fov_y = 70
+
+                bbox_width = abs(box[0] - box[2])
+                bbox_height = abs(box[1] - box[3])
+                bbox_area = (bbox_width * bbox_height) / (width * height)
+
+                x_pos = int((box[0] + box[2]) / 2)
+                y_pos = int((box[1] + box[3]) / 2)
+                
+                d_x = x_pos - (width / 2)
+                d_y = y_pos - (height / 2)
+                
+                theta_x = (d_x * fov_x) / width
+                theta_y = (d_y * fov_y) / height
+                
+                conf = detection[4]
+                
+                print(x_pos, y_pos, theta_x, theta_y)
             
-            conf = detections[i][4]
+                object_position_response.found      = True
+                # object_position_response.x_position = x_pos
+                object_position_response.x_position = bbox_area # TODO: change this. for competition
+                object_position_response.y_position = y_pos
+                object_position_response.x_theta    = theta_x
+                object_position_response.y_theta    = theta_y
+                object_position_response.confidence = conf
             
-            print(x_pos, y_pos, theta_x, theta_y)
-           
-            object_position_response.found      = True
-            # object_position_response.x_position = x_pos
-            object_position_response.x_position = bbox_area # TODO: change this. for competition
-            object_position_response.y_position = y_pos
-            object_position_response.x_theta    = theta_x
-            object_position_response.y_theta    = theta_y
-            object_position_response.confidence = conf
+            
+                idx = int(detection[5])
+                self.recent_positions[idx] = object_position_response
+                print(idx)
+                print(self.recent_positions[idx])
+                self.recent_positions[idx] = object_position_response
+
+                # draw bounding box on image
+                cv2.rectangle(image_ocv, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), (255, 255, 255), 2)
+                cv2.putText(image_ocv, f"{Targets(idx).name} {conf:.2f}", (int(box[0]), int(box[1]-5)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255))
+
+            print(f"processed in {time.time() - start}")
+
+            msg = bridge.cv2_to_imgmsg(image_ocv, encoding='rgb8')
+            self.bbox_pub.publish(msg)
+
+
+            # THIS PRINTS a lOT
+            # log("ml_node", "DEBUG", 'ml_node - done processing a frame in ' + str((time.time()-start)) + ' seconds')
+        else:
+            for i in range(len(Targets)):
+                self.recent_positions[i] = None
+
+
+    def handle_obj_request(self, idx, msg):
+        self.latest_request_time = rospy.get_time()
+        while self.recent_positions[idx] == None:
+            rospy.sleep(0.005)
+        return self.recent_positions[idx]
+
+    def __init__(self):
+        # Load the model
+        #model, classes, colors, output_layers = load_yolo()
+        self.model = load_yolo()
+        print("model loaded")
+
+        print("made it to main")
+        rospy.init_node('ml_server', anonymous=False)
+        print(sys.version)
+        print("node initialized")
         
-        
-            idx = int(detections[i][5])
-            recent_positions[idx] = object_position_response
-            print(idx)
-            print(recent_positions[idx])
-            recent_positions[idx] = object_position_response
+        # Intialize ros services for each of the objects
+        mk_service = lambda name, idx: rospy.Service(
+            f'object_position/{name}', 
+            ObjectPosition, 
+            lambda msg : self.handle_obj_request(idx.value, msg)
+        )
+        self.gate_blue_srv = mk_service('gate_blue', Targets.GATE_BLUE)
+        self.gate_red_srv = mk_service('gate_red', Targets.GATE_RED)
 
-            # draw bounding box on image
-            cv2.rectangle(image_ocv, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), (255, 255, 255), 2)
-            cv2.putText(image_ocv, f"{Targets(idx).name} {conf:.2f}", (int(box[0]), int(box[1]-5)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255))
+        self.recent_positions = [None] * len(Targets)
+        self.latest_request_time = rospy.get_time() - TIME_THRESHOLD
 
-        print(f"processed in {time.time() - start}")
+        # Subscribe to the ZED left image and depth topics
+        # For a full list of zed topics, see https://www.stereolabs.com/docs/ros/zed-node/#published-topics
+        rospy.Subscriber("/zed2/zed_node/rgb/image_rect_color", Image, self.zed_callback, queue_size=1)
 
-        msg = bridge.cv2_to_imgmsg(image_ocv, encoding='rgb8')
-        PeriodicIO.bbox_pub.publish(msg)
+        self.bbox_pub = rospy.Publisher('/object_position/bbox', Image, queue_size=10)
 
-
-        # THIS PRINTS a lOT
-        # log("ml_node", "DEBUG", 'ml_node - done processing a frame in ' + str((time.time()-start)) + ' seconds')
-    else:
-        for i in range(len(Targets)):
-            recent_positions[i] = None
-
-
-def handle_obj_request(idx, msg):
-    global latest_request_time
-    latest_request_time = rospy.get_time()
-    while recent_positions[idx] == None:
-        rospy.sleep(0.005)
-    return recent_positions[idx]
-
-# Load the model
-#model, classes, colors, output_layers = load_yolo()
-model = load_yolo()
-obj_pos_pub = None
-bounding_pub = None
-print("model loaded")
+    def spin(self):
+        rospy.spin()
+        cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    print("made it to main")
-    rospy.init_node('ml_server', anonymous=False)
-    print(sys.version)
-    print("node initialized")
-    
-
-    # Intialize ros services for each of the objects
-    mk_service = lambda name, idx: rospy.Service(f'object_position/{name}', ObjectPosition, lambda msg : handle_obj_request(idx.value, msg))
-    abydos_srv = mk_service('abydos',Targets.ABYDOS)
-    earth_srv = mk_service('earth',Targets.EARTH)
-    taurus_srv = mk_service('taurus',Targets.TAURUS)
-    serpens_caput_srv = mk_service('serpens_caput',Targets.SERPENS_CAPUT)
-    auriga_srv = mk_service('auriga',Targets.AURIGA)
-    cetus_srv = mk_service('cetus',Targets.CETUS)
-
-    for i in range(len(Targets)):
-        recent_positions[i] = None
-    latest_request_time = rospy.get_time() - TIME_THRESHOLD
-
-    # Subscribe to the ZED left image and depth topics
-    # For a full list of zed topics, see https://www.stereolabs.com/docs/ros/zed-node/#published-topics
-    rospy.Subscriber("/zed2/zed_node/rgb/image_rect_color", Image, zed_callback, queue_size=1)
-    #rospy.Subscriber("/zed_nodelet/rgb/image_rect_color", Image, zed_callback, queue_size=1)
-
-    PeriodicIO.bbox_pub = rospy.Publisher('/object_position/bbox', Image, queue_size=10)
-    rospy.spin()
-
-    cv2.destroyAllWindows()
-
+    Node().spin()
