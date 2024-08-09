@@ -1,6 +1,6 @@
 import rospy
 from umrsm import State
-from abstract_states import TimedState
+from abstract_states import AlignPathmarker, TimedState
 from periodic_io import PIO, ImageDetections, ImageTarget
 from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
 from typing import Dict, Optional, Tuple, Union, NamedTuple
@@ -143,14 +143,15 @@ class AlignBinsPathmarker(AlignPathmarker):
     class TimedOut(NamedTuple):
         pass
 
-    yaw_threshold = 2
+    yaw_threshold = 2.
+    timeout = 10.
 
     def __init__(self, prev_outcome: NamedTuple):
         super().__init__(prev_outcome)
         self.iter = -50
 
     def handle_if_not_timedout(self) -> Union[NamedTuple, None]:
-        if iter < 0:
+        if self.iter < 0:
             PIO.set_target_twist_surge(-0.1)
             PIO.set_target_twist_sway(-0.1)
             return None
@@ -161,11 +162,11 @@ class AlignBinsPathmarker(AlignPathmarker):
         return outcome
 
     def handle_aligned(self) -> AlignedToBins:
-        return AlignedToBins()
+        return self.AlignedToBins()
 
     def handle_no_measurements(self) -> NoMeasurements:
-        return NoMeasurements()
+        return self.NoMeasurements()
 
     def handle_once_timedout(self) -> TimedOut:
-        return TimedOut()
+        return self.TimedOut()
 

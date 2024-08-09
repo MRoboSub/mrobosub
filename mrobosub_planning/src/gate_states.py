@@ -135,7 +135,8 @@ class AlignBuoyPathmarker(AlignPathmarker):
     class TimedOut(NamedTuple):
         pass
 
-    yaw_threshold = 2
+    yaw_threshold = 2.
+    timeout = 10.
 
     def handle_if_not_timedout(self) -> Union[NamedTuple, None]:
         outcome = super().handle_if_not_timedout()
@@ -150,13 +151,13 @@ class AlignBuoyPathmarker(AlignPathmarker):
         return outcome
 
     def handle_aligned(self) -> AlignedToBuoy:
-        return AlignedToBuoy()
+        return self.AlignedToBuoy()
 
     def handle_no_measurements(self) -> NoMeasurements:
-        return NoMeasurements()
+        return self.NoMeasurements()
 
     def handle_once_timedout(self) -> TimedOut:
-        return TimedOut()
+        return self.TimedOut()
 
 
 class GuessBuoyAngle(TurnToYaw):
@@ -171,9 +172,9 @@ class GuessBuoyAngle(TurnToYaw):
     timeout = 10.0
 
     def handle_reached(self):
-        return Reached()
+        return self.Reached()
     def handle_once_timedout(self):
-        return TimedOut()
+        return self.TimedOut()
 
 class Spin(TimedState):
     timeout: float = 30.0

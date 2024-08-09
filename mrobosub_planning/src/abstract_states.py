@@ -1,7 +1,7 @@
 from umrsm import State
 from periodic_io import PIO
 import rospy
-from typing import NamedTuple, Optional
+from typing import NamedTuple, Optional, List, Union
 from abc import abstractmethod
 
 

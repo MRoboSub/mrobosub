@@ -24,11 +24,11 @@ transitions: TransitionMap = {
 
     Spin.TimedOut: SpinFinish,
 
-    SpinFinish.Reached: AlignPathmarker,
-    SpinFinish.TimedOut: AlignPathmarker,
+    SpinFinish.Reached: AlignBuoyPathmarker,
+    SpinFinish.TimedOut: AlignBuoyPathmarker,
     
     AlignBuoyPathmarker.AlignedToBuoy: ApproachBuoyOpen,
-    AlignBouyPathmarker.NoMeasurements: GuessBuoyAngle,
+    AlignBuoyPathmarker.NoMeasurements: GuessBuoyAngle,
     AlignBuoyPathmarker.TimedOut: GuessBuoyAngle,
 
     GuessBuoyAngle.Reached: ApproachBuoyOpen,
@@ -44,12 +44,12 @@ transitions: TransitionMap = {
     CenterYawBuoy.TimedOut: Surface, #could do passBuoy instead of surface as well
 
     CircumnavigateOpenDiscreteDiamondTurns.FinishedStep: CircumnavigateOpenDiscreteMove,
-    CircumnavigateOpenDiscreteDiamondTurns.Complete: AlignPathmarker, #use pathmarker to align to bin
+    CircumnavigateOpenDiscreteDiamondTurns.Complete: AlignBinsPathmarker, #use pathmarker to align to bin
     CircumnavigateOpenDiscreteDiamondTurns.TimedOut: Surface,
 
     CircumnavigateOpenDiscreteMove.FinishedStep: CircumnavigateOpenDiscreteDiamondTurns,
 
-    AlignBinsPathmarker.AlignedToBin: ApproachBinOpen, #this is where we will go to bin
+    AlignBinsPathmarker.AlignedToBins: ApproachBinOpen, #this is where we will go to bin
     AlignBinsPathmarker.NoMeasurements: Surface,
     AlignBinsPathmarker.TimedOut: ApproachBinOpen,
 
