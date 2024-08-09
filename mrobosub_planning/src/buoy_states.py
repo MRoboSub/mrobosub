@@ -77,6 +77,7 @@ class CenterHeaveBuoy(TimedState):
         self.buoy_y_theta = self.most_recent_results.y_theta
 
     def handle_if_not_timedout(self) -> Union[Centered, None]:
+        return self.Centered(self.most_recent_results)
         query_res = PIO.query_buoy()
         if query_res.found:
             self.buoy_y_theta = query_res.y_theta
@@ -105,7 +106,7 @@ class CenterYawBuoy(TimedState):
 
     radius_thold: float = 25.
     unseen_thold: float = 20.0
-    surge_speed: float = 0.2
+    surge_speed: float = 0.15
     yaw_factor: float = 0.5
     timeout: float = 40.0
 
