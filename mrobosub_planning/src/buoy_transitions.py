@@ -9,17 +9,8 @@ transitions: TransitionMap = {
     Start.Complete: Submerge,
     # Start.Complete: CircumnavigateOpenDiscreteDiamondTurns,
 
-    Submerge.Submerged: ApproachBuoyOpen,
-    Submerge.TimedOut: ApproachBuoyOpen,
-
-    ApproachBuoyOpen.SeenBuoy: CenterHeaveBuoy,
-    ApproachBuoyOpen.TimedOut: Surface,
-
-    CenterHeaveBuoy.Centered: CenterYawBuoy,
-    CenterHeaveBuoy.TimedOut: Surface,
-
-    CenterYawBuoy.CloseToBuoy: CircumnavigateOpenDiscreteDiamondTurns,
-    CenterYawBuoy.TimedOut: Surface,
+    Submerge.Submerged: CircumnavigateOpenDiscreteDiamondTurns,
+    Submerge.TimedOut: CircumnavigateOpenDiscreteDiamondTurns,
 
     CircumnavigateOpenDiscreteDiamondTurns.FinishedStep: CircumnavigateOpenDiscreteMove,
     CircumnavigateOpenDiscreteDiamondTurns.Complete: Surface, #this means completed successfully

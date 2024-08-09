@@ -48,7 +48,7 @@ class CircumnavigateOpenDiscreteDiamondTurns(TurnToYaw):
     timeout: float = 25.
     yaw_threshold: float = 7.5
     settle_time: float = 1.
-    angle_per_iter: float = 360. / 4. + 10. # add 10 degrees ech turn to account for drift
+    angle_per_iter: float = 360. / 4. + 3 # + 10. # add 10 degrees ech turn to account for drift
     initial_turn: float = angle_per_iter / 2.
 
     @property
