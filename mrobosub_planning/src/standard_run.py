@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from common_states import Start, Submerge, Surface, Stop
 from gate_states import AlignGate, AlignBuoyPathmarker, ApproachGate, Spin, ApproachGateImage, SpinFinish, GuessBuoyAngle
-from buoy_states import ApproachBuoyOpen, AlignBinsPathmarker, CenterHeaveBuoy, CenterYawBuoy
+from buoy_states import ApproachBuoyOpen, AlignBinsPathmarker, CenterHeaveBuoy, CenterYawBuoy, ZedPause
 from circumnavigate_states import CircumnavigateOpenDiscreteDiamondTurns, CircumnavigateOpenDiscreteMove
 from bin_states import ApproachBinOpen, ApproachBinClosed, CenterCameraToBin, Descend, CenterLeftDropper, DropMarker, Spin180
 from umrsm import TransitionMap
@@ -27,12 +27,14 @@ transitions: TransitionMap = {
     SpinFinish.Reached: AlignBuoyPathmarker,
     SpinFinish.TimedOut: AlignBuoyPathmarker,
     
-    AlignBuoyPathmarker.AlignedToBuoy: ApproachBuoyOpen,
+    AlignBuoyPathmarker.AlignedToBuoy: ZedPause, #ApproachBuoyOpen,
     AlignBuoyPathmarker.NoMeasurements: GuessBuoyAngle,
     AlignBuoyPathmarker.TimedOut: GuessBuoyAngle,
 
-    GuessBuoyAngle.Reached: ApproachBuoyOpen,
-    GuessBuoyAngle.TimedOut: ApproachBuoyOpen,
+    GuessBuoyAngle.Reached: ZedPause,
+    GuessBuoyAngle.TimedOut: ZedPause,
+
+    ZedPause.TimedOut: ApproachBuoyOpen,
 
     ApproachBuoyOpen.SeenBuoy: CenterHeaveBuoy,
     ApproachBuoyOpen.TimedOut: Surface,
