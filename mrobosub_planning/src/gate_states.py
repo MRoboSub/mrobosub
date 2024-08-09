@@ -1,8 +1,9 @@
-from abstract_states import TimedState
+from abstract_states import TimedState, TurnToYaw
 from periodic_io import PIO, ImageTarget
 from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
 import rospy
-from typing import NamedTuple, Union
+from typing import NamedTuple, Union, Optional
+from circumnavigate_states import CircumnavigateOpenDiscreteDiamondTurns
 
 
 class SeenGateImageType(NamedTuple):
@@ -47,12 +48,12 @@ class ApproachGate(TimedState):
 
     def __init__(self, prev_outcome: NamedTuple):
         super().__init__(prev_outcome)
+        PIO.activate_zed()
         self.times_seen = 0
 
     def handle_if_not_timedout(self) -> Union[SeenGateImage, None]:
         PIO.set_target_twist_surge(self.surge_speed)
         PIO.set_target_pose_heave(0.75)
-        return None
 
         blue_response = PIO.query_image(ImageTarget.GATE_BLUE)
         red_response = PIO.query_image(ImageTarget.GATE_RED)
@@ -99,6 +100,7 @@ class ApproachGateImage(TimedState):
         self.image_seen = prev_outcome.image_seen
         self.last_target_yaw = PIO.Pose.yaw + prev_outcome.position.x_theta
         self.times_not_seen = 0
+        PIO.activate_zed()
 
     def handle_if_not_timedout(self) -> Union[GoneThroughGate, None]:
         # Precondition: you have already seen a glyph. You are trying to update
@@ -128,9 +130,13 @@ class ApproachGateImage(TimedState):
 class AlignPathmarker(TimedState):
     # class SeenGlyph(SeenGlyphType):
     #     pass
-    class Aligned(NamedTuple):
+    class AlignedToBuoy(NamedTuple):
         pass
-    class TimedOut(NamedTuple):
+    class AlignedToBin(NamedTuple):
+        pass
+    class TimedOutBuoy(NamedTuple):
+        pass
+    class TimedOutBin(NamedTuple):
         pass
 
     yaw_threshold: float = 2.0
@@ -138,17 +144,55 @@ class AlignPathmarker(TimedState):
 
     def __init__(self, prev_outcome: NamedTuple) -> None:
         super().__init__(prev_outcome)
-        self.last_known_angle = None
-        if isinstance(prev_outcome, ApproachGateImage.FoundBuoyPathMarker):
-            self.last_known_angle = prev_outcome.angle
+        PIO.activate_bot_cam()
+        self.last_known_angle: Optional[float] = None
+        self.iter = 0
+        self.measurements = []
+        if isinstance(prev_outcome, SpinFinish.Reached):
+            self.pathmarker_to_buoy = True
+        elif isinstance(prev_outcome, CircumnavigateOpenDiscreteDiamondTurns.Complete):
+            self.pathmarker_to_buoy = False
         else:
-            print(f"Expected type FoundBuoyPathMarker, received {prev_outcome}") 
-        
+            self.pathmarker_to_buoy = True
+            print(f"Expected type FoundBuoyPathMarker or CompleteCircumnavigate, received {prev_outcome}") 
 
+    def handle_if_not_timedout(self) -> Union[TimedOutBuoy, TimedOutBin, AlignedToBuoy, AlignedToBin, None]:
+        PIO.set_target_twist_surge(0)
+        self.iter += 1
+        if self.iter < 50:
+            return None
+        if self.iter < 100:
+            pm_resp = PIO.query_pathmarker()
+            print(f'{pm_resp=}')
+            if pm_resp is not None:
+                self.measurements.append(pm_resp)
+            return None
+        if self.iter == 100:
+            print('Calculating target')
+            if not self.measurements:
+                if self.pathmarker_to_buoy:
+                    return self.TimedOutBuoy()
+                else:
+                    return self.TimedOutBin()
+            self.target_angle = sum(self.measurements) / len(self.measurements)
+            print(f'{self.target_angle=}')
+            self.yaw_threshold_count = 0
+        if self.iter >= 100:
+            PIO.set_target_pose_yaw(self.target_angle)
+            if PIO.is_yaw_within_threshold(self.yaw_threshold):
+                self.yaw_threshold_count += 1
+            else:
+                self.yaw_threshold_count = 0
+            if self.yaw_threshold_count > 50:
+                if self.pathmarker_to_buoy:
+                    return self.AlignedToBuoy()
+                else:
+                    return self.AlignedToBin()
+        return None
 
-    def handle_if_not_timedout(self) -> Union[Aligned, TimedOut, None]:
+        '''
         pm_resp = PIO.query_pathmarker()
-        print(pm_resp)
+        #print(pm_resp)
         if pm_resp is not None:
             self.last_known_angle = pm_resp
 
@@ -158,12 +202,34 @@ class AlignPathmarker(TimedState):
             return None
 
         if PIO.is_yaw_within_threshold(self.yaw_threshold):
-            return self.Aligned()
+            if self.pathmarker_to_buoy:
+                return self.AlignedToBuoy()
+            else:
+                return self.AlignedToBin()
         return None
+        '''
 
-    def handle_once_timedout(self) -> TimedOut:
-        return self.TimedOut()
+    def handle_once_timedout(self) -> Union[TimedOutBin, TimedOutBuoy]:
+        if self.pathmarker_to_buoy:
+            return self.TimedOutBuoy()
+        else:
+            return self.TimedOutBin()
 
+class GuessBuoyAngle(TurnToYaw):
+    class Reached(NamedTuple):
+        pass
+    class TimedOut(NamedTuple):
+        pass
+
+    target_yaw = 20.0
+    yaw_threshold = 2.0
+    settle_time = 1.0
+    timeout = 10.0
+
+    def handle_reached(self):
+        return Reached()
+    def handle_once_timedout(self):
+        return TimedOut()
 
 class Spin(TimedState):
     timeout: float = 30.0

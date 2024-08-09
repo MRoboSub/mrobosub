@@ -154,7 +154,6 @@ class DoubleTimedState(State):
 class TurnToYaw(TimedState):
     """
     Must specify following outcomes:
-    Unreached
     Reached
     TimedOut
 
@@ -174,14 +173,10 @@ class TurnToYaw(TimedState):
         if rospy.get_time() - self.timer >= self.settle_time:
             return self.handle_reached()
 
-        return self.handle_unreached()
+        return None
 
     @abstractmethod
     def handle_reached(self) -> Optional[NamedTuple]:
-        pass
-
-    @abstractmethod
-    def handle_unreached(self) -> Optional[NamedTuple]:
         pass
 
     @property

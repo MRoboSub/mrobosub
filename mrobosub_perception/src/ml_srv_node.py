@@ -38,8 +38,8 @@ CONFIDENCE = 0.9
 TIME_THRESHOLD = 10
 
 class Targets(enum.Enum):
-    GATE_BLUE = 0
-    GATE_RED = 1
+    GATE_RED = 0
+    GATE_BLUE = 1
 
 def load_yolo():
     # load model
@@ -51,9 +51,9 @@ def load_yolo():
     path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     yolo_path = os.path.join(path, 'yolov5')
 
-    model_path = os.path.join(path, "models/model_2a.pt")
+    model_path = os.path.join(path, "models/comp_gate_2024.pt")
     model = torch.hub.load(yolo_path, 'custom', path=model_path, source='local')  # local repo
-    model.conf = 0.25  # NMS confidence threshold
+    model.conf = 0.1  # NMS confidence threshold
     return model
 
 def imgmsg_to_cv2(img_msg):
@@ -80,7 +80,8 @@ class Node:
 
             # print("zed callback")
             # Convert the zed image to an opencv image
-            image_ocv = imgmsg_to_cv2(message)
+            # image_ocv = imgmsg_to_cv2(message)
+            image_ocv = bridge.imgmsg_to_cv2(message, desired_encoding='rgb8')
 
             # Remove the 4th channel (transparency)
             # image_ocv = image_ocv[:,:,:3]
@@ -88,12 +89,11 @@ class Node:
             # Find any objects in the image
             height, width, channels = image_ocv.shape   # shape of the image
             outputs = self.model(image_ocv, size=width)   # get raw detection data
+
             detections = outputs.xyxy[0].cpu().numpy()   # get the detections
 
             # Draw any bounding boxes and display the image
             # results.show()
-
-
 
             #byte_data = struct.unpack(const_unpack, message.depth.data)
 
@@ -186,8 +186,8 @@ class Node:
             ObjectPosition, 
             lambda msg : self.handle_obj_request(idx.value, msg)
         )
-        self.gate_blue_srv = mk_service('gate_blue', Targets.GATE_BLUE)
         self.gate_red_srv = mk_service('gate_red', Targets.GATE_RED)
+        self.gate_blue_srv = mk_service('gate_blue', Targets.GATE_BLUE)
 
         self.recent_positions = [None] * len(Targets)
         self.latest_request_time = rospy.get_time() - TIME_THRESHOLD

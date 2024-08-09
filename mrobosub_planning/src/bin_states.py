@@ -8,9 +8,35 @@ import rospy
 from std_msgs.msg import Int32
 
 
+class ApproachBinOpen(TimedState):
+    class SeenBin(NamedTuple):
+        pass
 
+    class TimedOut(NamedTuple):
+        pass
 
-class ApproachBin(TimedState):
+    surge_speed: float = 0.15
+    timeout: float = 30
+
+    def __init__(self, prev_outcome) -> None:
+        super().__init__(prev_outcome)
+        PIO.activate_bot_cam()
+        self.target_yaw = getattr(prev_outcome, "angle", PIO.Pose.yaw)
+
+    def handle_if_not_timedout(self) -> Union[SeenBin, None]:
+        PIO.set_target_pose_yaw(self.target_yaw)
+        PIO.set_target_twist_surge(self.surge_speed)
+
+        binPosition = PIO.query_BinCamPos()
+        if binPosition and binPosition.found:
+            return self.SeenBin()
+        return None
+
+    def handle_once_timedout(self) -> TimedOut:
+        PIO.set_target_twist_surge(0)
+        return self.TimedOut()
+
+class ApproachBinClosed(TimedState):
     class TimedOut(NamedTuple):
         pass
     class Reached(NamedTuple):
@@ -18,7 +44,7 @@ class ApproachBin(TimedState):
 
     timeout: float = 40.0
 
-    surge_speed = .6 #max surge speed
+    surge_speed = .1 #max surge speed
     yaw_factor = .2
     centered_pixel_dist_thresh = .1 #threshold distance in pixels within which we say we have centered appropriatclass CenterToBinFromFar(TimedState):
     aligned_yaw_thresh = 5 #threshold within which we consider yaw aligned
@@ -27,6 +53,7 @@ class ApproachBin(TimedState):
     
     def __init__(self, prev_outcome: NamedTuple):
         super().__init__(prev_outcome)
+        PIO.activate_bot_cam()
         self.angle_to_bin: float = 0.0
 
 
@@ -82,18 +109,30 @@ class CenterCameraToBin(TimedState):
         pass
     class Reached(NamedTuple):
         pass
-    timeout: float = 40.0
+    timeout: float = 120.0
 
     surge_and_strafe_speed = 0.05 #max surge/sway speed
-    centered_pixel_x_y_thresh = 0.05 
+    centered_pixel_x_y_thresh = 0.15
+    bin_depth = 0.5
+    descend_speed = 0.05
 
     def __init__(self, prev_outcome: NamedTuple):
         super().__init__(prev_outcome)
+        PIO.activate_bot_cam()
         self.angle_to_bin: float = 0.0
+        self.surge_speed = 0.0
+        self.sway_speed = 0.0
+        self.lost_frames_num = 0
+        self.last_heave_target = PIO.Pose.heave
+        self.i = 0
 
     def handle_if_not_timedout(self) -> Union[None, Reached]:
+        if self.i < 30:
+            self.i += 1
+            PIO.set_target_twist_surge(-0.2)
         bin_camera_position = PIO.query_BinCamPos() 
         if bin_camera_position and bin_camera_position.found: 
+            self.lost_frames_num = 0
             x,y = bin_camera_position.x_position, bin_camera_position.y_position
             x -= 0.5
             y -= 0.5
@@ -105,25 +144,34 @@ class CenterCameraToBin(TimedState):
 
             if not surge_aligned:
                 if y > 0:
-                    surge_speed = self.surge_and_strafe_speed
+                    self.surge_speed = self.surge_and_strafe_speed
                 else:
-                    surge_speed = -self.surge_and_strafe_speed
-                PIO.set_target_twist_surge(surge_speed)
+                    self.surge_speed = -1 * self.surge_and_strafe_speed
+                PIO.set_target_twist_surge(self.surge_speed)
 
             if not sway_aligned:
                 if x > 0:
-                    sway_speed = self.surge_and_strafe_speed
+                    self.sway_speed = self.surge_and_strafe_speed
                 else:
-                    sway_speed = -self.surge_and_strafe_speed
-                PIO.set_target_twist_sway(sway_speed)
+                    self.sway_speed = -1 * self.surge_and_strafe_speed
+                PIO.set_target_twist_sway(self.sway_speed)
 
             print(f'{surge_aligned=}; {sway_aligned=}')
             if sway_aligned and surge_aligned:
-                #return self.Reached()
-                PIO.set_target_twist_heave(0.1)
+                self.last_heave_target = max(self.last_heave_target, PIO.Pose.heave)
+                PIO.set_target_twist_heave(self.descend_speed)
                 print('Descending')
-                if PIO.Pose.heave > 1.8:
+                if PIO.Pose.heave > self.bin_depth:
                     return self.Reached()
+            else:
+                PIO.set_target_pose_heave(self.last_heave_target)
+        else:
+            PIO.set_target_pose_heave(self.last_heave_target)
+            self.lost_frames_num += 1
+            if self.lost_frames_num > 10:
+                PIO.set_target_twist_surge(-1*self.surge_speed)
+                PIO.set_target_twist_sway(-1*self.sway_speed)
+
         return None
 
  
@@ -147,6 +195,7 @@ class CenterLeftDropper(TimedState):
 
     def __init__(self, prev_outcome: NamedTuple):
         super().__init__(prev_outcome)
+        PIO.activate_bot_cam()
         self.angle_to_bin: float = 0.0
 
     def handle_if_not_timedout(self) -> Union[None, Reached]:
@@ -226,12 +275,10 @@ class DropMarker(TimedState):
         
     def handle_if_not_timedout(self) -> Union[DroppedLeft, DroppedRight]:
         if self.drop_left:
-            left_dropper_pub = rospy.Publisher('/left_servo/angle', Int32)
-            left_dropper_pub.publish(self.open_angle)
+            PIO.set_left_dropper_angle(60)
             return self.DroppedLeft()
         else:
-            right_dropper_pub = rospy.Publisher('/right_servo/angle', Int32)
-            right_dropper_pub.publish(self.open_angle)
+            PIO.set_right_dropper_angle(120)
             return self.DroppedRight()
     
     def handle_once_timedout(self) -> TimedOut:
