@@ -57,10 +57,7 @@ class CircumnavigateOpenDiscreteDiamondTurns(TurnToYaw):
 
     def __init__(self, prev_outcome: NamedTuple):
         super().__init__(prev_outcome)
-        if getattr(prev_outcome, 'ccw', False):
-            self.dir = -1
-        else:
-            self.dir = 1
+        self.dir = 1 # always go clockwise for matching points
 
         if not isinstance(prev_outcome, CircumnavigateOpenDiscreteData):
             self.cum_angle = 0.

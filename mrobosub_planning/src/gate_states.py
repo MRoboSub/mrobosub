@@ -55,19 +55,19 @@ class ApproachGate(TimedState):
         PIO.set_target_twist_surge(self.surge_speed)
         PIO.set_target_pose_heave(0.75)
 
-        blue_response = PIO.query_image(ImageTarget.GATE_BLUE)
+        # blue_response = PIO.query_image(ImageTarget.GATE_BLUE)
         red_response = PIO.query_image(ImageTarget.GATE_RED)
-        res_exists = blue_response.found or red_response.found
+        res_exists = red_response.found # or blue_response.found
 
         if not res_exists:
             return None
 
         if self.times_seen >= self.found_image_threshold:
-            if red_response.found:
+            # if red_response.found:
                 # Prefer red because red bin is probably easier to see
                 return self.SeenGateImage(red_response, ImageTarget.GATE_RED)
-            else:
-                return self.SeenGateImage(blue_response, ImageTarget.GATE_BLUE)
+            # else:
+            #     return self.SeenGateImage(blue_response, ImageTarget.GATE_BLUE)
 
 
         self.times_seen += 1
