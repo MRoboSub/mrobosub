@@ -31,7 +31,7 @@ rospy.wait_for_service('/localization/zero_state')
 zero_srv = rospy.ServiceProxy('/localization/zero_state', Trigger)
 
 if USE_ML:
-    rospy.wait_for_service('/object_position/earth')
+    rospy.wait_for_service('/object_position/gate_red')
 
 rate = rospy.Rate(10)
 target_twist_yaw_pub = rospy.Publisher('/target_twist/yaw', Float64, queue_size=1)
