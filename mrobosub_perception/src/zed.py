@@ -46,6 +46,11 @@ class Zed(ControlLoopNode):
     def chop(self, frame):
         width = frame.shape[1]
         return frame[:,:(width//2),:]
+    
+    def crop(self, frame):
+        left, right, top, bottom = 130, 50, 40, 60
+        frame[:,:left] = frame[:,-right:] = frame[:top,:] = frame[-bottom:,:] = [255,0,0]
+        return frame
 
     def loop(self):
         if not self.on: return
@@ -55,7 +60,8 @@ class Zed(ControlLoopNode):
         if success:
             self.raw_pub.publish(self.br.cv2_to_imgmsg(frame, encoding='bgr8'))
             frame_chopped = self.chop(frame)
-            img = self.br.cv2_to_imgmsg(frame_chopped, encoding='bgr8')
+            frame_cropped = self.crop(frame_chopped)
+            img = self.br.cv2_to_imgmsg(frame_cropped, encoding='bgr8')
             self.pub.publish(img)
 
             
