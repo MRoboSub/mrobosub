@@ -15,8 +15,8 @@ class ApproachBinOpen(TimedState):
     class TimedOut(NamedTuple):
         pass
 
-    surge_speed: float = 0.1
-    timeout: float = 20
+    surge_speed: float = 0.15
+    timeout: float = 30
 
     def __init__(self, prev_outcome) -> None:
         super().__init__(prev_outcome)
@@ -109,10 +109,12 @@ class CenterCameraToBin(TimedState):
         pass
     class Reached(NamedTuple):
         pass
-    timeout: float = 40.0
+    timeout: float = 120.0
 
     surge_and_strafe_speed = 0.05 #max surge/sway speed
-    centered_pixel_x_y_thresh = 0.15 
+    centered_pixel_x_y_thresh = 0.15
+    bin_depth = 0.5
+    descend_speed = 0.05
 
     def __init__(self, prev_outcome: NamedTuple):
         super().__init__(prev_outcome)
@@ -121,8 +123,13 @@ class CenterCameraToBin(TimedState):
         self.surge_speed = 0.0
         self.sway_speed = 0.0
         self.lost_frames_num = 0
+        self.last_heave_target = PIO.Pose.heave
+        self.i = 0
 
     def handle_if_not_timedout(self) -> Union[None, Reached]:
+        if self.i < 30:
+            self.i += 1
+            PIO.set_target_twist_surge(-0.2)
         bin_camera_position = PIO.query_BinCamPos() 
         if bin_camera_position and bin_camera_position.found: 
             self.lost_frames_num = 0
@@ -139,24 +146,27 @@ class CenterCameraToBin(TimedState):
                 if y > 0:
                     self.surge_speed = self.surge_and_strafe_speed
                 else:
-                    self.surge_speed = -self.surge_and_strafe_speed
+                    self.surge_speed = -1 * self.surge_and_strafe_speed
                 PIO.set_target_twist_surge(self.surge_speed)
 
             if not sway_aligned:
                 if x > 0:
                     self.sway_speed = self.surge_and_strafe_speed
                 else:
-                    self.sway_speed = -self.surge_and_strafe_speed
+                    self.sway_speed = -1 * self.surge_and_strafe_speed
                 PIO.set_target_twist_sway(self.sway_speed)
 
             print(f'{surge_aligned=}; {sway_aligned=}')
             if sway_aligned and surge_aligned:
-                #return self.Reached()
-                PIO.set_target_twist_heave(0.1)
+                self.last_heave_target = max(self.last_heave_target, PIO.Pose.heave)
+                PIO.set_target_twist_heave(self.descend_speed)
                 print('Descending')
-                if PIO.Pose.heave > 1.8:
+                if PIO.Pose.heave > self.bin_depth:
                     return self.Reached()
+            else:
+                PIO.set_target_pose_heave(self.last_heave_target)
         else:
+            PIO.set_target_pose_heave(self.last_heave_target)
             self.lost_frames_num += 1
             if self.lost_frames_num > 10:
                 PIO.set_target_twist_surge(-1*self.surge_speed)

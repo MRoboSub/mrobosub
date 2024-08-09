@@ -14,7 +14,7 @@ class Submerge(TimedState):
     class Submerged(NamedTuple): pass
     class TimedOut(NamedTuple): pass
     
-    target_heave: float = 0.225
+    target_heave: float = 0.2
     heave_threshold: float = 0.1
     timeout: float = 15
     yaw_threshold: float = 2

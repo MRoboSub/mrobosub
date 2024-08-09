@@ -156,7 +156,7 @@ class AlignPathmarker(TimedState):
             self.pathmarker_to_buoy = True
             print(f"Expected type FoundBuoyPathMarker or CompleteCircumnavigate, received {prev_outcome}") 
 
-    def handle_if_not_timedout(self) -> Union[AlignedToBuoy, AlignedToBin, None]:
+    def handle_if_not_timedout(self) -> Union[TimedOutBuoy, TimedOutBin, AlignedToBuoy, AlignedToBin, None]:
         PIO.set_target_twist_surge(0)
         self.iter += 1
         if self.iter < 50:
