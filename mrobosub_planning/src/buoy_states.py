@@ -133,3 +133,39 @@ class CenterYawBuoy(TimedState):
         PIO.set_target_twist_surge(0)
         PIO.set_target_twist_yaw(0)
         return self.TimedOut()
+
+
+class AlignBinsPathmarker(AlignPathmarker):
+    class AlignedToBins(NamedTuple):
+        pass
+    class NoMeasurements(NamedTuple):
+        pass
+    class TimedOut(NamedTuple):
+        pass
+
+    yaw_threshold = 2
+
+    def __init__(self, prev_outcome: NamedTuple):
+        super().__init__(prev_outcome)
+        self.iter = -50
+
+    def handle_if_not_timedout(self) -> Union[NamedTuple, None]:
+        if iter < 0:
+            PIO.set_target_twist_surge(-0.1)
+            PIO.set_target_twist_sway(-0.1)
+            return None
+        outcome = super().handle_if_not_timedout()
+        if self.iter == 100 and hasattr(self, 'target_angle'):
+            if PIO.query_buoy().found:
+                self.target_angle -= 180
+        return outcome
+
+    def handle_aligned(self) -> AlignedToBins:
+        return AlignedToBins()
+
+    def handle_no_measurements(self) -> NoMeasurements:
+        return NoMeasurements()
+
+    def handle_once_timedout(self) -> TimedOut:
+        return TimedOut()
+

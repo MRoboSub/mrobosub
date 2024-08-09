@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from common_states import Start, Submerge, Surface, Stop
-from gate_states import AlignGate, AlignPathmarker, ApproachGate, ApproachGateImage
+from gate_states import AlignGate, AlignBuoyPathmarker, ApproachGate, ApproachGateImage
 # from buoy_states import ApproachBuoyOpen, OldApproachBuoyClosed, FindGlyph, FallBack, PassBuoy, Pause, ContingencyApproach, ContingencySubmerge, Ascend
 
 
@@ -16,9 +16,9 @@ transitions = {
     ApproachGate.SeenGateImage: ApproachGateImage,
     ApproachGate.TimedOut: Surface,
 
-    # AlignPathMarker.Aligned: ApproachBuoyOpen,
-    # AlignPathMarker.SeenGlyph: OldApproachBuoyClosed,
-    # AlignPathMarker.TimedOut: ApproachBuoyOpen,
+    # AlignBuoyPathmarker.Aligned: ApproachBuoyOpen,
+    # AlignBuoyPathmarker.SeenGlyph: OldApproachBuoyClosed,
+    # AlignBuoyPathmarker.TimedOut: ApproachBuoyOpen,
 
     # ApproachGateImage.TimedOut: ApproachBuoyOpen,
 

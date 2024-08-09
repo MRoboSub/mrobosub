@@ -1,4 +1,4 @@
-from gate_states import AlignPathmarker
+from buoy_states import AlignBinPathmarker
 from bin_states import ApproachBinOpen, ApproachBinClosed, CenterCameraToBin, Descend, CenterLeftDropper, DropMarker, Spin180
 from common_states import Start, Submerge, Surface, Stop
 from gate_states import AlignPathmarker
@@ -11,10 +11,9 @@ transitions: TransitionMap = {
     Submerge.Submerged: AlignPathmarker,
     Submerge.TimedOut: AlignPathmarker,
 
-    AlignPathmarker.AlignedToBuoy: ApproachBinOpen,
-    AlignPathmarker.AlignedToBin: ApproachBinOpen,
-    AlignPathmarker.TimedOutBuoy: Surface,
-    AlignPathmarker.TimedOutBin: Surface,
+    AlignBinPathmarker.AlignedToBin: ApproachBinOpen,
+    AlignBinPathmarker.NoMeasurements: ApproachBinOpen, # TODO
+    AlignBinPathmarker.TimedOut: Surface,
 
     ApproachBinOpen.SeenBin: ApproachBinClosed,
     ApproachBinOpen.TimedOut: Surface,

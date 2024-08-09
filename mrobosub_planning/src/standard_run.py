@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from common_states import Start, Submerge, Surface, Stop
-from gate_states import AlignGate, AlignPathmarker, ApproachGate, Spin, ApproachGateImage, SpinFinish, GuessBuoyAngle
-from buoy_states import ApproachBuoyOpen, CenterHeaveBuoy, CenterYawBuoy
+from gate_states import AlignGate, AlignBuoyPathmarker, ApproachGate, Spin, ApproachGateImage, SpinFinish, GuessBuoyAngle
+from buoy_states import ApproachBuoyOpen, AlignBinsPathmarker, CenterHeaveBuoy, CenterYawBuoy
 from circumnavigate_states import CircumnavigateOpenDiscreteDiamondTurns, CircumnavigateOpenDiscreteMove
 from bin_states import ApproachBinOpen, ApproachBinClosed, CenterCameraToBin, Descend, CenterLeftDropper, DropMarker, Spin180
 from umrsm import TransitionMap
@@ -27,8 +27,9 @@ transitions: TransitionMap = {
     SpinFinish.Reached: AlignPathmarker,
     SpinFinish.TimedOut: AlignPathmarker,
     
-    AlignPathmarker.AlignedToBuoy: ApproachBuoyOpen,
-    AlignPathmarker.TimedOutBuoy: GuessBuoyAngle,
+    AlignBuoyPathmarker.AlignedToBuoy: ApproachBuoyOpen,
+    AlignBouyPathmarker.NoMeasurements: GuessBuoyAngle,
+    AlignBuoyPathmarker.TimedOut: GuessBuoyAngle,
 
     GuessBuoyAngle.Reached: ApproachBuoyOpen,
     GuessBuoyAngle.TimedOut: ApproachBuoyOpen,
@@ -48,8 +49,9 @@ transitions: TransitionMap = {
 
     CircumnavigateOpenDiscreteMove.FinishedStep: CircumnavigateOpenDiscreteDiamondTurns,
 
-    AlignPathmarker.AlignedToBin: ApproachBinOpen, #this is where we will go to bin
-    AlignPathmarker.TimedOutBin: ApproachBinOpen,
+    AlignBinsPathmarker.AlignedToBin: ApproachBinOpen, #this is where we will go to bin
+    AlignBinsPathmarker.NoMeasurements: Surface,
+    AlignBinsPathmarker.TimedOut: ApproachBinOpen,
 
     ApproachBinOpen.SeenBin: ApproachBinClosed,
     ApproachBinOpen.TimedOut: Surface,

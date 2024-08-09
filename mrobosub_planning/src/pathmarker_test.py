@@ -1,4 +1,4 @@
-from gate_states import AlignPathmarker, ApproachGate
+from gate_states import AlignBuoyPathmarker, ApproachGate
 from buoy_states import ApproachBuoyOpen
 from common_states import Start, Submerge, Surface, Stop
 from umrsm import TransitionMap
@@ -7,13 +7,12 @@ from umrsm import TransitionMap
 transitions: TransitionMap = {
     Start.Complete: AlignPathmarker,#Submerge,
 
-    Submerge.Submerged: AlignPathmarker,
-    Submerge.TimedOut: AlignPathmarker,
+    Submerge.Submerged: AlignBuoyPathmarker,
+    Submerge.TimedOut: AlignBuoyPathmarker,
 
-    AlignPathmarker.AlignedToBuoy: Surface,
-    AlignPathmarker.AlignedToBin: Surface,
-    AlignPathmarker.TimedOutBin: Surface,
-    AlignPathmarker.TimedOutBuoy: Surface,
+    AlignBuoyPathmarker.NoMeasurements: Surface,
+    AlignBuoyPathmarker.AlignedToBuoy: Surface,
+    AlignBuoyPathmarker.TimedOut: Surface,
 
     Surface.Surfaced: Stop
 }
