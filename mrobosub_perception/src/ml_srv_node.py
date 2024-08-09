@@ -68,10 +68,42 @@ def imgmsg_to_cv2(img_msg):
 
 class Node:
     recent_positions: List[Optional[ObjectPositionResponse]]
+    red_is_left: bool = True
+
+    def __init__(self):
+        # Load the model
+        #model, classes, colors, output_layers = load_yolo()
+        self.model = load_yolo()
+        print("model loaded")
+
+        print("made it to main")
+        rospy.init_node('ml_server', anonymous=False)
+        print(sys.version)
+        print("node initialized")
+        
+        # Intialize ros services for each of the objects
+        mk_service = lambda name, idx: rospy.Service(
+            f'object_position/{name}', 
+            ObjectPosition, 
+            lambda msg : self.handle_obj_request(idx.value, msg)
+        )
+        self.gate_red_srv = mk_service('gate_red', Targets.GATE_RED)
+        self.gate_blue_srv = mk_service('gate_blue', Targets.GATE_BLUE)
+
+        self.recent_positions = [None] * len(Targets)
+        self.latest_request_time = rospy.get_time() - TIME_THRESHOLD
+
+        # Subscribe to the ZED left image and depth topics
+        # For a full list of zed topics, see https://www.stereolabs.com/docs/ros/zed-node/#published-topics
+        rospy.Subscriber("/zed2/zed_node/rgb/image_rect_color", Image, self.zed_callback, queue_size=1)
+
+        self.bbox_pub = rospy.Publisher('/object_position/bbox', Image, queue_size=10)
+
 
     def zed_callback(self, message):
         global img_seen_num, img_num
-        # print('in zed callback')
+        recent_positions_local: List[Optional[ObjectPositionResponse]] = [None] * len(Targets)
+
         if self.latest_request_time is None:
             return
         if rospy.get_time() - self.latest_request_time < TIME_THRESHOLD:
@@ -101,10 +133,10 @@ class Node:
             print(detections)
             print('TIME: ', str((time.time() - start)))
 
-            for i in range(len(self.recent_positions)):
+            for i in range(len(recent_positions_local)):
                 msg = ObjectPositionResponse()
                 msg.found = False
-                self.recent_positions[i] = msg
+                recent_positions_local[i] = msg
             
             for i, detection in enumerate(detections):
                 object_position_response = ObjectPositionResponse()
@@ -141,10 +173,37 @@ class Node:
             
             
                 idx = int(detection[5])
-                self.recent_positions[idx] = object_position_response
-                print(idx)
-                print(self.recent_positions[idx])
-                self.recent_positions[idx] = object_position_response
+
+                if idx < 2: # for red and blue gate symbols
+                    if recent_positions_local[0] and recent_positions_local[0].found:
+                        if(recent_positions_local[0].x_position < object_position_response.x_position):
+                            if(self.red_is_left):
+                                idx = 1
+                            else:
+                                idx = 0
+                        else:
+                            if(self.red_is_left):
+                                idx = 0
+                            else:
+                                idx = 1
+                    elif recent_positions_local[1] and recent_positions_local[1].found:
+                        if(recent_positions_local[1].x_position < object_position_response.x_position):
+                            if(self.red_is_left):
+                                idx = 1
+                            else:
+                                idx = 0
+                        else:
+                            if(self.red_is_left):
+                                idx = 0
+                            else:
+                                idx = 1
+                    
+                if recent_positions_local[idx] and recent_positions_local[idx].found:
+                    recent_positions_local[idx], recent_positions_local[abs(idx-1)] = object_position_response, recent_positions_local[idx]
+                else:
+                    recent_positions_local[idx] = object_position_response
+
+                self.recent_positions = recent_positions_local
 
                 # draw bounding box on image
                 cv2.rectangle(image_ocv, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), (255, 255, 255), 2)
@@ -169,34 +228,6 @@ class Node:
             rospy.sleep(0.005)
         return self.recent_positions[idx]
 
-    def __init__(self):
-        # Load the model
-        #model, classes, colors, output_layers = load_yolo()
-        self.model = load_yolo()
-        print("model loaded")
-
-        print("made it to main")
-        rospy.init_node('ml_server', anonymous=False)
-        print(sys.version)
-        print("node initialized")
-        
-        # Intialize ros services for each of the objects
-        mk_service = lambda name, idx: rospy.Service(
-            f'object_position/{name}', 
-            ObjectPosition, 
-            lambda msg : self.handle_obj_request(idx.value, msg)
-        )
-        self.gate_red_srv = mk_service('gate_red', Targets.GATE_RED)
-        self.gate_blue_srv = mk_service('gate_blue', Targets.GATE_BLUE)
-
-        self.recent_positions = [None] * len(Targets)
-        self.latest_request_time = rospy.get_time() - TIME_THRESHOLD
-
-        # Subscribe to the ZED left image and depth topics
-        # For a full list of zed topics, see https://www.stereolabs.com/docs/ros/zed-node/#published-topics
-        rospy.Subscriber("/zed2/zed_node/rgb/image_rect_color", Image, self.zed_callback, queue_size=1)
-
-        self.bbox_pub = rospy.Publisher('/object_position/bbox', Image, queue_size=10)
 
     def spin(self):
         rospy.spin()
