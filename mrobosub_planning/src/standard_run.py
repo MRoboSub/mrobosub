@@ -46,7 +46,7 @@ transitions: TransitionMap = {
     CenterYawBuoy.TimedOut: Surface, #could do passBuoy instead of surface as well
 
     CircumnavigateOpenDiscreteDiamondTurns.FinishedStep: CircumnavigateOpenDiscreteMove,
-    CircumnavigateOpenDiscreteDiamondTurns.Complete: AlignBinsPathmarker, #use pathmarker to align to bin
+    CircumnavigateOpenDiscreteDiamondTurns.Complete: Surface, #use pathmarker to align to bin
     CircumnavigateOpenDiscreteDiamondTurns.TimedOut: Surface,
 
     CircumnavigateOpenDiscreteMove.FinishedStep: CircumnavigateOpenDiscreteDiamondTurns,

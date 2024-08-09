@@ -14,4 +14,4 @@ alias watch_bin="watch -n 1 rosservice call /bin_object_position"
 alias watch_gate_blue="watch -n 1 rosservice call /object_position/gate_blue"
 alias watch_gate_red="watch -n 1 rosservice call /object_position/gate_red"
 alias gs="git status"
-
+alias quartermaster_start="nohup rosrun mrobosub_bringup quartermaster &"
