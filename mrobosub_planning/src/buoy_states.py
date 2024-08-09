@@ -6,6 +6,23 @@ from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
 from typing import Dict, Optional, Tuple, Union, NamedTuple
 
 
+class ZedPause(TimedState):
+    class TimedOut(NamedTuple):
+        pass
+
+    timeout: float = 5.
+
+    def __init__(self):
+        PIO.activate_zed()
+    
+    def handle_if_not_timedout(self):
+        PIO.set_target_pose_heave(0.75)
+        return None
+
+    def handle_once_timedout(self):
+        return self.TimedOut()
+
+
 class SeenBuoyType(NamedTuple):
     buoy_results: ObjectPositionResponse
 
@@ -17,7 +34,7 @@ class ApproachBuoyOpen(TimedState):
     class TimedOut(NamedTuple):
         pass
 
-    surge_speed: float = 0.2
+    surge_speed: float = 0.15
     timeout: float = 20
 
     def __init__(self, prev_outcome) -> None:

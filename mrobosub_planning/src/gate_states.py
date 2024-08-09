@@ -42,8 +42,8 @@ class ApproachGate(TimedState):
     class TimedOut(NamedTuple):
         pass
 
-    timeout: float = 50.0
-    surge_speed: float = 0.2
+    timeout: float = 150.0
+    surge_speed: float = 0.15
     found_image_threshold = 50
 
     def __init__(self, prev_outcome: NamedTuple):
@@ -108,13 +108,14 @@ class ApproachGateImage(TimedState):
             raise ValueError(f"Expected to have seen a planet by now")
 
         resp = PIO.query_image(self.image_seen)
-        if not resp.found:
+        resp_blue = PIO.query_image(ImageTarget.GATE_BLUE)
+        if not resp.found and not resp_blue.found:
             self.times_not_seen += 1
             if self.times_not_seen >= self.lost_image_threshold:
                 return self.GoneThroughGate(planet=self.image_seen)
         else:
             self.times_not_seen = 0
-            self.last_target_yaw = PIO.Pose.yaw + resp.x_theta * 0.5
+            self.last_target_yaw = PIO.Pose.yaw + resp.x_theta * 0.05
 
         # pm_angle = self.query_pathmarker()
         # if pm_angle is not None:
@@ -148,6 +149,7 @@ class AlignBuoyPathmarker(AlignPathmarker):
                 self.target_angle += 180
             if 180 <= self.target_angle < 270:
                 self.target_angle -= 180
+            print(f'adjusted_setpoint: {self.target_angle=}')
         return outcome
 
     def handle_aligned(self) -> AlignedToBuoy:
@@ -166,7 +168,7 @@ class GuessBuoyAngle(TurnToYaw):
     class TimedOut(NamedTuple):
         pass
 
-    target_yaw = 20.0
+    target_yaw = -10.
     yaw_threshold = 2.0
     settle_time = 1.0
     timeout = 10.0
@@ -204,13 +206,16 @@ class SpinFinish(TimedState):
         pass
 
     yaw_threshold: float = 2.0
-    timeout: float = 30.0
+    timeout: float = 15.0
 
     def __init__(self, prev_outcome: NamedTuple):
         super().__init__(prev_outcome)
         self.timer = rospy.get_time()
 
     def handle_if_not_timedout(self) -> Union[Reached, None]:
+        PIO.set_target_twist_surge(0.0)
+        PIO.set_target_pose_heave(0.4)
+
         target_yaw = 0
         PIO.set_target_pose_yaw(target_yaw)
 
