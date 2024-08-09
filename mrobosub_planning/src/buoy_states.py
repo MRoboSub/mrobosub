@@ -12,7 +12,8 @@ class ZedPause(TimedState):
 
     timeout: float = 5.
 
-    def __init__(self):
+    def __init__(self, prev_outcome: NamedTuple):
+        super().__init__(prev_outcome)
         PIO.activate_zed()
     
     def handle_if_not_timedout(self):

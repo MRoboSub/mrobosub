@@ -164,6 +164,10 @@ class TurnToYaw(TimedState):
     timeout: float
     """
 
+    def __init__(self, prev_outcome: NamedTuple):
+        super().__init__(prev_outcome)
+        self.timer = rospy.get_time()
+
     def handle_if_not_timedout(self) -> Optional[NamedTuple]:
         PIO.set_target_pose_yaw(self.target_yaw)
 
