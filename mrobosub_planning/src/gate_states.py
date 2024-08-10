@@ -107,15 +107,16 @@ class ApproachGateImage(TimedState):
         if self.image_seen is None:
             raise ValueError(f"Expected to have seen a planet by now")
 
-        resp = PIO.query_image(self.image_seen)
+        resp_red = PIO.query_image(self.image_seen)
         resp_blue = PIO.query_image(ImageTarget.GATE_BLUE)
-        if not resp.found and not resp_blue.found:
+        if not resp_red.found and not resp_blue.found:
             self.times_not_seen += 1
             if self.times_not_seen >= self.lost_image_threshold:
                 return self.GoneThroughGate(planet=self.image_seen)
         else:
             self.times_not_seen = 0
-            self.last_target_yaw = PIO.Pose.yaw + resp.x_theta * 0.05
+            if resp_red.found:
+                self.last_target_yaw = PIO.Pose.yaw + resp_red.x_theta * 0.05
 
         # pm_angle = self.query_pathmarker()
         # if pm_angle is not None:
@@ -125,6 +126,115 @@ class ApproachGateImage(TimedState):
         return None
 
     def handle_once_timedout(self) -> TimedOut:
+        return self.TimedOut()
+    
+class ApproachGateImageDiscrete(TimedState):
+    class GoneThroughGate(NamedTuple):
+        pass
+
+    class TimedOut(NamedTuple):
+        pass
+
+    radius_thold: float = 25.
+    unseen_thold: float = 20.0
+    surge_speed: float = 0.15
+    # yaw_factor: float = 0.5
+    timeout: float = 100.0
+
+    def __init__(self, prev_outcome) -> None:
+        super().__init__(prev_outcome)
+        if not isinstance(prev_outcome, SeenGateImageType):
+            raise TypeError(f"Expected type SeenGateImageType, received {prev_outcome}")
+        self.image_seen = prev_outcome.image_seen
+        self.last_target_yaw = PIO.Pose.yaw + prev_outcome.position.x_theta
+        self.times_not_seen = 0
+        PIO.activate_zed()
+
+        self.gate_position: ObjectPositionResponse = prev_outcome.position
+        self.angle_diff = prev_outcome.position.x_theta
+        self.target_heave = PIO.Pose.heave
+
+        self.FORWARD_ITER = 0
+        self.PAUSE_ITER = self.FORWARD_ITER + 200
+        self.COLLECT_ANGLES_ITER = self.PAUSE_ITER + 200
+        self.CENTER_ITER = self.COLLECT_ANGLES_ITER + 100
+        self.RESET_ITER = self.CENTER_ITER + 1000
+        self.END_ITER = self.RESET_ITER + 5
+
+        self.iter = self.COLLECT_ANGLES_ITER
+        self.angle_sum = 0
+        self.angle_count = 0
+        self.last_iter = False
+
+    def handle_if_not_timedout(self) -> Union[GoneThroughGate, None]:
+
+        PIO.set_target_pose_heave(self.target_heave)
+
+        resp_red = PIO.query_image(ImageTarget.GATE_RED)
+        resp_blue = PIO.query_image(ImageTarget.GATE_BLUE)
+        if not resp_red.found and not resp_blue.found:
+            self.times_not_seen += 1
+            if self.times_not_seen >= self.lost_image_threshold:
+                return self.GoneThroughGate(planet=self.image_seen)
+        else:
+            self.times_not_seen = 0
+            if resp_red.found:
+                self.angle_diff = resp_red.x_theta
+
+        if self.iter == self.FORWARD_ITER:
+            print('Forward')
+        elif self.iter == self.PAUSE_ITER:
+            print('Pausing after forward')
+        elif self.iter == self.COLLECT_ANGLES_ITER:
+            print('Collect angles')
+        elif self.iter == self.CENTER_ITER:
+            print('Centering')
+        elif self.iter == self.RESET_ITER:
+            print('Resetting')
+        elif self.iter == self.END_ITER:
+            print(f'Ended with {self.last_iter=}')
+
+        self.iter += 1
+        
+        if self.iter < self.PAUSE_ITER:
+            # Forward
+            PIO.set_target_twist_surge(self.surge_speed)
+        elif self.iter < self.COLLECT_ANGLES_ITER: # Starts here on first iter
+            # Pause
+            PIO.set_target_twist_surge(0)
+            ...
+        elif self.iter < self.CENTER_ITER: # Jump here on last iter
+            # Collect angles
+            PIO.set_target_twist_surge(0)
+            if resp_red.found:
+                self.angle_sum += PIO.Pose.yaw + self.angle_diff
+                self.angle_count += 1
+        elif self.iter < self.RESET_ITER:
+            # Center
+            if self.angle_count == 0:                
+                PIO.set_target_twist_surge(0)
+                PIO.set_target_twist_yaw(0)
+                return self.GoneThroughGate()
+            avg_angle = self.angle_sum / self.angle_count
+            PIO.set_target_pose_yaw(avg_angle)
+            if PIO.is_yaw_within_threshold(2):
+                self.iter = self.RESET_ITER - 1
+        elif self.iter < self.END_ITER:
+            # Reset
+            if self.last_iter:                
+                PIO.set_target_twist_surge(0)
+                PIO.set_target_twist_yaw(0)            
+                return self.GoneThroughGate()
+            else:
+                self.angle_sum = 0
+                self.angle_count = 0
+                self.iter = self.FORWARD_ITER
+
+        return None
+
+    def handle_once_timedout(self) -> TimedOut:
+        PIO.set_target_twist_surge(0)
+        PIO.set_target_twist_yaw(0)
         return self.TimedOut()
 
 
