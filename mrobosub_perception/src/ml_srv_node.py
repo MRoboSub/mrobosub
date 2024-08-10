@@ -138,6 +138,8 @@ class Node:
                 msg.found = False
                 recent_positions_local[i] = msg
             
+            bboxs = [None] * len(recent_positions_local)
+
             for i, detection in enumerate(detections):
                 object_position_response = ObjectPositionResponse()
                 object_position_response.found = True
@@ -176,7 +178,7 @@ class Node:
 
                 if idx < 2: # for red and blue gate symbols
                     if recent_positions_local[0] and recent_positions_local[0].found:
-                        if(recent_positions_local[0].x_position < object_position_response.x_position):
+                        if(recent_positions_local[0].x_theta < object_position_response.x_theta):
                             if(self.red_is_left):
                                 idx = 1
                             else:
@@ -187,7 +189,7 @@ class Node:
                             else:
                                 idx = 1
                     elif recent_positions_local[1] and recent_positions_local[1].found:
-                        if(recent_positions_local[1].x_position < object_position_response.x_position):
+                        if(recent_positions_local[1].x_theta < object_position_response.x_theta):
                             if(self.red_is_left):
                                 idx = 1
                             else:
@@ -199,16 +201,22 @@ class Node:
                                 idx = 1
                     
                 if recent_positions_local[idx] and recent_positions_local[idx].found:
-                    recent_positions_local[idx], recent_positions_local[abs(idx-1)] = object_position_response, recent_positions_local[idx]
+                    recent_positions_local[idx], recent_positions_local[1-idx] = object_position_response, recent_positions_local[idx]
+                    bboxs[idx], bboxs[1-idx] = box, bboxs[idx]
                 else:
                     recent_positions_local[idx] = object_position_response
-
-                self.recent_positions = recent_positions_local
+                    bboxs[idx] = box
 
                 # draw bounding box on image
+            
+            for idx, box in enumerate(bboxs):
+                if box is None:
+                    continue
                 cv2.rectangle(image_ocv, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), (255, 255, 255), 2)
                 cv2.putText(image_ocv, f"{Targets(idx).name} {conf:.2f}", (int(box[0]), int(box[1]-5)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255))
 
+            self.recent_positions = recent_positions_local
+            
             print(f"processed in {time.time() - start}")
 
             msg = bridge.cv2_to_imgmsg(image_ocv, encoding='rgb8')
