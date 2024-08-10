@@ -152,7 +152,137 @@ class CenterYawBuoy(TimedState):
         PIO.set_target_twist_surge(0)
         PIO.set_target_twist_yaw(0)
         return self.TimedOut()
+    
+class CenterYawBuoyDiscrete(TimedState):
+    class CloseToBuoy(NamedTuple):
+        pass
 
+    class TimedOut(NamedTuple):
+        pass
+
+    radius_thold: float = 21.
+    unseen_thold: float = 20.0
+    surge_speed: float = 0.15
+    # yaw_factor: float = 0.5
+    timeout: float = 100.0
+
+    def __init__(self, prev_outcome) -> None:
+        super().__init__(prev_outcome)
+        PIO.activate_zed()
+        if type(prev_outcome) != CenterHeaveBuoy.Centered:
+            raise TypeError(type(prev_outcome))
+        self.bbox_area = (
+            prev_outcome.last_data.confidence
+        )  ##Need to replace with actual bbox area
+        self.unseen_time = rospy.get_time()
+
+        self.buoy_position: ObjectPositionResponse = prev_outcome.last_data
+        self.angle_diff = prev_outcome.last_data.x_theta
+        self.target_heave = PIO.Pose.heave
+
+        self.FORWARD_ITER = 0
+        self.PAUSE_ITER = self.FORWARD_ITER + 50
+        self.COLLECT_ANGLES_ITER = self.PAUSE_ITER + 200
+        self.CENTER_ITER = self.COLLECT_ANGLES_ITER + 100
+        self.RESET_ITER = self.CENTER_ITER + 1000
+        self.END_ITER = self.RESET_ITER + 5
+
+        self.iter = self.COLLECT_ANGLES_ITER
+        self.angle_sum = 0
+        self.angle_count = 0
+        self.last_iter = False
+
+    def handle_if_not_timedout(self) -> Union[CloseToBuoy, None]:
+
+        query_res: ObjectPositionResponse = PIO.query_buoy()
+        if query_res.found:
+            self.angle_diff = query_res.x_theta
+            self.bbox_area = query_res.x_position
+            self.unseen_time = rospy.get_time()
+
+        PIO.set_target_pose_heave(self.target_heave)
+
+        if self.iter == self.FORWARD_ITER:
+            print('Forward')
+        elif self.iter == self.PAUSE_ITER:
+            print('Pausing after forward')
+        elif self.iter == self.COLLECT_ANGLES_ITER:
+            print('Collect angles')
+        elif self.iter == self.CENTER_ITER:
+            print('Centering')
+        elif self.iter == self.RESET_ITER:
+            print('Resetting')
+        elif self.iter == self.END_ITER:
+            print(f'Ended with {self.last_iter=}')
+
+        self.iter += 1
+        
+        if self.iter < self.PAUSE_ITER:
+            # Forward
+            PIO.set_target_twist_surge(self.surge_speed)
+        elif self.iter < self.COLLECT_ANGLES_ITER: # Starts here on first iter
+            # Pause
+            PIO.set_target_twist_surge(0)
+            ...
+        elif self.iter < self.CENTER_ITER: # Jump here on last iter
+            # Collect angles
+            PIO.set_target_twist_surge(0)
+            if query_res.found:
+                self.angle_sum += PIO.Pose.yaw + self.angle_diff
+                self.angle_count += 1
+        elif self.iter < self.RESET_ITER:
+            # Center
+            if self.angle_count == 0:                
+                PIO.set_target_twist_surge(0)
+                PIO.set_target_twist_yaw(0)
+                return self.CloseToBuoy()
+            avg_angle = self.angle_sum / self.angle_count
+            PIO.set_target_pose_yaw(avg_angle)
+            if PIO.is_yaw_within_threshold(2):
+                self.iter = self.RESET_ITER - 1
+        elif self.iter < self.END_ITER:
+            # Reset
+            if self.last_iter:                
+                PIO.set_target_twist_surge(0)
+                PIO.set_target_twist_yaw(0)            
+                return self.CloseToBuoy()
+            else:
+                self.angle_sum = 0
+                self.angle_count = 0
+                self.iter = self.FORWARD_ITER
+
+        if not self.last_iter and self.bbox_area >= self.radius_thold:
+            print('Close to buoy, going to pause/collect/center states one last time')
+            self.angle_sum = 0
+            self.angle_count = 0
+            self.iter = self.PAUSE_ITER
+            self.last_iter = True
+
+        if rospy.get_time() - self.unseen_time >= self.unseen_thold:
+            print("Unseen for longer than time threshold")
+            # Assume we cant see it because we're too close or past the buoy
+            PIO.set_target_twist_surge(0)
+            PIO.set_target_twist_yaw(0)
+            return self.CloseToBuoy()
+
+        return None
+
+    def handle_once_timedout(self) -> TimedOut:
+        PIO.set_target_twist_surge(0)
+        PIO.set_target_twist_yaw(0)
+        return self.TimedOut()
+    
+class BuoyPause(TimedState):
+    timeout: float = 3.
+
+    class TimedOut(NamedTuple):
+        pass
+
+    def handle_if_not_timedout(self) -> None:
+        pass
+        
+    def handle_once_timedout(self) -> TimedOut:
+        return self.TimedOut()
 
 class AlignBinsPathmarker(AlignPathmarker):
     class AlignedToBins(NamedTuple):

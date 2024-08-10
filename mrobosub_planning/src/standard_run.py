@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from common_states import Start, Submerge, Surface, Stop
 from gate_states import AlignGate, AlignBuoyPathmarker, ApproachGate, Spin, ApproachGateImage, SpinFinish, GuessBuoyAngle
-from buoy_states import ApproachBuoyOpen, AlignBinsPathmarker, CenterHeaveBuoy, CenterYawBuoy, ZedPause
+from buoy_states import ApproachBuoyOpen, AlignBinsPathmarker, BuoyPause, CenterHeaveBuoy, CenterYawBuoy, CenterYawBuoyDiscrete, ZedPause
 from circumnavigate_states import CircumnavigateOpenDiscreteDiamondTurns, CircumnavigateOpenDiscreteMove
 from bin_states import ApproachBinOpen, ApproachBinClosed, CenterCameraToBin, Descend, CenterLeftDropper, DropMarker, Spin180
 from umrsm import TransitionMap
@@ -46,8 +46,10 @@ transitions: TransitionMap = {
     CenterHeaveBuoy.Centered: CenterYawBuoy,
     CenterHeaveBuoy.TimedOut: CenterYawBuoy,
 
-    CenterYawBuoy.CloseToBuoy: CircumnavigateOpenDiscreteDiamondTurns, # this is where movement of around buoy will connect
-    CenterYawBuoy.TimedOut: Surface, #could do passBuoy instead of surface as well
+    CenterYawBuoyDiscrete.CloseToBuoy: BuoyPause, # this is where movement of around buoy will connect
+    CenterYawBuoyDiscrete.TimedOut: Surface, #could do passBuoy instead of surface as well
+
+    BuoyPause.TimedOut: CircumnavigateOpenDiscreteDiamondTurns,
 
     CircumnavigateOpenDiscreteDiamondTurns.FinishedStep: CircumnavigateOpenDiscreteMove,
     CircumnavigateOpenDiscreteDiamondTurns.Complete: Surface, #use pathmarker to align to bin
