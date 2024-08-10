@@ -68,7 +68,7 @@ def imgmsg_to_cv2(img_msg):
 
 class Node:
     recent_positions: List[Optional[ObjectPositionResponse]]
-    red_is_left: bool = True
+    red_is_left: bool = False
 
     def __init__(self):
         # Load the model
