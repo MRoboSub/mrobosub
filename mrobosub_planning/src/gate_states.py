@@ -130,7 +130,7 @@ class ApproachGateImage(TimedState):
     
 class ApproachGateImageDiscrete(TimedState):
     class GoneThroughGate(NamedTuple):
-        pass
+        planet: ImageTarget
 
     class TimedOut(NamedTuple):
         pass
@@ -140,6 +140,7 @@ class ApproachGateImageDiscrete(TimedState):
     surge_speed: float = 0.15
     # yaw_factor: float = 0.5
     timeout: float = 100.0
+    lost_image_threshold: int = 100
 
     def __init__(self, prev_outcome) -> None:
         super().__init__(prev_outcome)
