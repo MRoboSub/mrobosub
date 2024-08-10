@@ -177,7 +177,6 @@ class PIO:
 
     @classmethod
     def query_image(cls, image_type: Optional[ImageTarget]) -> ObjectPositionResponse:
-        image_type = ImageTarget.GATE_BLUE if image_type == ImageTarget.GATE_RED else ImageTarget.GATE_RED
         if image_type is not None:
             try:
                 return cls._object_position_srvs[image_type]()

@@ -217,6 +217,7 @@ class ApproachGateImage2(TimedState):
                 PIO.set_target_twist_yaw(0)
                 return self.GoneThroughGate()
             avg_angle = self.angle_sum / self.angle_count
+            print(avg_angle)
             PIO.set_target_pose_yaw(avg_angle)
             if PIO.is_yaw_within_threshold(2):
                 self.iter = self.RESET_ITER - 1
@@ -279,7 +280,7 @@ class GuessBuoyAngle(TurnToYaw):
     class TimedOut(NamedTuple):
         pass
 
-    target_yaw = 30.
+    target_yaw = -30.
     yaw_threshold = 2.0
     settle_time = 1.0
     timeout = 10.0

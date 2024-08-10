@@ -86,7 +86,7 @@ class CircumnavigateOpenDiscreteMove(TimedState):
     class FinishedStep(CircumnavigateOpenDiscreteData):
         pass
 
-    timeout: float = 10.
+    timeout: float = 13.
     surge_twist: float = 0.15
 
     def __init__(self, prev_outcome: NamedTuple):

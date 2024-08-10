@@ -160,7 +160,7 @@ class CenterYawBuoyDiscrete(TimedState):
     class TimedOut(NamedTuple):
         pass
 
-    radius_thold: float = 25.
+    radius_thold: float = 20.
     unseen_thold: float = 20.0
     surge_speed: float = 0.15
     # yaw_factor: float = 0.5
