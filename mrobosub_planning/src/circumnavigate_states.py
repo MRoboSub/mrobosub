@@ -65,17 +65,20 @@ class CircumnavigateOpenDiscreteDiamondTurns(TurnToYaw):
         else:
             self.cum_angle = prev_outcome.cum_angle + abs(self.angle_per_iter)
             self._target_yaw = (prev_outcome.curr_angle + self.angle_per_iter * self.dir) % 360
+        PIO.set_target_twist_surge(0.)
 
     def handle_unreached(self) -> None:
         PIO.set_target_twist_surge(0.)
         return None
 
     def handle_reached(self) -> Optional[Union[FinishedStep, Complete]]:
+        PIO.set_target_twist_surge(0.)
         if self.cum_angle >= 350.:
             return self.Complete()
         return self.FinishedStep(self.cum_angle, self.target_yaw, self.dir == -1)
 
     def handle_once_timedout(self) -> TimedOut:
+        PIO.set_target_twist_surge(0.)
         return self.TimedOut()
 
 

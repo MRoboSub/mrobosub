@@ -199,15 +199,36 @@ class PIO:
     
     @classmethod
     def activate_zed(cls):
-        cls._set_cameras(True, False, "Cannot activate ZED")
+        try:
+            cls._bot_cam_on_srv(False)
+        except rospy.service.ServiceException as e:
+            print(f'Error: Cannot deactivate Bot Cam, {e}')
+        try:
+            cls._zed_on_srv(True)
+        except rospy.service.ServiceException as e:
+            print(f'Error: Cannot activate ZED, {e}')
 
     @classmethod
     def activate_bot_cam(cls):
-        cls._set_cameras(False, True, "Cannot activate Bot Cam")
+        try:
+            cls._zed_on_srv(False)
+        except rospy.service.ServiceException as e:
+            print(f'Error: Cannot deactivate ZED, {e}')
+        try:
+            cls._bot_cam_on_srv(True)
+        except rospy.service.ServiceException as e:
+            print(f'Error: Cannot activate Bot Cam, {e}')
 
     @classmethod
     def deactivate_cameras(cls):
-        cls._set_cameras(False, False, "Cannot deactivate cameras")
+        try:
+            cls._zed_on_srv(False)
+        except rospy.service.ServiceException as e:
+            print(f'Error: Cannot deactivate ZED, {e}')
+        try:
+            cls._bot_cam_on_srv(False)
+        except rospy.service.ServiceException as e:
+            print(f'Error: Cannot deactivate Bot Cam, {e}')
 
     @classmethod
     def _set_cameras(cls, zed_on: bool, bot_cam_on: bool, error_msg="Cannot call camera service"):
@@ -267,5 +288,5 @@ class PIO:
     for glyph in ImageTarget:
         _object_position_srvs[glyph] = rospy.ServiceProxy(f'/object_position/{glyph.name.lower()}', ObjectPosition, persistent=True)
 
-    _zed_on_srv = rospy.ServiceProxy('/zed/on', SetBool)
-    _bot_cam_on_srv = rospy.ServiceProxy('/bot_cam/on', SetBool)
+    _zed_on_srv = rospy.ServiceProxy('/zed/on', SetBool, persistent=True)
+    _bot_cam_on_srv = rospy.ServiceProxy('/bot_cam/on', SetBool, persistent=True)

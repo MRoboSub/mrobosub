@@ -177,6 +177,9 @@ class TurnToYaw(TimedState):
         if rospy.get_time() - self.timer >= self.settle_time:
             return self.handle_reached()
 
+        return self.handle_unreached()
+
+    def handle_unreached(self) -> Optional[NamedTuple]:
         return None
 
     @abstractmethod
