@@ -162,9 +162,9 @@ class ApproachGateImage2(TimedState):
         self.END_ITER = self.RESET_ITER + 5
 
         self.iter = self.COLLECT_ANGLES_ITER
-        self.angle_sum = 0
+        self.angle_sum = 0.
         self.angle_count = 0
-        self.avg_angle = 0
+        self.avg_angle = 0.
         self.last_iter = False
 
     def handle_if_not_timedout(self) -> Union[GoneThroughGate, None]:
