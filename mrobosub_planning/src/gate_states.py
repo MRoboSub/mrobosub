@@ -136,7 +136,7 @@ class AlignBuoyPathmarker(AlignPathmarker):
     class TimedOut(NamedTuple):
         pass
 
-    yaw_threshold = 2.
+    yaw_threshold = 2.5
     timeout = 10.
 
     def handle_if_not_timedout(self) -> Union[NamedTuple, None]:

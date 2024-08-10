@@ -249,7 +249,7 @@ class AlignPathmarker(TimedState):
                 self.yaw_threshold_count += 1
             else:
                 self.yaw_threshold_count = 0
-            if self.yaw_threshold_count > 50:
+            if self.yaw_threshold_count > 30:
                 return self.handle_aligned()
         return None
 

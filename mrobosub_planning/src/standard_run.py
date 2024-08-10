@@ -10,8 +10,12 @@ from umrsm import TransitionMap
 transitions: TransitionMap = {
     Start.Complete: Submerge,
 
-    Submerge.Submerged: AlignGate,
-    Submerge.TimedOut: AlignGate,
+    # Submerge.Submerged: AlignGate,
+    # Submerge.TimedOut: AlignGate,
+
+    Submerge.Submerged: ZedPause,
+    Submerge.TimedOut: ZedPause,
+    
 
     AlignGate.ReachedAngle: ApproachGate,
     AlignGate.TimedOut: ApproachGate,

@@ -169,7 +169,8 @@ class PIO:
     def query_buoy(cls) -> ObjectPositionResponse:
         try:
             return cls._hsv_buoy_position_srv()
-        except:
+        except rospy.ServiceException as e:
+            print(f'Buoy service cannot be called with error: {e}')
             obj_msg = ObjectPositionResponse()
             obj_msg.found = False
             return obj_msg
@@ -259,7 +260,7 @@ class PIO:
     # Services
     _pathmarker_srv = rospy.ServiceProxy('/pathmarker_angle', PathmarkerAngle, persistent=True)
     _bin_cam_pos_srv = rospy.ServiceProxy('/bin_object_position', ObjectPosition, persistent = True)
-    _hsv_buoy_position_srv = rospy.ServiceProxy('/hsv_buoy_position', ObjectPosition, persistent=True)
+    _hsv_buoy_position_srv = rospy.ServiceProxy('/buoy_object_position', ObjectPosition, persistent=True)
 
     #also old
     _object_position_srvs: Dict[ImageTarget, rospy.ServiceProxy] = {}

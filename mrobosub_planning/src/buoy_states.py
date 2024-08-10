@@ -105,10 +105,10 @@ class CenterYawBuoy(TimedState):
     class TimedOut(NamedTuple):
         pass
 
-    radius_thold: float = 25.
+    radius_thold: float = 21.
     unseen_thold: float = 20.0
     surge_speed: float = 0.15
-    yaw_factor: float = 0.08
+    yaw_factor: float = 0.045
     timeout: float = 40.0
 
     def __init__(self, prev_outcome) -> None:
