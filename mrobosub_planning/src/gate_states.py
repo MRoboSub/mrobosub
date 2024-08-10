@@ -276,7 +276,7 @@ class GuessBuoyAngle(TurnToYaw):
     class TimedOut(NamedTuple):
         pass
 
-    target_yaw = -30.
+    target_yaw = 45.
     yaw_threshold = 2.0
     settle_time = 1.0
     timeout = 10.0
