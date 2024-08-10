@@ -45,7 +45,7 @@ class CircumnavigateOpenDiscreteDiamondTurns(TurnToYaw):
     class TimedOut(NamedTuple):
         pass
 
-    timeout: float = 25.
+    timeout: float = 8.
     yaw_threshold: float = 7.5
     settle_time: float = 1.
     angle_per_iter: float = 360. / 4. + 3 # + 10. # add 10 degrees ech turn to account for drift
@@ -86,7 +86,7 @@ class CircumnavigateOpenDiscreteMove(TimedState):
     class FinishedStep(CircumnavigateOpenDiscreteData):
         pass
 
-    timeout: float = 13.
+    timeout: float = 11.
     surge_twist: float = 0.15
 
     def __init__(self, prev_outcome: NamedTuple):

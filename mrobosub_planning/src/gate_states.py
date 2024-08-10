@@ -139,7 +139,7 @@ class ApproachGateImage2(TimedState):
     surge_speed: float = 0.15
     # yaw_factor: float = 0.5
     timeout: float = 100.0
-    lost_image_threshold: int = 200
+    lost_image_threshold: int = 400
 
     def __init__(self, prev_outcome) -> None:
         super().__init__(prev_outcome)
@@ -155,7 +155,7 @@ class ApproachGateImage2(TimedState):
         self.target_heave = PIO.Pose.heave
 
         self.FORWARD_ITER = 0
-        self.PAUSE_ITER = self.FORWARD_ITER + 200
+        self.PAUSE_ITER = self.FORWARD_ITER + 500
         self.COLLECT_ANGLES_ITER = self.PAUSE_ITER + 200
         self.CENTER_ITER = self.COLLECT_ANGLES_ITER + 100
         self.RESET_ITER = self.CENTER_ITER + 1000

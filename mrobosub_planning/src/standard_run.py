@@ -54,7 +54,7 @@ transitions: TransitionMap = {
     BuoyPause.TimedOut: CircumnavigateOpenDiscreteDiamondTurns,
 
     CircumnavigateOpenDiscreteDiamondTurns.FinishedStep: CircumnavigateOpenDiscreteMove,
-    CircumnavigateOpenDiscreteDiamondTurns.Complete: Surface, #use pathmarker to align to bin
+    CircumnavigateOpenDiscreteDiamondTurns.Complete: CircumnavigateOpenDiscreteMove, #use pathmarker to align to bin
     CircumnavigateOpenDiscreteDiamondTurns.TimedOut: Surface,
 
     CircumnavigateOpenDiscreteMove.FinishedStep: CircumnavigateOpenDiscreteDiamondTurns,
