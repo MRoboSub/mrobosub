@@ -90,7 +90,7 @@ class ApproachGateImage(TimedState):
         pass
 
     timeout: float = 25.0
-    lost_image_threshold: int = 50
+    lost_image_threshold: int = 100
     yaw_threshold: float = 2.0
 
     def __init__(self, prev_outcome: NamedTuple) -> None:
@@ -168,7 +168,7 @@ class GuessBuoyAngle(TurnToYaw):
     class TimedOut(NamedTuple):
         pass
 
-    target_yaw = -10.
+    target_yaw = 30.
     yaw_threshold = 2.0
     settle_time = 1.0
     timeout = 10.0

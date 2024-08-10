@@ -14,8 +14,7 @@ transitions: TransitionMap = {
     # Submerge.TimedOut: AlignGate,
 
     Submerge.Submerged: ZedPause,
-    Submerge.TimedOut: ZedPause,
-    
+    Submerge.TimedOut: ZedPause, 
 
     AlignGate.ReachedAngle: ApproachGate,
     AlignGate.TimedOut: ApproachGate,
@@ -43,8 +42,8 @@ transitions: TransitionMap = {
     ApproachBuoyOpen.SeenBuoy: CenterHeaveBuoy,
     ApproachBuoyOpen.TimedOut: Surface,
 
-    CenterHeaveBuoy.Centered: CenterYawBuoy,
-    CenterHeaveBuoy.TimedOut: CenterYawBuoy,
+    CenterHeaveBuoy.Centered: CenterYawBuoyDiscrete,
+    CenterHeaveBuoy.TimedOut: CenterYawBuoyDiscrete,
 
     CenterYawBuoyDiscrete.CloseToBuoy: BuoyPause, # this is where movement of around buoy will connect
     CenterYawBuoyDiscrete.TimedOut: Surface, #could do passBuoy instead of surface as well
