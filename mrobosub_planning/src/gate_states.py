@@ -128,9 +128,9 @@ class ApproachGateImage(TimedState):
     def handle_once_timedout(self) -> TimedOut:
         return self.TimedOut()
     
-class ApproachGateImageDiscrete(TimedState):
+class ApproachGateImage2(TimedState):
     class GoneThroughGate(NamedTuple):
-        planet: ImageTarget
+        pass
 
     class TimedOut(NamedTuple):
         pass
@@ -176,7 +176,7 @@ class ApproachGateImageDiscrete(TimedState):
         if not resp_red.found and not resp_blue.found:
             self.times_not_seen += 1
             if self.times_not_seen >= self.lost_image_threshold:
-                return self.GoneThroughGate(planet=self.image_seen)
+                return self.GoneThroughGate()
         else:
             self.times_not_seen = 0
             if resp_red.found:
