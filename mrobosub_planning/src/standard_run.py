@@ -4,6 +4,7 @@ from gate_states import AlignGate, AlignBuoyPathmarker, ApproachGate, Spin, Appr
 from buoy_states import ApproachBuoyOpen, AlignBinsPathmarker, BuoyPause, CenterHeaveBuoy, CenterYawBuoy, CenterYawBuoyDiscrete, ZedPause
 from circumnavigate_states import CircumnavigateOpenDiscreteDiamondTurns, CircumnavigateOpenDiscreteMove
 from bin_states import ApproachBinOpen, ApproachBinClosed, CenterCameraToBin, Descend, CenterLeftDropper, DropMarker, Spin180
+from octagon_states import TurnToOctagon, GoToOctagon
 from umrsm import TransitionMap
 
 
@@ -54,36 +55,45 @@ transitions: TransitionMap = {
     BuoyPause.TimedOut: CircumnavigateOpenDiscreteDiamondTurns,
 
     CircumnavigateOpenDiscreteDiamondTurns.FinishedStep: CircumnavigateOpenDiscreteMove,
-    CircumnavigateOpenDiscreteDiamondTurns.Complete: CircumnavigateOpenDiscreteMove, #use pathmarker to align to bin
-    CircumnavigateOpenDiscreteDiamondTurns.TimedOut: Surface,
+    CircumnavigateOpenDiscreteDiamondTurns.Complete: TurnToOctagon, #use pathmarker to align to bin
+    CircumnavigateOpenDiscreteDiamondTurns.TimedOut: CircumnavigateOpenDiscreteMove,
 
     CircumnavigateOpenDiscreteMove.FinishedStep: CircumnavigateOpenDiscreteDiamondTurns,
 
-    AlignBinsPathmarker.AlignedToBins: ApproachBinOpen, #this is where we will go to bin
-    AlignBinsPathmarker.NoMeasurements: Surface,
-    AlignBinsPathmarker.TimedOut: ApproachBinOpen,
+    TurnToOctagon.Aligned: GoToOctagon,
+    TurnToOctagon.TimedOut: GoToOctagon,
 
-    ApproachBinOpen.SeenBin: ApproachBinClosed,
-    ApproachBinOpen.TimedOut: Surface,
+    GoToOctagon.Reached: Surface,
+    GoToOctagon.TimedOut: Surface,
 
-    ApproachBinClosed.Reached: CenterCameraToBin,
-    ApproachBinClosed.TimedOut: Surface,
+    Surface.Surfaced: Stop
 
-    CenterCameraToBin.Reached: Descend,
-    CenterCameraToBin.TimedOut: Surface,
+
+#     AlignBinsPathmarker.AlignedToBins: ApproachBinOpen, #this is where we will go to bin
+#     AlignBinsPathmarker.NoMeasurements: Surface,
+#     AlignBinsPathmarker.TimedOut: ApproachBinOpen,
+
+#     ApproachBinOpen.SeenBin: ApproachBinClosed,
+#     ApproachBinOpen.TimedOut: Surface,
+
+#     ApproachBinClosed.Reached: CenterCameraToBin,
+#     ApproachBinClosed.TimedOut: Surface,
+
+#     CenterCameraToBin.Reached: Descend,
+#     CenterCameraToBin.TimedOut: Surface,
     
-    Descend.Reached: CenterLeftDropper,
-    Descend.TimedOut: Surface,
+#     Descend.Reached: CenterLeftDropper,
+#     Descend.TimedOut: Surface,
 
-    CenterLeftDropper.Reached: DropMarker,
-    CenterLeftDropper.TimedOut: Surface,
+#     CenterLeftDropper.Reached: DropMarker,
+#     CenterLeftDropper.TimedOut: Surface,
 
-    DropMarker.DroppedLeft: Spin180,
-    DropMarker.TimedOut: Surface,
-    DropMarker.DroppedRight: Surface,
+#     DropMarker.DroppedLeft: Spin180,
+#     DropMarker.TimedOut: Surface,
+#     DropMarker.DroppedRight: Surface,
 
-    Spin180.Reached: DropMarker,
-    Spin180.TimedOut: Surface,
+#     Spin180.Reached: DropMarker,
+#     Spin180.TimedOut: Surface,
 
-    Surface.Surfaced: Stop     
+#     Surface.Surfaced: Stop     
 }
