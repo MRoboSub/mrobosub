@@ -173,14 +173,15 @@ class ApproachGateImage2(TimedState):
 
         resp_red = PIO.query_image(ImageTarget.GATE_RED)
         resp_blue = PIO.query_image(ImageTarget.GATE_BLUE)
-        if not resp_red.found and not resp_blue.found:
-            self.times_not_seen += 1
-            if self.times_not_seen >= self.lost_image_threshold:
-                return self.GoneThroughGate()
-        else:
-            self.times_not_seen = 0
-            if resp_red.found:
-                self.angle_diff = resp_red.x_theta
+        if self.FORWARD_ITER <= self.iter < self.PAUSE_ITER:
+            if not resp_red.found and not resp_blue.found:
+                self.times_not_seen += 1
+                if self.times_not_seen >= self.lost_image_threshold:
+                    return self.GoneThroughGate()
+            else:
+                self.times_not_seen = 0
+                if resp_red.found:
+                    self.angle_diff = resp_red.x_theta
 
         if self.iter == self.FORWARD_ITER:
             print('Forward')
