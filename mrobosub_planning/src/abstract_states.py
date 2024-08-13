@@ -6,10 +6,10 @@ from abc import abstractmethod
 
 
 class TimedState(State):
-    """ base class for States which can be timed out. 
+    """base class for States which can be timed out.
 
-        expects an outcome called TimedOut and parameter named timeout.
-        override handle_once_timedout iff cleanup is needed after timeout
+    expects an outcome called TimedOut and parameter named timeout.
+    override handle_once_timedout iff cleanup is needed after timeout
     """
 
     def __init__(self, prev_outcome: NamedTuple):
@@ -212,22 +212,22 @@ class AlignPathmarker(TimedState):
     @abstractmethod
     def yaw_threshold(self) -> float:
         pass
-        
+
     @abstractmethod
     def handle_no_measurements(self) -> NamedTuple:
         pass
-    
+
     @abstractmethod
     def handle_aligned(self) -> NamedTuple:
         pass
-        
+
     def __init__(self, prev_outcome: NamedTuple) -> None:
         super().__init__(prev_outcome)
         PIO.activate_bot_cam()
         self.last_known_angle: Optional[float] = None
         self.iter = 0
         self.measurements: List[float] = []
-                
+
     def handle_if_not_timedout(self) -> Union[NamedTuple, None]:
         PIO.set_target_twist_surge(0)
         self.iter += 1
@@ -235,16 +235,16 @@ class AlignPathmarker(TimedState):
             return None
         if self.iter < 100:
             pm_resp = PIO.query_pathmarker()
-            print(f'{pm_resp=}')
+            print(f"{pm_resp=}")
             if pm_resp is not None:
                 self.measurements.append(pm_resp)
             return None
         if self.iter == 100:
-            print('Calculating target')
+            print("Calculating target")
             if len(self.measurements) < 20:
                 return self.handle_no_measurements()
             self.target_angle = sum(self.measurements) / len(self.measurements)
-            print(f'{self.target_angle=}')
+            print(f"{self.target_angle=}")
             self.yaw_threshold_count = 0
         if self.iter >= 100:
             PIO.set_target_pose_yaw(self.target_angle)
@@ -255,4 +255,3 @@ class AlignPathmarker(TimedState):
             if self.yaw_threshold_count > 30:
                 return self.handle_aligned()
         return None
-

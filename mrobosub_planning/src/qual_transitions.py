@@ -1,5 +1,5 @@
 from common_states import Start, Submerge, Surface, Stop
-from gate_states import AlignGate, AlignPathmarker, ApproachGate, ApproachGateImage
+from gate_states import AlignGate, ApproachGate
 from umrsm import TransitionMap
 
 transitions: TransitionMap = {

@@ -40,7 +40,7 @@ transitions = {
 
     # ContingencyApproach.HitBuoySecond: FallBack,
     # ContingencyApproach.TimedOut: Surface,
-    
+
     # FallBack.TimedOut: Ascend,
 
     # Ascend.Reached: PassBuoy,
@@ -48,5 +48,5 @@ transitions = {
 
     # PassBuoy.TimedOut: Surface,
 
-    Surface.Surfaced: Stop     
+    Surface.Surfaced: Stop,
 }

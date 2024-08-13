@@ -5,7 +5,7 @@ from umrsm import TransitionMap
 
 
 transitions: TransitionMap = {
-    Start.Complete: AlignBuoyPathmarker,#Submerge,
+    Start.Complete: AlignBuoyPathmarker, # Submerge,
 
     Submerge.Submerged: AlignBuoyPathmarker,
     Submerge.TimedOut: AlignBuoyPathmarker,
@@ -14,5 +14,5 @@ transitions: TransitionMap = {
     AlignBuoyPathmarker.AlignedToBuoy: Surface,
     AlignBuoyPathmarker.TimedOut: Surface,
 
-    Surface.Surfaced: Stop
+    Surface.Surfaced: Stop,
 }

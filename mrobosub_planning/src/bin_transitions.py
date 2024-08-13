@@ -15,9 +15,9 @@ transitions:TransitionMap = {
     ApproachBinClosed.Reached: CenterCameraToBin,
     ApproachBinClosed.TimedOut: Surface,
 
-    CenterCameraToBin.Reached: CenterLeftDropper,#Descend,
-    CenterCameraToBin.TimedOut: CenterLeftDropper,#Surface
-    
+    CenterCameraToBin.Reached: CenterLeftDropper, # Descend,
+    CenterCameraToBin.TimedOut: CenterLeftDropper, # Surface
+
     Descend.Reached: CenterLeftDropper,
     Descend.TimedOut: Surface,
 
@@ -28,8 +28,8 @@ transitions:TransitionMap = {
     DropMarker.TimedOut: Surface,
     DropMarker.DroppedRight: Surface,
 
-    Spin180.Reached: DropMarker, #Surface,#
+    Spin180.Reached: DropMarker,
     Spin180.TimedOut: Surface,
 
-    Surface.Surfaced: Stop
+    Surface.Surfaced: Stop,
 }

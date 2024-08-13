@@ -15,12 +15,15 @@ transitions: TransitionMap = {
     Submerge.TimedOut: AlignGate,
 
     # Submerge.Submerged: ZedPause,
-    # Submerge.TimedOut: ZedPause, 
+    # Submerge.TimedOut: ZedPause,
+    # Submerge.TimedOut: ZedPause,
+
+    # Submerge.TimedOut: ZedPause,
 
     AlignGate.ReachedAngle: ApproachGate,
     AlignGate.TimedOut: ApproachGate,
 
-    ApproachGate.SeenGateImage: ApproachGateImage2, # Change me
+    ApproachGate.SeenGateImage: ApproachGateImage2,  # Change me
     ApproachGate.TimedOut: Spin,
 
     ApproachGateImage.GoneThroughGate: Spin,
@@ -28,13 +31,13 @@ transitions: TransitionMap = {
 
     ApproachGateImage2.GoneThroughGate: Spin,
     ApproachGateImage2.TimedOut: Surface,
-    
+
     Spin.TimedOut: SpinFinish,
 
     SpinFinish.Reached: AlignBuoyPathmarker,
     SpinFinish.TimedOut: AlignBuoyPathmarker,
-    
-    AlignBuoyPathmarker.AlignedToBuoy: ZedPause, #ApproachBuoyOpen,
+
+    AlignBuoyPathmarker.AlignedToBuoy: ZedPause,  # ApproachBuoyOpen,
     AlignBuoyPathmarker.NoMeasurements: GuessBuoyAngle,
     AlignBuoyPathmarker.TimedOut: GuessBuoyAngle,
 
@@ -50,12 +53,12 @@ transitions: TransitionMap = {
     CenterHeaveBuoy.TimedOut: CenterYawBuoyDiscrete,
 
     CenterYawBuoyDiscrete.CloseToBuoy: BuoyPause, # this is where movement of around buoy will connect
-    CenterYawBuoyDiscrete.TimedOut: Surface, #could do passBuoy instead of surface as well
+    CenterYawBuoyDiscrete.TimedOut: Surface,
 
     BuoyPause.TimedOut: CircumnavigateOpenDiscreteDiamondTurns,
 
     CircumnavigateOpenDiscreteDiamondTurns.FinishedStep: CircumnavigateOpenDiscreteMove,
-    CircumnavigateOpenDiscreteDiamondTurns.Complete: TurnToOctagon, #use pathmarker to align to bin
+    CircumnavigateOpenDiscreteDiamondTurns.Complete: TurnToOctagon,  # use pathmarker to align to bin
     CircumnavigateOpenDiscreteDiamondTurns.TimedOut: CircumnavigateOpenDiscreteMove,
 
     CircumnavigateOpenDiscreteMove.FinishedStep: CircumnavigateOpenDiscreteDiamondTurns,
@@ -66,34 +69,33 @@ transitions: TransitionMap = {
     GoToOctagon.Reached: Surface,
     GoToOctagon.TimedOut: Surface,
 
-    Surface.Surfaced: Stop
+    Surface.Surfaced: Stop,
 
+    # AlignBinsPathmarker.AlignedToBins: ApproachBinOpen, #this is where we will go to bin
+    # AlignBinsPathmarker.NoMeasurements: Surface,
+    # AlignBinsPathmarker.TimedOut: ApproachBinOpen,
 
-#     AlignBinsPathmarker.AlignedToBins: ApproachBinOpen, #this is where we will go to bin
-#     AlignBinsPathmarker.NoMeasurements: Surface,
-#     AlignBinsPathmarker.TimedOut: ApproachBinOpen,
+    # ApproachBinOpen.SeenBin: ApproachBinClosed,
+    # ApproachBinOpen.TimedOut: Surface,
 
-#     ApproachBinOpen.SeenBin: ApproachBinClosed,
-#     ApproachBinOpen.TimedOut: Surface,
+    # ApproachBinClosed.Reached: CenterCameraToBin,
+    # ApproachBinClosed.TimedOut: Surface,
 
-#     ApproachBinClosed.Reached: CenterCameraToBin,
-#     ApproachBinClosed.TimedOut: Surface,
+    # CenterCameraToBin.Reached: Descend,
+    # CenterCameraToBin.TimedOut: Surface,
 
-#     CenterCameraToBin.Reached: Descend,
-#     CenterCameraToBin.TimedOut: Surface,
-    
-#     Descend.Reached: CenterLeftDropper,
-#     Descend.TimedOut: Surface,
+    # Descend.Reached: CenterLeftDropper,
+    # Descend.TimedOut: Surface,
 
-#     CenterLeftDropper.Reached: DropMarker,
-#     CenterLeftDropper.TimedOut: Surface,
+    # CenterLeftDropper.Reached: DropMarker,
+    # CenterLeftDropper.TimedOut: Surface,
 
-#     DropMarker.DroppedLeft: Spin180,
-#     DropMarker.TimedOut: Surface,
-#     DropMarker.DroppedRight: Surface,
+    # DropMarker.DroppedLeft: Spin180,
+    # DropMarker.TimedOut: Surface,
+    # DropMarker.DroppedRight: Surface,
 
-#     Spin180.Reached: DropMarker,
-#     Spin180.TimedOut: Surface,
+    # Spin180.Reached: DropMarker,
+    # Spin180.TimedOut: Surface,
 
-#     Surface.Surfaced: Stop     
+    # Surface.Surfaced: Stop
 }

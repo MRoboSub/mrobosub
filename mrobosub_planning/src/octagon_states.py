@@ -8,19 +8,20 @@ from typing import Dict, Optional, Tuple, Union, NamedTuple
 class TurnToOctagon(TurnToYaw):
     class Aligned(NamedTuple):
         pass
+
     class TimedOut(NamedTuple):
         pass
 
-    target_yaw = 30.
+    target_yaw = 30.0
     yaw_threshold = 2.0
     settle_time = 1.0
     timeout = 10.0
 
-    def handle_reached(self):
-        return self.Reached()
-    def handle_once_timedout(self):
+    def handle_reached(self) -> Aligned:
+        return self.Aligned()
+
+    def handle_once_timedout(self) -> TimedOut:
         return self.TimedOut()
- 
 
 
 class GoToOctagon(TimedState):
@@ -31,7 +32,7 @@ class GoToOctagon(TimedState):
         pass
 
     timeout: float = 20.0
-    yaw_angle: float = 30.
+    yaw_angle: float = 30.0
     surge_speed: float = 0.15
 
     def __init__(self, prev_outcome: NamedTuple):

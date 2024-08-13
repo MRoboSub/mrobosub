@@ -13,5 +13,5 @@ transitions: TransitionMap = {
     SpinFinish.Reached: Surface,
     SpinFinish.TimedOut: Surface,
 
-    Surface.Surfaced: Stop
+    Surface.Surfaced: Stop,
 }

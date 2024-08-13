@@ -1,5 +1,13 @@
 from buoy_states import AlignBinsPathmarker
-from bin_states import ApproachBinOpen, ApproachBinClosed, CenterCameraToBin, Descend, CenterLeftDropper, DropMarker, Spin180
+from bin_states import (
+    ApproachBinOpen,
+    ApproachBinClosed,
+    CenterCameraToBin,
+    Descend,
+    CenterLeftDropper,
+    DropMarker,
+    Spin180,
+)
 from common_states import Start, Submerge, Surface, Stop
 from umrsm import TransitionMap
 
@@ -11,7 +19,7 @@ transitions: TransitionMap = {
     Submerge.TimedOut: AlignBinsPathmarker,
 
     AlignBinsPathmarker.AlignedToBins: ApproachBinOpen,
-    AlignBinsPathmarker.NoMeasurements: ApproachBinOpen, # TODO
+    AlignBinsPathmarker.NoMeasurements: ApproachBinOpen,
     AlignBinsPathmarker.TimedOut: Surface,
 
     ApproachBinOpen.SeenBin: ApproachBinClosed,
@@ -36,6 +44,5 @@ transitions: TransitionMap = {
     Spin180.TimedOut: Surface,
 
     DropMarker.DroppedRight: Surface,
-
-    Surface.Surfaced: Stop
+    Surface.Surfaced: Stop,
 }
