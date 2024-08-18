@@ -2,7 +2,7 @@
 
 Consolidated repo for the mrobosub ros network
 
-[Check out the wiki!](https://gitlab.eecs.umich.edu/mrobosub/mrobosub/-/wikis/home)
+[Check out the wiki!](https://github.com/MRoboSub/mrobosub/wiki)
 
 ## Install
 ```console
