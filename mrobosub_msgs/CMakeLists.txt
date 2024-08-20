@@ -18,7 +18,6 @@ add_service_files(
     BinCamPos.srv
     ObjectPosition.srv
     PathmarkerAngle.srv
-    HsvFilterImage.srv
 )
 
 generate_messages(
