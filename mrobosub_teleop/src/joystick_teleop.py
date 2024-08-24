@@ -63,6 +63,8 @@ class Inputs:
             return False
 
         return bool(self.buttons[id])
+
+
 class DOF:
     def __init__(self, inputs: Inputs, config: config, twist_pub: str) -> None:
         self.inputs = inputs
@@ -418,7 +420,7 @@ class JoystickTeleop(Node):
         zero = rospy.ServiceProxy('localization/zero_state', Trigger)
         try:
             res = zero()
-            for axis in self.axis_controls:
+            for axis in self.axis_controls.values():
                 if hasattr(axis, 'setpoint'):
                     axis.setpoint = 0
             print('Zeroed state estimator')
