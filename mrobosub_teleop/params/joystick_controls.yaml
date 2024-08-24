@@ -3,11 +3,12 @@ surge:
     twist:
         axis:
             id: 1
+            scale: 0.3
 sway:
     twist:
         axis:
             id: 0
-            scale: -1
+            scale: -0.3
 heave:
     toggle: 7
     twist:
