@@ -11,7 +11,7 @@ from mrobosub_lib.lib import Node, Param
 
 config = Dict[str, Union[int, bool, 'config']]
 
-AXES = 'surge', 'sway', 'heave', 'yaw', 'roll', 'pitch'
+AXES = 'surge', 'sway', 'heave', 'yaw', # 'roll', 'pitch'
 
 class ControlMode(Enum):
     Twist = auto()
@@ -177,6 +177,9 @@ class HeaveControl(ToggleableDOF):
         self.pose = new_pose.data
 
     def __call__(self) -> None:
+        self.pose_pub.publish(0.35)
+        return
+
         if self.toggle_button.rising_edge():
             if self.mode == ControlMode.Twist:
                 self.mode = ControlMode.Pose
@@ -347,8 +350,8 @@ class JoystickTeleop(Node):
         self.axis_controls['sway'] = SwayControl(self.inputs, self.sway)
         self.axis_controls['heave'] = HeaveControl(self.inputs, self.heave)
         self.axis_controls['yaw'] = YawControl(self.inputs, self.yaw)
-        self.axis_controls['roll'] = RollControl(self.inputs, self.roll)
-        self.axis_controls['pitch'] = PitchControl(self.inputs, self.pitch)
+        # self.axis_controls['roll'] = RollControl(self.inputs, self.roll)
+        # self.axis_controls['pitch'] = PitchControl(self.inputs, self.pitch)
         self.periodic_funcs.update(self.axis_controls)
 
         self.wrench_pubs = [rospy.Publisher(f'/output_wrench/{axis}', Float64, queue_size=1) for axis in AXES]
@@ -373,7 +376,7 @@ class JoystickTeleop(Node):
         def poll_switch_sm_mode():
             if self.state_machine_mode.should_switch_mode():
                 self.switch_sm_mode()
-        self.periodic_funcs['poll_switch_sm_mode'] = poll_switch_sm_mode
+        # self.periodic_funcs['poll_switch_sm_mode'] = poll_switch_sm_mode
 
         print('Teleop startup complete')
 
