@@ -41,7 +41,7 @@ class CircumnavigateOpenDiscreteDiamondTurns(TurnToYaw):
     class Complete(NamedTuple):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(CircumnavigateOpenDiscreteData):
         pass
 
     timeout: float = 8.0
@@ -76,9 +76,11 @@ class CircumnavigateOpenDiscreteDiamondTurns(TurnToYaw):
             return self.Complete()
         return self.FinishedStep(self.cum_angle, self.target_yaw, self.dir == -1)
 
-    def handle_once_timedout(self) -> TimedOut:
+    def handle_once_timedout(self) -> Union[Complete, TimedOut]:
         PIO.set_target_twist_surge(0.0)
-        return self.TimedOut()
+        if self.cum_angle >= 350.0:
+            return self.Complete()
+        return self.TimedOut(self.cum_angle, self.target_yaw, self.dir == -1)
 
 
 class CircumnavigateOpenDiscreteMove(TimedState):

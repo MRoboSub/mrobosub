@@ -1,0 +1,14 @@
+{
+  "name": "Michigan RoboSub Main Software Project",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "mrobosub",
+  "workspaceFolder": "/root/catkin_ws/src/mrobosub",
+  "shutdownAction": "stopCompose",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python"
+      ]
+    }
+  }
+}
