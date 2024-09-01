@@ -4,6 +4,62 @@ Consolidated repo for the mrobosub ros network
 
 [Check out the wiki!](https://github.com/MRoboSub/mrobosub/wiki)
 
+## Setup
+
+First install Docker Desktop (https://www.docker.com/)
+
+### Windows:
+
+Download WSL 
+```console
+$ wsl --install
+```
+
+Then within WSL (you can open as an application or from powershell with ```wsl```), make a folder which will hold your Robosub repositories. Within this folder git clone the repo as follows.
+
+Clone the most recent devel branch of the mrobosub repo:
+```console
+$ git clone https://github.com/MRoboSub/mrobosub.git
+```
+
+You may need to setup ssh keys to clone the repo follow the following links to Generate and then Add and SSH key:
+
+Generating SSH key - https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent?platform=linux
+
+Adding SSH key to Github - https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account
+
+Open the repository within VSCode, within the folder you can do ```code .``` or navigate within vs code.
+
+Install the Dev Containers extension within VSCode
+
+Make sure Docker is open, and if it is not the first time you can run the corresponding container. If it is the first time it should automatically setup when opening VS code.
+
+When you open the repo it should ask you to reopen within container, if it does not type Ctrl+Shift+P and type ```Dev Containers: Reopen in Container```. If it is the first time this may take some time to load, if it fails to reopen in container the first time close vs code and try opening it again.
+
+
+### Mac:
+
+Make a folder where you wish to hold your robosub repositories.
+
+Within this folder clone the most recent devel branch of the mrobosub repo:
+```console
+$ git clone https://github.com/MRoboSub/mrobosub.git
+```
+
+You may need to setup ssh keys to clone the repo follow the following links to Generate and then Add and SSH key:
+
+Generating SSH key - https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent?platform=linux
+
+Adding SSH key to Github - https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account
+
+Open the repository within VSCode, within the folder you can do ```code .``` or navigate within vs code.
+
+Install the Dev Containers extension within VSCode
+
+Make sure Docker is open, and if it is not the first time you can run the corresponding container. If it is the first time it should automatically setup when opening VS code.
+
+When you open the repo it should ask you to reopen within container, if it does not type Ctrl+Shift+P and type ```Dev Containers: Reopen in Container```. If it is the first time this may take some time to load, if it fails to reopen in container the first time close vs code and try opening it again.
+
 ## Install
 ```console
 $ rosdep install --from-paths src --ignore-src -r -y
