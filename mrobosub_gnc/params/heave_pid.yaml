@@ -1,0 +1,6 @@
+Kp: 0.9
+Ki: 0.05
+Kd: 0.2
+upper_limit: 0.4
+lower_limit: -0.4
+windup_limit: 1

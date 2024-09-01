@@ -1,0 +1,122 @@
+#!/usr/bin/env python
+
+from enum import Enum
+import time
+import roslaunch
+import rospkg
+import rospy
+from std_msgs.msg import Bool, Float64
+from std_srvs.srv import SetBool, Trigger
+from pathlib import Path
+
+USE_ML = True
+
+class RobotState(Enum):
+    ambient = 0
+    ready = 1
+    running = 2
+
+rospy.init_node('quartermaster')
+
+curr_state = RobotState.ambient
+
+rospack = rospkg.RosPack()
+planning_pkg = Path(rospack.get_path('mrobosub_planning'))
+capt_launch = None
+
+rospy.wait_for_service('/arming/cmd')
+arm_srv = rospy.ServiceProxy('/arming/cmd', SetBool)
+
+rospy.wait_for_service('/localization/zero_state')
+zero_srv = rospy.ServiceProxy('/localization/zero_state', Trigger)
+
+if USE_ML:
+    rospy.wait_for_service('/object_position/gate_red')
+
+rate = rospy.Rate(10)
+target_twist_yaw_pub = rospy.Publisher('/target_twist/yaw', Float64, queue_size=1)
+target_twist_roll_pub = rospy.Publisher('/target_twist/roll', Float64, queue_size=1)
+target_twist_surge_pub = rospy.Publisher('/target_twist/surge', Float64, queue_size=1)
+target_twist_sway_pub = rospy.Publisher('/target_twist/sway', Float64, queue_size=1)
+target_twist_heave_pub = rospy.Publisher('/target_twist/heave', Float64, queue_size = 1)
+
+led_strange_pub = rospy.Publisher('/led/strange', Bool, queue_size=1)
+led_charm_pub = rospy.Publisher('/led/charm', Bool, queue_size=1)
+led_on_pub = rospy.Publisher('/led/on', Bool, queue_size=1)
+
+hall_effect_inputs = {'strange': False, 'charm': False}
+
+def set_strange(new_value: Bool):
+    hall_effect_inputs['strange'] = new_value.data
+
+def set_charm(new_value: Bool):
+    hall_effect_inputs['charm'] = new_value.data
+
+rospy.Subscriber('/buttons/strange', Bool, set_strange)
+rospy.Subscriber('/buttons/charm', Bool, set_charm)
+strange_input = False
+charm_input = False
+
+while not rospy.is_shutdown(): 
+    led_on_pub.publish(True)
+
+    # KEEP THIS LINE
+    rate.sleep()
+
+    prev_state = curr_state
+
+    strange_input = hall_effect_inputs['strange'] or strange_input
+    charm_input = hall_effect_inputs['charm'] or charm_input
+    #strange_input = charm_input = strange_input or charm_input 
+
+    curr_state = RobotState(strange_input + charm_input)
+    if curr_state != prev_state:
+        print(f'{strange_input=} {charm_input=}')
+
+    if False: # curr_state == RobotState.ready:
+        target_twist_yaw_pub.publish(0.0)
+        target_twist_roll_pub.publish(0.0)
+        target_twist_surge_pub.publish(0.0)
+        target_twist_sway_pub.publish(0.0)
+        target_twist_heave_pub.publish(0.0)
+
+    if curr_state == prev_state:
+        continue
+    elif curr_state == RobotState.ambient:
+        arm_resp = arm_srv(False)
+        rospy.loginfo(f'arming response: {arm_resp.success}; {arm_resp.message}')
+    elif curr_state == RobotState.ready:
+        zero_srv()
+        
+        if capt_launch is not None:
+            capt_launch.shutdown()
+            capt_launch = None
+        
+        if prev_state == RobotState.running:
+            arm_srv(True)
+            soft_stop = rospy.ServiceProxy('/captain/soft_stop', Trigger)
+            try:
+                res = soft_stop()
+            except:
+                pass
+            rospy.loginfo('Soft stopping state machine (from quartermaster)')
+        else:
+            arm_resp = arm_srv(True)
+            retries = 0
+            while not arm_resp.success and retries < 10:
+                arm_resp = arm_srv(True)
+                retries += 1
+            rospy.loginfo(f'arming response: {arm_resp.success}; {arm_resp.message}; {retries} retries')
+    else:
+        rospy.loginfo('starting state machine (from quartermaster)')
+        uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+        roslaunch.configure_logging(uuid)
+        capt_launch = roslaunch.parent.ROSLaunchParent(
+            uuid, [str(planning_pkg / 'launch' / 'captain.launch')]
+        )
+        capt_launch.start()
+
+    led_strange_pub.publish(bool(strange_input))
+    led_charm_pub.publish(bool(charm_input))
+
+

@@ -1,0 +1,5 @@
+<launch>
+  <include file="$(find mrobosub_gnc)/launch/gnc.launch"/>
+  <include file="$(find mrobosub_localization)/launch/localization.launch"/>
+  <include file="$(find mrobosub_hal)/launch/hal.launch"/>
+</launch>

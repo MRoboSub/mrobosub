@@ -1,0 +1,5 @@
+<launch>
+    <node name="zed" pkg="mrobosub_perception" type="zed.py">
+        <rosparam command="load" file="$(find mrobosub_perception)/params/zed.yaml"/>
+    </node>
+</launch>

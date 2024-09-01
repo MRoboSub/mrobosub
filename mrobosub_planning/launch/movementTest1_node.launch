@@ -1,0 +1,14 @@
+<launch>
+ <node name="movementTest1_node" pkg="mrobosub_planning" type="movementTest1.py">
+        <param 
+            textfile="$(find mrobosub_planning)/param/prequal_states.yaml" 
+            type="yaml"
+            name="prequal_states"
+        />
+        <param 
+            textfile="$(find mrobosub_planning)/param/globals.yaml" 
+            type="yaml"
+            name="globals"
+        />
+    </node>
+</launch>

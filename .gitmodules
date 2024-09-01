@@ -1,0 +1,3 @@
+[submodule "mrobosub_perception/yolov5"]
+	path = mrobosub_perception/yolov5
+	url = https://github.com/ultralytics/yolov5

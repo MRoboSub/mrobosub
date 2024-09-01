@@ -1,0 +1,3 @@
+<launch>
+  <node name="all_dof_teleop" pkg="mrobosub_teleop" type="all_dof_teleop.py" output="screen" required="true"/>
+</launch>

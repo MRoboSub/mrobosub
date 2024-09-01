@@ -1,0 +1,19 @@
+aligngate:
+  defaults:
+    target_heave: 1.9
+    target_yaw: 0 
+    timeout: 10
+
+approachgate:
+  defaults:
+    target_heave: 1.9
+    target_surge_time: 10
+    wait_time: 1
+
+
+approachmarker:
+  defaults:
+    target_heave: 1.2
+    target_surge_time: 22
+    wait_time: 1
+

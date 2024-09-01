@@ -1,0 +1,59 @@
+approachbouyopen:
+  defaults:
+    timeout: 20
+  alignment_test:
+    timeout: 5
+
+
+centerheaveglyph:
+  defaults:
+    heave_down_speed: 0.2
+    heave_up_speed: 0
+    deadband: 50
+    timeout: 15
+
+centeryawglyph:
+  defaults:
+    bbox_area_thold: 0.05
+    unseen_thold: 6
+    surge_speed: 0.2
+    yaw_factor: 0.004
+    timeout: 10
+
+approachbuoyclosed:
+  defaults:
+    timeout: 10
+    heave_factor: 0.002 
+    yaw_factor: 0.004
+
+fallback:
+  defaults:
+    timeout: 3
+
+ascend:
+  defaults:
+    target_depth: 0.25
+    timeout: 3
+
+passbouy:
+  defaults:
+    timeout: 5
+
+backup:
+  defaults:
+    timeout: 12
+
+pause:
+  defaults:
+    timeout: 3
+
+contingencysubmerge:
+  defaults:
+    timeout: 15
+
+
+contingencyapproach:
+  defaults:
+    timeout: 7
+
+

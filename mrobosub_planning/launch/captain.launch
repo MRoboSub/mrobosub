@@ -1,0 +1,36 @@
+<launch>
+    <arg name="machine" default="standard" />
+    <node name="captain" pkg="mrobosub_planning" type="captain.py" 
+        output="screen" args="$(arg machine)">
+        <param 
+            textfile="$(find mrobosub_planning)/param/globals.yaml" 
+            type="yaml"
+            name="globals"
+        />
+        <param 
+            textfile="$(find mrobosub_planning)/param/common.yaml" 
+            type="yaml"
+            name="common"
+        />
+        <param 
+            textfile="$(find mrobosub_planning)/param/prequal_front.yaml" 
+            type="yaml"
+            name="prequal_front"
+        />
+        <param 
+            textfile="$(find mrobosub_planning)/param/prequal_turn.yaml" 
+            type="yaml"
+            name="prequal_turn"
+        />
+        <param 
+            textfile="$(find mrobosub_planning)/param/gate_task.yaml" 
+            type="yaml"
+            name="gate_task"
+        />
+        <param 
+            textfile="$(find mrobosub_planning)/param/buoy_task.yaml" 
+            type="yaml"
+            name="buoy_task"
+        />
+    </node>
+</launch>

@@ -1,0 +1,7 @@
+<launch>
+    <node
+        pkg="mrobosub_perception"
+        type="botcam.py"
+        name="botcam"
+    />
+</launch>

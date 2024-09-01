@@ -1,0 +1,2 @@
+#!/bin/bash
+ssh -t pi@192.168.55.100 "~/mrobosub_ws/src/mrobosub_companion/src/start.sh"

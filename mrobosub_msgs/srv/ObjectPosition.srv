@@ -1,0 +1,7 @@
+---
+bool found
+float32 x_position      # Center of bounding box in pixels from left
+float32 y_position      # Center of bounding box in pixels from top
+float32 x_theta         # X theta (degrees) needed to center the sub on the bounding box on the x axis
+float32 y_theta         # Y theta (degrees) needed to center the sub on the bounding box on the y axis
+float32 confidence      # Model confidence value of detected object

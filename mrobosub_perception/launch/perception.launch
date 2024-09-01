@@ -1,0 +1,8 @@
+<launch>
+    <include file="$(find mrobosub_perception)/launch/ml.launch" />
+    <include file="$(find mrobosub_perception)/launch/pathmarker_hsv.launch" />
+    <include file="$(find mrobosub_perception)/launch/buoy_hsv.launch" />
+    <include file="$(find mrobosub_perception)/launch/bin_hsv.launch" />
+    <include file="$(find mrobosub_perception)/launch/zed.launch" />
+    <include file="$(find mrobosub_perception)/launch/botcam.launch" />
+</launch>
