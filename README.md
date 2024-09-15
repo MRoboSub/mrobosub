@@ -69,12 +69,6 @@ The typical way we run files is either with `rosrun` or `roslaunch`. The standar
 To run the whole state machine with standard run for example the command with be `roslaunch mrobosub_planning captain.launch`.
 
 
-## Dependencies Install
-```console
-$ rosdep install --from-paths src --ignore-src -r -y
-```
-Be in `~/catkin_ws` and installs all dependencies for ros
-
 
 ## RQT
 
