@@ -31,19 +31,19 @@ jobs:
         - /tmp/.X11-unix:/tmp/.X11-unix
 
     steps:
-      - name: Setup Python 3
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.8
-
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Install Dependencies
-        run: |
-          sudo apt-get -y update
-          sudo apt-get -y install libc6
-          python -m pip install mypy
+      - name: Docker Compose
+        env:
+          COMPOSE_INTERACTIVE_NO_CLI: 1
+        run: docker-compose up -d --wait
+
+      - name: Check running containers
+        run: docker ps -a
+
+      - name: Check logs
+        run: docker-compose logs
 
       - name: Run mypy
         run: mypy mrobosub_planning
