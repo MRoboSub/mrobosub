@@ -18,10 +18,10 @@ on:
 jobs:
   mypy:
     runs-on: ubuntu-latest
-    container:
-      image: mrobosub/mrobosub:latest
-      volumes:
-        - ${{ github.workspace }}:/root/catkin_ws/src/mrobosub
+#    container:
+#      image: mrobosub/mrobosub:latest
+#      volumes:
+#        - ${{ github.workspace }}:/root/catkin_ws/src/mrobosub
 
     steps:
       - name: Checkout
@@ -29,6 +29,9 @@ jobs:
 
       - name: Install Mypy
         run: python3 -m pip install mypy
+
+      - name: Install Rospy
+        run: pip3 install --extra-index-url https://rospypi.github.io/simple/ rospy
 
       - name: Run mypy
         run: mypy mrobosub_planning
