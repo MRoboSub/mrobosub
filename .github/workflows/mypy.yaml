@@ -41,8 +41,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          sudo apt update
-          sudo apt install libc6
+          sudo apt-get -y update
+          sudo apt-get -y install libc6
           python -m pip install mypy
 
       - name: Run mypy
