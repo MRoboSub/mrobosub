@@ -20,10 +20,15 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: mrobosub/mrobosub:latest
+      volumes:
+        - ${{ github.workspace }}:/root/catkin_ws/src/mrobosub
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Install Mypy
+        run: python3 -m pip install mypy
 
       - name: Run mypy
         run: mypy mrobosub_planning
