@@ -5,13 +5,13 @@ on:
 
   push:
     paths:
-      - "*.py*"
+      - "*.py"
       - ".github/workflows/mypy.yaml"
       - "**/mypi.ini"
 
   pull_request:
     paths:
-      - "*.py*"
+      - "*.py"
       - ".github/workflows/mypy.yaml"
       - "**/mypi.ini"
 
