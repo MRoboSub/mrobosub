@@ -1,8 +1,6 @@
 name: Run mypy
 
 on:
-  workflow_dispatch:
-
   push:
     paths:
       - "*.py"
@@ -14,6 +12,8 @@ on:
       - "*.py"
       - ".github/workflows/mypy.yaml"
       - "**/mypy.ini"
+
+  workflow_dispatch:
 
 jobs:
   mypy:
