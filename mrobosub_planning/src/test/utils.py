@@ -26,7 +26,7 @@ class binCamPosServiceMock:
         self.position = BinCamPosResponse() ## dummy position
         self.service = rospy.Service('bin_cam_pos', BinCamPos, self._handle_obj_request)
 
-    def _handle_obj_request(self, _msg) -> BinCamPosResponse:
+    def _handle_obj_request(self, _msg: Any) -> BinCamPosResponse:
         return self.position
     
     def set_position(self, pos: BinCamPosResponse) -> None:
@@ -53,7 +53,7 @@ class ObjectPositionServiceMock:
         self.service = rospy.Service('hsv_buoy_position', ObjectPosition, self._handle_obj_request)
 
 
-    def _handle_obj_request(self, _msg) -> ObjectPositionResponse:
+    def _handle_obj_request(self, _msg: Any) -> ObjectPositionResponse:
         return self.objectPosition
 
     def set_position(self, position: ObjectPositionResponse) -> None:
@@ -115,7 +115,7 @@ def main() -> None:
     rospy.init_node('test_sim')
     started = False
     sub = None
-    def set_started(msg: String):
+    def set_started(msg: String) -> None:
         nonlocal started, sub
         if started:
             return
