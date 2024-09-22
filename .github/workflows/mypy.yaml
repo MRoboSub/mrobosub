@@ -7,21 +7,17 @@ on:
     paths:
       - "*.py"
       - ".github/workflows/mypy.yaml"
-      - "**/mypi.ini"
+      - "**/mypy.ini"
 
   pull_request:
     paths:
       - "*.py"
       - ".github/workflows/mypy.yaml"
-      - "**/mypi.ini"
+      - "**/mypy.ini"
 
 jobs:
   mypy:
     runs-on: ubuntu-latest
-#    container:
-#      image: mrobosub/mrobosub:latest
-#      volumes:
-#        - ${{ github.workspace }}:/root/catkin_ws/src/mrobosub
 
     steps:
       - name: Checkout
