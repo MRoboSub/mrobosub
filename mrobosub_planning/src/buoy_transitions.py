@@ -27,4 +27,6 @@ transitions: TransitionMap = {
 
     CircumnavigateOpenDiscreteMove.FinishedStep: CircumnavigateOpenDiscreteDiamondTurns,
     Surface.Surfaced: Stop,
+
+    None: int, # This is to intentionally fail mypy
 }
