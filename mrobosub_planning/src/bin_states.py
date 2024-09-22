@@ -2,7 +2,7 @@ from umrsm import State
 from abstract_states import TimedState
 import periodic_io
 from periodic_io import PIO
-from mrobosub_msgs.srv import ObjectPositionResponse
+from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
 from typing import NamedTuple, Union
 import math
 import rospy
