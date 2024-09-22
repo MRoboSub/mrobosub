@@ -76,19 +76,19 @@ class PoseMock:
 
 @dataclass
 class TargetReader:
-    target_pose_heave: int = 0
-    target_pose_roll: int = 0
-    target_pose_yaw: int = 0
-    target_pose_surge: int = 0
-    target_pose_sway: int = 0
-    target_pose_pitch: int = 0
+    target_pose_heave: float = 0.0
+    target_pose_roll: float = 0.0
+    target_pose_yaw: float = 0.0
+    target_pose_surge: float = 0.0
+    target_pose_sway: float = 0.0
+    target_pose_pitch: float = 0.0
 
-    target_twist_heave: int = 0
-    target_twist_roll: int = 0
-    target_twist_yaw: int = 0
-    target_twist_surge: int = 0
-    target_twist_sway: int = 0
-    target_twist_pitch: int = 0
+    target_twist_heave: float = 0.0
+    target_twist_roll: float = 0.0
+    target_twist_yaw: float = 0.0
+    target_twist_surge: float = 0.0
+    target_twist_sway: float = 0.0
+    target_twist_pitch: float = 0.0
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
 
