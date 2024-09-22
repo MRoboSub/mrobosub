@@ -3,13 +3,13 @@ name: Run mypy
 on:
   push:
     paths:
-      - "*.py"
+      - "**/*.py"
       - ".github/workflows/mypy.yaml"
       - "**/mypy.ini"
 
   pull_request:
     paths:
-      - "*.py"
+      - "**/*.py"
       - ".github/workflows/mypy.yaml"
       - "**/mypy.ini"
 
