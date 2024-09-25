@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from enum import Enum, auto
+from typing import Any
 import gc
 from dataclasses import dataclass
 from typing import Dict, List
@@ -25,10 +26,10 @@ class binCamPosServiceMock:
         self.position = BinCamPosResponse() ## dummy position
         self.service = rospy.Service('bin_cam_pos', BinCamPos, self._handle_obj_request)
 
-    def _handle_obj_request(self, _msg):
+    def _handle_obj_request(self, _msg: Any) -> BinCamPosResponse:
         return self.position
     
-    def set_position(self, pos: BinCamPosResponse):
+    def set_position(self, pos: BinCamPosResponse) -> None:
         self.position = pos
 
 # DEPRECATED we don't use glyphs no more
@@ -52,10 +53,10 @@ class ObjectPositionServiceMock:
         self.service = rospy.Service('hsv_buoy_position', ObjectPosition, self._handle_obj_request)
 
 
-    def _handle_obj_request(self, _msg):
+    def _handle_obj_request(self, _msg: Any) -> ObjectPositionResponse:
         return self.objectPosition
 
-    def set_position(self, position: ObjectPositionResponse):
+    def set_position(self, position: ObjectPositionResponse) -> None:
         self.objectPosition = position
 
 class PoseMock:
@@ -75,21 +76,21 @@ class PoseMock:
 
 @dataclass
 class TargetReader:
-    target_pose_heave: int = 0.
-    target_pose_roll: int = 0.
-    target_pose_yaw: int = 0.
-    target_pose_surge: int = 0.
-    target_pose_sway: int = 0.
-    target_pose_pitch: int = 0.
+    target_pose_heave: float = 0.0
+    target_pose_roll: float = 0.0
+    target_pose_yaw: float = 0.0
+    target_pose_surge: float = 0.0
+    target_pose_sway: float = 0.0
+    target_pose_pitch: float = 0.0
 
-    target_twist_heave: int = 0.
-    target_twist_roll: int = 0.
-    target_twist_yaw: int = 0.
-    target_twist_surge: int = 0.
-    target_twist_sway: int = 0.
-    target_twist_pitch: int = 0.
+    target_twist_heave: float = 0.0
+    target_twist_roll: float = 0.0
+    target_twist_yaw: float = 0.0
+    target_twist_surge: float = 0.0
+    target_twist_sway: float = 0.0
+    target_twist_pitch: float = 0.0
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
 
         self._pose_heave_sub = rospy.Subscriber('/target_pose/heave', Float64, partial(self._pose_callback, 'heave'))
         self._pose_roll_sub = rospy.Subscriber('/target_pose/roll', Float64, partial(self._pose_callback, 'roll'))
@@ -110,11 +111,11 @@ class TargetReader:
         setattr(self, f'target_twist_{key}', msg.data)
         # setattr(self, f'target_pose_{key}', None)
 
-def main():
+def main() -> None:
     rospy.init_node('test_sim')
     started = False
     sub = None
-    def set_started(msg: String):
+    def set_started(msg: String) -> None:
         nonlocal started, sub
         if started:
             return

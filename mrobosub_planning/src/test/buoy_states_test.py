@@ -4,11 +4,11 @@ from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse  # type: ig
 from time import sleep
 import rospy
 
-def main():
+def main() -> None:
     rospy.init_node('test_sim')
     started = False
     sub = None
-    def set_started(msg: String):
+    def set_started(msg: String) -> None:
         nonlocal started, sub
         if started:
             return

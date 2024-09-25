@@ -8,11 +8,11 @@ from time import sleep
 from functools import partial
 import rospy
 
-def main():
+def main() -> None:
     rospy.init_node('test_sim')
     started = False
     sub = None
-    def set_started(msg: String):
+    def set_started(msg: String) -> None:
         nonlocal started, sub
         if started:
             return
