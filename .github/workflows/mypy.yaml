@@ -1,0 +1,33 @@
+name: Run mypy
+
+on:
+  push:
+    paths:
+      - "**/*.py"
+      - ".github/workflows/mypy.yaml"
+      - "**/mypy.ini"
+
+  pull_request:
+    paths:
+      - "**/*.py"
+      - ".github/workflows/mypy.yaml"
+      - "**/mypy.ini"
+
+  workflow_dispatch:
+
+jobs:
+  mypy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Mypy
+        run: python3 -m pip install mypy
+
+      - name: Install Rospy
+        run: pip3 install --extra-index-url https://rospypi.github.io/simple/ rospy
+
+      - name: Run mypy
+        run: mypy mrobosub_planning
