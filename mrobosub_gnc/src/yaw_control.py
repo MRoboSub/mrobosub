@@ -20,7 +20,6 @@ class YawControlNode(Node):
     Publishers
     - /output_wrench/yaw
     """
-    # pid_params: PIDParams
 
     def __init__(self):
         super().__init__('heading_control')

@@ -18,7 +18,6 @@ class SwayControlNode(Node):
     Publishers
     - /output_wrench/sway
     """
-    # pid_params: PIDParams
 
     def __init__(self):
         super().__init__('surge_control')

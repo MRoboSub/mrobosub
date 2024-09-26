@@ -10,11 +10,14 @@ from typing import Optional, Final
 
 class SurgeControlNode(Node):
     """
+    Listens to the /target_twist/surge topic and 
+
     Subscribers
     - /target_twist/surge (power)
 
     Publishers
     - /output_wrench/surge
+    - /at_twist/surge
     """
     # pid_params: PIDParams
 
@@ -40,12 +43,9 @@ class SurgeControlNode(Node):
         self.prev_output = output
         self.prev_time = rospy.get_time()
         
-        self.pub_output_surge(output)
+        self.output_surge_pub.publish(output)
         self.at_twist_pub.publish(abs(msg.data - output) <= 0.0001)
         
-
-    def pub_output_surge(self, output: float):
-        self.output_surge_pub.publish(output)
 
     def run(self): 
         rospy.spin()

@@ -73,13 +73,6 @@ while not rospy.is_shutdown():
     if curr_state != prev_state:
         print(f'{strange_input=} {charm_input=}')
 
-    if False: # curr_state == RobotState.ready:
-        target_twist_yaw_pub.publish(0.0)
-        target_twist_roll_pub.publish(0.0)
-        target_twist_surge_pub.publish(0.0)
-        target_twist_sway_pub.publish(0.0)
-        target_twist_heave_pub.publish(0.0)
-
     if curr_state == prev_state:
         continue
     elif curr_state == RobotState.ambient:
@@ -96,11 +89,11 @@ while not rospy.is_shutdown():
             arm_srv(True)
             soft_stop = rospy.ServiceProxy('/captain/soft_stop', Trigger)
             try:
+                rospy.loginfo('Soft stopping state machine (from quartermaster)')
                 res = soft_stop()
-                # TODO make roslog for if soft stop works or fails
+                rospy.loginfo(f'soft stop response: {res.success}; {res.message}')
             except:
                 pass
-            rospy.loginfo('Soft stopping state machine (from quartermaster)')
 
         else: # Previous state is ambient
             arm_resp = arm_srv(True)
