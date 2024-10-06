@@ -40,23 +40,25 @@ target_twist_surge_pub = rospy.Publisher('/target_twist/surge', Float64, queue_s
 target_twist_sway_pub = rospy.Publisher('/target_twist/sway', Float64, queue_size=1)
 target_twist_heave_pub = rospy.Publisher('/target_twist/heave', Float64, queue_size = 1)
 
-# TODO change strange and charm to better names
-led_strange_pub = rospy.Publisher('/led/strange', Bool, queue_size=1)
-led_charm_pub = rospy.Publisher('/led/charm', Bool, queue_size=1)
+led_hall_effect_1_pub = rospy.Publisher('/led/hall_effect_1', Bool, queue_size=1)
+led_hall_effect_2_pub = rospy.Publisher('/led/hall_effect_2', Bool, queue_size=1)
 led_on_pub = rospy.Publisher('/led/on', Bool, queue_size=1)
 
-hall_effect_inputs = {'strange': False, 'charm': False}
+hall_effect_inputs = [False, False]
 
-def set_strange(new_value: Bool):
-    hall_effect_inputs['strange'] = new_value.data
+def set_hall_effect_1(new_value: Bool):
+    hall_effect_inputs[0] = new_value.data
 
-def set_charm(new_value: Bool):
-    hall_effect_inputs['charm'] = new_value.data
+def set_hall_effect_2(new_value: Bool):
+    hall_effect_inputs[1] = new_value.data
 
-rospy.Subscriber('/buttons/strange', Bool, set_strange)
-rospy.Subscriber('/buttons/charm', Bool, set_charm)
-strange_input = False
-charm_input = False
+rospy.Subscriber('/buttons/hall_effect_1', Bool, set_hall_effect_1)
+rospy.Subscriber('/buttons/hall_effect_2', Bool, set_hall_effect_2)
+
+#TODO This still needs to be checked 
+# these are for stickiness because hall effects might be flickering needs to be checked
+hall_effect_1_input = False
+hall_effect_2_input = False
 
 while not rospy.is_shutdown(): 
     led_on_pub.publish(True)
@@ -66,12 +68,12 @@ while not rospy.is_shutdown():
 
     prev_state = curr_state
     # TODO Check with electrical if hall effects are still flashing without stickiness 
-    strange_input = hall_effect_inputs['strange'] or strange_input
-    charm_input = hall_effect_inputs['charm'] or charm_input
+    hall_effect_1_input = hall_effect_inputs[0] or hall_effect_1_input
+    hall_effect_2_input = hall_effect_inputs[1] or hall_effect_2_input
 
-    curr_state = RobotState(strange_input + charm_input)
+    curr_state = RobotState(hall_effect_1_input + hall_effect_2_input)
     if curr_state != prev_state:
-        print(f'{strange_input=} {charm_input=}')
+        print(f'{hall_effect_1_input=} {hall_effect_2_input=}')
 
     if curr_state == prev_state:
         continue
@@ -111,7 +113,7 @@ while not rospy.is_shutdown():
         )
         capt_launch.start()
 
-    led_strange_pub.publish(bool(strange_input))
-    led_charm_pub.publish(bool(charm_input))
+    led_hall_effect_1_pub.publish(bool(hall_effect_1_input))
+    led_hall_effect_2_pub.publish(bool(hall_effect_2_input))
 
 

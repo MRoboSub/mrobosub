@@ -53,12 +53,11 @@ class BuoyHsv(Node):
             if detection is not None:
                 x_theta, y_theta = utils.pixels_to_angles(bgr_img, detection.x, detection.y)
                 response.found = True
-                response.x_position = detection.radius
+                response.x_position = detection.x
                 response.y_position = detection.y
                 response.x_theta = x_theta
                 response.y_theta = y_theta
-                # TODO add raidus to service type
-                response.confidence = detection.radius
+                response.radius = detection.radius
 
             self.serv.set_result(response)
         

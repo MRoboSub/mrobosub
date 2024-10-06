@@ -125,7 +125,7 @@ class CenterYawBuoy(TimedState):
         if type(prev_outcome) != CenterHeaveBuoy.Centered:
             raise TypeError(type(prev_outcome))
         # Need to replace with actual bbox area
-        self.bbox_area = prev_outcome.last_data.confidence
+        self.bbox_area = prev_outcome.last_data.radius
         self.unseen_time = rospy.get_time()
 
         self.buoy_position: ObjectPositionResponse = prev_outcome.last_data
@@ -140,7 +140,7 @@ class CenterYawBuoy(TimedState):
         query_res: ObjectPositionResponse = PIO.query_buoy()
         if query_res.found:
             self.angle_diff = query_res.x_theta
-            self.bbox_area = query_res.x_position
+            self.bbox_area = query_res.radius
             self.unseen_time = rospy.get_time()
 
         PIO.set_target_pose_heave(self.target_heave)
@@ -184,7 +184,7 @@ class CenterYawBuoyDiscrete(TimedState):
         if not isinstance(prev_outcome, CenterHeaveBuoyData):
             raise TypeError(type(prev_outcome))
         # Need to replace with actual bbox area
-        self.bbox_area = prev_outcome.last_data.confidence
+        self.bbox_area = prev_outcome.last_data.radius
         self.unseen_time = rospy.get_time()
 
         self.buoy_position: ObjectPositionResponse = prev_outcome.last_data
@@ -212,7 +212,7 @@ class CenterYawBuoyDiscrete(TimedState):
         query_res: ObjectPositionResponse = PIO.query_buoy()
         if query_res.found:
             self.angle_diff = query_res.x_theta
-            self.bbox_area = query_res.x_position
+            self.bbox_area = query_res.radius
             self.unseen_time = rospy.get_time()
 
         PIO.set_target_pose_heave(self.target_heave)

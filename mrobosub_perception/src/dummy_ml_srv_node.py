@@ -11,25 +11,14 @@ import time
 import sys
 import enum
 import pathlib
-#from rsub_log import log
-#from get_depth import get_avg_depth
 import struct
 import os
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 
-# height = 376
-# width = 1344
-# const_unpack = ''
-# for i in range(376*1344*2):
-    # const_unpack += 'B'
 
 bridge = CvBridge()
 
-#log("ml_node", "INFO", "Starting")
-#log("ml_node", "DEBUG", 'python version: ' + sys.version)
-#log("ml_node", "DEBUG", 'cv2 version: ' + cv2.__version__)
-#log("ml_node", "DEBUG", 'cv2 location:'+ cv2.__file__)
 
 CONFIDENCE = 0.9
 TIME_THRESHOLD = 10
