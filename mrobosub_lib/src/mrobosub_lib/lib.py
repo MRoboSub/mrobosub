@@ -85,29 +85,3 @@ def subscriber(topic_name, MsgType=None):
         return rospy.Subscriber(topic_name, MsgType, callback)
 
     return subscriber_factory
-
-
-
-# M = TypeVar('M')
-# class Subscriber(Generic[M]):
-#     def __init__(self, topic_name: str, callback: Callable[[M], None], MsgType=None):
-#         cb_annots = get_type_hints(callback).copy()
-#         cb_annots.pop('return', None) # remove the return type annotation if it exists
-#         if len(cb_annots) > 1:
-#             raise InvalidArgument('callback must accept exactly one argument')
-#         elif len(cb_annots) == 0:
-#             if MsgType is None:
-#                 raise InvalidArgument('must either annotate callback parameter or explicitly provide MsgType')
-#         else: # len(cb_annots) == 1
-#             _, MsgType = cb_annots.popitem()
-
-#         self.subscriber = rospy.Subscriber(topic_name, MsgType, callback)
-
-# T = TypeVar('T')
-# class SubscribedVar(Generic[T]):
-#     def __init__(self, topic, cls, initial=None):
-#         self.val = initial
-#         rospy.Subscriber(topic, cls, lambda msg: self._set(msg))
-
-#     def _set(self, msg: T):
-#         self.val = msg

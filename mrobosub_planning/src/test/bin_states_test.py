@@ -69,7 +69,5 @@ def main() -> None:
     #     print(f"{reader.target_pose_yaw=}")
 
 
-
-
 if __name__ == '__main__':
     main()

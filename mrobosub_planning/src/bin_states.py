@@ -25,6 +25,8 @@ class ApproachBinOpen(TimedState):
         self.target_yaw = getattr(prev_outcome, "angle", PIO.Pose.yaw)
 
     def handle_if_not_timedout(self) -> Union[SeenBin, None]:
+        # Need to get a better way to approach bin 
+        # because we align to pathmarker angle but sub drifts from target bin
         PIO.set_target_pose_yaw(self.target_yaw)
         PIO.set_target_twist_surge(self.surge_speed)
 
@@ -85,9 +87,9 @@ class ApproachBinClosed(TimedState):
                 PIO.set_target_pose_yaw((PIO.Pose.yaw % 360 - self.angle_to_bin * self.yaw_factor) % 360)
             else:
                 # set surge speed decreases as closer to centered
-                juice = self.surge_speed * dist_to_bin 
-                print(f"{juice=}")
-                PIO.set_target_twist_surge(juice)
+                bin_surge_speed = self.surge_speed * dist_to_bin 
+                print(f"{bin_surge_speed=}")
+                PIO.set_target_twist_surge(bin_surge_speed)
 
         if dist_to_bin < self.centered_pixel_dist_thresh:
             PIO.set_target_twist_surge(0)
@@ -101,12 +103,6 @@ class ApproachBinClosed(TimedState):
         PIO.set_target_pose_yaw(PIO.Pose.yaw)
         return self.TimedOut()
 
-
-# Used to mark which previous state we came from to allow for dropper code to work
-class CenterOrSpin(NamedTuple):
-    is_center: bool
-
-
 class CenterCameraToBin(TimedState):
     class TimedOut(NamedTuple):
         pass
@@ -115,7 +111,6 @@ class CenterCameraToBin(TimedState):
         pass
 
     timeout: float = 120.0
-
     surge_and_strafe_speed = 0.05 # max surge/sway speed
     centered_pixel_x_y_thresh = 0.15
     bin_depth = 0.5
@@ -176,7 +171,6 @@ class CenterCameraToBin(TimedState):
             if self.lost_frames_num > 10:
                 PIO.set_target_twist_surge(-1 * self.surge_speed)
                 PIO.set_target_twist_sway(-1 * self.sway_speed)
-
         return None
 
     def handle_once_timedout(self) -> TimedOut:
