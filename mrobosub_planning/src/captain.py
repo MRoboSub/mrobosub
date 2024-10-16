@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from typing import Dict, NamedTuple, Type
+from importlib import import_module
 from umrsm import StateMachine, State, TransitionMap
 import common_states
 import standard_run
@@ -35,11 +36,29 @@ transition_maps: Dict[str, TransitionMap] = {
 
 if __name__ == "__main__":
     rospy.init_node("captain")
+    
     machine_name = sys.argv[1]
+
+    # Read the module that the user passed in
+    module_file_name = sys.argv[2]
+
+    # Read the starting state that the user wants
+    state_name = sys.argv[3]
+
+    # Programmatically include the module that the user requests
+    module = import_module(module_file_name)
+
+    # Programmatically instantiate the desired starting state from that module
+    starting_state = getattr(module, state_name)
+
+    # NOTE: The implicit precondition is that the `starting_state` desired 
+    #       is in the TransitionMap of this current machine.
+
+    # Syntax `roslaunch mrobosub_planning captain.launch machine:=<machine> module:=<module> state:=<state>`
     machine = StateMachine(
         machine_name,
         transition_maps[machine_name],
-        common_states.Start,
+        starting_state,
         common_states.Stop,
     )
     try:

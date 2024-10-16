@@ -1,7 +1,9 @@
 <launch>
     <arg name="machine" default="standard" />
+    <arg name="module" default="common_states" />
+    <arg name="state" default="Start" />
     <node name="captain" pkg="mrobosub_planning" type="captain.py" 
-        output="screen" args="$(arg machine)">
+        output="screen" args="$(arg machine) $(arg module) $(arg state)">
         <param 
             textfile="$(find mrobosub_planning)/param/globals.yaml" 
             type="yaml"
