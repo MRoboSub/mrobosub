@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from typing import Dict, NamedTuple, Type
+from typing import Dict, NamedTuple, Optional, Type
 from importlib import import_module
 import inspect
 from umrsm import StateMachine, State, TransitionMap
@@ -35,7 +35,7 @@ transition_maps: Dict[str, TransitionMap] = {
 }
 
 
-def state_class_from_str(full_state: str, transitions: TransitionMap):
+def state_class_from_str(full_state: str, transitions: TransitionMap) -> Optional[Type[State]]:
     """
     Find the associated class object from a given state name.
 
