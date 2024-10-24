@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from typing import Dict, NamedTuple, Type
 from importlib import import_module
+import inspect
 from umrsm import StateMachine, State, TransitionMap
 import common_states
 import standard_run
@@ -34,27 +35,80 @@ transition_maps: Dict[str, TransitionMap] = {
 }
 
 
+def state_class_from_str(full_state: str, transitions: TransitionMap):
+    """
+    Find the associated class object from a given state name.
+
+    Arguments:
+        full_state (str): The state passed into roslaunch. Could be in the format `state` or `module.state`.
+        transitions (TransitionMap): The transition map from the associated machine name. 
+    
+    Returns:
+        The class object for the state or `None` if no/multiple are found.
+    """
+    if '.' in full_state:
+        # Split the full state into the module.state_name
+        module = full_state.split('.')[0]
+        state = full_state.split('.')[1]
+
+        # We are given a module, search for all of the classes in the module
+        # Note that inspect.getmembers() returns a tuple that looks like (class string name, class object)
+        classes = set(inspect.getmembers(import_module(module), inspect.isclass))
+
+        # Search through all of the tuples by the class string name to 
+        # find associated class object
+        found_class_options = [tup[1] for tup in classes if tup[0] == state]
+
+        # If we find none or multiple, uhh, break
+        if len(found_class_options) != 1:
+            return None
+
+        found_class = found_class_options[0]
+        return found_class
+    else:
+        # Assuming that no module is entered in the terminal, we have to find which module the state is in
+        # set because we want this to be unique
+        module_names = set([cls.__module__ for cls in transitions])
+
+        # We need to get each class for all of the modules included in the transitions module
+        # Note that inspect.getmembers() returns a tuple that looks like (class string name, class object)
+        classes_in_modules = [inspect.getmembers(import_module(mod), inspect.isclass) for mod in module_names]
+
+        # The above list is a list of lists, flatten this into just a list
+        classes_in_transition_map = set([subclass for cls in classes_in_modules for subclass in cls])
+
+        # Search through all of the tuples by the class string name to 
+        # find associated class object
+        found_class_options = [tup[1] for tup in classes_in_transition_map if tup[0] == full_state]
+        
+        # If we find none or multiple, uhh, break
+        if len(found_class_options) != 1:
+            return None
+        
+        found_class = found_class_options[0]
+        return found_class
+
+
 if __name__ == "__main__":
     rospy.init_node("captain")
     
     machine_name = sys.argv[1]
 
-    # Read the module that the user passed in
-    module_file_name = sys.argv[2]
+    # Read the state that the user passed in, which is either
+    #  1) `module.state`
+    #  2) `state`, and the module has to be inferred
+    full_state = sys.argv[2]
 
-    # Read the starting state that the user wants
-    state_name = sys.argv[3]
+    starting_state = state_class_from_str(full_state, transition_maps[machine_name])
 
-    # Programmatically include the module that the user requests
-    module = import_module(module_file_name)
+    print(starting_state)
 
-    # Programmatically instantiate the desired starting state from that module
-    starting_state = getattr(module, state_name)
+    if starting_state is None:
+        print(f"Could not find {full_state} in the transition map.")
+        exit()
 
-    # NOTE: The implicit precondition is that the `starting_state` desired 
-    #       is in the TransitionMap of this current machine.
-
-    # Syntax `roslaunch mrobosub_planning captain.launch machine:=<machine> module:=<module> state:=<state>`
+    # Syntax `roslaunch mrobosub_planning captain.launch machine:=<machine> state:=<state|module.state>`
+    
     machine = StateMachine(
         machine_name,
         transition_maps[machine_name],
