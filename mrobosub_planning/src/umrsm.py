@@ -4,6 +4,7 @@ Python metaprogramming."""
 from __future__ import annotations
 from abc import abstractmethod
 from typing import (
+    Any,
     Dict,
     Optional,
     Type,
@@ -68,7 +69,7 @@ class State(metaclass=StateMeta):
         return True
 
     @classmethod
-    def with_params(cls, **kwargs) -> Type['State']:
+    def with_params(cls, **kwargs: Dict[str, Any]) -> Type['State']:
         overrides: dict = kwargs.get('_param_overrides', {}).copy()
         overrides.update(kwargs)
         kwargs['_param_overrides'] = overrides
