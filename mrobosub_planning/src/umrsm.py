@@ -69,7 +69,7 @@ class State(metaclass=StateMeta):
         return True
 
     @classmethod
-    def with_params(cls, **kwargs: Dict[str, Any]) -> Type['State']:
+    def with_params(cls, **kwargs: Any) -> Type['State']:
         overrides: dict = kwargs.get('_param_overrides', {}).copy()
         overrides.update(kwargs)
         kwargs['_param_overrides'] = overrides
