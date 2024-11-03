@@ -33,7 +33,18 @@ class SoftStopTransition(NamedTuple):
     pass
 
 
-class State:
+class StateMeta(type):
+    def _rendered_repr(self) -> str:
+        if not hasattr(self, '_param_overrides'):
+            return f'state {self.__name__}'
+        param_overrides = getattr(self, '_param_overrides')
+        params_str = ', '.join(f'{k}={v}' for k, v in param_overrides.items())
+        return f'state {self.__qualname__} with {params_str}'
+
+    def __repr__(self) -> str:
+        return f'<{self._rendered_repr()}>'
+
+class State(metaclass=StateMeta):
     """States contain logic that will be executed by the StateMachine.
 
     Each State also contains class variables for each parameter on the parameter server, which
@@ -58,7 +69,15 @@ class State:
 
     @classmethod
     def with_params(cls, **kwargs) -> Type['State']:
+        overrides: dict = kwargs.get('_param_overrides', {}).copy()
+        overrides.update(kwargs)
+        kwargs['_param_overrides'] = overrides
+        kwargs['__module__'] = cls.__module__
         return type(cls.__name__, (cls,), kwargs)
+
+    @classmethod
+    def __repr__(cls) -> str:
+        return f'<instance of {cls._rendered_repr()}>'
 
 TransitionMap = Dict[Type[NamedTuple], Type[State]]
 
