@@ -56,6 +56,9 @@ class State:
     def is_valid_income_type(cls, outcome_type: Type[NamedTuple]) -> bool:
         return True
 
+    @classmethod
+    def with_params(cls, **kwargs) -> Type['State']:
+        return type(cls.__name__, (cls,), kwargs)
 
 TransitionMap = Dict[Type[NamedTuple], Type[State]]
 
