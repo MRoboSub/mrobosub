@@ -10,6 +10,7 @@ from typing import (
     Type,
     Tuple,
 )
+import warnings
 import rospy
 from std_msgs.msg import String
 from std_srvs.srv import Trigger, TriggerRequest
@@ -52,6 +53,7 @@ class State(metaclass=StateMeta):
         can be accessed using self. Data that should be shared between calls of handle should be
         set as an instance variable.
     """
+    _num_unexpected_params = 0
 
     def __init__(self, prev_outcome: NamedTuple):
         self.prev_outcome = prev_outcome
@@ -70,10 +72,16 @@ class State(metaclass=StateMeta):
 
     @classmethod
     def with_params(cls, **kwargs: Any) -> Type['State']:
+        num_unexpected = 0
+        for k in kwargs:
+            if not hasattr(cls, k):
+                warnings.warn(f"overriding parameter {k}, which is not defined on {cls}", stacklevel=2)
+                num_unexpected += 1
         overrides: dict = kwargs.get('_param_overrides', {}).copy()
         overrides.update(kwargs)
         kwargs['_param_overrides'] = overrides
         kwargs['__module__'] = cls.__module__
+        kwargs['_num_unexpected_params'] = cls._num_unexpected_params + num_unexpected
         return type(cls.__name__, (cls,), kwargs)
 
     @classmethod
