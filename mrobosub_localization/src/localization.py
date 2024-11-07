@@ -13,6 +13,8 @@ from sensor_msgs.msg import Imu
 
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
+from iekf import IEKF
+
 from math import degrees
 
 class StateEstimation(Node):
@@ -39,12 +41,15 @@ class StateEstimation(Node):
     orientation = None
 
     def __init__(self):
+        self.iekf_class = IEKF()
         super().__init__('localization')
         self.heave_pub = rospy.Publisher('/pose/heave', Float64, queue_size=1)
         self.yaw_pub = rospy.Publisher('/pose/yaw', Float64, queue_size=1)
         self.pitch_pub = rospy.Publisher('/pose/pitch', Float64, queue_size=1)
-        self.roll_pub = rospy.Publisher('/pose/roll', Float64, queue_size=1)   
-        rospy.Subscriber('/iekf/state', Float64, self.iekf_callback)
+        self.roll_pub = rospy.Publisher('/pose/roll', Float64, queue_size=1) 
+        self.x_pub = rospy.Publisher('/pose/x_pos', Float64, queue_size=1)
+        self.y_pub = rospy.Publisher('/pose/y_pos', Float64, queue_size=1)
+        rospy.Subscriber('/dvl/raw_data', Dvl, self.dvl_callback)   
         rospy.Subscriber('/depth/raw_depth', Float32, self.raw_depth_callback)
         rospy.Subscriber('/mavros/imu/data', Imu, self.imu_callback)
         rospy.Service('localization/zero_state', Trigger, lambda msg: self.handle_reset())
@@ -67,7 +72,8 @@ class StateEstimation(Node):
     def raw_depth_callback(self, raw_depth: Float32):
         if self.heave_offset is None:
             self.heave_offset = raw_depth.data
-        self.heave_pub.publish(raw_depth.data - self.heave_offset)
+        self.iekf_class.add_depth_measurement(raw_depth.data)
+        self.publish_state() 
 
     def imu_callback(self, msg):
 
@@ -90,20 +96,25 @@ class StateEstimation(Node):
         pitch = degrees(-euler[1]) - self.pitch_offset
         roll = degrees(euler[0]) - self.roll_offset
 
-        self.yaw_pub.publish(yaw)
-        self.pitch_pub.publish(pitch)
-        self.roll_pub.publish(roll)
+        self.iekf_class.add_imu_measurement() #input should be measured acceleration and gyro (Imu.linear_acceleration ?)
+        state = self.iekf_class.predict()
+        self.publish_state()
 
-    def iekf_callback(self, msg: Float64):
-        roll = msg.data['roll']
-        pitch = msg.data['pitch']
-        yaw = msg.data['yaw']
-        velocity = msg.data['velocity']
-        position = msg.data['position']
+    def dvl_callback(self, msg: Dvl):
+        dvl_velocity = #array of x,y,z velocity components
+        self.iekf_class.add_dvl_measurement(dvl_velocity)
+        self.publish_state()
 
-        self.roll_pub.publish(roll)
-        self.pitch_pub.publish(pitch)
-        self.yaw_pub.publish(yaw)
+
+    def publish_state(self):
+        state = self.iefk_class.predict()
+        updated_yaw, updated_pitch, updated_roll = calculate_euler_angles_from_rotation_matrix(state.rotation)
+        self.yaw_pub.publish(updated_yaw)
+        self.pitch_pub.publish(updated_pitch) 
+        self.roll_pub.publish(updated_roll) 
+        self.heave_pub(state.position[2])
+        self.x_pub.publish(state.position[0])
+        self.y_pub.publish(state.position[1])
 
     def run(self):
         rospy.spin()

@@ -3,6 +3,7 @@ import numpy as np
 import numpy.typing as npt
 from scipy.linalg import expm, block_diag
 import constants
+from mrobosub_lib.lib import Node
 # from mrobosub_msgs import IMUMessageType, DVLMessageType, DepthMessageType # type: ignore
 import rospy # type: ignore
 from time import time
@@ -104,9 +105,8 @@ def calc_right_invariant_error(state: State):
 
 def change_of_basis(basis: np.ndarray, value: np.ndarray) -> np.ndarray:
     return basis @ value @ basis.T
-
-
 class IEKF:
+
     def __init__(self, initial_state: State, init_cov: np.ndarray) -> None:
         self.pred_state = initial_state
         
