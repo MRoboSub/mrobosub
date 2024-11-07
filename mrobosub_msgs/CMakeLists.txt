@@ -10,6 +10,7 @@ add_message_files(
     FILES 
     HydrophoneAngle.msg
     HeadingRequest.msg
+    iekf.msg
 )
 
 add_service_files(

@@ -43,7 +43,8 @@ class StateEstimation(Node):
         self.heave_pub = rospy.Publisher('/pose/heave', Float64, queue_size=1)
         self.yaw_pub = rospy.Publisher('/pose/yaw', Float64, queue_size=1)
         self.pitch_pub = rospy.Publisher('/pose/pitch', Float64, queue_size=1)
-        self.roll_pub = rospy.Publisher('/pose/roll', Float64, queue_size=1)    
+        self.roll_pub = rospy.Publisher('/pose/roll', Float64, queue_size=1)   
+        rospy.Subscriber('/iekf/state', Float64, self.iekf_callback)
         rospy.Subscriber('/depth/raw_depth', Float32, self.raw_depth_callback)
         rospy.Subscriber('/mavros/imu/data', Imu, self.imu_callback)
         rospy.Service('localization/zero_state', Trigger, lambda msg: self.handle_reset())
@@ -92,6 +93,17 @@ class StateEstimation(Node):
         self.yaw_pub.publish(yaw)
         self.pitch_pub.publish(pitch)
         self.roll_pub.publish(roll)
+
+    def iekf_callback(self, msg: Float64):
+        roll = msg.data['roll']
+        pitch = msg.data['pitch']
+        yaw = msg.data['yaw']
+        velocity = msg.data['velocity']
+        position = msg.data['position']
+
+        self.roll_pub.publish(roll)
+        self.pitch_pub.publish(pitch)
+        self.yaw_pub.publish(yaw)
 
     def run(self):
         rospy.spin()

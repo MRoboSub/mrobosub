@@ -1,11 +1,43 @@
+import rospy
+from std_msgs.msg import Float64, Float32
+from sensor_msgs.msg import Imu
+from sensor_msgs.msg import Dvl
 import numpy as np
 from numpy.linalg import inv
 from scipy.linalg import expm
 from tqdm import tqdm
 import warnings 
+from mrobosub_msgs.msg import iekf
+
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
+
+from math import degrees
+
+
    
 class HoveringAUV:
+
+    heave_offset = None
+    yaw_offset = None
+    pitch_offset = None
+    roll_offset = None
+
+    orientation = None
+
     def __init__(self, Q, R, filename, dvl_p=np.zeros(3), dvl_r=np.eye(3)):
+
+        self.heave_pub = rospy.Publisher('/pose/heave', Float64, queue_size=1)
+        self.yaw_pub = rospy.Publisher('/pose/yaw', Float64, queue_size=1)
+        self.pitch_pub = rospy.Publisher('/pose/pitch', Float64, queue_size=1)
+        self.roll_pub = rospy.Publisher('/pose/roll', Float64, queue_size=1) 
+        self.state_pub = rospy.Publisher('iekf/state', Float64, queue_size=10)
+
+        rospy.Subscriber('/mavros/imu/data', Imu, self.imu_callback)
+        rospy.Subscriber('/depth/raw_depth', Float32, self.raw_depth_callback)
+        rospy.Subscriber('/dvl/raw_dvl', Dvl, self.dvl_callback)
+
+        self.state = np.zeros(12)
+
         """Our system for a quadcopter, with IMU measurements as controls. 
 
         Args:
@@ -32,6 +64,79 @@ class HoveringAUV:
 
         # convert z1 noise into the correct frame
         self.R[:3,:3] = self.dvl_r@self.R[:3,:3]@self.dvl_r.T + self.dvl_p@(self.Q[0:3,0:3] + self.Q[9:12,9:12])@self.dvl_p.T
+
+    def handle_reset(self):
+        previous_offsets = f'{self.heave_offset=}, {self.yaw_offset=}, {self.pitch_offset=}, {self.roll_offset=}'
+
+        self.heave_offset = None
+        self.yaw_offset = None
+        self.pitch_offset = None
+        self.roll_offset = None
+
+        self.heave_pub.publish(0)
+        self.yaw_pub.publish(0)
+        self.pitch_pub.publish(0)
+        self.roll_pub.publish(0)
+
+        return [True, previous_offsets]
+
+    def imu_callback(self, msg: Imu):
+        orientation = Imu.orientation
+
+        quaternion = [
+            orientation.x,
+            orientation.y, 
+            orientation.z, 
+            orientation.w
+        ]
+        euler = euler_from_quaternion(quaternion)
+        
+        if self.yaw_offset is None:
+            self.yaw_offset = degrees(-euler[2])
+            self.pitch_offset = degrees(-euler[1])
+            self.roll_offset = degrees(euler[0])
+
+        yaw = degrees(-euler[2]) - self.yaw_offset
+        pitch = degrees(-euler[1]) - self.pitch_offset
+        roll = degrees(euler[0]) - self.roll_offset
+
+        self.update_state_from_imu(yaw, pitch, roll)
+
+        
+
+    def raw_depth_callback(self, raw_depth: Float32):
+        depth_measurement = raw_depth.data
+        self.update_state_from_depth(depth_measurement)
+
+    def dvl_callback(self, msg: Dvl):
+        dvl_state_rotation_matrix = 
+        dvl_velocity = np.array([Dvl.velocity.x, Dvl.velocity.y, Dvl.velocity.z])
+        dvl_position = 
+        self.update_state_from_dvl(dvl_state_rotation_matrix, dvl_velocity, dvl_position)
+
+    def update_state_from_imu(self, yaw, pitch, roll):
+        # Update the state with the new IMU data
+        # For example, update the rotation matrix in the state
+        self.publish_iekf_state()
+        pass
+
+    def update_state_from_depth(self, depth):
+        # Update the state with the new depth measurement
+        self.publish_iekf_state()
+        pass
+
+    def update_state_from_dvl(self, dvl_state_rotation_matrix, dvl_velocity, dvl_position):
+        # Update the state with the DVL velocity
+        self.publish_iekf_state()
+        pass
+
+    def publish_iekf_state(self):
+        iefk_response = iekf()
+        iekf_response.yaw, iefk_response.pitch, iefk_response.roll = calc_euler_angles_from_rot_matrix(self.state[])
+        iekf_response.velocity = self.state[3:6]
+        iekf_response.position = self.state[6:9]
+
+
 
     def gen_data(self, t, imuHz, dvlHz, depthHz, noise=True, sim_bias=True):
         """Generates model data using Lie Group model.
@@ -288,7 +393,6 @@ if __name__ == "__main__":
         ax[-1,2].legend(loc='best')
         fig.tight_layout()
         plt.show()
-
 
 class IEKF:
     def __init__(self, system, mu_0, sigma_0, left=False):
