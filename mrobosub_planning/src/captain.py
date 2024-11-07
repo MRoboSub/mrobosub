@@ -5,6 +5,7 @@ import inspect
 from umrsm import StateMachine, State, TransitionMap
 import common_states
 import standard_run
+import re
 
 # import prequal_strafe
 import prequal_turn
@@ -44,50 +45,50 @@ def state_class_from_str(full_state: str, transitions: TransitionMap) -> Optiona
         transitions (TransitionMap): The transition map from the associated machine name. 
     
     Returns:
-        The class object for the state or `None` if no/multiple are found.
+        The class object for the state or a ValueError if there is an error finding the state.
     """
-    if '.' in full_state:
-        # Split the full state into the module.state_name
-        module = full_state.split('.')[0]
-        state = full_state.split('.')[1]
-
-        # We are given a module, search for all of the classes in the module
-        # Note that inspect.getmembers() returns a tuple that looks like (class string name, class object)
-        classes = set(inspect.getmembers(import_module(module), inspect.isclass))
-
-        # Search through all of the tuples by the class string name to 
-        # find associated class object
-        found_class_options = [tup[1] for tup in classes if tup[0] == state]
-
-        # If we find none or multiple, uhh, break
-        if len(found_class_options) != 1:
-            return None
-
-        found_class = found_class_options[0]
-        return found_class
-    else:
-        # Assuming that no module is entered in the terminal, we have to find which module the state is in
-        # set because we want this to be unique
-        module_names = set([cls.__module__ for cls in transitions])
-
-        # We need to get each class for all of the modules included in the transitions module
-        # Note that inspect.getmembers() returns a tuple that looks like (class string name, class object)
-        classes_in_modules = [inspect.getmembers(import_module(mod), inspect.isclass) for mod in module_names]
-
-        # The above list is a list of lists, flatten this into just a list
-        classes_in_transition_map = set([subclass for cls in classes_in_modules for subclass in cls])
-
-        # Search through all of the tuples by the class string name to 
-        # find associated class object
-        found_class_options = [tup[1] for tup in classes_in_transition_map if tup[0] == full_state]
+    # A NamedTuple is a class made inside of a State. 
+    # This helper function finds the state name from a NamedTuple in the transition map. E.g. NamedTuple(StartState.Complete) would return "StartState"
+    def named_tuple_to_state_str(named_tuple: Type[NamedTuple]) -> str:
+        return named_tuple.__qualname__.split('.')[0]
+    
+    # Helper function to turn a NamedTuple into its wrapping State. E.g. NamedTuple(StartState.Complete) would return State(StartState)
+    def named_tuple_to_state(named_tuple: Type[NamedTuple]) -> Type[State]:
+        module = import_module(named_tuple.__module__)
+        return getattr(module, named_tuple_to_state_str(named_tuple))
+    
+    # Ensure that the full_state passed in is either "module.state" or "state". Can have at most one '.'.
+    if full_state.count('.') > 1:
+        raise ValueError(f"{full_state} should have at most one '.'")
         
-        # If we find none or multiple, uhh, break
-        if len(found_class_options) != 1:
-            return None
-        
-        found_class = found_class_options[0]
-        return found_class
+    # Return the state from the full_state that looks like "module.state" or "state".
+    state = full_state.split('.')[1] if '.' in full_state else full_state
 
+    # The format of a transition map entry is NamedTuple: State.
+    # We need to find NamedTuples whose State matches the passed in state.
+    found_named_tuples = [named_tuple for named_tuple in transitions.keys() if named_tuple_to_state_str(named_tuple) == state]
+
+    # Turn each candidate NamedTuple into a set of their corresponding States.
+    unique_found_states = set([named_tuple_to_state(named_tuple) for named_tuple in found_named_tuples])
+
+    # If the state cannot be found, error.
+    if len(unique_found_states) == 0:
+        raise ValueError(f"Your selected {state=} is not in {unique_found_states=}. Please enter a state in the transition map.")
+
+    # If multiple states have been found, error.
+    if len(unique_found_states) > 1:
+        raise ValueError(f"{unique_found_states=} has multiples and can't disambiguate which state to start. Include module or check transition map.")
+    
+    found_state = unique_found_states.pop()
+
+    # If they provide a module, then confirm that this is the state that the user wants by ensuring the found state's module matches.
+    if full_state.count('.') == 1:
+        module, _ = full_state.split('.')
+        if str(found_state.__module__) != module:
+            raise ValueError(f"{found_state=} does not have the same module as the {module=} passed in. Ensure you are using the correct state from the transition map.")
+    
+    return found_state
+    
 
 if __name__ == "__main__":
     rospy.init_node("captain")
@@ -104,8 +105,7 @@ if __name__ == "__main__":
     print(starting_state)
 
     if starting_state is None:
-        print(f"Could not find {full_state} in the transition map.")
-        exit()
+        raise ValueError(f"Could not find {full_state} in the transition map")
 
     # Syntax `roslaunch mrobosub_planning captain.launch machine:=<machine> state:=<state|module.state>`
     
