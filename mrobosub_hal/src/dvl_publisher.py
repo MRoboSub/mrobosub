@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import socket
 
 import rospy
@@ -6,14 +8,15 @@ from mrobosub_msgs.msg import Dvl
 
 # todo: parameterize this in the launch file
 UDP_IP = "0.0.0.0"
-UDP_PORT = "27000"
+UDP_PORT = 27000
 
 
 class DVLPublisher():
     def __init__(self):
+        rospy.init_node("dvl_publisher")
         self.pub = rospy.Publisher('/dvl/raw_dvl', Dvl, queue_size=10)
 
-    def publisher(self):
+    def run(self):
         rate = rospy.Rate(50)
 
         # connect to socket containing the DVL information
@@ -32,3 +35,7 @@ class DVLPublisher():
             data_list = data_str.split(',')
             self.pub.publish(Dvl(*map(lambda i: float(data_list[i]), (10, 17, 24))))
             rate.sleep()
+
+if __name__ == "__main__":
+    node = DVLPublisher()
+    node.run()
