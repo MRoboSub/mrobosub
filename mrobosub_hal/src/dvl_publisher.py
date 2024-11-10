@@ -4,8 +4,9 @@ import rospy
 from mrobosub_msgs.msg import Dvl
 
 
-UDP_IP = ...
-UDP_PORT = ...
+# todo: parameterize this in the launch file
+UDP_IP = "0.0.0.0"
+UDP_PORT = "27000"
 
 
 class DVLPublisher():
