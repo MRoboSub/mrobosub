@@ -1,6 +1,6 @@
-from typing import Union
+from typing import Optional, Union
 from umrsm import State, NamedTuple
-from abstract_states import TimedState
+from abstract_states import ForwardAndWait, TimedState, TurnToYaw
 from periodic_io import PIO
 import rospy
 
@@ -54,6 +54,72 @@ class Stop(State):
             PIO.reset_target_twist()
             self.rate.sleep()
         return None
+
+class Forward(ForwardAndWait):
+    class Moved(NamedTuple):
+        pass
+
+    class TimedOut(NamedTuple):
+        pass
+
+    # Here are some "defaults"
+    # The assumption is here that you would use 
+    # the state metaprogramming to set these.
+    _target_heave:      float =  0.0
+    _target_surge_time: float = 10.0
+    _wait_time:         float = 10.0
+    _surge_speed:       float = 10.0
+
+    @property
+    def target_heave(self) -> float:
+        return self._target_heave
+
+    @property
+    def target_surge_time(self) -> float:
+        return self._target_surge_time
+
+    @property
+    def wait_time(self) -> float:
+        return self._wait_time
+
+    @property
+    def surge_speed(self) -> float:
+        return self._surge_speed
+
+    def handle_reached(self) -> Optional[NamedTuple]:
+        return self.Moved()
+
+    def handle_unreached(self) -> Optional[NamedTuple]:
+        return self.TimedOut()
+
+
+class Turn(TurnToYaw):
+    class Complete(NamedTuple):
+        pass
+
+    _target_yaw:    float =  0.0
+    _yaw_threshold: float =  2.0
+    _settle_time:   float = 10.0
+    _timeout:       float = 10.0
+
+    @property
+    def target_yaw(self) -> float:
+        return self._target_yaw
+
+    @property
+    def yaw_threshold(self) -> float:
+        return self._yaw_threshold
+
+    @property
+    def settle_time(self) -> float:
+        return self._settle_time
+
+    @property
+    def timeout(self) -> float:
+        return self._timeout
+    
+    def handle_reached(self) -> Optional[NamedTuple]:
+        return self.Complete()
 
 
 Surface = Stop
