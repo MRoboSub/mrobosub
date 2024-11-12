@@ -77,7 +77,7 @@ class State(metaclass=StateMeta):
             if not hasattr(cls, k):
                 warnings.warn(f"overriding parameter {k}, which is not defined on {cls}", stacklevel=2)
                 num_unexpected += 1
-        overrides: dict = kwargs.get('_param_overrides', {}).copy()
+        overrides: dict = getattr(cls, '_param_overrides', {}).copy()
         overrides.update(kwargs)
         kwargs['_param_overrides'] = overrides
         kwargs['__module__'] = cls.__module__
