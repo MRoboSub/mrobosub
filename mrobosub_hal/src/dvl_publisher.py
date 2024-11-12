@@ -60,5 +60,4 @@ class DVLPublisher():
         sock.close()
 
 if __name__ == "__main__":
-    node = DVLPublisher()
-    node.run()
+    DVLPublisher().run()
