@@ -42,7 +42,7 @@ class DVLPublisher():
 
                 # parse according to spec here https://docs.ceruleansonar.com/c/dvl-50/communicating-with-the-tracker-650/outgoing-message-formats-tracker-650-to-host/usddvkfc-kalman-filter-raw-data-support-message
                 data_list = data_str.split(',')
-                self.pub_raw.publish(Dvl(*map(lambda i: float(data_list[i]), (10, 17, 24))))
+                self.pub_raw.publish(Dvl(*map(float, data_list[10:24+1:7])))
 
                 # transform from cone axis to tranlational axis 
                 cone_A_vel = float(data_list[10])
