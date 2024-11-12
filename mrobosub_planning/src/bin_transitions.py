@@ -4,7 +4,7 @@ from umrsm import TransitionMap
 
 
 transitions:TransitionMap = {
-    Start.Complete: Submerge,
+    Start.Complete: Submerge.with_params(target_heave=0.75),
 
     Submerge.Submerged: ApproachBinOpen,
     Submerge.TimedOut: ApproachBinOpen,
