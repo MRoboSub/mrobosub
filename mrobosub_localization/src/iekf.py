@@ -1,4 +1,4 @@
-from typing import TypeAlias, Literal, Annotated
+from typing_extensions import TypeAlias, Literal, Annotated
 import numpy as np
 import numpy.typing as npt
 from scipy.linalg import expm, block_diag

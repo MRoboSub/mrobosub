@@ -16,7 +16,13 @@ generate_dynamic_reconfigure_options(
   #...
 )
 
-
+add_custom_target(
+  _unused_name ALL
+  COMMAND cd ${CMAKE_SOURCE_DIR}
+    && maturin build --release --quiet
+    # 2> /dev/null # adding this quiets maturin but also supresses rustc errors and warnings
+    && python3 -m pip install ./target/wheels/* --root-user-action ignore --force-reinstall
+)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)

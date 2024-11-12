@@ -8,9 +8,12 @@ RUN apt-get update && \
                         git \
                         vim \
                         screen \
-                        python3-tk
+                        python3-tk \
+                        curl
 
-RUN pip install mypy -U
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+RUN python3 -m pip install pip -U
+RUN python3 -m pip install mypy maturin numpy scipy -U
 
 SHELL ["/bin/bash", "-c"] 
 

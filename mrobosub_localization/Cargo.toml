@@ -1,0 +1,18 @@
+[package]
+name = "umriekf"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "umriekf"
+path = "src/iekf/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+anyhow = "1.0.91"
+nalgebra = "0.32.6"
+numpy = { version = "0.22.1", features = ["nalgebra"] }
+pyo3 = { version = "0.22.0", features = ["anyhow"] }
+rand = "0.8.5"
+statrs = "0.17.1"

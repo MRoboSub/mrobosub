@@ -1,6 +1,7 @@
 version: "3"
 services:
   mrobosub:
+    build: .
     image: mrobosub/mrobosub
     privileged: true
     ports:
