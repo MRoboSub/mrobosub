@@ -1,17 +1,12 @@
-#![allow(unused)]
-use core::f64::consts::PI;
 use std::{
     error::Error,
     fmt::{Display, Formatter},
-    sync::LazyLock,
 };
 
 use anyhow::{Context, Result};
-use nalgebra::{ArrayStorage, Const, Dyn, Matrix, Matrix3, Matrix4, Rotation3, Vector3, U15};
-use numpy::{IxDyn, PyReadonlyArrayDyn, PyUntypedArrayMethods};
 use pyo3::{prelude::*, types::PyDict};
 
-use crate::utils::{assert_mat_len, InvalidMatrixLengthError, SMatrix, SVector};
+use crate::utils::{SMatrix, SVector};
 
 #[derive(Debug, Default)]
 pub struct Constants {
