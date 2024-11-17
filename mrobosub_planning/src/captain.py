@@ -36,7 +36,7 @@ transition_maps: Dict[str, TransitionMap] = {
 }
 
 
-def state_class_from_str(full_state: str, transitions: TransitionMap) -> Optional[Type[State]]:
+def state_class_from_str(full_state: str, transitions: TransitionMap) -> Type[State]:
     """
     Find the associated class object from a given state name.
 
@@ -71,6 +71,10 @@ def state_class_from_str(full_state: str, transitions: TransitionMap) -> Optiona
     # Turn each candidate NamedTuple into a set of their corresponding States.
     unique_found_states = set([named_tuple_to_state(named_tuple) for named_tuple in found_named_tuples])
 
+    # If module is included, filter by the module included.
+    if '.' in full_state:
+        unique_found_states = set([state for state in unique_found_states if state.__module__ == full_state.split(".")[0]])
+
     # If the state cannot be found, error.
     if len(unique_found_states) == 0:
         raise ValueError(f"Your selected {state=} is not in {unique_found_states=}. Please enter a state in the transition map.")
@@ -81,18 +85,13 @@ def state_class_from_str(full_state: str, transitions: TransitionMap) -> Optiona
     
     found_state = unique_found_states.pop()
 
-    # If they provide a module, then confirm that this is the state that the user wants by ensuring the found state's module matches.
-    if full_state.count('.') == 1:
-        module, _ = full_state.split('.')
-        if str(found_state.__module__) != module:
-            raise ValueError(f"{found_state=} does not have the same module as the {module=} passed in. Ensure you are using the correct state from the transition map.")
-    
     return found_state
     
 
 if __name__ == "__main__":
     rospy.init_node("captain")
     
+    # Syntax `roslaunch mrobosub_planning captain.launch machine:=<machine> state:=<state|module.state>`
     machine_name = sys.argv[1]
 
     # Read the state that the user passed in, which is either
@@ -101,13 +100,6 @@ if __name__ == "__main__":
     full_state = sys.argv[2]
 
     starting_state = state_class_from_str(full_state, transition_maps[machine_name])
-
-    print(starting_state)
-
-    if starting_state is None:
-        raise ValueError(f"Could not find {full_state} in the transition map")
-
-    # Syntax `roslaunch mrobosub_planning captain.launch machine:=<machine> state:=<state|module.state>`
     
     machine = StateMachine(
         machine_name,
