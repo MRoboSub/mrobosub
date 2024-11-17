@@ -1,11 +1,9 @@
 #!/usr/bin/env python
-from typing import Dict, NamedTuple, Optional, Type
+from typing import Dict, NamedTuple, Type
 from importlib import import_module
-import inspect
 from umrsm import StateMachine, State, TransitionMap
 import common_states
 import standard_run
-import re
 
 # import prequal_strafe
 import prequal_turn
@@ -47,41 +45,31 @@ def state_class_from_str(full_state: str, transitions: TransitionMap) -> Type[St
     Returns:
         The class object for the state or a ValueError if there is an error finding the state.
     """
-    # A NamedTuple is a class made inside of a State. 
-    # This helper function finds the state name from a NamedTuple in the transition map. E.g. NamedTuple(StartState.Complete) would return "StartState"
-    def named_tuple_to_state_str(named_tuple: Type[NamedTuple]) -> str:
-        return named_tuple.__qualname__.split('.')[0]
+    def outcome_to_state_str(outcome: Type[NamedTuple]) -> str:
+        return outcome.__qualname__.split('.')[0] # __qualname__ returns the full name, including all wrapping classes, of a class.
     
-    # Helper function to turn a NamedTuple into its wrapping State. E.g. NamedTuple(StartState.Complete) would return State(StartState)
-    def named_tuple_to_state(named_tuple: Type[NamedTuple]) -> Type[State]:
-        module = import_module(named_tuple.__module__)
-        return getattr(module, named_tuple_to_state_str(named_tuple))
+    def outcome_to_state(outcome: Type[NamedTuple]) -> Type[State]:
+        module = import_module(outcome.__module__)
+        return getattr(module, outcome_to_state_str(outcome))
     
-    # Ensure that the full_state passed in is either "module.state" or "state". Can have at most one '.'.
+    # full_state should be "module.state" or "state".
     if full_state.count('.') > 1:
         raise ValueError(f"{full_state} should have at most one '.'")
-        
-    # Return the state from the full_state that looks like "module.state" or "state".
-    state = full_state.split('.')[1] if '.' in full_state else full_state
+    state = full_state.split('.')[-1]
 
-    # The format of a transition map entry is NamedTuple: State.
-    # We need to find NamedTuples whose State matches the passed in state.
-    found_named_tuples = [named_tuple for named_tuple in transitions.keys() if named_tuple_to_state_str(named_tuple) == state]
+    # Find Outcomes whose State matches the passed in state.
+    found_outcomes = [outcome for outcome in transitions.keys() if outcome_to_state_str(outcome) == state]
 
-    # Turn each candidate NamedTuple into a set of their corresponding States.
-    unique_found_states = set([named_tuple_to_state(named_tuple) for named_tuple in found_named_tuples])
+    # Turn each candidate Outcome into a set of their corresponding States.
+    unique_found_states = set(outcome_to_state(outcome) for outcome in found_outcomes)
 
     # If module is included, filter by the module included.
     if '.' in full_state:
-        unique_found_states = set([state for state in unique_found_states if state.__module__ == full_state.split(".")[0]])
+        unique_found_states = set(state for state in unique_found_states if state.__module__ == full_state.split(".")[0])
 
-    # If the state cannot be found, error.
-    if len(unique_found_states) == 0:
-        raise ValueError(f"Your selected {state=} is not in {unique_found_states=}. Please enter a state in the transition map.")
-
-    # If multiple states have been found, error.
-    if len(unique_found_states) > 1:
-        raise ValueError(f"{unique_found_states=} has multiples and can't disambiguate which state to start. Include module or check transition map.")
+    # If 0 or multiple states are found, cannot disambiguate which state to use.
+    if len(unique_found_states) != 1:
+        raise ValueError(f'{full_state=} does not uniquely describe a state. {unique_found_states=}')
     
     found_state = unique_found_states.pop()
 
@@ -93,10 +81,6 @@ if __name__ == "__main__":
     
     # Syntax `roslaunch mrobosub_planning captain.launch machine:=<machine> state:=<state|module.state>`
     machine_name = sys.argv[1]
-
-    # Read the state that the user passed in, which is either
-    #  1) `module.state`
-    #  2) `state`, and the module has to be inferred
     full_state = sys.argv[2]
 
     starting_state = state_class_from_str(full_state, transition_maps[machine_name])
