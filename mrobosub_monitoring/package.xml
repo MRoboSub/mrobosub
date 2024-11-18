@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>mrobosub_safety</name>
+  <name>mrobosub_monitoring</name>
   <version>0.0.0</version>
   <description>miscellaneous nodes that assures the submarine is running safely</description>
 
