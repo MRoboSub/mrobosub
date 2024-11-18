@@ -15,8 +15,8 @@ class TemperatureController:
         rospy.init_node("temperature_controller")
 
     def is_overheating(self) -> bool:
-        for sensor, temperatures in psutil.sensors_temperatures().items():
-            if any(temp.current >= temp.critical for temp in temperatures):
+        for _, temperatures in psutil.sensors_temperatures().items():
+            if any(temp.critical is not None and temp.current >= temp.critical for temp in temperatures):
                 return True
         return False
 
