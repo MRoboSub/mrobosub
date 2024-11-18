@@ -3,33 +3,43 @@ import time
 import typing
 
 import rospy
+import psutil
+
 from std_msgs.msg import Float64
 
-import psutil
+
+OVERHEATING_TIME = 3  # seconds 
+
 class TemperatureController:
     def __init__(self):
         rospy.init_node("temperature_controller")
 
-    def is_overheating(self) -> typing.Optional[str]:
+    def is_overheating(self) -> bool:
         for sensor, temperatures in psutil.sensors_temperatures().items():
             if any(temp.current >= temp.critical for temp in temperatures):
-                return sensor
+                return True
+        return False
 
-    def shutdown(self, sensor: str):
+    def shutdown(self):
         for axis in ('surge', 'sway', 'heave', 'yaw', 'roll', 'pitch'):
             rospy.Publisher(f"/output_wrench/{axis}", Float64, queue_size=1).publish(0)
             rospy.Publisher(f"/target_twist/{axis}", Float64, queue_size=1).publish(0)
-        rospy.signal_shutdown(f"Jetson Sensor '{sensor}' Overheating Detected")
+        rospy.signal_shutdown(f"Jetson Sensor Overheating Detected")
         time.sleep(2)
         os.system("sudo shutdown -h now")  # should run without needing password: %shutdown ALL=(root) NOPASSWD: /sbin/shutdown
 
     def run(self):
-        rate = rospy.Rate(10)
+        rate = rospy.Rate(5)
 
+        last_check = None
         while not rospy.is_shutdown():
-            overheating_sensor = self.is_overheating()
-            if overheating_sensor is not None:
-                self.shutdown(overheating_sensor)
+            if self.is_overheating():
+                if last_check is None:
+                    last_check = rospy.get_time()
+                if rospy.get_time() - last_check > OVERHEATING_TIME:
+                    self.shutdown()
+            else:
+                last_check = None
             rate.sleep()
 
 if __name__ == "__main__":
