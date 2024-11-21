@@ -77,7 +77,7 @@ class MoveToXY(TimedState):
 
         return None
     
-    def handle_once_timedout(self) -> Optional[NamedTuple]:
+    def handle_once_timedout(self) -> NamedTuple:
         return self.TimedOut()
 
     target_x:             float = 0.0
