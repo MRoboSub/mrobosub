@@ -23,7 +23,9 @@ class TemperatureController:
 
     def shutdown(self):
         shutdown_rate = rospy.Rate(10)
-        while not rospy.is_shutdown():
+        for _ in range(10):
+            if rospy.is_shutdown():
+                break
             for axis in ('surge', 'sway', 'heave', 'yaw', 'roll', 'pitch'):
                 rospy.Publisher(f"/output_wrench/{axis}", Float64, queue_size=1).publish(0)
                 rospy.Publisher(f"/target_twist/{axis}", Float64, queue_size=1).publish(0)
@@ -34,7 +36,6 @@ class TemperatureController:
 
     def run(self):
         rate = rospy.Rate(5)
-
         last_check = None
         while not rospy.is_shutdown():
             if self.is_overheating():
