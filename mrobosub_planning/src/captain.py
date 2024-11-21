@@ -46,33 +46,26 @@ def state_class_from_str(full_state: str, transitions: TransitionMap) -> Type[St
         The class object for the state or a ValueError if there is an error finding the state.
     """
     def outcome_to_state_str(outcome: Type[NamedTuple]) -> str:
-        return outcome.__qualname__.split('.')[0] # __qualname__ returns the full name, including all wrapping classes, of a class.
+        return outcome.__qualname__.split('.')[0]
     
     def outcome_to_state(outcome: Type[NamedTuple]) -> Type[State]:
         module = import_module(outcome.__module__)
         return getattr(module, outcome_to_state_str(outcome))
     
-    # full_state should be "module.state" or "state".
     if full_state.count('.') > 1:
         raise ValueError(f"{full_state} should have at most one '.'")
+
     state = full_state.split('.')[-1]
-
-    # Find Outcomes whose State matches the passed in state.
     found_outcomes = [outcome for outcome in transitions.keys() if outcome_to_state_str(outcome) == state]
-
-    # Turn each candidate Outcome into a set of their corresponding States.
     unique_found_states = set(outcome_to_state(outcome) for outcome in found_outcomes)
-
-    # If module is included, filter by the module included.
+    
     if '.' in full_state:
         unique_found_states = set(state for state in unique_found_states if state.__module__ == full_state.split(".")[0])
 
-    # If 0 or multiple states are found, cannot disambiguate which state to use.
     if len(unique_found_states) != 1:
         raise ValueError(f'{full_state=} does not uniquely describe a state. {unique_found_states=}')
     
     found_state = unique_found_states.pop()
-
     return found_state
     
 
