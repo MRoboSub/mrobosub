@@ -34,8 +34,7 @@ class TemperatureController:
         last_check = None
         while not rospy.is_shutdown():
             if self.is_overheating():
-                if last_check is None:
-                    last_check = rospy.get_time()
+               last_check = last_check or rospy.get_time()
                 if rospy.get_time() - last_check > OVERHEATING_TIME:
                     self.shutdown()
             else:
