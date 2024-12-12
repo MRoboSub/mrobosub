@@ -32,3 +32,5 @@ int main(int argc, char** argv) {
     std::cout << "end" << std::endl;
 }
 
+// sudo ~/catkin_ws/devel/lib/mrobosub_localization/imu_node /dev/ttyACM0
+
