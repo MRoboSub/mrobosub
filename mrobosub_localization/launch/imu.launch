@@ -1,0 +1,4 @@
+<launch>
+  <arg name="port" default="COM3" />
+  <node name="imu" pkg="mrobosub_localization" type="imu_node" output="screen"/>
+</launch>
