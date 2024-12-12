@@ -10,6 +10,9 @@ for map_name, map in transition_maps.items():
         if not state.is_valid_income_type(outcome):
             print(f'{state} is mapped to by invalid outcome {outcome} in transition map "{map_name}"')
             errors += 1
+        if state._num_unexpected_params != 0:
+            print(f'{state} contains {state._num_unexpected_params} unexpected parameters')
+            errors += state._num_unexpected_params
 
 if errors == 0:
     print("No errors found")

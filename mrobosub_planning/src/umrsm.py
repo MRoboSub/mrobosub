@@ -4,11 +4,13 @@ Python metaprogramming."""
 from __future__ import annotations
 from abc import abstractmethod
 from typing import (
+    Any,
     Dict,
     Optional,
     Type,
     Tuple,
 )
+import warnings
 import rospy
 from std_msgs.msg import String
 from std_srvs.srv import Trigger, TriggerRequest
@@ -33,13 +35,25 @@ class SoftStopTransition(NamedTuple):
     pass
 
 
-class State:
+class StateMeta(type):
+    def _rendered_repr(self) -> str:
+        if not hasattr(self, '_param_overrides'):
+            return f'state {self.__name__}'
+        param_overrides = getattr(self, '_param_overrides')
+        params_str = ', '.join(f'{k}={v}' for k, v in param_overrides.items())
+        return f'state {self.__qualname__} with {params_str}'
+
+    def __repr__(self) -> str:
+        return f'<{self._rendered_repr()}>'
+
+class State(metaclass=StateMeta):
     """States contain logic that will be executed by the StateMachine.
 
     Each State also contains class variables for each parameter on the parameter server, which
         can be accessed using self. Data that should be shared between calls of handle should be
         set as an instance variable.
     """
+    _num_unexpected_params = 0
 
     def __init__(self, prev_outcome: NamedTuple):
         self.prev_outcome = prev_outcome
@@ -56,6 +70,23 @@ class State:
     def is_valid_income_type(cls, outcome_type: Type[NamedTuple]) -> bool:
         return True
 
+    @classmethod
+    def with_params(cls, **kwargs: Any) -> Type['State']:
+        num_unexpected = 0
+        for k in kwargs:
+            if not hasattr(cls, k):
+                warnings.warn(f"overriding parameter {k}, which is not defined on {cls}", stacklevel=2)
+                num_unexpected += 1
+        overrides: dict = getattr(cls, '_param_overrides', {}).copy()
+        overrides.update(kwargs)
+        kwargs['_param_overrides'] = overrides
+        kwargs['__module__'] = cls.__module__
+        kwargs['_num_unexpected_params'] = cls._num_unexpected_params + num_unexpected
+        return type(cls.__name__, (cls,), kwargs)
+
+    @classmethod
+    def __repr__(cls) -> str:
+        return f'<instance of {cls._rendered_repr()}>'
 
 TransitionMap = Dict[Type[NamedTuple], Type[State]]
 
