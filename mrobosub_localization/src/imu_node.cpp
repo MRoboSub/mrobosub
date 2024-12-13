@@ -25,11 +25,6 @@ int main(int argc, char** argv) {
 
     if (argc != 2) {
         std::printf("Usage: %s <port>\n", argv[0]);
-	std::printf("Received:");
-	for (int i = 0; i < argc; i++) {
-            std::printf(" %s", argv[i]);
-        }
-	std::printf("\n");
         return 1;
     }
 
