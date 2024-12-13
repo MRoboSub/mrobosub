@@ -4,8 +4,7 @@
 #include "../inertial-sense-sdk/src/data_sets.h"
 
 #include <ros/ros.h>
-#include <std_msgs/Float64.h>
-#include <mrobosub_msgs/Dvl.h>
+#include <mrobosub_msgs/Imu.h>
 
 #include <chrono>
 #include <thread>
@@ -34,14 +33,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    ros::Publisher time_pub = nh.advertise<std_msgs::Float64>("/imu/time", 1);
-    if (!time_pub) return -1;
-    ros::Publisher vel_pub = nh.advertise<mrobosub_msgs::Dvl>("/imu/vel", 1);
-    if (!vel_pub) return -1;
-    ros::Publisher theta_pub = nh.advertise<mrobosub_msgs::Dvl>("/imu/theta", 1);
-    if (!theta_pub) return -1;
-    ros::Publisher dt_pub = nh.advertise<std_msgs::Float64>("/imu/dt", 1);
-    if (!dt_pub) return -1;
+    ros::Publisher pub = nh.advertise<mrobosub_msgs::Imu>("/imu/data", 1);
+    if (!pub) return -1;
 
     InertialSense is;
     is.Open(argv[1]);
@@ -49,25 +42,16 @@ int main(int argc, char** argv) {
     auto succ = is.BroadcastBinaryData(DID_PIMU, 1, [&](InertialSense* is, p_data_t* _data, int pHandle) {
         const auto data = reinterpret_cast<const pimu_t*>(_data->ptr);
 
-        std_msgs::Float64 time;
-        time.data = data->time;
-        time_pub.publish(time);
-
-        mrobosub_msgs::Dvl vel;
-        vel.velocityA = data->vel[0];
-        vel.velocityB = data->vel[1];
-        vel.velocityC = data->vel[2];
-        vel_pub.publish(vel);
-
-        mrobosub_msgs::Dvl theta;
-        theta.velocityA = data->theta[0];
-        theta.velocityB = data->theta[1];
-        theta.velocityC = data->theta[2];
-        theta_pub.publish(theta);
-
-        std_msgs::Float64 dt;
-        dt.data = data->dt;
-        dt_pub.publish(dt);
+        mrobosub_msgs::Imu msg;
+	msg.time = data->time;
+        msg.velocityA = data->vel[0];
+        msg.velocityB = data->vel[1];
+        msg.velocityC = data->vel[2];
+	msg.thetaA = data->theta[0];
+	msg.thetaB = data->theta[1];
+	msg.thetaC = data->theta[2];
+	msg.dt = data->dt;
+        pub.publish(msg);
     });
     if (!succ) {
 	return 1;
