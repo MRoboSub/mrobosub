@@ -130,6 +130,8 @@ include_directories(
 )
 
 find_package(Threads REQUIRED)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs mrobosub_msgs)
+include_directories(include ${catkin_INCLUDE_DIRS})
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -158,7 +160,7 @@ add_executable(imu_node src/imu_node.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(
-    imu_node InertialSenseSDK Threads::Threads
+	imu_node InertialSenseSDK Threads::Threads ${catkin_LIBRARIES}
 )
 
 #############

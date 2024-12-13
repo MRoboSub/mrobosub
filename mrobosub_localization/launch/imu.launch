@@ -1,4 +1,4 @@
 <launch>
-  <arg name="port" default="COM3" />
-  <node name="imu" pkg="mrobosub_localization" type="imu_node" output="screen"/>
+  <arg name="port" default="/dev/ttyACM0"/>
+  <node name="imu" pkg="mrobosub_localization" type="imu_node" output="screen" args="$(arg port)"/>
 </launch>
