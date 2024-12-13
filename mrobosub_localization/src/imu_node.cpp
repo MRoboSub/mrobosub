@@ -29,7 +29,9 @@ int main(int argc, char** argv) {
     }
 
     ros::Publisher pub = nh.advertise<mrobosub_msgs::Imu>("/imu/data", 1);
-    if (!pub) return -1;
+    if (!pub) {
+        return -1;
+    }
 
     InertialSense is;
     is.Open(argv[1]);
