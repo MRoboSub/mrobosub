@@ -120,7 +120,7 @@ class PIO:
     @classmethod
     def set_target_pose_x(cls, target_x: float) -> None:
         cls._target_pose_x_pub.publish(target_x)
-        cls.TargetPose.heave = target_x
+        cls.TargetPose.x = target_x
 
     @classmethod
     def set_target_pose_y(cls, target_y: float) -> None:
