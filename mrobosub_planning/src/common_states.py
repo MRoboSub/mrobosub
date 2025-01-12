@@ -69,10 +69,10 @@ class MoveToXY(TimedState):
                 self.timer = rospy.get_time()
                 error = self.kP * PIO.calculate_x_y_magnitude()
                 heave = min(error, self.max_heave) 
-                PIO.set_target_twist_surge(heave)
+                PIO.set_target_twist_heave(heave)
             
             if rospy.get_time() - self.timer >= self.settle_time:
-                PIO.set_target_twist_surge(0)
+                PIO.set_target_twist_heave(0)
                 return self.Reached()
 
         return None
