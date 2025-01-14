@@ -27,7 +27,7 @@ class Zed(ControlLoopNode):
 
     def open_capture(self):
         self.cap = cv2.VideoCapture(self.device_path)
-        subprocess.call('v4l2-ctl -d /dev/video4 -c white_balance_temperature_auto=0 -c hue_auto=0', shell=True)
+        subprocess.call('v4l2-ctl -d /dev/zed2 -c white_balance_temperature_auto=0 -c hue_auto=0', shell=True)
 
     def close_capture(self):
         self.cap.release()
@@ -49,8 +49,9 @@ class Zed(ControlLoopNode):
     
     def crop(self, frame):
         left, right, top, bottom = 130, 50, 40, 60
-        frame[:,:left] = frame[:,-right:] = frame[:top,:] = frame[-bottom:,:] = [255,0,0]
-        return frame
+        # frame[:,:left] = frame[:,-right:] = frame[:top,:] = frame[-bottom:,:] = [255,0,0]
+        cropped = frame[top:-bottom, left:-right]
+        return cropped
 
     def loop(self):
         if not self.on: return
