@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="mrobosub_monitoring" type="temperature_controller.py" name="temperature_controller" output="screen">
+    </node>
+</launch>
