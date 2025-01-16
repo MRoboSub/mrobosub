@@ -3,7 +3,8 @@ from typing_extensions import TypeAlias, Annotated
 import numpy as np
 import numpy.typing as npt
 from scipy.linalg import expm, block_diag
-import constants
+from constants import Constants
+# from mrobosub_msgs import IMUMessageType, DVLMessageType, DepthMessageType # type: ignore
 import rospy # type: ignore
 
 Vec3: TypeAlias = Annotated[npt.NDArray[np.float64], Literal[3]]
@@ -85,9 +86,9 @@ def carat(xi):
     p = xi[6:9].reshape(-1, 1)
     return np.block([[w_cross, v, p], [np.zeros((2, 5))]])
 
-def calc_right_invariant_error(state: State):
+def calc_right_invariant_error(state: State, constants: Constants):
     _ = np.zeros((3, 3))
-    gskew = make_skew_sym(constants.GRAVITY)
+    gskew = make_skew_sym(constants.gravity)
     rot = state.rotation
     vxr = make_skew_sym(state.velocity) @ rot
     pxr = make_skew_sym(state.position) @ rot
@@ -106,7 +107,9 @@ def change_of_basis(basis: np.ndarray, value: np.ndarray) -> np.ndarray:
 
 
 class IEKF:
-    def __init__(self, initial_state: State, init_cov: np.ndarray) -> None:
+    def __init__(self, constants: Constants, initial_state: State, init_cov: np.ndarray) -> None:
+        self.constants = constants
+
         self.pred_state = initial_state
         
         self.pred_cov = init_cov
@@ -131,16 +134,16 @@ class IEKF:
 
         # Add noise to IMU acceleration measurement
         # pred_acc_noise = np.zeros(3)
-        pred_acc_noise = np.random.multivariate_normal(np.zeros(3), constants.cov_acc_noise)
+        pred_acc_noise = np.random.multivariate_normal(np.zeros(3), self.constants.cov_acc_noise)
         # pred_acc_bias_noise = np.zeros(3)
-        pred_acc_bias_noise = np.random.multivariate_normal(np.zeros(3), constants.cov_acc_bias_noise)
+        pred_acc_bias_noise = np.random.multivariate_normal(np.zeros(3), self.constants.cov_acc_bias_noise)
         pred_acc = measured_acc + pred_acc_noise + pred_acc_bias_noise
 
         # Add noise to IMU gyro measurement
         # pred_gyro_noise = np.zeros(3)
-        pred_gyro_noise = np.random.multivariate_normal(np.zeros(3), constants.cov_gyro_noise)
+        pred_gyro_noise = np.random.multivariate_normal(np.zeros(3), self.constants.cov_gyro_noise)
         # pred_gyro_bias_noise = np.zeros(3)
-        pred_gyro_bias_noise = np.random.multivariate_normal(np.zeros(3), constants.cov_gyro_bias_noise)
+        pred_gyro_bias_noise = np.random.multivariate_normal(np.zeros(3), self.constants.cov_gyro_bias_noise)
         pred_gyro = measured_gyro + pred_gyro_noise + pred_gyro_bias_noise
 
         pred_prev_state = self.pred_state
@@ -148,7 +151,7 @@ class IEKF:
         self.pred_acc_bias = np.zeros((3,))
         self.pred_gyro_bias = np.zeros((3,))
         self.pred_biased_acc = pred_acc - self.pred_acc_bias
-        pred_global_acc = self.pred_state.rotation @ self.pred_biased_acc + constants.GRAVITY
+        pred_global_acc = self.pred_state.rotation @ self.pred_biased_acc + self.constants.gravity
         self.pred_biased_gyro = pred_gyro - self.pred_gyro_bias
 
         # Calculate updated state
@@ -158,23 +161,23 @@ class IEKF:
 
         self.pred_state = State.from_components(pred_rotation, pred_vel, pred_pos)
 
-        phi = expm(calc_right_invariant_error(self.pred_state) * dt)
-        self.pred_cov = change_of_basis(phi, (self.pred_cov + change_of_basis(self.adj_xb, constants.state_covariance) * dt))
+        phi = expm(calc_right_invariant_error(self.pred_state, self.constants) * dt)
+        self.pred_cov = change_of_basis(phi, (self.pred_cov + change_of_basis(self.adj_xb, self.constants.state_covariance) * dt))
 
         self.last_imu_time = curr_time
 
     def add_dvl_measurement(self, dvl_velocity: Vec3):
         # Add noise to measurement
-        pred_dvl_noise = np.random.multivariate_normal(np.zeros(3), constants.cov_dvl_noise)
+        pred_dvl_noise = np.random.multivariate_normal(np.zeros(3), self.constants.cov_dvl_noise)
         pred_dvl_vel = dvl_velocity + pred_dvl_noise
 
         # Convert predicted velocity into IMU reference frame
-        pred_vel_in_imu_frame = np.array([*constants.dvl_rotation @ pred_dvl_vel + make_skew_sym(constants.dvl_translation) @ self.pred_biased_gyro, -1, 0])
+        pred_vel_in_imu_frame = np.array([*self.constants.dvl_rotation @ pred_dvl_vel + make_skew_sym(self.constants.dvl_translation) @ self.pred_biased_gyro, -1, 0])
 
         # Note: Currently just using the latest ang velocity reading from the IMU
         # TODO: Convert to using a queue to align IMU & DVL measurements if performance is bad
-        cov_pred_vel_in_imu_frame = change_of_basis(constants.dvl_rotation, constants.cov_dvl_noise) \
-            + change_of_basis(make_skew_sym(constants.dvl_translation), constants.cov_gyro_noise + constants.cov_gyro_bias_noise)
+        cov_pred_vel_in_imu_frame = change_of_basis(self.constants.dvl_rotation, self.constants.cov_dvl_noise) \
+            + change_of_basis(make_skew_sym(self.constants.dvl_translation), self.constants.cov_gyro_noise + self.constants.cov_gyro_bias_noise)
 
         # Calculate the measurement covariance
         measurement_covariance = np.linalg.inv(self.pred_cov[3:6, 3:6] + change_of_basis(self.pred_state.rotation, cov_pred_vel_in_imu_frame))
@@ -196,10 +199,10 @@ class IEKF:
 
     def add_depth_measurement(self, depth_measurement: float):
         H = np.block([np.zeros((3,6)), np.eye(3), np.zeros((3, 6))])
-        depth_measurement_from_imu = depth_measurement + (self.pred_state.rotation @ constants.depth_translation)[2]
+        depth_measurement_from_imu = depth_measurement + (self.pred_state.rotation @ self.constants.depth_translation)[2]
         cov_squiggle = np.linalg.inv(change_of_basis(H @ self.adj_xb, self.pred_cov))
         foo = np.zeros((3, 3))
-        foo[2, 2] = 1. / constants.std_depth_noise**2
+        foo[2, 2] = 1. / self.constants.std_depth_noise**2
         measurement_covariance = cov_squiggle - cov_squiggle @ np.linalg.inv(change_of_basis(self.pred_state.rotation.T, foo) + cov_squiggle) @ cov_squiggle
         pseudo_measurement = np.array([self.pred_state.matrix[0,4], self.pred_state.matrix[1,4], depth_measurement_from_imu, 0, 1])
 
