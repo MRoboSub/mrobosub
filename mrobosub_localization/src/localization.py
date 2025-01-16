@@ -9,12 +9,14 @@ from typing import Optional, Final
 
 from std_srvs.srv import Trigger
 from geometry_msgs.msg import Quaternion
-from sensor_msgs.msg import Imu
+from sensor_msgs.msg import Imu, Dvl, Iekf
 
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
-from iekf import IEKF
+import constants
+from iekf import IEKF, State
 
+import numpy as np
 from math import degrees
 
 class StateEstimation(Node):
@@ -41,17 +43,26 @@ class StateEstimation(Node):
     orientation = None
 
     def __init__(self):
-        self.iekf_class = IEKF()
         super().__init__('localization')
+        init_cov = np.diag([
+            np.pi/6, np.pi/6, np.pi/6,
+            1, 1, 1,
+            .1, .1, .1,
+            .005, .005, .005,
+            .05, .05, .05])
+        self.iekf = IEKF(constants, State.identity(), init_cov)
+
+        self.x_pub = rospy.Publisher('/pose/x_pos', Float64, queue_size=1)
+        self.y_pub = rospy.Publisher('/pose/y_pos', Float64, queue_size=1)
         self.heave_pub = rospy.Publisher('/pose/heave', Float64, queue_size=1)
         self.yaw_pub = rospy.Publisher('/pose/yaw', Float64, queue_size=1)
         self.pitch_pub = rospy.Publisher('/pose/pitch', Float64, queue_size=1)
         self.roll_pub = rospy.Publisher('/pose/roll', Float64, queue_size=1) 
-        self.x_pub = rospy.Publisher('/pose/x_pos', Float64, queue_size=1)
-        self.y_pub = rospy.Publisher('/pose/y_pos', Float64, queue_size=1)
+
         rospy.Subscriber('/dvl/raw_data', Dvl, self.dvl_callback)   
         rospy.Subscriber('/depth/raw_depth', Float32, self.raw_depth_callback)
         rospy.Subscriber('/mavros/imu/data', Imu, self.imu_callback)
+
         rospy.Service('localization/zero_state', Trigger, lambda msg: self.handle_reset())
 
     def handle_reset(self):
