@@ -3,7 +3,10 @@ import numpy as np
 import numpy.typing as npt
 from scipy.linalg import expm, block_diag
 import constants
+<<<<<<< HEAD
 from mrobosub_lib.lib import Node
+=======
+>>>>>>> iekf
 # from mrobosub_msgs import IMUMessageType, DVLMessageType, DepthMessageType # type: ignore
 import rospy # type: ignore
 from time import time
@@ -105,6 +108,7 @@ def calc_right_invariant_error(state: State):
 
 def change_of_basis(basis: np.ndarray, value: np.ndarray) -> np.ndarray:
     return basis @ value @ basis.T
+<<<<<<< HEAD
 class IEKF:
 
     def __init__(self, initial_state: State, init_cov: np.ndarray) -> None:
@@ -123,6 +127,27 @@ class IEKF:
     def adj_xb(self) -> np.ndarray:
         return block_diag(calc_adjoint(self.pred_state), np.eye(6))
 
+=======
+
+
+class IEKF:
+    def __init__(self, initial_state: State, init_cov: np.ndarray) -> None:
+        self.pred_state = initial_state
+        
+        self.pred_cov = init_cov
+        self.pred_acc_bias = np.zeros((3,))
+        self.pred_gyro_bias = np.zeros((3,))
+
+        self.pred_biased_acc = np.zeros((3,))
+        self.pred_biased_gyro = np.zeros((3,))
+
+        self.last_imu_time = 0.
+
+    @property
+    def adj_xb(self) -> np.ndarray:
+        return block_diag(calc_adjoint(self.pred_state), np.eye(6))
+
+>>>>>>> iekf
     def predict(self) -> State:
         return self.pred_state
 
