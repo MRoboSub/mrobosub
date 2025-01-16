@@ -10,7 +10,7 @@ add_message_files(
     FILES 
     HydrophoneAngle.msg
     HeadingRequest.msg
-    iekf.msg
+    Iekf.msg
     Dvl.msg
     Imu.msg
 )

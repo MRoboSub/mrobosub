@@ -1,15 +1,10 @@
-from typing import TypeAlias, Literal, Annotated
+from typing import Literal
+from typing_extensions import TypeAlias, Annotated
 import numpy as np
 import numpy.typing as npt
 from scipy.linalg import expm, block_diag
 import constants
-<<<<<<< HEAD
-from mrobosub_lib.lib import Node
-=======
->>>>>>> iekf
-# from mrobosub_msgs import IMUMessageType, DVLMessageType, DepthMessageType # type: ignore
 import rospy # type: ignore
-from time import time
 
 Vec3: TypeAlias = Annotated[npt.NDArray[np.float64], Literal[3]]
 Mat3x3: TypeAlias = Annotated[npt.NDArray[np.float64], Literal[3, 3]]
@@ -108,26 +103,6 @@ def calc_right_invariant_error(state: State):
 
 def change_of_basis(basis: np.ndarray, value: np.ndarray) -> np.ndarray:
     return basis @ value @ basis.T
-<<<<<<< HEAD
-class IEKF:
-
-    def __init__(self, initial_state: State, init_cov: np.ndarray) -> None:
-        self.pred_state = initial_state
-        
-        self.pred_cov = init_cov
-        self.pred_acc_bias = np.zeros((3,))
-        self.pred_gyro_bias = np.zeros((3,))
-
-        self.pred_biased_acc = np.zeros((3,))
-        self.pred_biased_gyro = np.zeros((3,))
-
-        self.last_imu_time = 0.
-
-    @property
-    def adj_xb(self) -> np.ndarray:
-        return block_diag(calc_adjoint(self.pred_state), np.eye(6))
-
-=======
 
 
 class IEKF:
@@ -147,23 +122,12 @@ class IEKF:
     def adj_xb(self) -> np.ndarray:
         return block_diag(calc_adjoint(self.pred_state), np.eye(6))
 
->>>>>>> iekf
     def predict(self) -> State:
         return self.pred_state
 
-    # def imu_callback(self, message: IMUMessageType):
-    #     self.add_imu_measurement(message.acceleration, message.gyro)
-
-    # def dvl_callback(self, message: DVLMessageType):
-    #     self.add_dvl_measurement(message.value)
-
-    # def depth_callback(self, message: DepthMessageType):
-    #     self.add_depth_measurement(message.value)
-
     def add_imu_measurement(self, measured_acc: Vec3, measured_gyro: Vec3):
-        curr_time = time()
-        # dt = curr_time - self.last_imu_time
-        dt = 0.05
+        curr_time = rospy.get_time()
+        dt = curr_time - self.last_imu_time
 
         # Add noise to IMU acceleration measurement
         # pred_acc_noise = np.zeros(3)

@@ -1,0 +1,9 @@
+float32 yaw
+float32 pitch
+float32 roll
+float32 twist_heave
+float32 twist_x
+float32 twist_y
+float32 pose_heave
+float32 pose_x
+float32 pose_y
