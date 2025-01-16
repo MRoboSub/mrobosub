@@ -10,6 +10,8 @@ add_message_files(
     FILES 
     HydrophoneAngle.msg
     HeadingRequest.msg
+    Dvl.msg
+    Imu.msg
 )
 
 add_service_files(
