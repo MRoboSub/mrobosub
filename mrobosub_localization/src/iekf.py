@@ -53,6 +53,11 @@ class State:
     def position(self, new_position: Vec3):
         self.matrix[:3, 4] = new_position
 
+    def __repr__(self) -> str:
+        return f'rotation={self.rotation}, ' \
+            f'velocity={self.velocity}, ' \
+            f'position={self.position}'
+
 def make_skew_sym(vec: Vec3) -> Mat3x3:
     return np.array([
         [0, -vec[2], vec[1]],
@@ -128,10 +133,7 @@ class IEKF:
     def predict(self) -> State:
         return self.pred_state
 
-    def add_imu_measurement(self, measured_acc: Vec3, measured_gyro: Vec3):
-        curr_time = rospy.get_time()
-        dt = curr_time - self.last_imu_time
-
+    def add_imu_measurement(self, measured_acc: Vec3, measured_gyro: Vec3, dt: float):
         # Add noise to IMU acceleration measurement
         # pred_acc_noise = np.zeros(3)
         pred_acc_noise = np.random.multivariate_normal(np.zeros(3), self.constants.cov_acc_noise)
@@ -163,8 +165,6 @@ class IEKF:
 
         phi = expm(calc_right_invariant_error(self.pred_state, self.constants) * dt)
         self.pred_cov = change_of_basis(phi, (self.pred_cov + change_of_basis(self.adj_xb, self.constants.state_covariance) * dt))
-
-        self.last_imu_time = curr_time
 
     def add_dvl_measurement(self, dvl_velocity: Vec3):
         # Add noise to measurement

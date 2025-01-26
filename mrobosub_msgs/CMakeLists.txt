@@ -13,6 +13,8 @@ add_message_files(
     Iekf.msg
     Dvl.msg
     Imu.msg
+    Magnetometer.msg
+    Barometer.msg
 )
 
 add_service_files(

@@ -5,42 +5,45 @@ from std_msgs.msg import Float64, Float32
 
 from mrobosub_lib.lib import Node, Param
 
-from typing import Optional, Final
+from typing import Tuple
+from typing_extensions import Annotated, Literal, TypeAlias
 
 from std_srvs.srv import Trigger
-from geometry_msgs.msg import Quaternion
-from sensor_msgs.msg import Imu, Dvl, Iekf
+from mrobosub_msgs.msg import Imu, Dvl, Iekf
 
-from tf.transformations import euler_from_quaternion, quaternion_from_euler
+from tf.transformations import euler_from_matrix
+from math import degrees
 
 import constants
 from iekf import IEKF, State
 
 import numpy as np
-from math import degrees
+import numpy.typing as npt
+
+Mat3x3: TypeAlias = Annotated[npt.NDArray[np.float64], Literal[3, 3]]
+
+def decompose_matrix(matrix: Mat3x3) -> Tuple[float, float, float]:
+    yaw, pitch, roll = euler_from_matrix(matrix, 'rzyx')
+    return degrees(yaw), degrees(pitch), degrees(roll)
 
 class StateEstimation(Node):
     """
     Subscribers
-    - /depth/raw_depth
     - /imu/data
+    - /dvl/translational_data
+    - /depth/raw_depth
     """
 
     """
     Publishers
+    - /pose/x
+    - /pose/y
     - /pose/heave
     - /pose/yaw
     - /pose/pitch
     - /pose/roll
+    - /pose
     """
-    # pid_params: PIDParams
-
-    heave_offset = None
-    yaw_offset = None
-    pitch_offset = None
-    roll_offset = None
-
-    orientation = None
 
     def __init__(self):
         super().__init__('localization')
@@ -50,7 +53,8 @@ class StateEstimation(Node):
             .1, .1, .1,
             .005, .005, .005,
             .05, .05, .05])
-        self.iekf = IEKF(constants, State.identity(), init_cov)
+        self.iekf = IEKF(constants.DefaultConstants(), State.identity(), init_cov)
+        self.zero_state = State.identity()
 
         self.x_pub = rospy.Publisher('/pose/x_pos', Float64, queue_size=1)
         self.y_pub = rospy.Publisher('/pose/y_pos', Float64, queue_size=1)
@@ -58,80 +62,60 @@ class StateEstimation(Node):
         self.yaw_pub = rospy.Publisher('/pose/yaw', Float64, queue_size=1)
         self.pitch_pub = rospy.Publisher('/pose/pitch', Float64, queue_size=1)
         self.roll_pub = rospy.Publisher('/pose/roll', Float64, queue_size=1) 
+        self.pose_pub = rospy.Publisher('/pose', Iekf, queue_size=1)
 
-        rospy.Subscriber('/dvl/raw_data', Dvl, self.dvl_callback)   
-        rospy.Subscriber('/depth/raw_depth', Float32, self.raw_depth_callback)
-        rospy.Subscriber('/mavros/imu/data', Imu, self.imu_callback)
+        rospy.Subscriber('/dvl/translational_data', Dvl, self.dvl_callback)   
+        rospy.Subscriber('/depth/raw_depth', Float32, self.depth_callback)
+        rospy.Subscriber('/imu/data', Imu, self.imu_callback)
 
-        rospy.Service('localization/zero_state', Trigger, lambda msg: self.handle_reset())
+        rospy.Service('localization/zero_state', Trigger, lambda _msg: self.handle_reset())
 
     def handle_reset(self):
-        previous_offsets = f'{self.heave_offset=}, {self.yaw_offset=}, {self.pitch_offset=}, {self.roll_offset=}'
+        previous_state = f'{self.iekf.predict()=}'
+        self.zero_state = self.iekf.predict()
+        self.publish_state()
+        return [True, previous_state]
 
-        self.heave_offset = None
-        self.yaw_offset = None
-        self.pitch_offset = None
-        self.roll_offset = None
+    def imu_callback(self, msg: Imu):
+        acc = np.array([msg.linAccA, msg.linAccB, msg.linAccC])
+        gyro = np.array([msg.angVelA, msg.angVelB, msg.angVelC])
 
-        self.heave_pub.publish(0)
-        self.yaw_pub.publish(0)
-        self.pitch_pub.publish(0)
-        self.roll_pub.publish(0)
-
-        return [True, previous_offsets]
-
-    def raw_depth_callback(self, raw_depth: Float32):
-        if self.heave_offset is None:
-            self.heave_offset = raw_depth.data
-        self.iekf_class.add_depth_measurement(raw_depth.data)
-        self.publish_state() 
-
-    def imu_callback(self, msg):
-
-        orientation = msg.orientation
-
-        quaternion = [
-            orientation.x,
-            orientation.y, 
-            orientation.z, 
-            orientation.w
-        ]
-        euler = euler_from_quaternion(quaternion)
-        
-        if self.yaw_offset is None:
-            self.yaw_offset = degrees(-euler[2])
-            self.pitch_offset = degrees(-euler[1])
-            self.roll_offset = degrees(euler[0])
-
-        yaw = degrees(-euler[2]) - self.yaw_offset
-        pitch = degrees(-euler[1]) - self.pitch_offset
-        roll = degrees(euler[0]) - self.roll_offset
-
-        self.iekf_class.add_imu_measurement() #input should be measured acceleration and gyro (Imu.linear_acceleration ?)
-        state = self.iekf_class.predict()
+        self.iekf.add_imu_measurement(acc, gyro, msg.dt)
         self.publish_state()
 
     def dvl_callback(self, msg: Dvl):
-        dvl_velocity = #array of x,y,z velocity components
-        self.iekf_class.add_dvl_measurement(dvl_velocity)
+        vel = np.array([msg.velocityA, msg.velocityB, msg.velocityC])
+        self.iekf.add_dvl_measurement(vel)
         self.publish_state()
 
+    def depth_callback(self, raw_depth: Float32):
+        self.iekf.add_depth_measurement(raw_depth.data)
+        self.publish_state() 
 
     def publish_state(self):
-        state = self.iefk_class.predict()
-        updated_yaw, updated_pitch, updated_roll = calculate_euler_angles_from_rotation_matrix(state.rotation)
-        self.yaw_pub.publish(updated_yaw)
-        self.pitch_pub.publish(updated_pitch) 
-        self.roll_pub.publish(updated_roll) 
-        self.heave_pub(state.position[2])
-        self.x_pub.publish(state.position[0])
-        self.y_pub.publish(state.position[1])
+        state = self.iekf.predict()
+        yaw, pitch, roll = decompose_matrix(self.zero_state.rotation.T @ state.rotation)
+        relative_state = Iekf(
+            yaw = yaw % 360,
+            pitch = pitch % 360,
+            roll = roll % 360,
+            twist_x = state.velocity[0],
+            twist_y = state.velocity[1],
+            twist_heave = state.velocity[2],
+            pose_x = state.position[0] - self.zero_state.position[0],
+            pose_y = state.position[1] - self.zero_state.position[1],
+            pose_heave = state.position[2] - self.zero_state.position[2],
+        )
+        self.yaw_pub.publish(relative_state.yaw)
+        self.pitch_pub.publish(relative_state.pitch)
+        self.roll_pub.publish(relative_state.roll)
+        self.x_pub.publish(relative_state.pose_x)
+        self.y_pub.publish(relative_state.pose_y)
+        self.heave_pub.publish(relative_state.pose_heave)
+        self.pose_pub.publish(relative_state)
 
     def run(self):
         rospy.spin()
-
-    def cleanup(self):
-        pass
 
 if __name__ == '__main__':
     StateEstimation().run()
