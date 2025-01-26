@@ -27,7 +27,7 @@ class Zed(ControlLoopNode):
 
     def open_capture(self):
         self.cap = cv2.VideoCapture(self.device_path)
-        subprocess.call('v4l2-ctl -d /dev/video4 -c white_balance_temperature_auto=0 -c hue_auto=0', shell=True)
+        subprocess.call('v4l2-ctl -d /dev/zed2 -c white_balance_temperature_auto=0 -c hue_auto=0', shell=True)
 
     def close_capture(self):
         self.cap.release()
