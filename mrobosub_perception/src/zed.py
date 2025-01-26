@@ -49,9 +49,8 @@ class Zed(ControlLoopNode):
     
     def crop(self, frame):
         left, right, top, bottom = 130, 50, 40, 60
-        # frame[:,:left] = frame[:,-right:] = frame[:top,:] = frame[-bottom:,:] = [255,0,0]
-        cropped = frame[top:-bottom, left:-right]
-        return cropped
+        frame[:,:left] = frame[:,-right:] = frame[:top,:] = frame[-bottom:,:] = [255,0,0]
+        return frame
 
     def loop(self):
         if not self.on: return
