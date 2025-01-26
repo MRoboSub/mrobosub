@@ -1,15 +1,44 @@
+from typing import Protocol
 import numpy as np
+import numpy.typing as npt
 from scipy.linalg import block_diag
 from scipy.spatial.transform import Rotation
 
-imuHz = 20
-GRAVITY = np.array([0, 0, -9.81])
+class Constants(Protocol):
+    imu_hz: float
+    gravity: npt.NDArray
+
+    std_acc_noise: float
+    std_acc_bias_noise: float
+    std_gyro_noise: float
+    std_gyro_bias_noise: float
+
+    cov_acc_noise: npt.NDArray
+    cov_acc_bias_noise: npt.NDArray
+    cov_gyro_noise: npt.NDArray
+    cov_gyro_bias_noise: npt.NDArray
+
+    state_covariance: npt.NDArray
+
+    std_dvl_noise: float
+    cov_dvl_noise: npt.NDArray
+    dvl_translation: npt.NDArray
+    dvl_rotation: npt.NDArray
+
+    std_depth_noise: float
+    cov_depth_noise: npt.NDArray
+    depth_translation: npt.NDArray
+
+    measurement_covariance: npt.NDArray
+
+imu_hz = 20
+gravity = np.array([0, 0, -9.81])
 
 # IMU
-std_acc_noise = 20 * 10**-6 * 9.8 * np.sqrt(imuHz)
-std_acc_bias_noise = 0.0001 * np.sqrt(imuHz)  # See https://arxiv.org/pdf/1402.5450.pdf
-std_gyro_noise = 0.005 * np.pi / 180 * np.sqrt(imuHz)
-std_gyro_bias_noise = 0.000618 * 8 / 18 * np.sqrt(imuHz)
+std_acc_noise = 20 * 10**-6 * 9.8 * np.sqrt(imu_hz)
+std_acc_bias_noise = 0.0001 * np.sqrt(imu_hz)  # See https://arxiv.org/pdf/1402.5450.pdf
+std_gyro_noise = 0.005 * np.pi / 180 * np.sqrt(imu_hz)
+std_gyro_bias_noise = 0.000618 * 8 / 18 * np.sqrt(imu_hz)
 
 cov_acc_noise = np.eye(3) * (std_acc_noise**2)
 cov_acc_bias_noise = np.eye(3) * (std_acc_bias_noise**2)
