@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
         const auto data = reinterpret_cast<const pimu_t*>(_data->ptr);
 
         mrobosub_msgs::Imu msg;
-        const auto div = 1.0f/data->dt
+        const auto div = 1.0f/data->dt;
         msg.time = data->time;
         msg.linAccA = data->vel[0] * div;
         msg.linAccB = data->vel[1] * div;
