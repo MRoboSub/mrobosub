@@ -54,7 +54,7 @@ class MoveToXY(TimedState):
         PIO.set_target_pose_x(self.target_x)
         PIO.set_target_pose_y(self.target_y)
         
-        desired_angle = PIO.calculate_angle_to_global_position()
+        desired_angle = PIO.calculate_yaw_to_target()
         PIO.set_target_pose_yaw(desired_angle)
 
         if not PIO.is_yaw_within_threshold(self.yaw_threshold):
@@ -67,7 +67,7 @@ class MoveToXY(TimedState):
         if self._reached_angle:
             if not PIO.is_magnitude_within_threshold(self.magnitude_threshold):
                 self.timer = rospy.get_time()
-                error = self.kP * PIO.calculate_x_y_magnitude()
+                error = self.kP * PIO.calculate_distance_to_target()
                 heave = min(error, self.max_heave) 
                 PIO.set_target_twist_heave(heave)
             

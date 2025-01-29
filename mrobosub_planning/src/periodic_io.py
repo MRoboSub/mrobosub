@@ -1,4 +1,4 @@
-from math import atan2, sqrt
+import math
 import rosgraph
 import rospy
 from std_msgs.msg import Float64, Bool, Int32
@@ -71,7 +71,7 @@ class PIO:
     
     @classmethod
     def is_magnitude_within_threshold(cls, threshold: float) -> float:
-        magnitude: float = cls.calculate_x_y_magnitude()
+        magnitude: float = cls.calculate_distance_to_target()
         return magnitude <= threshold
 
     @classmethod
@@ -79,22 +79,19 @@ class PIO:
         return abs(cls.TargetPose.heave - cls.Pose.heave) <= threshold
     
     @classmethod
-    def calculate_angle_to_global_position(cls) -> float:
-        # v1 = <x = /pose/x, y = /pose/y> is the current position 
-        # v2 = <target_x,    target_y> is the current position 
+    def calculate_yaw_to_target(cls) -> float:
         # the direction vector to the target d = v2 - v1
         # the angle to this would be arctan(dy / dx)
-        dx: float = cls.TargetPose.x - cls.Pose.x
-        dy: float = cls.TargetPose.y - cls.Pose.y
+        dx = cls.TargetPose.x - cls.Pose.x
+        dy = cls.TargetPose.y - cls.Pose.y
 
-        return atan2(dy, dx)
+        return math.atan2(dy, dx) * 180 / math.pi
     
     @classmethod
-    def calculate_x_y_magnitude(cls) -> float:
-        dx: float = cls.TargetPose.x - cls.Pose.x
-        dy: float = cls.TargetPose.y - cls.Pose.y
-        return sqrt(dx**2 + dy**2)
-
+    def calculate_distance_to_target(cls) -> float:
+        dx = cls.TargetPose.x - cls.Pose.x
+        dy = cls.TargetPose.y - cls.Pose.y
+        return math.sqrt(dx**2 + dy**2)
 
 
     # @classmethod
