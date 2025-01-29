@@ -1,9 +1,9 @@
 float32 time
-float32 velocityA
-float32 velocityB
-float32 velocityC
-float32 thetaA
-float32 thetaB
-float32 thetaC
+float32 linAccA
+float32 linAccB
+float32 linAccC
+float32 angVelA
+float32 angVelB
+float32 angVelC
 float32 dt
 
