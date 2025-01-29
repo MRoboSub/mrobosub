@@ -1,3 +1,6 @@
 [submodule "mrobosub_perception/yolov5"]
 	path = mrobosub_perception/yolov5
 	url = https://github.com/ultralytics/yolov5
+[submodule "mrobosub_localization/inertial-sense-sdk"]
+	path = mrobosub_localization/inertial-sense-sdk
+	url = https://github.com/inertialsense/inertial-sense-sdk.git
