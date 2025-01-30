@@ -1,3 +1,4 @@
+import math
 import rosgraph
 import rospy
 from std_msgs.msg import Float64, Bool, Int32
@@ -28,11 +29,15 @@ class PIO:
         yaw = 0.0
         heave = 0.0
         roll = 0.0
+        x = 0.0
+        y = 0.0
 
     class TargetPose:
         yaw = 0.0
         heave = 0.0
         roll = 0.0
+        x = 0.0
+        y = 0.0
 
     buoy_collision = False
 
@@ -63,10 +68,31 @@ class PIO:
     @classmethod
     def is_yaw_within_threshold(cls, threshold: float) -> float:
         return abs(angle_error(cls.TargetPose.yaw, cls.Pose.yaw)) <= threshold
+    
+    @classmethod
+    def is_magnitude_within_threshold(cls, threshold: float) -> float:
+        magnitude: float = cls.calculate_distance_to_target()
+        return magnitude <= threshold
 
     @classmethod
     def is_heave_within_threshold(cls, threshold: float) -> float:
         return abs(cls.TargetPose.heave - cls.Pose.heave) <= threshold
+    
+    @classmethod
+    def calculate_yaw_to_target(cls) -> float:
+        # the direction vector to the target d = v2 - v1
+        # the angle to this would be arctan(dy / dx)
+        dx = cls.TargetPose.x - cls.Pose.x
+        dy = cls.TargetPose.y - cls.Pose.y
+
+        return math.atan2(dy, dx) * 180 / math.pi
+    
+    @classmethod
+    def calculate_distance_to_target(cls) -> float:
+        dx = cls.TargetPose.x - cls.Pose.x
+        dy = cls.TargetPose.y - cls.Pose.y
+        return math.sqrt(dx**2 + dy**2)
+
 
     # @classmethod
     # def set_absolute_heading(cls, heading):
@@ -87,6 +113,16 @@ class PIO:
     def set_target_pose_roll(cls, target_roll: float) -> None:
         cls._target_pose_roll_pub.publish(target_roll)
         cls.TargetPose.roll = target_roll
+    
+    @classmethod
+    def set_target_pose_x(cls, target_x: float) -> None:
+        cls._target_pose_x_pub.publish(target_x)
+        cls.TargetPose.x = target_x
+
+    @classmethod
+    def set_target_pose_y(cls, target_y: float) -> None:
+        cls._target_pose_y_pub.publish(target_y)
+        cls.TargetPose.y = target_y
 
     @classmethod
     def set_target_twist_roll(cls, override_roll: float) -> None:
@@ -243,6 +279,14 @@ class PIO:
             PIO.Pose.roll = msg.data
 
         @staticmethod
+        def x_callback(msg: Float64) -> None:
+            PIO.Pose.x = msg.data
+        
+        @staticmethod
+        def y_callback(msg: Float64) -> None:
+            PIO.Pose.y = msg.data
+       
+        @staticmethod
         def collision_callback(msg: Bool) -> None:
             PIO.buoy_collision = msg.data
 
@@ -250,12 +294,16 @@ class PIO:
     rospy.Subscriber("/pose/yaw", Float64, Callbacks.yaw_callback)
     rospy.Subscriber("/pose/heave", Float64, Callbacks.heave_callback)
     rospy.Subscriber("/pose/roll", Float64, Callbacks.roll_callback)
+    rospy.Subscriber("/pose/x", Float64, Callbacks.x_callback)
+    rospy.Subscriber("/pose/y", Float64, Callbacks.y_callback)
     rospy.Subscriber("/collision/collision", Bool, Callbacks.collision_callback)
 
     # Publishers
     _target_pose_heave_pub = rospy.Publisher("/target_pose/heave", Float64, queue_size=1)
     _target_pose_yaw_pub = rospy.Publisher("/target_pose/yaw", Float64, queue_size=1)
     _target_pose_roll_pub = rospy.Publisher("/target_pose/roll", Float64, queue_size=1)
+    _target_pose_x_pub = rospy.Publisher("/target_pose/x", Float64, queue_size=1)
+    _target_pose_y_pub = rospy.Publisher("/target_pose/y", Float64, queue_size=1)
 
     _target_twist_yaw_pub = rospy.Publisher("/target_twist/yaw", Float64, queue_size=1)
     _target_twist_roll_pub = rospy.Publisher("/target_twist/roll", Float64, queue_size=1)
