@@ -46,9 +46,20 @@ class MoveToXY(TimedState):
     class TimedOut(NamedTuple):
         pass
     
+    target_x:             float = 0.0
+    target_y:             float = 0.0
+    magnitude_threshold:  float = 0.1
+    yaw_threshold:        float = 2.0
+    settle_time:          float = 1.0   # should we use a separate angle settle time and position settle time
+    timeout:              float = 20.0
+    
+    kP:                   float = 0.01  # this is the coefficient of the proportional term in PID
+    max_heave:            float = 0.3
+
     def __init__(self, prev_outcome: NamedTuple):
         super().__init__(prev_outcome)
         self.timer = rospy.get_time()
+        self._reached_angle = False
     
     def handle_if_not_timedout(self) -> Optional[NamedTuple]:
         PIO.set_target_pose_x(self.target_x)
@@ -79,18 +90,6 @@ class MoveToXY(TimedState):
     
     def handle_once_timedout(self) -> NamedTuple:
         return self.TimedOut()
-
-    target_x:             float = 0.0
-    target_y:             float = 0.0
-    magnitude_threshold:  float = 0.1
-    yaw_threshold:        float = 2.0
-    settle_time:          float = 1.0   # should we use a separate angle settle time and position settle time
-    timeout:              float = 20.0
-    
-    kP:                   float = 0.01  # this is the coefficient of the proportional term in PID
-    max_heave:            float = 0.3
-    
-    _reached_angle:       bool  = False
 
 
 class Stop(State):
