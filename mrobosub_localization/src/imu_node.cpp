@@ -40,13 +40,14 @@ int main(int argc, char** argv) {
         const auto data = reinterpret_cast<const pimu_t*>(_data->ptr);
 
         mrobosub_msgs::Imu msg;
+        const auto div = 1.0f/data->dt;
         msg.time = data->time;
-        msg.velocityA = data->vel[0];
-        msg.velocityB = data->vel[1];
-        msg.velocityC = data->vel[2];
-        msg.thetaA = data->theta[0];
-        msg.thetaB = data->theta[1];
-        msg.thetaC = data->theta[2];
+        msg.linAccA = data->vel[0] * div;
+        msg.linAccB = data->vel[1] * div;
+        msg.linAccC = data->vel[2] * div;
+        msg.angVelA = data->theta[0] * div;
+        msg.angVelB = data->theta[1] * div;
+        msg.angVelC = data->theta[2] * div;
         msg.dt = data->dt;
         pub.publish(msg);
     });
