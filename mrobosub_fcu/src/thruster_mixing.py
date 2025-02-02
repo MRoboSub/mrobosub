@@ -1,12 +1,22 @@
-from tf.transformations import rotation_from_euler
+from tf.transformations import euler_matrix
 import numpy as np
+from math import radians
 
-THRUSTER_YAW = [-45, 45, 45, -45, 0, 0, 0, 0]
-THRUSTER_PITCH = [0, 0, 0, 0, 90, 90, 90, 90]
-THRUSTER_SURGE = [0.2921, 0.2921, -0.2921, -0.2921, 0.127, 0.127, -0.127, -0.127]
-THRUSTER_SWAY = [26.67, -26.67, 26.67, -26.67, 26.67, -26.67, 26.67, -26.67]
-THRUSTER_TRANSLATIONS = np.array([THRUSTER_SURGE, THRUSTER_SWAY, [0.] * 8])
+THRUSTERS_YAW = map(radians, [-45, 45, 45, -45, 0, 0, 0, 0])
+THRUSTERS_PITCH = map(radians, [0, 0, 0, 0, 90, 90, 90, 90])
+THRUSTERS_SURGE = [0.2921, 0.2921, -0.2921, -0.2921, 0.127, 0.127, -0.127, -0.127]
+THRUSTERS_SWAY = [0.2667, -0.2667, 0.2667, -0.2667, 0.2667, -0.2667, 0.2667, -0.2667]
+THRUSTERS_TRANSLATIONS = np.array([THRUSTERS_SURGE, THRUSTERS_SWAY, [0.] * 8]).T
+THRUSTER_MAX_FORCE = 0.25
 
-THRUSTER_ROTATIONS = np.array([rotation_from_euler(yaw, pitch, 0.0, 'rzyx') for yaw, pitch in zip(THRUSTER_YAW, THRUSTER_PITCH)])
-THRUSTER_FORCE = THRUSTER_ROTATIONS @ np.array([1., 0., 0.])[:, None, None]
-THRUSTER_TORQUE = np.cross(THRUSTER_TRANSLATIONS, THRUSTER_FORCE)
+THRUSTERS_ROTATIONS = np.array([euler_matrix(yaw, pitch, 0.0, 'rzyx')[:3, :3] for yaw, pitch in zip(THRUSTERS_YAW, THRUSTERS_PITCH)])
+THRUSTERS_FORCE = (THRUSTERS_ROTATIONS @ np.array([THRUSTER_MAX_FORCE, 0., 0.])[None, :, None]).squeeze()
+THRUSTERS_TORQUE = np.cross(THRUSTERS_TRANSLATIONS, THRUSTERS_FORCE)
+THRUSTER_ALLOCATION_MATRIX = np.hstack((THRUSTERS_FORCE, THRUSTERS_TORQUE))
+INV_TAM = np.linalg.pinv(THRUSTER_ALLOCATION_MATRIX)
+
+np.set_printoptions(suppress=True, precision=3)
+print(f'{THRUSTERS_ROTATIONS=}')
+print(f'{THRUSTERS_FORCE=}')
+print(f'{THRUSTERS_TORQUE=}')
+print(f'{INV_TAM=}')
