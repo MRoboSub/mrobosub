@@ -75,24 +75,101 @@ class PathFinding:
 
         return path
 
-    #simple heuristic for now
     def h_cost(self, current, goal):
-        return abs(current.x - goal.x) + abs(current.y - goal.y)
+        h_cost = 0.0;
+        hor_cost = 1;
+        dia_cost = np.sqrt(2);
+
+        dx = abs(current.x - goal.x);
+        dy = abs(current.y - goal.y);
+        h_cost = hor_cost * (dx + dy) + (dia_cost - 2 * hor_cost) * min(dx, dy);
+        
+        return h_cost
     
-    #simple g cost for now
+    #simple g cost for now. 
+    #REVIEW - do we need g_cost? hueristic alone should be fine
     #TODO - complete gcost
-    def g_cost(self, current, start):
+    def g_cost(self, current, start, distances, params):
+        nearestObstDist = distances(current.x, current.y) #TODO - implement distances
+        hor_cost = 1;
+        dia_cost = np.sqrt(2);
+        g_cost = current.g_cost;
+        dx = abs(current.x - start.x);
+        dy = abs(current.y - start.y);
+
+        if (dx == 1 and dy == 1):
+            g_cost += dia_cost;
+        else:
+            g_cost += hor_cost;
+
+        
         return abs(current.x - start.x) + abs(current.y - start.y)
+    
+    def getNeighbors(self, current, distanceGrid):
+        xDeltas = [-1, 0, 1, -1, 1, -1, 0, 1]
+        yDeltas = [0, 0, 1, -1, 1, -1, -1, 1]
+        neighbors = []
+        for i in range(8):
+            x = current.x + xDeltas[i]
+            y = current.y + yDeltas[i]
+            if distanceGrid.isCellInGrid(x, y):
+                neighbors.append(distanceGrid.cells_[x, y])
+
+        #TODO - implement getNeighbors
+        return neighbors
     
     #TODO - complete extract_node_path
     def extract_node_path(self, goalNode, startNode):
-        path = {}
-        return path
-    
-    #TODO - complete prune_node_path
-    def prune_node_path(self, path):
+        path = []
+        path.append(goalNode)
+        while goalNode != startNode:
+            goalNode = goalNode.getParent()
+            path.append(goalNode)
+        
+        path.reverse()
         return path
     
     #TODO - complete extract_pose_path
     def extract_pose_path(self, path, distanceGrid):
+        new_path = []
+        i = 0
+        for node in path:
+            delta_y, delta_x, theta = 0, 0, 0
+            cur = grid_position_to_global_position(node.x, node.y, distanceGrid)
+
+            if (i == 0):
+                delta_y = cur.y
+                delta_x = cur.x
+                i += 1
+            
+            else:
+                delta_y = cur.y - new_path[i-1].y
+                delta_x = cur.x - new_path[i-1].x
+            
+            theta = np.arctan2(delta_y, delta_x)
+            #TODO - instead of pushing nodes, I should make a separate 
+            # pose class and keep them separate. || or, I could make the node contain both the pose and the cell
+            new_path.append(nd.Node([cur.x, cur.y, theta])) # add new node to list using pose
+            
         return path
+    
+    # REVIEW - this may lead to a slow path, so maybe make an alternative pruning method
+    def prune_node_path(self, path):
+        new_path = []
+        new_path.append(path[0])
+        for i in range(0, len(path) - 2):
+            slope2, slope1, dx1, dx1, dx2, dy2 = 0, 0, 0, 0, 0, 0
+            while path[i+2] != path[path.length]:
+                dx2 = np.abs(path[i].x - path[i+2].x)
+                dy2 = np.abs(path[i].y - path[i+2].y)
+                dx1 = np.abs(path[i].x - path[i+1].x)
+                dy1 = np.abs(path[i].y - path[i+1].y)
+                slope2 = dy2 / dx2
+                slope1 = dy1 / dx1
+
+                if slope1 != slope2:
+                    new_path.append(path[i+1])
+                    break
+                elif path[i+2] == path[path.length]:
+                    new_path.append(path[i+2])
+                    break

@@ -5,12 +5,15 @@ class Node:
     #inialize length and width in inches
     def __init__(self, location):
         self.location = location
+        self.x = location[1]
+        self.y = location[0]
         self.type = None
         self.parent = None
         self.occupancy = 0
         self.g_cost = 0
         self.h_cost = 0
         self.f_cost = 0
+        
 
     def setTargetType(self,type):
         self.type = type 
@@ -33,8 +36,4 @@ class Node:
     
     def getCost(self):
         return self.f_cost
-    
-    #TODO - make getNeighbors to find surrounding child nodes
-    def getNeighbors(self):
-        neighbors = []
-        
+ 
