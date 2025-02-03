@@ -22,10 +22,12 @@ THRUSTERS_TRANSLATIONS = np.array([THRUSTERS_SURGE, THRUSTERS_SWAY, [0.0] * 8]).
 THRUSTER_MAX_FORCE = 1.0
 
 SUB_FRAME = np.diag([1, -1, -1])
-THRUSTERS_ROTATIONS = np.array([
-    euler_matrix(yaw, pitch, 0.0, "rzyx")[:3, :3] @ SUB_FRAME
-    for yaw, pitch in zip(THRUSTERS_YAW, THRUSTERS_PITCH)
-])
+THRUSTERS_ROTATIONS = np.array(
+    [
+        euler_matrix(yaw, pitch, 0.0, "rzyx")[:3, :3] @ SUB_FRAME
+        for yaw, pitch in zip(THRUSTERS_YAW, THRUSTERS_PITCH)
+    ]
+)
 
 THRUSTERS_FORCE = (
     THRUSTERS_ROTATIONS @ np.array([THRUSTER_MAX_FORCE, 0.0, 0.0])[None, :, None]
@@ -50,7 +52,7 @@ RATE = 100  # hz
 
 class ThrusterMixing(Node):
     def __init__(self) -> None:
-        super().__init__('thruster_mixing')
+        super().__init__("thruster_mixing")
         self.wrench = {dof: 0 for dof in DOFS}
         self.wrench_subs = {
             dof: rospy.Subscriber(
@@ -62,7 +64,8 @@ class ThrusterMixing(Node):
             rospy.Publisher(f"/motor_output/{i}", Float64, queue_size=1)
             for i in range(NUM_MOTORS)
         ]
-        self.all_motor_pub = rospy.Publisher('/motor_output', MotorState, queue_size=1)
+        self.all_motor_pub = rospy.Publisher("/motor_output", MotorState, queue_size=1)
+        self.scale_pub = rospy.Publisher("/motor_output/scale", Float64, queue_size=1)
 
     def run(self):
         self.timer = rospy.Timer(rospy.Duration.from_sec(1.0 / RATE), self.update)
@@ -75,14 +78,29 @@ class ThrusterMixing(Node):
 
         return callback
 
+    def motor_force_curve(self, demanded_force: float) -> float:
+        """Returns required motor output power for a certain demanded torque"""
+        # This should probably be nonlinear somehow?
+        return demanded_force / THRUSTER_MAX_FORCE
+
     def update(self, _timer_event: Any):
         wrench = np.array(list(self.wrench.values()))
-        output = INV_TAM @ wrench
+        forces = INV_TAM @ wrench
+
+        max_demand = np.max(forces)
+        scale = 1.0
+        if max_demand > THRUSTER_MAX_FORCE:
+            scale = 1.0 / max_demand
+        forces *= scale
+        self.scale_pub.publish(scale)
+
         state = MotorState()
-        for i, value in enumerate(output):
-            self.motor_pubs[i].publish(value)
-            setattr(state, f"motor{i}", value)
+        for i, force in enumerate(forces):
+            output = self.motor_force_curve(force)
+            self.motor_pubs[i].publish(output)
+            setattr(state, f"motor{i}", output)
         self.all_motor_pub.publish(state)
+
 
 if __name__ == "__main__":
     ThrusterMixing().run()
