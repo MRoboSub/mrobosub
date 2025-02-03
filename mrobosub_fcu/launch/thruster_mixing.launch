@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="mrobosub_fcu" type="thruster_mixing.py" name="thruster_mixing" output="screen"/>
+</launch>
