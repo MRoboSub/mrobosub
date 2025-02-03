@@ -89,10 +89,10 @@ class ThrusterMixing(Node):
         forces = INV_TAM @ wrench
 
         max_demand = np.max(forces)
-        scale = 1.0
         if max_demand > THRUSTER_MAX_FORCE:
-            scale = 1.0 / max_demand
-        forces *= scale
+            forces /= max_demand
+        scaled = THRUSTER_ALLOCATION_MATRIX.T @ forces
+        scale = np.nan_to_num(np.mean(scaled[wrench != 0] / wrench[wrench != 0]), nan=1.)
         self.scale_pub.publish(scale)
 
         state = MotorState()
