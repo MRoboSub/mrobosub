@@ -80,7 +80,8 @@ class ThrusterMixing(Node):
 
     def motor_force_curve(self, demanded_force: float) -> float:
         """Returns required motor output power for a certain demanded torque"""
-        # This should probably be nonlinear somehow?
+        # This should probably be nonlinear according to the datasheet or experimental data
+        # https://bluerobotics.com/store/thrusters/t100-t200-thrusters/t200-thruster-r2-rp/
         return demanded_force / THRUSTER_MAX_FORCE
 
     def update(self, _timer_event: Any):
