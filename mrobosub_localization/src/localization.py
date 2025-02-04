@@ -9,7 +9,7 @@ from typing import Tuple
 from typing_extensions import Annotated, Literal, TypeAlias
 
 from std_srvs.srv import Trigger
-from mrobosub_msgs.msg import Imu, Dvl, Iekf
+from mrobosub_msgs.msg import Imu, Dvl, Iekf as IekfMsg
 
 from tf.transformations import euler_from_matrix
 from math import degrees
@@ -95,7 +95,7 @@ class StateEstimation(Node):
     def publish_state(self):
         state = self.iekf.predict()
         yaw, pitch, roll = decompose_matrix(self.zero_state.rotation.T @ state.rotation)
-        relative_state = Iekf(
+        relative_state = IekfMsg(
             yaw = yaw % 360,
             pitch = pitch % 360,
             roll = roll % 360,
