@@ -17,7 +17,7 @@ THRUSTERS_PITCH = map(radians, [0, 0, 0, 0, 90, 90, 90, 90])
 # meters
 THRUSTERS_SURGE = [0.2921, 0.2921, -0.2921, -0.2921, 0.127, 0.127, -0.127, -0.127]
 THRUSTERS_SWAY = [0.267, -0.267, 0.267, -0.267, 0.267, -0.267, 0.267, -0.267]
-THRUSTERS_TRANSLATIONS = np.array([THRUSTERS_SURGE, THRUSTERS_SWAY, [0.0] * 8]).T
+THRUSTERS_TRANSLATION = np.array([THRUSTERS_SURGE, THRUSTERS_SWAY, [0.0] * 8]).T
 # newtons
 THRUSTER_MAX_FORCE = 1.0
 
@@ -32,7 +32,7 @@ THRUSTERS_ROTATIONS = np.array(
 THRUSTERS_FORCE = (
     THRUSTERS_ROTATIONS @ np.array([THRUSTER_MAX_FORCE, 0.0, 0.0])[None, :, None]
 ).squeeze()
-THRUSTERS_TORQUE = np.cross(THRUSTERS_TRANSLATIONS, THRUSTERS_FORCE)
+THRUSTERS_TORQUE = np.cross(THRUSTERS_TRANSLATION, THRUSTERS_FORCE)
 THRUSTER_ALLOCATION_MATRIX = np.hstack((THRUSTERS_FORCE, THRUSTERS_TORQUE))
 INV_TAM = np.linalg.pinv(THRUSTER_ALLOCATION_MATRIX).T
 
@@ -82,7 +82,8 @@ class ThrusterMixing(Node):
         """Returns required motor output power for a certain demanded torque"""
         # This should probably be nonlinear according to the datasheet or experimental data
         # https://bluerobotics.com/store/thrusters/t100-t200-thrusters/t200-thruster-r2-rp/
-        return demanded_force / THRUSTER_MAX_FORCE
+        raw_demand = demanded_force / THRUSTER_MAX_FORCE
+        return np.clip(raw_demand, -1.0, 1.0)
 
     def update(self, _timer_event: Any):
         wrench = np.array(list(self.wrench.values()))
