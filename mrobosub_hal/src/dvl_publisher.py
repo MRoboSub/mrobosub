@@ -56,7 +56,7 @@ class DVLPublisher():
                 self.pub_translational.publish(trans_response)
                 rate.sleep()
             except socket.timeout:
-                print("DVL UDP connection timing out, no data recieved from DVL")
+                # print("DVL UDP connection timing out, no data recieved from DVL")
         sock.close()
 
 if __name__ == "__main__":
