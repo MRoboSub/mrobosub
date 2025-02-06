@@ -23,18 +23,18 @@ class PathFinding:
     def pose_callback(self, msg):
         self.sub_pos = [msg.x_pos, msg.y_pos]
 
-    #find path using basic A* algorithm    
+    #find path using basic heuristic  
     def findPath(self, startNode, goalNode, distanceGrid, searchParams):
-        path = {}
+        path = []
         path_found = False
         open_list = []
-        #TODO - configure the heap to use the lowest f_cost first
+        #TODO - configure the heap to use the lowest cost first
         hq.heappush(open_list, startNode)
 
         closed_list = []
         nextNode = None;
 
-        while not open_list == False:
+        while len(open_list) > 0:
             nextNode = open_list.pop()
             closed_list.append(nextNode)
 
@@ -43,30 +43,30 @@ class PathFinding:
                 path_found = True
                 break
             
-            #TODO - implement getNeighbors
             childNodes = nextNode.getNeighbors()
             for child in childNodes:
                 if child != None:
                     #check if child is in closed list or open list
                     if child not in closed_list and child not in open_list:
                         #undiscovered node, compute new cost and add to open list
-                        #TODO - put setParent into the expand node function
-                        child.setCost(self.g_cost(child, startNode), self.h_cost(child, goalNode))
+                        child.setCost(self.h_cost(child, goalNode))
                         hq.heappush(open_list, child)
                    
-                    #if child is in one of the lists, check if the cost is less than the current cost and update
+                    #if child is in one of the lists, check if the new cost is less than the current cost and update
                     else:
                         #discovered node, check if the cost is less than the current cost
-                        new_cost = self.g_cost(child, startNode) + self.h_cost(child, goalNode)
-                        if new_cost > child.getCost():
-                            child.setCost(self.g_cost(child, startNode), self.h_cost(child, goalNode))
+                        new_cost = self.h_cost(child, goalNode)
+                        if new_cost < child.getCost():
+                            child.setCost(self.h_cost(child, goalNode))
                             child.setParent(nextNode)
 
-        print("path has been found")
 
         if(path_found == True):
+            # extract the path from the goal node to the start node using the parents
             nodePath = self.extract_node_path(goalNode, startNode)
+            # prune the path to remove unnecessary nodes and increase speed
             prunedNodePath = self.prune_node_path(nodePath)
+            # convert the node path to a pose path, which can then be used with PIDs 
             path = self.extract_pose_path(prunedNodePath, distanceGrid)
     
         else:
@@ -86,24 +86,6 @@ class PathFinding:
         
         return h_cost
     
-    #simple g cost for now. 
-    #REVIEW - do we need g_cost? hueristic alone should be fine
-    #TODO - complete gcost
-    def g_cost(self, current, start, distances, params):
-        nearestObstDist = distances(current.x, current.y) #TODO - implement distances
-        hor_cost = 1;
-        dia_cost = np.sqrt(2);
-        g_cost = current.g_cost;
-        dx = abs(current.x - start.x);
-        dy = abs(current.y - start.y);
-
-        if (dx == 1 and dy == 1):
-            g_cost += dia_cost;
-        else:
-            g_cost += hor_cost;
-
-        
-        return abs(current.x - start.x) + abs(current.y - start.y)
     
     def getNeighbors(self, current, distanceGrid):
         xDeltas = [-1, 0, 1, -1, 1, -1, 0, 1]
@@ -113,9 +95,9 @@ class PathFinding:
             x = current.x + xDeltas[i]
             y = current.y + yDeltas[i]
             if distanceGrid.isCellInGrid(x, y):
-                neighbors.append(distanceGrid.cells_[x, y])
-
-        #TODO - implement getNeighbors
+                child = nd.Node([x, y])
+                child.setParent(current)
+                neighbors.append(child)
         return neighbors
     
     #TODO - complete extract_node_path
@@ -135,21 +117,21 @@ class PathFinding:
         i = 0
         for node in path:
             delta_y, delta_x, theta = 0, 0, 0
-            cur = grid_position_to_global_position(node.x, node.y, distanceGrid)
+            current = grid_position_to_global_position(node.x, node.y, distanceGrid)
 
             if (i == 0):
-                delta_y = cur.y
-                delta_x = cur.x
+                delta_y = current[1] #y
+                delta_x = current[0] #x
                 i += 1
             
             else:
-                delta_y = cur.y - new_path[i-1].y
-                delta_x = cur.x - new_path[i-1].x
+                delta_y = current[1] - new_path[i-1].y
+                delta_x = current[0] - new_path[i-1].x
             
             theta = np.arctan2(delta_y, delta_x)
             #TODO - instead of pushing nodes, I should make a separate 
             # pose class and keep them separate. || or, I could make the node contain both the pose and the cell
-            new_path.append(nd.Node([cur.x, cur.y, theta])) # add new node to list using pose
+            new_path.append(nd.Node([current[0], current[1], theta])) # add new node to list using pose
             
         return path
     
@@ -173,3 +155,13 @@ class PathFinding:
                 elif path[i+2] == path[path.length]:
                     new_path.append(path[i+2])
                     break
+
+def grid_position_to_global_position(x, y, distanceGrid):
+    global_x = distanceGrid.globalOrigin_[0] + x / distanceGrid.cellsPerInch_
+    global_y = distanceGrid.globalOrigin_[1] + y / distanceGrid.cellsPerInch_
+    return [global_x, global_y]
+
+def global_position_to_grid_position(x, y, distanceGrid):
+    grid_x = (x - distanceGrid.globalOrigin_[0]) * distanceGrid.cellsPerInch_
+    grid_y = (y - distanceGrid.globalOrigin_[1]) * distanceGrid.cellsPerInch_
+    return [grid_x, grid_y]

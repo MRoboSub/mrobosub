@@ -10,9 +10,7 @@ class Node:
         self.type = None
         self.parent = None
         self.occupancy = 0
-        self.g_cost = 0
-        self.h_cost = 0
-        self.f_cost = 0
+        self.cost = 0
         
 
     def setTargetType(self,type):
@@ -29,11 +27,9 @@ class Node:
     def setParent(self, parent):
         self.parent = parent
 
-    def setCost(self, g, h):
-        self.g_cost = g
-        self.h_cost = h
-        self.f_cost = g + h
+    def setCost(self, h):
+        self.cost = h
     
     def getCost(self):
-        return self.f_cost
+        return self.cost
  
