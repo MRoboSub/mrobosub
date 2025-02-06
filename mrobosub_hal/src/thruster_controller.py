@@ -8,7 +8,12 @@ from serial import Serial
 
 class ThrusterController(Node):
     def __init__(self):
-        # self.get_errors() #just to clear errors at the start
+        super().__init__('thruster_controller')
+        print("LAUNCHED NODE HOORAY")
+        self.port = "usb-Polulu_Corporation_Polulu_Mini_Maestro_12-Channel_USB_Server_Controller_00467345-if00"
+        self.port = '/dev/ttyACM0'
+        self.get_errors() #just to clear errors at the start
+        
         rospy.Subscriber('/motor_pwm/0', Float64, self.motor_0_callback)
         rospy.Subscriber('/motor_pwm/1', Float64, self.motor_1_callback)
         rospy.Subscriber('/motor_pwm/2', Float64, self.motor_2_callback)
@@ -17,6 +22,7 @@ class ThrusterController(Node):
         rospy.Subscriber('/motor_pwm/5', Float64, self.motor_5_callback)
         rospy.Subscriber('/motor_pwm/6', Float64, self.motor_6_callback)
         rospy.Subscriber('/motor_pwm/7', Float64, self.motor_7_callback)
+        rospy.spin()
     
     # pwm_raw ranges from -1 to 1
     # pwm_val ranges from 4000 to 8000
@@ -31,6 +37,8 @@ class ThrusterController(Node):
         pwm_val: int = self.convert_pwm_signal(pwm_raw)
         if pwm_val == -1:
             return -1
+    
+        print(f"PWM VAL {pwm_val}")
         
         if(motor<0 or motor >7):
             print(f"Thruster Controller Error: Motor number {motor} out of range (should be [0-7])")
@@ -39,7 +47,7 @@ class ThrusterController(Node):
         LSBs = pwm_val % (2**7)
         MSBs = int(pwm_val/(2**7))
 
-        with Serial('/dev/ttyACM0') as s:
+        with Serial(self.port) as s:
             s.write(bytearray([0xAA, 0x0C, 0x04, motor, LSBs, MSBs]))
         
         return 0
@@ -70,9 +78,14 @@ class ThrusterController(Node):
 
     def get_errors(self):
         # gets errors from thruster controller hardware (which automatically clears the errors too)
-        with Serial('/dev/ttyACM0') as s:
+        with Serial(self.port) as s:
             s.write(bytearray([0xAA, 0x0C, 0x21]))
             error = s.read(2)
             print(f"Thruster Controller: error code = {error}") #TODO how does error code get formatteed when you print it?
 
 
+def main():
+    ThrusterController()
+
+if __name__ == "__main__":
+    main()
