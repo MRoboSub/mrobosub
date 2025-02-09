@@ -28,8 +28,8 @@ class PathFinding:
         path = []
         path_found = False
         open_list = []
-        #TODO - configure the heap to use the lowest cost first
         hq.heappush(open_list, startNode)
+        
 
         closed_list = []
         nextNode = None;

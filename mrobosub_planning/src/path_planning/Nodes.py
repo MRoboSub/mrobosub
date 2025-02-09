@@ -11,6 +11,8 @@ class Node:
         self.parent = None
         self.occupancy = 0
         self.cost = 0
+    def __lt__(self, other):
+        return self.cost < other.cost
         
 
     def setTargetType(self,type):
