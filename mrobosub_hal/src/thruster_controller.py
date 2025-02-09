@@ -9,9 +9,9 @@ from serial import Serial
 class ThrusterController(Node):
     def __init__(self):
         super().__init__('thruster_controller')
-        print("LAUNCHED NODE HOORAY")
-        self.port = "usb-Polulu_Corporation_Polulu_Mini_Maestro_12-Channel_USB_Server_Controller_00467345-if00"
-        self.port = '/dev/ttyACM0'
+        print("Launched thruster_controller node")
+        self.port = "/dev/serial/by-id/usb-Pololu_Corporation_Pololu_Mini_Maestro_12-Channel_USB_Servo_Controller_00467345-if00"
+        # self.port = '/dev/ttyACM0'
         self.get_errors() #just to clear errors at the start
         
         rospy.Subscriber('/motor_pwm/0', Float64, self.motor_0_callback)
@@ -38,18 +38,24 @@ class ThrusterController(Node):
         if pwm_val == -1:
             return -1
     
-        print(f"PWM VAL {pwm_val}")
+        print(f"Thruster controller: send pwm value {pwm_val} to motor {motor}")
         
         if(motor<0 or motor >7):
-            print(f"Thruster Controller Error: Motor number {motor} out of range (should be [0-7])")
+            print(f"Thruster Controller [ERROR]: motor number {motor} out of range (should be [0-7])")
             return -1
 
         LSBs = pwm_val % (2**7)
         MSBs = int(pwm_val/(2**7))
 
-        with Serial(self.port) as s:
-            s.write(bytearray([0xAA, 0x0C, 0x04, motor, LSBs, MSBs]))
-        
+        self.get_errors()
+        try:
+            with Serial(self.port) as s:
+                s.write(bytearray([0xAA, 0x0C, 0x04, motor, LSBs, MSBs]))
+        except:
+            self.get_errors() #giving it one more chance to clear errors, just in case (sometimes it's weird)
+            with Serial(self.port) as s:
+                s.write(bytearray([0xAA, 0x0C, 0x04, motor, LSBs, MSBs]))
+
         return 0
 
     def motor_0_callback(self, pwm_raw: Float64):
@@ -81,7 +87,10 @@ class ThrusterController(Node):
         with Serial(self.port) as s:
             s.write(bytearray([0xAA, 0x0C, 0x21]))
             error = s.read(2)
-            print(f"Thruster Controller: error code = {error}") #TODO how does error code get formatteed when you print it?
+            error_code = int.from_bytes(error, "little")
+            if(error_code != 0):
+                print(f"Thruster controller: error code = {error_code}")
+            # eg: error_code 16 means 00010000 which is the 5th error bit set
 
 
 def main():
