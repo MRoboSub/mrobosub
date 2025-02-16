@@ -3,9 +3,10 @@
 import rospy
 
 from mrobosub_lib.lib import Node
-from std_msgs.msg import Float64
+from std_msgs.msg import Float32
 from serial import Serial
 from typing_extensions import Callable
+from mrobosub_msgs.msg import MotorState
 
 NUM_MOTORS = 8
 
@@ -17,24 +18,19 @@ class ThrusterController(Node):
         # self.port = '/dev/ttyACM0'
         self.get_errors() # clear errors at the start
         
-        self.motor_subs = {
-           i: rospy.Subscriber(
-               f"/motor_output/{i}", Float64, self.make_motor_callback(i)
-           )
-           for i in range(NUM_MOTORS)
-        }
+        self.motor_sub = rospy.Subscriber('/motor_output', MotorState, self.motor_callback)
         rospy.spin()
     
     # pwm_raw ranges from -1 to 1
     # pwm_val ranges from 4000 to 8000
-    def convert_pwm_signal(self, pwm_raw: Float64) -> int:
+    def convert_pwm_signal(self, pwm_raw: Float32) -> int:
         if(pwm_raw.data<-1 or pwm_raw.data>1):
             print(f"Thruster Controller [ERROR]: PWM value {pwm_raw} out of range (should be in [-1, 1])")
             return -1
         return int((pwm_raw.data * 2000)+6000)
     
     # in case of invalid PWM or motor number parameters, does not send any updated signal to the motor controller and returns -1
-    def send_signal(self, motor: int, pwm_raw: Float64) -> int:
+    def send_signal(self, motor: int, pwm_raw: Float32) -> int:
         pwm_val: int = self.convert_pwm_signal(pwm_raw)
         if pwm_val == -1:
             return -1
@@ -59,11 +55,10 @@ class ThrusterController(Node):
 
         return 0
 
-    def make_motor_callback(self, i) -> Callable[[Float64], None]:
-        def motor_callback(pwm_raw: Float64):
-            self.send_signal(i, pwm_raw)
-
-        return motor_callback
+    def motor_callback(self, msg: MotorState):
+        for i in range(NUM_MOTORS):
+            motor_name = f"motor{i}"
+            self.send_signal(i, msg.motor_name)
 
     def get_errors(self):
         # gets errors from thruster controller hardware (which automatically clears the errors too)
