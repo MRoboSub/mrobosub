@@ -10,23 +10,112 @@ from typing_extensions import Callable
 
 from mrobosub_lib.lib import Node
 from mrobosub_msgs.msg import MotorState
+from dataclasses import dataclass
 
-# degrees
-THRUSTERS_YAW = map(radians, [-45, 45, 45, -45, 0, 0, 0, 0])
-THRUSTERS_PITCH = map(radians, [0, 0, 0, 0, 90, 90, 90, 90])
-# meters
-THRUSTERS_SURGE = [0.2921, 0.2921, -0.2921, -0.2921, 0.127, 0.127, -0.127, -0.127]
-THRUSTERS_SWAY = [0.267, -0.267, 0.267, -0.267, 0.267, -0.267, 0.267, -0.267]
-THRUSTERS_TRANSLATION = np.array([THRUSTERS_SURGE, THRUSTERS_SWAY, [0.0] * 8]).T
-# newtons
-THRUSTER_MAX_FORCE = 1.0
+
+@dataclass
+class ThrusterDescriptor:
+    id: int
+    yaw: float  # degrees
+    pitch: float  # degrees
+    roll: float  # degrees
+    surge: float  # meters
+    sway: float  # meters
+    heave: float  # meters
+
+
+THRUSTER_MAX_FORCE = 1.0  # newtons
+CORNER_THRUSTER_SURGE = 0.2921
+CENTER_THRUSTER_SURGE = 0.127
+THRUSTER_SWAY = 0.267
+THRUSTERS = [
+    ThrusterDescriptor(
+        id=0,
+        yaw=-45,
+        pitch=0,
+        roll=0,
+        surge=CORNER_THRUSTER_SURGE,
+        sway=THRUSTER_SWAY,
+        heave=0,
+    ),
+    ThrusterDescriptor(
+        id=1,
+        yaw=45,
+        pitch=0,
+        roll=0,
+        surge=CORNER_THRUSTER_SURGE,
+        sway=-THRUSTER_SWAY,
+        heave=0,
+    ),
+    ThrusterDescriptor(
+        id=2,
+        yaw=45,
+        pitch=0,
+        roll=0,
+        surge=-CORNER_THRUSTER_SURGE,
+        sway=THRUSTER_SWAY,
+        heave=0,
+    ),
+    ThrusterDescriptor(
+        id=3,
+        yaw=-45,
+        pitch=0,
+        roll=0,
+        surge=-CORNER_THRUSTER_SURGE,
+        sway=-THRUSTER_SWAY,
+        heave=0,
+    ),
+    ThrusterDescriptor(
+        id=4,
+        yaw=0,
+        pitch=90,
+        roll=0,
+        surge=CENTER_THRUSTER_SURGE,
+        sway=THRUSTER_SWAY,
+        heave=0,
+    ),
+    ThrusterDescriptor(
+        id=5,
+        yaw=0,
+        pitch=90,
+        roll=0,
+        surge=CENTER_THRUSTER_SURGE,
+        sway=-THRUSTER_SWAY,
+        heave=0,
+    ),
+    ThrusterDescriptor(
+        id=6,
+        yaw=0,
+        pitch=90,
+        roll=0,
+        surge=-CENTER_THRUSTER_SURGE,
+        sway=THRUSTER_SWAY,
+        heave=0,
+    ),
+    ThrusterDescriptor(
+        id=7,
+        yaw=0,
+        pitch=90,
+        roll=0,
+        surge=-CENTER_THRUSTER_SURGE,
+        sway=-THRUSTER_SWAY,
+        heave=0,
+    ),
+]
+THRUSTERS.sort(key=lambda thruster: thruster.id)
 
 SUB_FRAME = np.diag([1, -1, -1])
 THRUSTERS_ROTATIONS = np.array(
     [
-        euler_matrix(yaw, pitch, 0.0, "rzyx")[:3, :3] @ SUB_FRAME
-        for yaw, pitch in zip(THRUSTERS_YAW, THRUSTERS_PITCH)
+        euler_matrix(radians(thruster.yaw), radians(thruster.pitch), 0.0, "rzyx")[
+            :3, :3
+        ]
+        @ SUB_FRAME
+        for thruster in THRUSTERS
     ]
+)
+THRUSTERS_TRANSLATION = np.array(
+    [[thruster.surge, thruster.sway, thruster.heave] for thruster in THRUSTERS]
 )
 
 THRUSTERS_FORCE = (
@@ -38,6 +127,7 @@ INV_TAM = np.linalg.pinv(THRUSTER_ALLOCATION_MATRIX).T
 
 np.set_printoptions(suppress=True, precision=3)
 print(f"{THRUSTERS_ROTATIONS=}")
+print(f"{THRUSTERS_TRANSLATION=}")
 print(f"{THRUSTERS_FORCE=}")
 print(f"{THRUSTERS_TORQUE=}")
 print(f"{INV_TAM=}")
@@ -93,7 +183,9 @@ class ThrusterMixing(Node):
         if max_demand > THRUSTER_MAX_FORCE:
             forces /= max_demand
         scaled = THRUSTER_ALLOCATION_MATRIX.T @ forces
-        scale = np.nan_to_num(np.mean(scaled[wrench != 0] / wrench[wrench != 0]), nan=1.)
+        scale = np.nan_to_num(
+            np.mean(scaled[wrench != 0] / wrench[wrench != 0]), nan=1.0
+        )
         self.scale_pub.publish(scale)
 
         state = MotorState()
