@@ -150,11 +150,7 @@ class ThrusterMixing(Node):
             )
             for dof in DOFS
         }
-        self.motor_pubs = [
-            rospy.Publisher(f"/motor_output/{i}", Float64, queue_size=1)
-            for i in range(NUM_MOTORS)
-        ]
-        self.all_motor_pub = rospy.Publisher("/motor_output", MotorState, queue_size=1)
+        self.motor_pub = rospy.Publisher("/motor_output", MotorState, queue_size=1)
         self.scale_pub = rospy.Publisher("/motor_output/scale", Float64, queue_size=1)
 
     def run(self):
@@ -191,9 +187,8 @@ class ThrusterMixing(Node):
         state = MotorState()
         for i, force in enumerate(forces):
             output = self.motor_force_curve(force)
-            self.motor_pubs[i].publish(output)
             setattr(state, f"motor{i}", output)
-        self.all_motor_pub.publish(state)
+        self.motor_pub.publish(state)
 
 
 if __name__ == "__main__":
