@@ -64,7 +64,7 @@ class ThrusterController(Node):
         if not self.emergency_stop:
             for i in range(NUM_MOTORS):
                 motor_name = f"motor{i}"
-                self.send_signal(i, msg.motor_name)
+                self.send_signal(i, msg.motor_name) # not sure if this works
 
     def get_errors(self):
         # gets errors from thruster controller hardware (which automatically clears the errors too)
