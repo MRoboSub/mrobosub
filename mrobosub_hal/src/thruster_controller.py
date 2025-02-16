@@ -5,6 +5,9 @@ import rospy
 from mrobosub_lib.lib import Node
 from std_msgs.msg import Float64
 from serial import Serial
+from typing_extensions import Callable
+
+NUM_MOTORS = 8
 
 class ThrusterController(Node):
     def __init__(self):
@@ -12,23 +15,21 @@ class ThrusterController(Node):
         print("Launched thruster_controller node")
         self.port = "/dev/serial/by-id/usb-Pololu_Corporation_Pololu_Mini_Maestro_12-Channel_USB_Servo_Controller_00467345-if00"
         # self.port = '/dev/ttyACM0'
-        self.get_errors() #just to clear errors at the start
+        self.get_errors() # clear errors at the start
         
-        rospy.Subscriber('/motor_pwm/0', Float64, self.motor_0_callback)
-        rospy.Subscriber('/motor_pwm/1', Float64, self.motor_1_callback)
-        rospy.Subscriber('/motor_pwm/2', Float64, self.motor_2_callback)
-        rospy.Subscriber('/motor_pwm/3', Float64, self.motor_3_callback)
-        rospy.Subscriber('/motor_pwm/4', Float64, self.motor_4_callback)
-        rospy.Subscriber('/motor_pwm/5', Float64, self.motor_5_callback)
-        rospy.Subscriber('/motor_pwm/6', Float64, self.motor_6_callback)
-        rospy.Subscriber('/motor_pwm/7', Float64, self.motor_7_callback)
+        self.motor_subs = {
+           i: rospy.Subscriber(
+               f"/motor_output/{i}", Float64, self.make_motor_callback(i)
+           )
+           for i in range(NUM_MOTORS)
+        }
         rospy.spin()
     
     # pwm_raw ranges from -1 to 1
     # pwm_val ranges from 4000 to 8000
     def convert_pwm_signal(self, pwm_raw: Float64) -> int:
         if(pwm_raw.data<-1 or pwm_raw.data>1):
-            print(f"Thruster Controller Error: PWM value {pwm_raw} out of range (should be between -1 and 1 (both inclusive))")
+            print(f"Thruster Controller [ERROR]: PWM value {pwm_raw} out of range (should be in [-1, 1])")
             return -1
         return int((pwm_raw.data * 2000)+6000)
     
@@ -37,11 +38,9 @@ class ThrusterController(Node):
         pwm_val: int = self.convert_pwm_signal(pwm_raw)
         if pwm_val == -1:
             return -1
-    
-        print(f"Thruster controller: send pwm value {pwm_val} to motor {motor}")
         
-        if(motor<0 or motor >7):
-            print(f"Thruster Controller [ERROR]: motor number {motor} out of range (should be [0-7])")
+        if(motor<0 or motor >= NUM_MOTORS):
+            print(f"Thruster Controller [ERROR]: motor number {motor} out of range (should be in [0-{NUM_MOTORS-1}])")
             return -1
 
         LSBs = pwm_val % (2**7)
@@ -55,32 +54,16 @@ class ThrusterController(Node):
             self.get_errors() #giving it one more chance to clear errors, just in case (sometimes it's weird)
             with Serial(self.port) as s:
                 s.write(bytearray([0xAA, 0x0C, 0x04, motor, LSBs, MSBs]))
+        
+        print(f"Thruster controller: sent pwm value {pwm_val} to motor {motor}")
 
         return 0
 
-    def motor_0_callback(self, pwm_raw: Float64):
-        self.send_signal(0, pwm_raw)
-    
-    def motor_1_callback(self, pwm_raw: Float64):
-        self.send_signal(1, pwm_raw)
+    def make_motor_callback(self, i) -> Callable[[Float64], None]:
+        def motor_callback(pwm_raw: Float64):
+            self.send_signal(i, pwm_raw)
 
-    def motor_2_callback(self, pwm_raw: Float64):
-        self.send_signal(2, pwm_raw)
-
-    def motor_3_callback(self, pwm_raw: Float64):
-        self.send_signal(3, pwm_raw)
-
-    def motor_4_callback(self, pwm_raw: Float64):
-        self.send_signal(4, pwm_raw)
-
-    def motor_5_callback(self, pwm_raw: Float64):
-        self.send_signal(5, pwm_raw)
-
-    def motor_6_callback(self, pwm_raw: Float64):
-        self.send_signal(6, pwm_raw)
-
-    def motor_7_callback(self, pwm_raw: Float64):
-        self.send_signal(7, pwm_raw)
+        return motor_callback
 
     def get_errors(self):
         # gets errors from thruster controller hardware (which automatically clears the errors too)
