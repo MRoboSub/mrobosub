@@ -5,7 +5,6 @@ import rospy
 from mrobosub_lib.lib import Node
 from std_msgs.msg import Float32
 from serial import Serial
-from typing_extensions import Callable
 from mrobosub_msgs.msg import MotorState
 from std_srvs.srv import SetBool, SetBoolResponse
 
@@ -17,24 +16,18 @@ class ThrusterController(Node):
         print("Launched thruster_controller node")
         self.port = "/dev/serial/by-id/usb-Pololu_Corporation_Pololu_Mini_Maestro_12-Channel_USB_Servo_Controller_00467345-if00"
         # self.port = '/dev/ttyACM0'
+        self.emergency_stop = False
+        self.serial = Serial(self.port)
         self.get_errors() # clear errors at the start
         
         self.object_position_service = rospy.Service("emergency_stop_motors", SetBool, self.handle_emergency_stop)
-
         self.motor_sub = rospy.Subscriber('/motor_output', MotorState, self.motor_callback)
-        self.emergency_stop = False
         rospy.spin()
     
     def handle_emergency_stop(self, _):
         self.emergency_stop = True
         self.get_errors()
-        try:
-            with Serial(self.port) as s:
-                s.write(bytearray([0xAA, 0x0C, 0x22]))
-        except:
-            self.get_errors() #giving it one more chance to clear errors, just in case (sometimes it's weird)
-            with Serial(self.port) as s:
-                s.write(bytearray([0xAA, 0x0C, 0x22]))
+        self.serial.write(bytearray([0xAA, 0x0C, 0x22]))
         r = SetBoolResponse()
         r.success = True
         return r
@@ -61,13 +54,7 @@ class ThrusterController(Node):
         MSBs = int(pwm_val/(2**7))
 
         self.get_errors()
-        try:
-            with Serial(self.port) as s:
-                s.write(bytearray([0xAA, 0x0C, 0x04, motor, LSBs, MSBs]))
-        except:
-            self.get_errors() #giving it one more chance to clear errors, just in case (sometimes it's weird)
-            with Serial(self.port) as s:
-                s.write(bytearray([0xAA, 0x0C, 0x04, motor, LSBs, MSBs]))
+        self.serial.write(bytearray([0xAA, 0x0C, 0x04, motor, LSBs, MSBs]))
         
         print(f"Thruster controller: sent pwm value {pwm_val} to motor {motor}")
 
@@ -81,12 +68,11 @@ class ThrusterController(Node):
 
     def get_errors(self):
         # gets errors from thruster controller hardware (which automatically clears the errors too)
-        with Serial(self.port) as s:
-            s.write(bytearray([0xAA, 0x0C, 0x21]))
-            error = s.read(2)
-            error_code = int.from_bytes(error, "little")
-            if(error_code != 0):
-                print(f"Thruster controller: error code = {error_code}")
+        self.serial.write(bytearray([0xAA, 0x0C, 0x21]))
+        error = self.serial.read(2)
+        error_code = int.from_bytes(error, "little")
+        if(error_code != 0):
+            print(f"Thruster controller: error code = {error_code}")
             # eg: error_code 16 means 00010000 which is the 5th error bit set
 
 
