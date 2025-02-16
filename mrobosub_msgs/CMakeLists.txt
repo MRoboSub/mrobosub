@@ -12,6 +12,7 @@ add_message_files(
     HeadingRequest.msg
     Dvl.msg
     Imu.msg
+    MotorState.msg
 )
 
 add_service_files(
