@@ -38,6 +38,10 @@ class PIDInterface():
     def set_target(self, target):
         self.publisher_enable.publish(True)
         self.publisher_setpoint.publish(target)
+    
+    def set_target_twist(self, target):
+        self.publisher_enable.publish(True)
+        self.publisher_setpoint.publish(target)
 
     def disable(self):
         self.publisher_enable.publish(False)
