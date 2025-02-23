@@ -43,11 +43,6 @@ class Targets(enum.Enum):
 
 def load_yolo():
     # load model
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-    else:
-        device = torch.device("cpu")
-
     path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     yolo_path = os.path.join(path, 'yolov5')
 
@@ -99,15 +94,18 @@ class Node:
 
         self.bbox_pub = rospy.Publisher('/object_position/bbox', Image, queue_size=10)
 
+        self.always_run = rospy.myargv(sys.argv)[1] != "0" #input 1 for always_run to not have to do service calls always_run:=1
+
 
     def zed_callback(self, message):
         global img_seen_num, img_num
         recent_positions_local: List[Optional[ObjectPositionResponse]] = [None] * len(Targets)
 
-        if self.latest_request_time is None:
-            return
-        if rospy.get_time() - self.latest_request_time < TIME_THRESHOLD:
-        # if True:
+        should_run = self.always_run or \
+            (self.latest_request_time is not None
+                and rospy.get_time() - self.latest_request_time < TIME_THRESHOLD)
+
+        if should_run:
             start = time.time()
 
             # print("zed callback")

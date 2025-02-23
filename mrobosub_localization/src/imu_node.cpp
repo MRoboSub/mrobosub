@@ -40,18 +40,18 @@ int main(int argc, char** argv) {
         const auto data = reinterpret_cast<const pimu_t*>(_data->ptr);
 
         mrobosub_msgs::Imu msg;
-	msg.time = data->time;
+        msg.time = data->time;
         msg.velocityA = data->vel[0];
         msg.velocityB = data->vel[1];
         msg.velocityC = data->vel[2];
-	msg.thetaA = data->theta[0];
-	msg.thetaB = data->theta[1];
-	msg.thetaC = data->theta[2];
-	msg.dt = data->dt;
+        msg.thetaA = data->theta[0];
+        msg.thetaB = data->theta[1];
+        msg.thetaC = data->theta[2];
+        msg.dt = data->dt;
         pub.publish(msg);
     });
     if (!succ) {
-	return 1;
+        return 1;
     }
 
     while (ros::ok()) {
