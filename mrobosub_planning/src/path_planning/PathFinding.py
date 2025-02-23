@@ -1,3 +1,4 @@
+import math
 import Nodes as nd
 import numpy as np
 import heapq as hq
@@ -78,7 +79,7 @@ class PathFinding:
     def h_cost(self, current, goal):
         h_cost = 0.0;
         hor_cost = 1;
-        dia_cost = np.sqrt(2);
+        dia_cost = 2**0.5;
 
         dx = abs(current.x - goal.x);
         dy = abs(current.y - goal.y);
@@ -128,7 +129,7 @@ class PathFinding:
                 delta_y = current[1] - new_path[i-1].y
                 delta_x = current[0] - new_path[i-1].x
             
-            theta = np.arctan2(delta_y, delta_x)
+            math.atan2(delta_y, delta_x)
             #TODO - instead of pushing nodes, I should make a separate 
             # pose class and keep them separate. || or, I could make the node contain both the pose and the cell
             new_path.append(nd.Node([current[0], current[1], theta])) # add new node to list using pose
