@@ -25,24 +25,39 @@ class YawControlNode(Node):
     def __init__(self):
         super().__init__('heading_control')
         self.pid = PIDInterface("yaw_pid", self.pid_callback)
+        #REVIEW - Made twist_pid
+        self.twist_pid=PIDInterface("yaw_twist_pid", self.pid_callback)
         self.output_yaw_pub = rospy.Publisher('/output_wrench/yaw', Float64, queue_size=1)
+        #REVIEW - Added output_twist_yaw_pub
+        self.output_twist_yaw_pub = rospy.Publisher('/output_twist/yaw', Float64, queue_size=1)
         rospy.Subscriber('/target_pose/yaw', Float64, self.target_pose_yaw_callback)
         rospy.Subscriber('/pose/yaw', Float64, self.pose_yaw_callback)
+        #REVIEW - Added target_twist/yaw, twist/yaw
         rospy.Subscriber('/target_twist/yaw', Float64, self.target_twist_yaw_callback)
+        rospy.Subscriber('/twist/yaw', Float64, self.twist_yaw_callback)
 
         
     def target_pose_yaw_callback(self, target_pose: Float64):
         self.pid.set_target(target_pose.data)
 
+    #REVIEW - Added target_twist_yaw_callback
+    def target_twist_yaw_callback(self, target_twist_yaw: Float64):
+        self.output_twist_yaw_pub.publish(target_twist_yaw.data)
+    
     def pose_yaw_callback(self, pose: Float64):
         self.pid.set_current(pose.data)
 
-    def target_twist_yaw_callback(self, target_twist_yaw: Float64):
-        self.pid.disable()
-        self.output_yaw_pub.publish(target_twist_yaw.data)
+    #REVIEW - Added twist_yaw_callback
+    def twist_yaw_callback(self,twist):
+        self.twist_pid.set_current(twist.data)
+    
 
     def pid_callback(self, effort: float):
         self.output_yaw_pub.publish(effort)
+
+    #REVIEW - Added twist_pid_callback
+    def twist_pid_callback(self,effort):
+        self.output_twist_yaw_pub.publish(effort)
 
     def run(self): 
         rospy.spin()
