@@ -18,6 +18,7 @@ class PathFinding:
     """
     sub_pos = None
     def __init__(self):
+        #  Initialize with the x-pose and the y-pose from the ekf.
         rospy.Subscriber('/pose/x_pos', Float64, self.pose_callback)
         rospy.Subscriber('/pose/y_pos', Float64, self.pose_callback)
     
@@ -26,16 +27,28 @@ class PathFinding:
 
     #find path using basic heuristic  
     def findPath(self, startNode, goalNode, distanceGrid, searchParams):
+
+        # start by creating a new empty path, open list, and closed list. and setting path_found flag to false.
         path = []
-        path_found = False
         open_list = []
+        closed_list = []
+
+        # set path_found to false, nextNode to none, and push the start node to the openlist.
+        # Open list should be a priority queue, with nodes with the least cost being at the top.
+        path_found = False
+        nextNode = None
         hq.heappush(open_list, startNode)
         
 
-        closed_list = []
-        nextNode = None;
-
-        while len(open_list) > 0:
+        
+        # While the open list has nodes inside of it, we want to iterate through nodes and add them to the closed list, starting with the startNode.
+        # If the next node, which is popped from the top of the open list, is the goal node, we have found the path and we may break out of this loop after setting
+        # the path_found flag to true.
+        # If the next node is not the goal node, we then find its "child nodes," which can be seen in the getNeighbors function below. For each child node, we then
+        # Check if they are already in either of the lists. If they are already in one of the lists, and their current cost is lower than the cost already associated
+        # with the node, the cost should be updated and the parent should be changed to "nextNode". If undiscovered, compute the cost and add it to the open list to be 
+        # explored later. This while loop will run until the open list is empty or the goal_node is found.
+        while len(open_list) > 0 and path_found == False:
             nextNode = open_list.pop()
             closed_list.append(nextNode)
 
@@ -62,6 +75,8 @@ class PathFinding:
                             child.setParent(nextNode)
 
 
+        # If the path is found, we now wll extract the path, which can be seen in detail below. We will then prune the path,
+        # deleting any unnecesary nodes and increasing the possible speed. Finally, we will extract the pose path.
         if(path_found == True):
             # extract the path from the goal node to the start node using the parents
             nodePath = self.extract_node_path(goalNode, startNode)
@@ -76,6 +91,7 @@ class PathFinding:
 
         return path
 
+    # This is the function that calculates the cost of each node. The costs in our case can be determined by 
     def h_cost(self, current, goal):
         h_cost = 0.0;
         hor_cost = 1;
