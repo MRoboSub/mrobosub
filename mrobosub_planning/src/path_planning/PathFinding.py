@@ -1,3 +1,4 @@
+import array
 import math
 import Nodes as nd
 import numpy as np
@@ -91,8 +92,13 @@ class PathFinding:
 
         return path
 
-    # This is the function that calculates the cost of each node. The costs in our case can be determined by 
+    
     def h_cost(self, current, goal):
+        # This is the function that calculates the cost of each node. The costs in our case can be determined by using the equation
+        # cost = H x (dX+dY) + (D - 2 * H) x min(dx,dy), where:
+        # H is a horizontal cost constant, D is the diagnal cost constant, and dx,dy are the errors in the x and y direction. In this instance
+        # Because we want the cost to coorelate to the distance from the target, we set our costs to be 1 meter per cell in the horizontal direction, 
+        # and the diagnal cost to be sqrt(2), which is found using pythagoreans theorem.
         h_cost = 0.0;
         hor_cost = 1;
         dia_cost = 2**0.5;
@@ -103,10 +109,14 @@ class PathFinding:
         
         return h_cost
     
-    
+ 
     def getNeighbors(self, current, distanceGrid):
-        xDeltas = [-1, 0, 1, -1, 1, -1, 0, 1]
-        yDeltas = [0, 0, 1, -1, 1, -1, -1, 1]
+        # This function finds and stores all of the nodes surrounding the current node in an array. It does this by taking the "detlas" around the node,
+        # or the indices of each node on the map around the current node. One way of doing this is by setting x,y delta pair, which you can add to the 
+        # index of the current node. Once the index of a child node is found, we add the node to the array if it is confirmed that the node lies within the map.
+        # We then also set the parent of the child node to be the current node.        
+        xDeltas = [-1, 1, -1, 0, 1, -1, 0, 1]
+        yDeltas = [0, 0, -1, -1, -1, 1, 1, 1]
         neighbors = []
         for i in range(8):
             x = current.x + xDeltas[i]
@@ -119,6 +129,10 @@ class PathFinding:
     
     #TODO - complete extract_node_path
     def extract_node_path(self, goalNode, startNode):
+        # This function finds the actual path and puts it in order from start to finish. In this function, you start at the goal node 
+        # and find the path by getting the parent of the goal node, then the parent of the parent of the goal node, etc until the startNode is found.
+        # Add all of the goal nodes to the path array as you go, and reverse the order of the array to ensure the final path is from the start to the end.
+
         path = []
         path.append(goalNode)
         while goalNode != startNode:
@@ -130,6 +144,10 @@ class PathFinding:
     
     #TODO - complete extract_pose_path
     def extract_pose_path(self, path, distanceGrid):
+        # The purpose of this function is to convert from the node path to pose path, such that the paths are put in the real world from
+        # using x and y distance coordinates from a global start point. This coordinate frame is more useful for us because we can use the
+        # coordinates to find target directions and distances for PID control.
+         
         new_path = []
         i = 0
         for node in path:
@@ -145,14 +163,14 @@ class PathFinding:
                 delta_y = current[1] - new_path[i-1].y
                 delta_x = current[0] - new_path[i-1].x
             
-            math.atan2(delta_y, delta_x)
+            theta = math.atan2(delta_y, delta_x)
             #TODO - instead of pushing nodes, I should make a separate 
             # pose class and keep them separate. || or, I could make the node contain both the pose and the cell
             new_path.append(nd.Node([current[0], current[1], theta])) # add new node to list using pose
             
         return path
     
-    # REVIEW - this may lead to a slow path, so maybe make an alternative pruning method
+    # ! - this may lead to a slow path, refine this method to remove more nodes.
     def prune_node_path(self, path):
         new_path = []
         new_path.append(path[0])
