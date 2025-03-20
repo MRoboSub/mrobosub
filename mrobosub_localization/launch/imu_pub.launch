@@ -1,3 +1,0 @@
-<launch>
-  <node name="imu_pub" pkg="mrobosub_localization" type="imu_pub" output="screen"/>
-</launch>
