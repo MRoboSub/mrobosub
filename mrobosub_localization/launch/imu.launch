@@ -1,4 +1,4 @@
 <launch>
-  <arg name="port" default="/dev/serial/by-id/usb-STMicroelectronics_STM32_Virtual_ComPort_207336753430-if00"/>
-  <node name="imu" pkg="mrobosub_localization" type="imu_node" output="screen" args="$(arg port)"/>
+  <node name="imu" pkg="mrobosub_localization" type="imu.py" output="screen">
+  </node>
 </launch>
