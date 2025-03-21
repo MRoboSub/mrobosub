@@ -14,7 +14,6 @@ class IMU(Node):
         self.pimu_sub = rospy.Subscriber("/pimu", imu_msgs.PIMU, self.did_pimu_sub) # for DID_PIMU
         self.did_ins_pub = rospy.Publisher("/imu_INS", Imu_INS, queue_size=1)
         self.pimu_pub = rospy.Publisher("/imu_PIMU", Imu_PIMU, queue_size=1)
-        rospy.spin()
 
     def did_ins_callback(self, msg):
         self.did_ins_pub.publish(msg.theta)
@@ -29,8 +28,9 @@ class IMU(Node):
         
         self.pimu_pub.publish(m)
 
-def main():
-    IMU()
+    def run(self):
+        rospy.spin()
 
 if __name__ == "__main__":
-    main()
+    IMU().spin()
+
