@@ -1,8 +1,9 @@
-from umrsm import State
+from umrsm import State, Outcome
 from periodic_io import PIO
 import rospy
-from typing import NamedTuple, Optional, List, Union
+from typing import Optional, List, Union
 from abc import abstractmethod
+
 
 class TimedState(State):
     """base class for States which can be timed out.
@@ -11,21 +12,21 @@ class TimedState(State):
     override handle_once_timedout iff cleanup is needed after timeout
     """
 
-    def __init__(self, prev_outcome: NamedTuple):
+    def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
         self.start_time = rospy.get_time()
 
-    def handle(self) -> Optional[NamedTuple]:
+    def handle(self) -> Optional[Outcome]:
         if rospy.get_time() - self.start_time >= self.timeout:
             return self.handle_once_timedout()
         return self.handle_if_not_timedout()
 
     @abstractmethod
-    def handle_if_not_timedout(self) -> Optional[NamedTuple]:
+    def handle_if_not_timedout(self) -> Optional[Outcome]:
         pass
 
     @abstractmethod
-    def handle_once_timedout(self) -> NamedTuple:
+    def handle_once_timedout(self) -> Outcome:
         pass
 
     @property
@@ -47,12 +48,12 @@ class ForwardAndWait(State):
     surge_speed: float
     """
 
-    def __init__(self, prev_outcome: NamedTuple):
+    def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
         self.start_time = rospy.get_time()
         self.waiting = False
 
-    def handle(self) -> Optional[NamedTuple]:
+    def handle(self) -> Optional[Outcome]:
         if not self.waiting:
             PIO.set_target_twist_surge(self.surge_speed)
             PIO.set_target_pose_heave(self.target_heave)
@@ -70,11 +71,11 @@ class ForwardAndWait(State):
         return self.handle_unreached()
 
     @abstractmethod
-    def handle_reached(self) -> Optional[NamedTuple]:
+    def handle_reached(self) -> Optional[Outcome]:
         pass
 
     @abstractmethod
-    def handle_unreached(self) -> Optional[NamedTuple]:
+    def handle_unreached(self) -> Optional[Outcome]:
         pass
 
     @property
@@ -109,12 +110,12 @@ class DoubleTimedState(State):
     phase_two_time: float
     """
 
-    def __init__(self, prev_outcome: NamedTuple):
+    def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
         self.start_time = rospy.get_time()
         self.timed_out_first = False
 
-    def handle(self) -> Optional[NamedTuple]:
+    def handle(self) -> Optional[Outcome]:
         if not self.timed_out_first:
             outcome = self.handle_first_phase()
             if rospy.get_time() - self.start_time >= self.phase_one_time:
@@ -128,15 +129,15 @@ class DoubleTimedState(State):
         return outcome
 
     @abstractmethod
-    def handle_first_phase(self) -> Optional[NamedTuple]:
+    def handle_first_phase(self) -> Optional[Outcome]:
         pass
 
     @abstractmethod
-    def handle_second_phase(self) -> Optional[NamedTuple]:
+    def handle_second_phase(self) -> Optional[Outcome]:
         pass
 
     @abstractmethod
-    def handle_once_timedout(self) -> Optional[NamedTuple]:
+    def handle_once_timedout(self) -> Optional[Outcome]:
         pass
 
     @property
@@ -163,11 +164,11 @@ class TurnToYaw(TimedState):
     timeout: float
     """
 
-    def __init__(self, prev_outcome: NamedTuple):
+    def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
         self.timer = rospy.get_time()
 
-    def handle_if_not_timedout(self) -> Optional[NamedTuple]:
+    def handle_if_not_timedout(self) -> Optional[Outcome]:
         PIO.set_target_pose_yaw(self.target_yaw)
 
         if not PIO.is_yaw_within_threshold(self.yaw_threshold):
@@ -178,11 +179,11 @@ class TurnToYaw(TimedState):
 
         return self.handle_unreached()
 
-    def handle_unreached(self) -> Optional[NamedTuple]:
+    def handle_unreached(self) -> Optional[Outcome]:
         return None
 
     @abstractmethod
-    def handle_reached(self) -> Optional[NamedTuple]:
+    def handle_reached(self) -> Optional[Outcome]:
         pass
 
     @property
@@ -213,21 +214,21 @@ class AlignPathmarker(TimedState):
         pass
 
     @abstractmethod
-    def handle_no_measurements(self) -> NamedTuple:
+    def handle_no_measurements(self) -> Outcome:
         pass
 
     @abstractmethod
-    def handle_aligned(self) -> NamedTuple:
+    def handle_aligned(self) -> Outcome:
         pass
 
-    def __init__(self, prev_outcome: NamedTuple) -> None:
+    def __init__(self, prev_outcome: Outcome) -> None:
         super().__init__(prev_outcome)
         PIO.activate_bot_cam()
         self.last_known_angle: Optional[float] = None
         self.iter = 0
         self.measurements: List[float] = []
 
-    def handle_if_not_timedout(self) -> Union[NamedTuple, None]:
+    def handle_if_not_timedout(self) -> Union[Outcome, None]:
         PIO.set_target_twist_surge(0)
         self.iter += 1
         if self.iter < 50:

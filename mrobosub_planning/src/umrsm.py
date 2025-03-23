@@ -14,37 +14,76 @@ import warnings
 import rospy
 from std_msgs.msg import String
 from std_srvs.srv import Trigger, TriggerRequest
-from typing import NamedTuple
+from dataclasses import dataclass
+from typing_extensions import dataclass_transform
 
 STATE_TOPIC = "captain/current_state"
 SOFT_STOP_SERVICE = "captain/soft_stop"
 
 __all__ = (
-    "NamedTuple",
     "TransitionMap",
+    "Outcome",
+    "InitTransition",
+    "SoftStopTransition",
     "State",
     "StateMachine",
 )
 
 
-class InitTransition(NamedTuple):
+@dataclass_transform()
+class OutcomeMeta(type):
+    def __new__(cls, *args: Any, **kwargs: Any) -> "OutcomeMeta":
+        """
+        This removes the need to annotate all outcomes with @dataclass
+        """
+        return dataclass(super().__new__(cls, *args, **kwargs))
+
+    def __repr__(self) -> str:
+        if hasattr(self, "_state"):
+            return f"<outcome {self.__name__} of state {self._state.__name__}>"
+        return f"<outcome {self.__name__}>"
+
+
+class Outcome(metaclass=OutcomeMeta):
     pass
 
 
-class SoftStopTransition(NamedTuple):
+class InitTransition(Outcome):
+    pass
+
+
+class SoftStopTransition(Outcome):
     pass
 
 
 class StateMeta(type):
+    def __new__(cls, name: str, bases: tuple, dict_: dict) -> "StateMeta":
+        assert len(bases) <= 1, "States do not support multiple inheritance"
+        state = super().__new__(cls, name, bases, dict_)
+        outcomes = {}
+        for v in dict_.values():
+            if isinstance(v, type) and issubclass(v, Outcome):
+                outcomes[v.__name__] = v
+                v._state = state  # type: ignore
+        base_outcomes = getattr(state, "_outcomes", {})
+        inherited = base_outcomes.keys() - outcomes.keys()
+        for name in inherited:
+            base = base_outcomes[name]
+            subclass = type(name, (base,), {"_state": state})
+            outcomes[name] = subclass
+        state._outcomes = outcomes  # type: ignore
+        return state
+
     def _rendered_repr(self) -> str:
-        if not hasattr(self, '_param_overrides'):
-            return f'state {self.__name__}'
-        param_overrides = getattr(self, '_param_overrides')
-        params_str = ', '.join(f'{k}={v}' for k, v in param_overrides.items())
-        return f'state {self.__qualname__} with {params_str}'
+        if not hasattr(self, "_param_overrides"):
+            return f"state {self.__name__}"
+        param_overrides = getattr(self, "_param_overrides")
+        params_str = ", ".join(f"{k}={v}" for k, v in param_overrides.items())
+        return f"state {self.__qualname__} with {params_str}"
 
     def __repr__(self) -> str:
-        return f'<{self._rendered_repr()}>'
+        return f"<{self._rendered_repr()}>"
+
 
 class State(metaclass=StateMeta):
     """States contain logic that will be executed by the StateMachine.
@@ -53,13 +92,14 @@ class State(metaclass=StateMeta):
         can be accessed using self. Data that should be shared between calls of handle should be
         set as an instance variable.
     """
+
     _num_unexpected_params = 0
 
-    def __init__(self, prev_outcome: NamedTuple):
+    def __init__(self, prev_outcome: Outcome):
         self.prev_outcome = prev_outcome
 
     @abstractmethod
-    def handle(self) -> Optional[NamedTuple]:
+    def handle(self) -> Optional[Outcome]:
         """Contains the logic to be run for a particular state.
 
         Is called repeatedly for each iteration of the state, including the first one.
@@ -67,28 +107,29 @@ class State(metaclass=StateMeta):
         pass
 
     @classmethod
-    def is_valid_income_type(cls, outcome_type: Type[NamedTuple]) -> bool:
+    def is_valid_income_type(cls, outcome_type: Type[Outcome]) -> bool:
         return True
 
     @classmethod
-    def with_params(cls, **kwargs: Any) -> Type['State']:
+    def with_params(cls, **kwargs: Any) -> Type["State"]:
         num_unexpected = 0
         for k in kwargs:
             if not hasattr(cls, k):
                 warnings.warn(f"overriding parameter {k}, which is not defined on {cls}", stacklevel=2)
                 num_unexpected += 1
-        overrides: dict = getattr(cls, '_param_overrides', {}).copy()
+        overrides: dict = getattr(cls, "_param_overrides", {}).copy()
         overrides.update(kwargs)
-        kwargs['_param_overrides'] = overrides
-        kwargs['__module__'] = cls.__module__
-        kwargs['_num_unexpected_params'] = cls._num_unexpected_params + num_unexpected
+        kwargs["_param_overrides"] = overrides
+        kwargs["__module__"] = cls.__module__
+        kwargs["_num_unexpected_params"] = cls._num_unexpected_params + num_unexpected
         return type(cls.__name__, (cls,), kwargs)
 
     @classmethod
     def __repr__(cls) -> str:
-        return f'<instance of {cls._rendered_repr()}>'
+        return f"<instance of {cls._rendered_repr()}>"
 
-TransitionMap = Dict[Type[NamedTuple], Type[State]]
+
+TransitionMap = Dict[Type[Outcome], Type[State]]
 
 
 class StateMachine:
@@ -123,12 +164,12 @@ class StateMachine:
         self.stop_signal_recvd = True
         return True, type(self.current_state).__qualname__
 
-    def run(self) -> Optional[NamedTuple]:
+    def run(self, hz: int = 50) -> Optional[Outcome]:
         """Performs a run, beginning with the StartState and ending when it reaches StopState.
 
         Returns the Outcome from calling handle() on StopState.
         """
-        rate = rospy.Rate(50)
+        rate = rospy.Rate(hz)
         publisher = rospy.Publisher(STATE_TOPIC, String, queue_size=1)
         self.current_state = self.StartState(InitTransition())
         while type(self.current_state) != self.StopState:
