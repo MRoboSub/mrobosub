@@ -5,8 +5,6 @@ from Nodes import Node
 
 #TODO - Determine size of sub in order to make approporiate configuration space
 class OccupancyGrid:
-
-    
     
     #initialize the width and height in Inches
     def __init__(self, width, height, inchesPerCell, cellsPerInch, occupiedThreshold):

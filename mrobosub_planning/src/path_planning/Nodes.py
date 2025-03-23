@@ -35,3 +35,12 @@ class Node:
     def getCost(self):
         return self.cost
  
+class Params:
+    def __init__(self):
+        self.minDistanceToObstacle = None #The minimum distance a robot can be from an obstacle before a collision occurs
+        self.maxDistanceWithCost = None #< The maximum distance from an obstacle that has an associated cost. The planned
+                                        #< path will attempt to stay at least this distance from obstacles unless it must
+                                        #< travel closer to actually find a path
+        self.distanceCostExponent = None#< The exponent to apply to the distance cost, whose function is:
+                                        #<   pow(maxDistanceWithCost - cellDistance, distanceCostExponent)
+                                        #< for cellDistance > minDistanceToObstacle && cellDistance < maxDistanceWithCost

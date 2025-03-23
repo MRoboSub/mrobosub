@@ -22,12 +22,13 @@ class PathFinding:
         #  Initialize with the x-pose and the y-pose from the ekf.
         rospy.Subscriber('/pose/x_pos', Float64, self.pose_callback)
         rospy.Subscriber('/pose/y_pos', Float64, self.pose_callback)
+        # TODO This is where we will make the grid
     
     def pose_callback(self, msg):
         self.sub_pos = [msg.x_pos, msg.y_pos]
 
     #find path using basic heuristic  
-    def findPath(self, startNode, goalNode, distanceGrid, searchParams):
+    def findPath(self, startNode, goalNode, OccupancyGrid):
 
         # start by creating a new empty path, open list, and closed list. and setting path_found flag to false.
         path = []
@@ -58,7 +59,7 @@ class PathFinding:
                 path_found = True
                 break
             
-            childNodes = nextNode.getNeighbors()
+            childNodes = self.getNeighbors(nextNode, self.OccupancyGrid)
             for child in childNodes:
                 if child != None:
                     #check if child is in closed list or open list
@@ -192,11 +193,11 @@ class PathFinding:
                     break
 
 def grid_position_to_global_position(x, y, distanceGrid):
-    global_x = distanceGrid.globalOrigin_[0] + x / distanceGrid.cellsPerInch_
-    global_y = distanceGrid.globalOrigin_[1] + y / distanceGrid.cellsPerInch_
+    global_x = distanceGrid.globalOrigin_[0] + x / distanceGrid.cellsPerMeter_
+    global_y = distanceGrid.globalOrigin_[1] + y / distanceGrid.cellsPerMeter_
     return [global_x, global_y]
 
 def global_position_to_grid_position(x, y, distanceGrid):
-    grid_x = (x - distanceGrid.globalOrigin_[0]) * distanceGrid.cellsPerInch_
-    grid_y = (y - distanceGrid.globalOrigin_[1]) * distanceGrid.cellsPerInch_
+    grid_x = (x - distanceGrid.globalOrigin_[0]) * distanceGrid.cellsPerMeter_
+    grid_y = (y - distanceGrid.globalOrigin_[1]) * distanceGrid.cellsPerMeter_
     return [grid_x, grid_y]
