@@ -2,14 +2,13 @@ from umrsm import *
 from common_states import *
 import prequal_front
 from abstract_states import TurnToYaw, ForwardAndWait
-from typing import NamedTuple
 
 
 class TurnAroundMarker(TurnToYaw):
-    class Reached(NamedTuple):
+    class Reached(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     target_yaw: float = 90
@@ -28,7 +27,7 @@ class TurnAroundMarker(TurnToYaw):
 
 
 class MovePastMarker(ForwardAndWait):
-    class Reached(NamedTuple):
+    class Reached(Outcome):
         pass
 
     target_heave: float = 1.4
@@ -44,10 +43,10 @@ class MovePastMarker(ForwardAndWait):
 
 
 class TurnToGate(TurnToYaw):
-    class Reached(NamedTuple):
+    class Reached(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     target_yaw: float = -175
@@ -66,7 +65,7 @@ class TurnToGate(TurnToYaw):
 
 
 class LeaveMarker(ForwardAndWait):
-    class Reached(NamedTuple):
+    class Reached(Outcome):
         pass
 
     target_heave: float = 1.4
@@ -82,7 +81,7 @@ class LeaveMarker(ForwardAndWait):
 
 
 class ReturnToGate(ForwardAndWait):
-    class Reached(NamedTuple):
+    class Reached(Outcome):
         pass
 
     target_heave: float = 1.4
@@ -90,14 +89,14 @@ class ReturnToGate(ForwardAndWait):
     surge_speed: float = 0.2
     wait_time: float = 1
 
-    def handle_reached(self) -> NamedTuple:
+    def handle_reached(self) -> Outcome:
         return self.Reached()
 
     def handle_unreached(self) -> None:
         return None
 
 
-transitions = prequal_front.transitions.copy()
+transitions: TransitionMap = prequal_front.transitions.copy()
 transitions.update(
     {
         prequal_front.ApproachMarker.Reached: TurnAroundMarker,

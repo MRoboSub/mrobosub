@@ -3,7 +3,7 @@ from bin_states import *
 from umrsm import TransitionMap
 
 
-transitions:TransitionMap = {
+transitions: TransitionMap = {
     Start.Complete: Submerge.with_params(target_heave=0.75),
 
     Submerge.Submerged: ApproachBinOpen,

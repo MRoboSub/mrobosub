@@ -1,15 +1,14 @@
 import rospy
-from umrsm import State
+from umrsm import Outcome
 from abstract_states import TurnToYaw, TimedState
 from periodic_io import PIO
-from typing import Dict, Optional, Tuple, Union, NamedTuple
 
 
 class TurnToOctagon(TurnToYaw):
-    class Aligned(NamedTuple):
+    class Aligned(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     target_yaw = 30.0
@@ -25,17 +24,17 @@ class TurnToOctagon(TurnToYaw):
 
 
 class GoToOctagon(TimedState):
-    class Reached(NamedTuple):
+    class Reached(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     timeout: float = 20.0
     yaw_angle: float = 30.0
     surge_speed: float = 0.15
 
-    def __init__(self, prev_outcome: NamedTuple):
+    def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
 
     def handle_if_not_timedout(self) -> None:

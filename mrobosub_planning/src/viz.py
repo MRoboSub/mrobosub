@@ -3,26 +3,25 @@ import graphviz
 
 from captain import transition_maps
 
-from typing import Mapping, Type
-import os
-
 from pathlib import Path
 
 
-def generate_graph(name: str, transitions: TransitionMap) -> graphviz.Digraph:
-    dot = graphviz.Digraph(name)
+def generate_graph(
+    name: str, format: str, transitions: TransitionMap
+) -> graphviz.Digraph:
+    dot = graphviz.Digraph(name, format=format)
     dot.attr("graph", diredgeconstraints="true")
 
     for name in {state_class.__name__ for state_class in transitions.values()}:
         dot.node(name, name)
 
     for outcome, state in transitions.items():
-        try:
-            source = outcome.__qualname__.split(".")[-2]
-        except IndexError as e:
+        source_state = getattr(outcome, "_state", None)
+        if source_state is None:
             raise SyntaxError(
                 f"Global states are not allowed: {outcome} ({outcome.__qualname__} defined in {outcome.__module__})"
-            ) from e
+            )
+        source = source_state.__name__
         label = outcome.__name__
         dest = state.__name__
 
@@ -32,6 +31,8 @@ def generate_graph(name: str, transitions: TransitionMap) -> graphviz.Digraph:
 
 
 def main() -> None:
+    import argparse
+
     parser = argparse.ArgumentParser(description="Create a state machine visualization")
     parser.add_argument(
         "map_name",
@@ -50,13 +51,12 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    graph = generate_graph("Standard Run", transition_maps[args.map_name])
+    graph = generate_graph("Standard Run", args.type, transition_maps[args.map_name])
     if args.save_src:
         graph.save(f"{args.output}.dot")
     else:
-        graph.render(args.output, format=args.type, cleanup=True)
+        graph.render(args.output, cleanup=True)
 
 
 if __name__ == "__main__":
-    import argparse
     main()

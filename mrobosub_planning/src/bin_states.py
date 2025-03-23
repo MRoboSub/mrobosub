@@ -1,25 +1,25 @@
-from umrsm import State
+from umrsm import Outcome
 from abstract_states import TimedState
 import periodic_io
 from periodic_io import PIO
-from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
-from typing import NamedTuple, Union
+from mrobosub_msgs.srv import ObjectPositionResponse # type: ignore
+from typing import Union
 import math
 import rospy
 from std_msgs.msg import Int32
 
 
 class ApproachBinOpen(TimedState):
-    class SeenBin(NamedTuple):
+    class SeenBin(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     surge_speed: float = 0.15
     timeout: float = 30
 
-    def __init__(self, prev_outcome: NamedTuple) -> None:
+    def __init__(self, prev_outcome: Outcome) -> None:
         super().__init__(prev_outcome)
         PIO.activate_bot_cam()
         self.target_yaw = getattr(prev_outcome, "angle", PIO.Pose.yaw)
@@ -39,10 +39,10 @@ class ApproachBinOpen(TimedState):
 
 
 class ApproachBinClosed(TimedState):
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
-    class Reached(NamedTuple):
+    class Reached(Outcome):
         pass
 
     timeout: float = 40.0
@@ -54,7 +54,7 @@ class ApproachBinClosed(TimedState):
     corrective_yaw_thresh = 30  # once angle to bin > thresh center the yaw
     yaw_aligned = False  # keeps track of if the yaw is aligned and we are suring or if we are not aligned and are aligning
 
-    def __init__(self, prev_outcome: NamedTuple):
+    def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
         PIO.activate_bot_cam()
         self.angle_to_bin: float = 0.0
@@ -85,7 +85,7 @@ class ApproachBinClosed(TimedState):
                 PIO.set_target_pose_yaw((PIO.Pose.yaw % 360 - self.angle_to_bin * self.yaw_factor) % 360)
             else:
                 # set surge speed decreases as closer to centered
-                juice = self.surge_speed * dist_to_bin 
+                juice = self.surge_speed * dist_to_bin
                 print(f"{juice=}")
                 PIO.set_target_twist_surge(juice)
 
@@ -103,25 +103,25 @@ class ApproachBinClosed(TimedState):
 
 
 # Used to mark which previous state we came from to allow for dropper code to work
-class CenterOrSpin(NamedTuple):
+class CenterOrSpin(Outcome):
     is_center: bool
 
 
 class CenterCameraToBin(TimedState):
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
-    class Reached(NamedTuple):
+    class Reached(Outcome):
         pass
 
     timeout: float = 120.0
 
-    surge_and_strafe_speed = 0.05 # max surge/sway speed
+    surge_and_strafe_speed = 0.05  # max surge/sway speed
     centered_pixel_x_y_thresh = 0.15
     bin_depth = 0.5
     descend_speed = 0.05
 
-    def __init__(self, prev_outcome: NamedTuple):
+    def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
         PIO.activate_bot_cam()
         self.angle_to_bin: float = 0.0
@@ -186,7 +186,7 @@ class CenterCameraToBin(TimedState):
 
 
 class CenterLeftDropper(TimedState):
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     class Reached(CenterOrSpin):
@@ -194,11 +194,11 @@ class CenterLeftDropper(TimedState):
 
     timeout: float = 10.0
 
-    surge_and_strafe_speed = 0.2 # max surge/sway speed
+    surge_and_strafe_speed = 0.2  # max surge/sway speed
     dropper_offset = 0.05
-    centered_pixel_thresh = 0.05 # threshold distance in pixels within which we say we have centered appropriatclass CenterToBinFromFar(TimedState):
+    centered_pixel_thresh = 0.05  # threshold distance in pixels within which we say we have centered appropriately
 
-    def __init__(self, prev_outcome: NamedTuple):
+    def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
         PIO.activate_bot_cam()
         self.angle_to_bin: float = 0.0
@@ -237,10 +237,10 @@ class CenterLeftDropper(TimedState):
 
 
 class Descend(TimedState):
-    class Reached(NamedTuple):
+    class Reached(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     timeout: float = 10.0
@@ -263,20 +263,20 @@ class Descend(TimedState):
 
 
 class DropMarker(TimedState):
-    class DroppedLeft(NamedTuple):
+    class DroppedLeft(Outcome):
         pass
 
-    class DroppedRight(NamedTuple):
+    class DroppedRight(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     timeout: float = 10.0
 
     open_angle = 130  # angle to open servo to
 
-    def __init__(self, prev_outcome: NamedTuple):
+    def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
         if not isinstance(prev_outcome, CenterOrSpin):
             self.drop_left = True
@@ -300,14 +300,14 @@ class Spin180(TimedState):
     class Reached(CenterOrSpin):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     timeout: float = 10.0
 
     yaw_threshold = 2.5
 
-    def __init__(self, prev_outcome: NamedTuple):
+    def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
         self.target_yaw: float = (PIO.Pose.yaw + 180) % 360
 

@@ -2,20 +2,20 @@ from abstract_states import TimedState, TurnToYaw, AlignPathmarker
 from periodic_io import PIO, ImageTarget
 from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
 import rospy
-from typing import NamedTuple, Type, Union, Optional, List
-from circumnavigate_states import CircumnavigateOpenDiscreteDiamondTurns
+from typing import Type, Union
+from umrsm import Outcome
 
 
-class SeenGateImageType(NamedTuple):
+class SeenGateImageType(Outcome):
     position: ObjectPositionResponse
     image_seen: ImageTarget
 
 
 class AlignGate(TimedState):
-    class ReachedAngle(NamedTuple):
+    class ReachedAngle(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     target_yaw: float = 0.0
@@ -39,14 +39,14 @@ class ApproachGate(TimedState):
     class SeenGateImage(SeenGateImageType):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     timeout: float = 150.0
     surge_speed: float = 0.15
     found_image_threshold = 50
 
-    def __init__(self, prev_outcome: NamedTuple):
+    def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
         PIO.activate_zed()
         self.times_seen = 0
@@ -79,20 +79,20 @@ class ApproachGate(TimedState):
 
 
 class ApproachGateImage(TimedState):
-    class GoneThroughGate(NamedTuple):
+    class GoneThroughGate(Outcome):
         planet: ImageTarget
 
-    class FoundBuoyPathmarker(NamedTuple):
+    class FoundBuoyPathmarker(Outcome):
         angle: float
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     timeout: float = 25.0
     lost_image_threshold: int = 100
     yaw_threshold: float = 2.0
 
-    def __init__(self, prev_outcome: NamedTuple) -> None:
+    def __init__(self, prev_outcome: Outcome) -> None:
         super().__init__(prev_outcome)
         if not isinstance(prev_outcome, SeenGateImageType):
             raise TypeError(f"Expected type SeenGateImageType, received {prev_outcome}")
@@ -102,7 +102,7 @@ class ApproachGateImage(TimedState):
         PIO.activate_zed()
 
     @classmethod
-    def is_valid_income_type(cls, outcome_type: Type[NamedTuple]) -> bool:
+    def is_valid_income_type(cls, outcome_type: Type[Outcome]) -> bool:
         return issubclass(outcome_type, SeenGateImageType)
 
     def handle_if_not_timedout(self) -> Union[GoneThroughGate, None]:
@@ -133,10 +133,10 @@ class ApproachGateImage(TimedState):
 
 
 class ApproachGateImage2(TimedState):
-    class GoneThroughGate(NamedTuple):
+    class GoneThroughGate(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     radius_thold: float = 25.0
@@ -145,7 +145,7 @@ class ApproachGateImage2(TimedState):
     timeout: float = 100.0
     lost_image_threshold: int = 400
 
-    def __init__(self, prev_outcome: NamedTuple) -> None:
+    def __init__(self, prev_outcome: Outcome) -> None:
         super().__init__(prev_outcome)
         if not isinstance(prev_outcome, SeenGateImageType):
             raise TypeError(f"Expected type SeenGateImageType, received {prev_outcome}")
@@ -172,7 +172,7 @@ class ApproachGateImage2(TimedState):
         self.last_iter = False
 
     @classmethod
-    def is_valid_income_type(cls, outcome_type: Type[NamedTuple]) -> bool:
+    def is_valid_income_type(cls, outcome_type: Type[Outcome]) -> bool:
         return issubclass(outcome_type, SeenGateImageType)
 
     def handle_if_not_timedout(self) -> Union[GoneThroughGate, None]:
@@ -245,19 +245,19 @@ class ApproachGateImage2(TimedState):
 
 
 class AlignBuoyPathmarker(AlignPathmarker):
-    class AlignedToBuoy(NamedTuple):
+    class AlignedToBuoy(Outcome):
         pass
 
-    class NoMeasurements(NamedTuple):
+    class NoMeasurements(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     yaw_threshold = 2.5
     timeout = 10.0
 
-    def handle_if_not_timedout(self) -> Union[NamedTuple, None]:
+    def handle_if_not_timedout(self) -> Union[Outcome, None]:
         outcome = super().handle_if_not_timedout()
         if self.iter == 100 and hasattr(self, "target_angle"):
             self.target_angle %= 360
@@ -281,10 +281,10 @@ class AlignBuoyPathmarker(AlignPathmarker):
 
 
 class GuessBuoyAngle(TurnToYaw):
-    class Reached(NamedTuple):
+    class Reached(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     target_yaw = 45.0
@@ -302,12 +302,11 @@ class GuessBuoyAngle(TurnToYaw):
 class Spin(TimedState):
     timeout: float = 30.0
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
-    def __init__(self, prev_outcome: NamedTuple) -> None:
+    def __init__(self, prev_outcome: Outcome) -> None:
         super().__init__(prev_outcome)
-        self.timeout = 15.0
 
     def handle_if_not_timedout(self) -> None:
         PIO.set_target_twist_yaw(0.12)
@@ -320,16 +319,16 @@ class Spin(TimedState):
 
 
 class SpinFinish(TimedState):
-    class Reached(NamedTuple):
+    class Reached(Outcome):
         angle: float
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     yaw_threshold: float = 2.0
     timeout: float = 15.0
 
-    def __init__(self, prev_outcome: NamedTuple):
+    def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
         self.timer = rospy.get_time()
 
