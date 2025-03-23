@@ -8,22 +8,28 @@ from serial import Serial
 from serial.serialutil import SerialException
 from mrobosub_msgs.msg import MotorState
 from std_srvs.srv import SetBool, SetBoolResponse
+from typing import Optional
 
 
 NUM_MOTORS = 8
 
+
 class ThrusterController(Node):
     def __init__(self):
-        super().__init__('thruster_controller')
+        super().__init__("thruster_controller")
         print("Launched thruster_controller node")
         self.port = "/dev/serial/by-id/usb-Pololu_Corporation_Pololu_Mini_Maestro_12-Channel_USB_Servo_Controller_00467345-if00"
         self.emergency_stop = False
         self.serial = None
         self.connect()
-        self.get_errors() # clear errors at the start
-        
-        self.object_position_service = rospy.Service("emergency_stop_motors", SetBool, self.handle_emergency_stop)
-        self.motor_sub = rospy.Subscriber('/motor_output', MotorState, self.motor_callback)
+        self.get_errors()  # clear errors at the start
+
+        self.object_position_service = rospy.Service(
+            "emergency_stop_motors", SetBool, self.handle_emergency_stop
+        )
+        self.motor_sub = rospy.Subscriber(
+            "/motor_output", MotorState, self.motor_callback
+        )
 
     def connect(self) -> bool:
         try:
@@ -47,18 +53,19 @@ class ThrusterController(Node):
             self.connect()
         return False
 
-    def read(self, len: int) -> bytes:
+    def read(self, len: int) -> Optional[bytes]:
         if self.serial is None:
             success = self.connect()
             if not success:
                 return None
         try:
-            self.serial.read(len)
+            return self.serial.read(len)
         except SerialException as e:
             print("read error:", e)
             self.serial.close()
             self.connect()
-    
+        return None
+
     def handle_emergency_stop(self, _):
         self.emergency_stop = True
         self.get_errors()
@@ -70,25 +77,29 @@ class ThrusterController(Node):
     # pwm_raw ranges from -1 to 1
     # pwm_val ranges from 4000 to 8000
     def convert_pwm_signal(self, pwm_raw: float) -> int:
-        if (pwm_raw < -1 or pwm_raw > 1):
-            raise ValueError(f"Thruster Controller [ERROR]: PWM value {pwm_raw} out of range (should be in [-1, 1])")
-        return int((pwm_raw * 2000)+6000)
-    
+        if pwm_raw < -1 or pwm_raw > 1:
+            raise ValueError(
+                f"Thruster Controller [ERROR]: PWM value {pwm_raw} out of range (should be in [-1, 1])"
+            )
+        return int((pwm_raw * 2000) + 6000)
+
     # in case of invalid PWM or motor number parameters, does not send any updated signal to the motor controller
     def send_signal(self, motor: int, pwm_raw: float) -> int:
         pwm_val: int = self.convert_pwm_signal(pwm_raw)
         if pwm_val == -1:
             return -1
-        
-        if (motor < 0 or motor >= NUM_MOTORS):
-            raise ValueError(f"motor number {motor} out of range (should be in [0-{NUM_MOTORS-1}])")
+
+        if motor < 0 or motor >= NUM_MOTORS:
+            raise ValueError(
+                f"motor number {motor} out of range (should be in [0-{NUM_MOTORS-1}])"
+            )
 
         LSBs = pwm_val % (2**7)
-        MSBs = int(pwm_val/(2**7))
+        MSBs = int(pwm_val / (2**7))
 
         self.get_errors()
         self.write(bytearray([0xAA, 0x0C, 0x04, motor, LSBs, MSBs]))
-        
+
         # print(f"Thruster controller: sent pwm value {pwm_val} to motor {motor}")
 
         return 0
@@ -106,7 +117,7 @@ class ThrusterController(Node):
         if error is None:
             return
         error_code = int.from_bytes(error, "little")
-        if(error_code != 0):
+        if error_code != 0:
             print(f"Thruster controller: error code = {error_code}")
             # eg: error_code 16 means 00010000 which is the 5th error bit set
 
@@ -116,4 +127,3 @@ class ThrusterController(Node):
 
 if __name__ == "__main__":
     ThrusterController().run()
-
