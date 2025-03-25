@@ -23,6 +23,7 @@ class ThrusterController(Node):
         self.serial = None
         self.connect()
         self.get_errors()  # clear errors at the start
+        self.motor_speeds = [0, 0, 0, 0, 0, 0, 0, 0]
 
         self.object_position_service = rospy.Service(
             "emergency_stop_motors", SetBool, self.handle_emergency_stop
@@ -100,6 +101,8 @@ class ThrusterController(Node):
         self.get_errors()
         self.write(bytearray([0xAA, 0x0C, 0x04, motor, LSBs, MSBs]))
 
+        self.rate = rospy.Rate(100)
+
         # print(f"Thruster controller: sent pwm value {pwm_val} to motor {motor}")
 
         return 0
@@ -108,7 +111,8 @@ class ThrusterController(Node):
         if not self.emergency_stop:
             for i in range(NUM_MOTORS):
                 motor_name = f"motor{i}"
-                self.send_signal(i, getattr(msg, motor_name))
+                self.motor_speeds[i] = getattr(msg, motor_name)
+                # self.send_signal(i, getattr(msg, motor_name))
 
     def get_errors(self):
         # gets errors from thruster controller hardware (which automatically clears the errors too)
@@ -122,7 +126,14 @@ class ThrusterController(Node):
             # eg: error_code 16 means 00010000 which is the 5th error bit set
 
     def run(self):
-        rospy.spin()
+        while not rospy.is_shutdown(): 
+            
+            for i in range(NUM_MOTORS):
+                self.send_signal(i, self.motor_speeds[i])
+
+            # KEEP THIS LINE
+            self.rate.sleep()
+        # rospy.spin()
 
 
 if __name__ == "__main__":
