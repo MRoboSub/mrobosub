@@ -65,11 +65,15 @@ class ApproachMarker(ForwardAndWait):
 
 transitions: TransitionMap = {
     Start.Complete: Submerge,
+
     Submerge.Submerged: AlignGate,
     Submerge.TimedOut: AlignGate,
+
     AlignGate.Reached: ApproachGate,
     AlignGate.TimedOut: ApproachGate,
+
     ApproachGate.Reached: ApproachMarker,
+
     # Surface.Unreached: Surface,
     # Surface.Reached: Stop,
 }
