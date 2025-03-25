@@ -76,7 +76,6 @@ class StateMeta(type):
                 v._state = state  # type: ignore
         base_outcomes = getattr(state, "_outcomes", {})
         inherited = base_outcomes.keys() - outcomes.keys()
-        print(f"{state.__name__}, {outcomes=}, {base_outcomes=}")
         for name in inherited:
             base = base_outcomes[name]
             suboutcome = type(name, (base,), {"_state": state})
