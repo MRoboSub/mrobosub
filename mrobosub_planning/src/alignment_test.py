@@ -18,6 +18,4 @@ transitions: TransitionMap = {
 
     ApproachBuoyOpen.SeenBuoy: Surface,
     ApproachBuoyOpen.TimedOut: Surface,
-
-    Surface.Surfaced: Stop,
 }

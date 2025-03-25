@@ -18,7 +18,7 @@ transitions: TransitionMap = {
     Submerge.Submerged: AlignBinsPathmarker,
     Submerge.TimedOut: AlignBinsPathmarker,
 
-    AlignBinsPathmarker.AlignedToBins: ApproachBinOpen,
+    AlignBinsPathmarker.Aligned: ApproachBinOpen,
     AlignBinsPathmarker.NoMeasurements: ApproachBinOpen,
     AlignBinsPathmarker.TimedOut: Surface,
 
@@ -44,5 +44,4 @@ transitions: TransitionMap = {
     Spin180.TimedOut: Surface,
 
     DropMarker.DroppedRight: Surface,
-    Surface.Surfaced: Stop,
 }

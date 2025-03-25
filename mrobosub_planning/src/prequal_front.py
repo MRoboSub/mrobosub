@@ -10,9 +10,6 @@ class AlignGate(TimedState):
     class Reached(Outcome):
         pass
 
-    class TimedOut(Outcome):
-        pass
-
     target_yaw: float = 0.0
     yaw_threshold: float = 2.0
     timeout: float = 10.0
@@ -24,51 +21,31 @@ class AlignGate(TimedState):
             return self.Reached()
         return None
 
-    def handle_once_timedout(self) -> TimedOut:
-        return self.TimedOut()
-
 
 class ApproachGate(ForwardAndWait):
-    class Reached(Outcome):
-        pass
-
     target_heave: float = 1.4  # TODO
     target_surge_time: float = 5.0
     surge_speed: float = 0.5
     wait_time: float = 1.0
 
-    def handle_reached(self) -> Reached:
-        return self.Reached()
-
-    def handle_unreached(self) -> None:
-        return None
-
 
 # Concerns: -drift during submerge, poor movement on sway &surge axes, drift during surge.
-
-
 class ApproachMarker(ForwardAndWait):
-    class Reached(Outcome):
-        pass
-
     target_heave: float = 1.4  # TODO
     target_surge_time: float = 56.0 / 2
     surge_speed: float = 0.5
     wait_time: float = 1.0
 
-    def handle_reached(self) -> Reached:
-        return self.Reached()
-
-    def handle_unreached(self) -> None:
-        return None
-
 
 transitions: TransitionMap = {
     Start.Complete: Submerge,
+
     Submerge.Submerged: AlignGate,
     Submerge.TimedOut: AlignGate,
+
     AlignGate.Reached: ApproachGate,
     AlignGate.TimedOut: ApproachGate,
+
     ApproachGate.Reached: ApproachMarker,
     # Surface.Unreached: Surface,
     # Surface.Reached: Stop,

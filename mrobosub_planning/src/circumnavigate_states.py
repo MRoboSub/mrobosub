@@ -3,6 +3,7 @@ from abstract_states import TimedState, TurnToYaw
 from periodic_io import PIO
 import rospy
 from typing import Optional, Type, Union
+from typing_extensions import Self
 
 
 class CircumnavigateOpenContinuous(TimedState):

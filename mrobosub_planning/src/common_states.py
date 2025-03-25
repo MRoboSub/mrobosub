@@ -17,9 +17,6 @@ class Submerge(TimedState):
     class Submerged(Outcome):
         pass
 
-    class TimedOut(Outcome):
-        pass
-
     target_heave: float = 0.75
     heave_threshold: float = 0.1
     timeout: float = 15
@@ -36,16 +33,10 @@ class Submerge(TimedState):
             return self.Submerged()
         return None
 
-    def handle_once_timedout(self) -> TimedOut:
-        return self.TimedOut()
-
 
 # TODO: This class needs to be reworked
 class MoveToXY(TimedState):
     class Reached(Outcome):
-        pass
-
-    class TimedOut(Outcome):
         pass
 
     def __init__(self, prev_outcome: Outcome):
@@ -62,7 +53,10 @@ class MoveToXY(TimedState):
         if not PIO.is_yaw_within_threshold(self.yaw_threshold):
             self.timer = rospy.get_time()
 
-        if not self._reached_angle and rospy.get_time() - self.timer >= self.settle_time:
+        if (
+            not self._reached_angle
+            and rospy.get_time() - self.timer >= self.settle_time
+        ):
             self._reached_angle = True
             self.timer = rospy.get_time()
 
@@ -79,9 +73,6 @@ class MoveToXY(TimedState):
 
         return None
 
-    def handle_once_timedout(self) -> Outcome:
-        return self.TimedOut()
-
     target_x: float = 0.0
     target_y: float = 0.0
     magnitude_threshold: float = 0.1
@@ -96,9 +87,6 @@ class MoveToXY(TimedState):
 
 
 class Stop(State):
-    class Surfaced(Outcome):
-        pass
-
     def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
         PIO.reset_target_twist()

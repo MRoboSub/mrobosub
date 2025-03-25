@@ -13,9 +13,6 @@ class ApproachBinOpen(TimedState):
     class SeenBin(Outcome):
         pass
 
-    class TimedOut(Outcome):
-        pass
-
     surge_speed: float = 0.15
     timeout: float = 30
 
@@ -33,15 +30,12 @@ class ApproachBinOpen(TimedState):
             return self.SeenBin()
         return None
 
-    def handle_once_timedout(self) -> TimedOut:
+    def handle_once_timedout(self) -> Outcome:
         PIO.set_target_twist_surge(0)
         return self.TimedOut()
 
 
 class ApproachBinClosed(TimedState):
-    class TimedOut(Outcome):
-        pass
-
     class Reached(Outcome):
         pass
 
@@ -96,7 +90,7 @@ class ApproachBinClosed(TimedState):
         else:
             return None
 
-    def handle_once_timedout(self) -> TimedOut:
+    def handle_once_timedout(self) -> Outcome:
         PIO.set_target_twist_surge(0)
         PIO.set_target_pose_yaw(PIO.Pose.yaw)
         return self.TimedOut()
@@ -108,9 +102,6 @@ class CenterOrSpin(Outcome):
 
 
 class CenterCameraToBin(TimedState):
-    class TimedOut(Outcome):
-        pass
-
     class Reached(Outcome):
         pass
 
@@ -179,16 +170,13 @@ class CenterCameraToBin(TimedState):
 
         return None
 
-    def handle_once_timedout(self) -> TimedOut:
+    def handle_once_timedout(self) -> Outcome:
         PIO.set_target_twist_surge(0)
         PIO.set_target_twist_sway(0)
         return self.TimedOut()
 
 
 class CenterLeftDropper(TimedState):
-    class TimedOut(Outcome):
-        pass
-
     class Reached(CenterOrSpin):
         pass
 
@@ -230,7 +218,7 @@ class CenterLeftDropper(TimedState):
                 PIO.set_target_twist_heave(0)
         return None
 
-    def handle_once_timedout(self) -> TimedOut:
+    def handle_once_timedout(self) -> Outcome:
         PIO.set_target_twist_surge(0)
         PIO.set_target_twist_sway(0)
         return self.TimedOut()
@@ -238,9 +226,6 @@ class CenterLeftDropper(TimedState):
 
 class Descend(TimedState):
     class Reached(Outcome):
-        pass
-
-    class TimedOut(Outcome):
         pass
 
     timeout: float = 10.0
@@ -258,18 +243,12 @@ class Descend(TimedState):
         else:
             return None
 
-    def handle_once_timedout(self) -> TimedOut:
-        return self.TimedOut()
-
 
 class DropMarker(TimedState):
     class DroppedLeft(Outcome):
         pass
 
     class DroppedRight(Outcome):
-        pass
-
-    class TimedOut(Outcome):
         pass
 
     timeout: float = 10.0
@@ -292,15 +271,9 @@ class DropMarker(TimedState):
             PIO.set_right_dropper_angle(120)
             return self.DroppedRight()
 
-    def handle_once_timedout(self) -> TimedOut:
-        return self.TimedOut()
-
 
 class Spin180(TimedState):
     class Reached(CenterOrSpin):
-        pass
-
-    class TimedOut(Outcome):
         pass
 
     timeout: float = 10.0
@@ -318,6 +291,3 @@ class Spin180(TimedState):
             return self.Reached(False)
         else:
             return None
-
-    def handle_once_timedout(self) -> TimedOut:
-        return self.TimedOut()

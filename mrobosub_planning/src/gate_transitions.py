@@ -48,6 +48,4 @@ transitions: TransitionMap = {
     # Ascend.TimedOut: PassBuoy,
 
     # PassBuoy.TimedOut: Surface,
-
-    Surface.Surfaced: Stop,
 }

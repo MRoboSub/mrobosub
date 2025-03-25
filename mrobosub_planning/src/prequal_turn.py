@@ -5,95 +5,38 @@ from abstract_states import TurnToYaw, ForwardAndWait
 
 
 class TurnAroundMarker(TurnToYaw):
-    class Reached(Outcome):
-        pass
-
-    class TimedOut(Outcome):
-        pass
-
     target_yaw: float = 90
     yaw_threshold: float = 2
     timeout: float = 10
     settle_time: float = 1
 
-    def handle_reached(self) -> Reached:
-        return self.Reached()
-
-    def handle_unreached(self) -> None:
-        return None
-
-    def handle_once_timedout(self) -> TimedOut:
-        return self.TimedOut()
-
 
 class MovePastMarker(ForwardAndWait):
-    class Reached(Outcome):
-        pass
-
     target_heave: float = 1.4
     target_surge_time: float = 5
     surge_speed: float = 0.2
     wait_time: float = 1
 
-    def handle_reached(self) -> Reached:
-        return self.Reached()
-
-    def handle_unreached(self) -> None:
-        return None
-
 
 class TurnToGate(TurnToYaw):
-    class Reached(Outcome):
-        pass
-
-    class TimedOut(Outcome):
-        pass
-
     target_yaw: float = -175
     yaw_threshold: float = 2
     timeout: float = 10
     settle_time: float = 1
 
-    def handle_reached(self) -> Reached:
-        return self.Reached()
-
-    def handle_unreached(self) -> None:
-        return None
-
-    def handle_once_timedout(self) -> TimedOut:
-        return self.TimedOut()
-
 
 class LeaveMarker(ForwardAndWait):
-    class Reached(Outcome):
-        pass
-
     target_heave: float = 1.4
     target_surge_time: float = 10
     surge_speed: float = 0.2
     wait_time: float = 1
 
-    def handle_reached(self) -> Reached:
-        return self.Reached()
-
-    def handle_unreached(self) -> None:
-        return None
-
 
 class ReturnToGate(ForwardAndWait):
-    class Reached(Outcome):
-        pass
-
     target_heave: float = 1.4
     target_surge_time: float = 224
     surge_speed: float = 0.2
     wait_time: float = 1
-
-    def handle_reached(self) -> Outcome:
-        return self.Reached()
-
-    def handle_unreached(self) -> None:
-        return None
 
 
 transitions: TransitionMap = prequal_front.transitions.copy()

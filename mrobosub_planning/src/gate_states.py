@@ -15,9 +15,6 @@ class AlignGate(TimedState):
     class ReachedAngle(Outcome):
         pass
 
-    class TimedOut(Outcome):
-        pass
-
     target_yaw: float = 0.0
     timeout: float = 10.0
     yaw_threshold: float = 2.0
@@ -30,16 +27,13 @@ class AlignGate(TimedState):
             return self.ReachedAngle()
         return None
 
-    def handle_once_timedout(self) -> TimedOut:
+    def handle_once_timedout(self) -> Outcome:
         PIO.set_target_pose_yaw(0)
         return self.TimedOut()
 
 
 class ApproachGate(TimedState):
     class SeenGateImage(SeenGateImageType):
-        pass
-
-    class TimedOut(Outcome):
         pass
 
     timeout: float = 150.0
@@ -72,7 +66,7 @@ class ApproachGate(TimedState):
         self.times_seen += 1
         return None
 
-    def handle_once_timedout(self) -> TimedOut:
+    def handle_once_timedout(self) -> Outcome:
         PIO.set_target_twist_surge(0)
 
         return self.TimedOut()
@@ -84,9 +78,6 @@ class ApproachGateImage(TimedState):
 
     class FoundBuoyPathmarker(Outcome):
         angle: float
-
-    class TimedOut(Outcome):
-        pass
 
     timeout: float = 25.0
     lost_image_threshold: int = 100
@@ -128,15 +119,9 @@ class ApproachGateImage(TimedState):
         PIO.set_target_pose_yaw(self.last_target_yaw)
         return None
 
-    def handle_once_timedout(self) -> TimedOut:
-        return self.TimedOut()
-
 
 class ApproachGateImage2(TimedState):
     class GoneThroughGate(Outcome):
-        pass
-
-    class TimedOut(Outcome):
         pass
 
     radius_thold: float = 25.0
@@ -238,20 +223,14 @@ class ApproachGateImage2(TimedState):
 
         return None
 
-    def handle_once_timedout(self) -> TimedOut:
+    def handle_once_timedout(self) -> Outcome:
         PIO.set_target_twist_surge(0)
         PIO.set_target_twist_yaw(0)
         return self.TimedOut()
 
 
 class AlignBuoyPathmarker(AlignPathmarker):
-    class AlignedToBuoy(Outcome):
-        pass
-
     class NoMeasurements(Outcome):
-        pass
-
-    class TimedOut(Outcome):
         pass
 
     yaw_threshold = 2.5
@@ -270,40 +249,19 @@ class AlignBuoyPathmarker(AlignPathmarker):
             print(f"adjusted_setpoint: {self.target_angle=}")
         return outcome
 
-    def handle_aligned(self) -> AlignedToBuoy:
-        return self.AlignedToBuoy()
-
     def handle_no_measurements(self) -> NoMeasurements:
         return self.NoMeasurements()
 
-    def handle_once_timedout(self) -> TimedOut:
-        return self.TimedOut()
-
 
 class GuessBuoyAngle(TurnToYaw):
-    class Reached(Outcome):
-        pass
-
-    class TimedOut(Outcome):
-        pass
-
     target_yaw = 45.0
     yaw_threshold = 2.0
     settle_time = 1.0
     timeout = 10.0
 
-    def handle_reached(self) -> Reached:
-        return self.Reached()
-
-    def handle_once_timedout(self) -> TimedOut:
-        return self.TimedOut()
-
 
 class Spin(TimedState):
     timeout: float = 30.0
-
-    class TimedOut(Outcome):
-        pass
 
     def __init__(self, prev_outcome: Outcome) -> None:
         super().__init__(prev_outcome)
@@ -313,7 +271,7 @@ class Spin(TimedState):
         PIO.set_target_pose_heave(1)
         return None
 
-    def handle_once_timedout(self) -> TimedOut:
+    def handle_once_timedout(self) -> Outcome:
         PIO.set_target_twist_yaw(0)
         return self.TimedOut()
 
@@ -321,9 +279,6 @@ class Spin(TimedState):
 class SpinFinish(TimedState):
     class Reached(Outcome):
         angle: float
-
-    class TimedOut(Outcome):
-        pass
 
     yaw_threshold: float = 2.0
     timeout: float = 15.0
@@ -346,6 +301,3 @@ class SpinFinish(TimedState):
             return self.Reached(target_yaw)
 
         return None
-
-    def handle_once_timedout(self) -> TimedOut:
-        return self.TimedOut()

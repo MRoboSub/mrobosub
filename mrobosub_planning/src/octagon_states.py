@@ -8,9 +8,6 @@ class TurnToOctagon(TurnToYaw):
     class Aligned(Outcome):
         pass
 
-    class TimedOut(Outcome):
-        pass
-
     target_yaw = 30.0
     yaw_threshold = 2.0
     settle_time = 1.0
@@ -19,15 +16,9 @@ class TurnToOctagon(TurnToYaw):
     def handle_reached(self) -> Aligned:
         return self.Aligned()
 
-    def handle_once_timedout(self) -> TimedOut:
-        return self.TimedOut()
-
 
 class GoToOctagon(TimedState):
     class Reached(Outcome):
-        pass
-
-    class TimedOut(Outcome):
         pass
 
     timeout: float = 20.0

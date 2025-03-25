@@ -11,8 +11,6 @@ transitions: TransitionMap = {
     Submerge.TimedOut: AlignBuoyPathmarker,
 
     AlignBuoyPathmarker.NoMeasurements: Surface,
-    AlignBuoyPathmarker.AlignedToBuoy: Surface,
+    AlignBuoyPathmarker.Aligned: Surface,
     AlignBuoyPathmarker.TimedOut: Surface,
-
-    Surface.Surfaced: Stop,
 }

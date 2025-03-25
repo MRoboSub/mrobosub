@@ -37,7 +37,7 @@ transitions: TransitionMap = {
     SpinFinish.Reached: AlignBuoyPathmarker,
     SpinFinish.TimedOut: AlignBuoyPathmarker,
 
-    AlignBuoyPathmarker.AlignedToBuoy: ZedPause,  # ApproachBuoyOpen,
+    AlignBuoyPathmarker.Aligned: ZedPause,  # ApproachBuoyOpen,
     AlignBuoyPathmarker.NoMeasurements: GuessBuoyAngle,
     AlignBuoyPathmarker.TimedOut: GuessBuoyAngle,
 
@@ -68,8 +68,6 @@ transitions: TransitionMap = {
 
     GoToOctagon.Reached: Surface,
     GoToOctagon.TimedOut: Surface,
-
-    Surface.Surfaced: Stop,
 
     # AlignBinsPathmarker.AlignedToBins: ApproachBinOpen, #this is where we will go to bin
     # AlignBinsPathmarker.NoMeasurements: Surface,

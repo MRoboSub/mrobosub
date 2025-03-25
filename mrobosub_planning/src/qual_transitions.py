@@ -13,6 +13,4 @@ transitions: TransitionMap = {
 
     ApproachGate.SeenGateImage: ApproachGate, # do not use gate images for qualification
     ApproachGate.TimedOut: Surface,
-
-    Surface.Surfaced: Stop,
 }

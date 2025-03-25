@@ -7,9 +7,6 @@ from typing import Dict, Optional, Tuple, Type, Union
 
 
 class ZedPause(TimedState):
-    class TimedOut(Outcome):
-        pass
-
     timeout: float = 5.0
 
     def __init__(self, prev_outcome: Outcome):
@@ -20,7 +17,7 @@ class ZedPause(TimedState):
         PIO.set_target_pose_heave(0.75)
         return None
 
-    def handle_once_timedout(self) -> TimedOut:
+    def handle_once_timedout(self) -> Outcome:
         return self.TimedOut()
 
 
@@ -30,9 +27,6 @@ class SeenBuoyType(Outcome):
 
 class ApproachBuoyOpen(TimedState):
     class SeenBuoy(SeenBuoyType):
-        pass
-
-    class TimedOut(Outcome):
         pass
 
     surge_speed: float = 0.15
@@ -52,7 +46,7 @@ class ApproachBuoyOpen(TimedState):
             return self.SeenBuoy(buoyPosition)
         return None
 
-    def handle_once_timedout(self) -> TimedOut:
+    def handle_once_timedout(self) -> Outcome:
         PIO.set_target_twist_surge(0)
         return self.TimedOut()
 
@@ -110,9 +104,6 @@ class CenterYawBuoy(TimedState):
     class CloseToBuoy(Outcome):
         pass
 
-    class TimedOut(Outcome):
-        pass
-
     radius_thold: float = 21.0
     unseen_thold: float = 20.0
     surge_speed: float = 0.15
@@ -159,7 +150,7 @@ class CenterYawBuoy(TimedState):
 
         return None
 
-    def handle_once_timedout(self) -> TimedOut:
+    def handle_once_timedout(self) -> Outcome:
         PIO.set_target_twist_surge(0)
         PIO.set_target_twist_yaw(0)
         return self.TimedOut()
@@ -167,9 +158,6 @@ class CenterYawBuoy(TimedState):
 
 class CenterYawBuoyDiscrete(TimedState):
     class CloseToBuoy(Outcome):
-        pass
-
-    class TimedOut(Outcome):
         pass
 
     radius_thold: float = 20.0
@@ -282,7 +270,7 @@ class CenterYawBuoyDiscrete(TimedState):
 
         return None
 
-    def handle_once_timedout(self) -> TimedOut:
+    def handle_once_timedout(self) -> Outcome:
         PIO.set_target_twist_surge(0)
         PIO.set_target_twist_yaw(0)
         return self.TimedOut()
@@ -291,24 +279,12 @@ class CenterYawBuoyDiscrete(TimedState):
 class BuoyPause(TimedState):
     timeout: float = 3.0
 
-    class TimedOut(Outcome):
-        pass
-
     def handle_if_not_timedout(self) -> None:
-        pass
-
-    def handle_once_timedout(self) -> TimedOut:
-        return self.TimedOut()
+        return None
 
 
 class AlignBinsPathmarker(AlignPathmarker):
-    class AlignedToBins(Outcome):
-        pass
-
     class NoMeasurements(Outcome):
-        pass
-
-    class TimedOut(Outcome):
         pass
 
     yaw_threshold = 2.0
@@ -329,11 +305,6 @@ class AlignBinsPathmarker(AlignPathmarker):
                 self.target_angle -= 180
         return outcome
 
-    def handle_aligned(self) -> AlignedToBins:
-        return self.AlignedToBins()
-
     def handle_no_measurements(self) -> NoMeasurements:
         return self.NoMeasurements()
 
-    def handle_once_timedout(self) -> TimedOut:
-        return self.TimedOut()

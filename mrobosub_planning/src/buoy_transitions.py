@@ -26,5 +26,4 @@ transitions: TransitionMap = {
     CircumnavigateOpenDiscreteDiamondTurns.TimedOut: Surface,
 
     CircumnavigateOpenDiscreteMove.FinishedStep: CircumnavigateOpenDiscreteDiamondTurns,
-    Surface.Surfaced: Stop,
 }

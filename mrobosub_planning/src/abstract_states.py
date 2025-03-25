@@ -8,9 +8,16 @@ from abc import abstractmethod
 class TimedState(State):
     """base class for States which can be timed out.
 
-    expects an outcome called TimedOut and parameter named timeout.
     override handle_once_timedout iff cleanup is needed after timeout
     """
+
+    class TimedOut(Outcome):
+        pass
+
+    @property
+    @abstractmethod
+    def timeout(self) -> float:
+        pass
 
     def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
@@ -25,28 +32,33 @@ class TimedState(State):
     def handle_if_not_timedout(self) -> Optional[Outcome]:
         pass
 
-    @abstractmethod
     def handle_once_timedout(self) -> Outcome:
+        return self.TimedOut()
+
+
+class ForwardAndWait(State):
+    class Reached(Outcome):
         pass
 
     @property
     @abstractmethod
-    def timeout(self) -> float:
+    def target_heave(self) -> float:
         pass
 
+    @property
+    @abstractmethod
+    def target_surge_time(self) -> float:
+        pass
 
-class ForwardAndWait(State):
-    """
-    Must specify the following outcomes:
-    Unreached
-    Reached
+    @property
+    @abstractmethod
+    def wait_time(self) -> float:
+        pass
 
-    Must specify the following parameters:
-    target_heave: float
-    target_surge_time: float
-    wait_time: float
-    surge_speed: float
-    """
+    @property
+    @abstractmethod
+    def surge_speed(self) -> float:
+        pass
 
     def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
@@ -70,45 +82,26 @@ class ForwardAndWait(State):
 
         return self.handle_unreached()
 
-    @abstractmethod
-    def handle_reached(self) -> Optional[Outcome]:
-        pass
-
-    @abstractmethod
     def handle_unreached(self) -> Optional[Outcome]:
-        pass
+        return None
 
-    @property
-    @abstractmethod
-    def target_heave(self) -> float:
-        pass
-
-    @property
-    @abstractmethod
-    def target_surge_time(self) -> float:
-        pass
-
-    @property
-    @abstractmethod
-    def wait_time(self) -> float:
-        pass
-
-    @property
-    @abstractmethod
-    def surge_speed(self) -> float:
-        pass
+    def handle_reached(self) -> Outcome:
+        return self.Reached()
 
 
 class DoubleTimedState(State):
-    """
-    Must specify the following outcomes:
-    Unreached
-    Reached
+    class TimedOut(Outcome):
+        pass
 
-    Must specify the following parameters:
-    phase_one_time: float
-    phase_two_time: float
-    """
+    @property
+    @abstractmethod
+    def phase_one_time(self) -> float:
+        pass
+
+    @property
+    @abstractmethod
+    def phase_two_time(self) -> float:
+        pass
 
     def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
@@ -136,33 +129,28 @@ class DoubleTimedState(State):
     def handle_second_phase(self) -> Optional[Outcome]:
         pass
 
-    @abstractmethod
-    def handle_once_timedout(self) -> Optional[Outcome]:
-        pass
-
-    @property
-    @abstractmethod
-    def phase_one_time(self) -> float:
-        pass
-
-    @property
-    @abstractmethod
-    def phase_two_time(self) -> float:
-        pass
+    def handle_once_timedout(self) -> Outcome:
+        return self.TimedOut()
 
 
 class TurnToYaw(TimedState):
-    """
-    Must specify following outcomes:
-    Reached
-    TimedOut
+    class Reached(Outcome):
+        pass
 
-    Must specify following parameters:
-    target_yaw: float
-    yaw_threshold: float
-    settle_time: float
-    timeout: float
-    """
+    @property
+    @abstractmethod
+    def target_yaw(self) -> float:
+        pass
+
+    @property
+    @abstractmethod
+    def yaw_threshold(self) -> float:
+        pass
+
+    @property
+    @abstractmethod
+    def settle_time(self) -> float:
+        pass
 
     def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
@@ -182,43 +170,17 @@ class TurnToYaw(TimedState):
     def handle_unreached(self) -> Optional[Outcome]:
         return None
 
-    @abstractmethod
     def handle_reached(self) -> Optional[Outcome]:
-        pass
-
-    @property
-    @abstractmethod
-    def target_yaw(self) -> float:
-        pass
-
-    @property
-    @abstractmethod
-    def yaw_threshold(self) -> float:
-        pass
-
-    @property
-    @abstractmethod
-    def settle_time(self) -> float:
-        pass
-
-    @property
-    @abstractmethod
-    def timeout(self) -> float:
-        pass
+        return self.Reached()
 
 
 class AlignPathmarker(TimedState):
+    class Aligned(Outcome):
+        pass
+
     @property
     @abstractmethod
     def yaw_threshold(self) -> float:
-        pass
-
-    @abstractmethod
-    def handle_no_measurements(self) -> Outcome:
-        pass
-
-    @abstractmethod
-    def handle_aligned(self) -> Outcome:
         pass
 
     def __init__(self, prev_outcome: Outcome) -> None:
@@ -255,3 +217,11 @@ class AlignPathmarker(TimedState):
             if self.yaw_threshold_count > 30:
                 return self.handle_aligned()
         return None
+
+    @abstractmethod
+    def handle_no_measurements(self) -> Outcome:
+        pass
+
+    def handle_aligned(self) -> Outcome:
+        return self.Aligned()
+

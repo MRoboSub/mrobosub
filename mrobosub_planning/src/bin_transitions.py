@@ -30,6 +30,4 @@ transitions: TransitionMap = {
 
     Spin180.Reached: DropMarker,
     Spin180.TimedOut: Surface,
-
-    Surface.Surfaced: Stop,
 }
