@@ -9,7 +9,8 @@ import numpy as np
 
 # todo: parameterize this in the launch file
 UDP_IP = "0.0.0.0"
-UDP_PORT = 27000
+# UDP_IP = "192.168.2.9"
+UDP_PORT = 50000
 
 
 class DVLPublisher():
