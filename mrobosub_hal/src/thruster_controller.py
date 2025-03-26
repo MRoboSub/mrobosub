@@ -3,7 +3,6 @@
 import rospy
 
 from mrobosub_lib.lib import Node
-from std_msgs.msg import Float32
 from serial import Serial
 from serial.serialutil import SerialException
 from mrobosub_msgs.msg import MotorState
@@ -20,6 +19,8 @@ class ThrusterController(Node):
         print("Launched thruster_controller node")
         self.port = "/dev/serial/by-id/usb-Pololu_Corporation_Pololu_Mini_Maestro_12-Channel_USB_Servo_Controller_00467345-if00"
         self.emergency_stop = False
+        self.motor_outputs = [0] * NUM_MOTORS
+        self.rate = rospy.Rate(50)
         self.serial = None
         self.connect()
         self.get_errors()  # clear errors at the start
@@ -99,7 +100,6 @@ class ThrusterController(Node):
 
         self.get_errors()
         self.write(bytearray([0xAA, 0x0C, 0x04, motor, LSBs, MSBs]))
-
         # print(f"Thruster controller: sent pwm value {pwm_val} to motor {motor}")
 
         return 0
@@ -108,7 +108,7 @@ class ThrusterController(Node):
         if not self.emergency_stop:
             for i in range(NUM_MOTORS):
                 motor_name = f"motor{i}"
-                self.send_signal(i, getattr(msg, motor_name))
+                self.motor_outputs[i] = getattr(msg, motor_name)
 
     def get_errors(self):
         # gets errors from thruster controller hardware (which automatically clears the errors too)
@@ -122,7 +122,11 @@ class ThrusterController(Node):
             # eg: error_code 16 means 00010000 which is the 5th error bit set
 
     def run(self):
-        rospy.spin()
+        while not rospy.is_shutdown():
+            for i in range(NUM_MOTORS):
+                self.send_signal(i, self.motor_outputs[i])
+
+            self.rate.sleep()
 
 
 if __name__ == "__main__":
