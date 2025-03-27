@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-from typing import Dict, NamedTuple, Type
+from typing import Dict, Type
 from importlib import import_module
-from umrsm import StateMachine, State, TransitionMap
+from umrsm import StateMachine, State, TransitionMap, Outcome
 import common_states
 import standard_run
 
@@ -45,10 +45,10 @@ def state_class_from_str(full_state: str, transitions: TransitionMap) -> Type[St
     Returns:
         The class object for the state or a ValueError if there is an error finding the state.
     """
-    def outcome_to_state_str(outcome: Type[NamedTuple]) -> str:
+    def outcome_to_state_str(outcome: Type[Outcome]) -> str:
         return outcome.__qualname__.split('.')[0]
     
-    def outcome_to_state(outcome: Type[NamedTuple]) -> Type[State]:
+    def outcome_to_state(outcome: Type[Outcome]) -> Type[State]:
         module = import_module(outcome.__module__)
         return getattr(module, outcome_to_state_str(outcome))
     

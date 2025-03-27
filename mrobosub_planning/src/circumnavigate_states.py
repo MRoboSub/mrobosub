@@ -1,18 +1,19 @@
+from umrsm import Outcome
 from abstract_states import TimedState, TurnToYaw
 from periodic_io import PIO
 import rospy
-from typing import NamedTuple, Optional, Type, Union
+from typing import Optional, Type, Union
 
 
 class CircumnavigateOpenContinuous(TimedState):
-    class Finished(NamedTuple):
+    class Finished(Outcome):
         pass
 
     timeout: float = 10
     yaw_twist: float = 0.2
     surge_twist: float = 0.2
 
-    def __init__(self, prev_outcome: NamedTuple):
+    def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
         if getattr(prev_outcome, "ccw", False):
             self.dir = -1
@@ -28,7 +29,7 @@ class CircumnavigateOpenContinuous(TimedState):
         return self.Finished()
 
 
-class CircumnavigateOpenDiscreteData(NamedTuple):
+class CircumnavigateOpenDiscreteData(Outcome):
     cum_angle: float
     curr_angle: float
     ccw: bool
@@ -38,7 +39,7 @@ class CircumnavigateOpenDiscreteDiamondTurns(TurnToYaw):
     class FinishedStep(CircumnavigateOpenDiscreteData):
         pass
 
-    class Complete(NamedTuple):
+    class Complete(Outcome):
         pass
 
     class TimedOut(CircumnavigateOpenDiscreteData):
@@ -47,16 +48,16 @@ class CircumnavigateOpenDiscreteDiamondTurns(TurnToYaw):
     timeout: float = 8.0
     yaw_threshold: float = 7.5
     settle_time: float = 1.0
-    angle_per_iter: float = 360.0 / 4.0 + 3 # add 3 degrees each turn to account for drift
+    angle_per_iter: float = 360.0 / 4.0 + 3  # add 3 degrees each turn to account for drift
     initial_turn: float = angle_per_iter / 2.0
 
     @property
     def target_yaw(self) -> float:
         return self._target_yaw
 
-    def __init__(self, prev_outcome: NamedTuple):
+    def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
-        self.dir = 1 # always go clockwise for matching points
+        self.dir = 1  # always go clockwise for matching points
 
         if not isinstance(prev_outcome, CircumnavigateOpenDiscreteData):
             self.cum_angle = 0.0
@@ -90,7 +91,7 @@ class CircumnavigateOpenDiscreteMove(TimedState):
     timeout: float = 11.0
     surge_twist: float = 0.15
 
-    def __init__(self, prev_outcome: NamedTuple):
+    def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
         if not isinstance(prev_outcome, CircumnavigateOpenDiscreteData):
             raise TypeError(f"Expected type CircumnavigateOpenDiscreteData, received {prev_outcome}")
@@ -99,7 +100,7 @@ class CircumnavigateOpenDiscreteMove(TimedState):
         self.ccw = prev_outcome.ccw
 
     @classmethod
-    def is_valid_income_type(cls, outcome_type: Type[NamedTuple]) -> bool:
+    def is_valid_income_type(cls, outcome_type: Type[Outcome]) -> bool:
         return issubclass(outcome_type, CircumnavigateOpenDiscreteData)
 
     def handle_if_not_timedout(self) -> None:

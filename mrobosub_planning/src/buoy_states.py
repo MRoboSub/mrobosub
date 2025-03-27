@@ -1,18 +1,18 @@
 import rospy
-from umrsm import State
+from umrsm import Outcome
 from abstract_states import AlignPathmarker, TimedState
 from periodic_io import PIO, ImageDetections, ImageTarget
 from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
-from typing import Dict, Optional, Tuple, Type, Union, NamedTuple
+from typing import Dict, Optional, Tuple, Type, Union
 
 
 class ZedPause(TimedState):
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     timeout: float = 5.0
 
-    def __init__(self, prev_outcome: NamedTuple):
+    def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
         PIO.activate_zed()
 
@@ -24,7 +24,7 @@ class ZedPause(TimedState):
         return self.TimedOut()
 
 
-class SeenBuoyType(NamedTuple):
+class SeenBuoyType(Outcome):
     buoy_results: ObjectPositionResponse
 
 
@@ -32,13 +32,13 @@ class ApproachBuoyOpen(TimedState):
     class SeenBuoy(SeenBuoyType):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     surge_speed: float = 0.15
     timeout: float = 20
 
-    def __init__(self, prev_outcome: NamedTuple) -> None:
+    def __init__(self, prev_outcome: Outcome) -> None:
         super().__init__(prev_outcome)
         PIO.activate_zed()
         self.target_yaw = getattr(prev_outcome, "angle", PIO.Pose.yaw)
@@ -57,7 +57,7 @@ class ApproachBuoyOpen(TimedState):
         return self.TimedOut()
 
 
-class CenterHeaveBuoyData(NamedTuple):
+class CenterHeaveBuoyData(Outcome):
     last_data: ObjectPositionResponse
 
 
@@ -73,7 +73,7 @@ class CenterHeaveBuoy(TimedState):
     deadband: int = 5  # pixels, or maybe 5 degrees
     timeout: float = 40.0
 
-    def __init__(self, prev_outcome: NamedTuple) -> None:
+    def __init__(self, prev_outcome: Outcome) -> None:
         super().__init__(prev_outcome)
         PIO.activate_zed()
         if not isinstance(prev_outcome, SeenBuoyType):
@@ -82,7 +82,7 @@ class CenterHeaveBuoy(TimedState):
         self.buoy_y_theta = self.most_recent_results.y_theta
 
     @classmethod
-    def is_valid_income_type(cls, outcome_type: Type[NamedTuple]) -> bool:
+    def is_valid_income_type(cls, outcome_type: Type[Outcome]) -> bool:
         return issubclass(outcome_type, SeenBuoyType)
 
     def handle_if_not_timedout(self) -> Union[Centered, None]:
@@ -107,10 +107,10 @@ class CenterHeaveBuoy(TimedState):
 
 
 class CenterYawBuoy(TimedState):
-    class CloseToBuoy(NamedTuple):
+    class CloseToBuoy(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     radius_thold: float = 21.0
@@ -119,7 +119,7 @@ class CenterYawBuoy(TimedState):
     yaw_factor: float = 0.045
     timeout: float = 40.0
 
-    def __init__(self, prev_outcome: NamedTuple) -> None:
+    def __init__(self, prev_outcome: Outcome) -> None:
         super().__init__(prev_outcome)
         PIO.activate_zed()
         if type(prev_outcome) != CenterHeaveBuoy.Centered:
@@ -133,7 +133,7 @@ class CenterYawBuoy(TimedState):
         self.target_heave = PIO.Pose.heave
 
     @classmethod
-    def is_valid_income_type(cls, outcome_type: Type[NamedTuple]) -> bool:
+    def is_valid_income_type(cls, outcome_type: Type[Outcome]) -> bool:
         return outcome_type == CenterHeaveBuoy.Centered
 
     def handle_if_not_timedout(self) -> Union[CloseToBuoy, None]:
@@ -166,10 +166,10 @@ class CenterYawBuoy(TimedState):
 
 
 class CenterYawBuoyDiscrete(TimedState):
-    class CloseToBuoy(NamedTuple):
+    class CloseToBuoy(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     radius_thold: float = 20.0
@@ -178,7 +178,7 @@ class CenterYawBuoyDiscrete(TimedState):
     # yaw_factor: float = 0.5
     timeout: float = 100.0
 
-    def __init__(self, prev_outcome: NamedTuple) -> None:
+    def __init__(self, prev_outcome: Outcome) -> None:
         super().__init__(prev_outcome)
         PIO.activate_zed()
         if not isinstance(prev_outcome, CenterHeaveBuoyData):
@@ -204,7 +204,7 @@ class CenterYawBuoyDiscrete(TimedState):
         self.last_iter = False
 
     @classmethod
-    def is_valid_income_type(cls, outcome_type: Type[NamedTuple]) -> bool:
+    def is_valid_income_type(cls, outcome_type: Type[Outcome]) -> bool:
         return issubclass(outcome_type, CenterHeaveBuoyData)
 
     def handle_if_not_timedout(self) -> Union[CloseToBuoy, None]:
@@ -291,7 +291,7 @@ class CenterYawBuoyDiscrete(TimedState):
 class BuoyPause(TimedState):
     timeout: float = 3.0
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     def handle_if_not_timedout(self) -> None:
@@ -302,23 +302,23 @@ class BuoyPause(TimedState):
 
 
 class AlignBinsPathmarker(AlignPathmarker):
-    class AlignedToBins(NamedTuple):
+    class AlignedToBins(Outcome):
         pass
 
-    class NoMeasurements(NamedTuple):
+    class NoMeasurements(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     yaw_threshold = 2.0
     timeout = 10.0
 
-    def __init__(self, prev_outcome: NamedTuple):
+    def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
         self.iter = -50
 
-    def handle_if_not_timedout(self) -> Union[NamedTuple, None]:
+    def handle_if_not_timedout(self) -> Union[Outcome, None]:
         if self.iter < 0:
             PIO.set_target_twist_surge(-0.1)
             PIO.set_target_twist_sway(-0.1)
