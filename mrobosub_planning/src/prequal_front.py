@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 from periodic_io import PIO, angle_error
 from umrsm import *
-from umrsm import TransitionMap
 from common_states import Start, Submerge
 from abstract_states import ForwardAndWait, TimedState
-from typing import NamedTuple, Union
+from typing import Union
 
 
 class AlignGate(TimedState):
-    class Reached(NamedTuple):
+    class Reached(Outcome):
         pass
 
-    class TimedOut(NamedTuple):
+    class TimedOut(Outcome):
         pass
 
     target_yaw: float = 0.0
@@ -30,7 +29,7 @@ class AlignGate(TimedState):
 
 
 class ApproachGate(ForwardAndWait):
-    class Reached(NamedTuple):
+    class Reached(Outcome):
         pass
 
     target_heave: float = 1.4  # TODO
@@ -49,7 +48,7 @@ class ApproachGate(ForwardAndWait):
 
 
 class ApproachMarker(ForwardAndWait):
-    class Reached(NamedTuple):
+    class Reached(Outcome):
         pass
 
     target_heave: float = 1.4  # TODO
