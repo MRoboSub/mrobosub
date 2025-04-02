@@ -5,7 +5,7 @@ project(mrobosub_hal)
 # add_compile_options(-std=c++11)
 
 #add dynamic reconfigure api
-#find_package(catkin REQUIRED dynamic_reconfigure)
+find_package(catkin REQUIRED dynamic_reconfigure)
 generate_dynamic_reconfigure_options(
   cfg/thruster_mapping.cfg
   #...
@@ -21,7 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
   mrobosub_msgs
 )
 
-add_dependencies(thruster_controller ${PROJECT_NAME}_gencfg)
+#add_dependencies(thruster_controller ${PROJECT_NAME}_gencfg)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
