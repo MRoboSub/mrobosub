@@ -4,6 +4,13 @@ project(mrobosub_hal)
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
+#add dynamic reconfigure api
+#find_package(catkin REQUIRED dynamic_reconfigure)
+generate_dynamic_reconfigure_options(
+  cfg/thruster_mapping.cfg
+  #...
+)
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -13,6 +20,8 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   mrobosub_msgs
 )
+
+add_dependencies(thruster_controller ${PROJECT_NAME}_gencfg)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)

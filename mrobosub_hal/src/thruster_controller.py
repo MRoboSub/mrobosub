@@ -2,7 +2,7 @@
 
 import rospy
 
-from mrobosub_lib.lib import Node
+from mrobosub_lib.lib import Node, Param
 from serial import Serial
 from serial.serialutil import SerialException
 from mrobosub_msgs.msg import MotorState
@@ -14,6 +14,15 @@ NUM_MOTORS = 8
 
 
 class ThrusterController(Node):
+    motor0 = Param[float]
+    motor1 = Param[float]
+    motor2 = Param[float]
+    motor3 = Param[float]
+    motor4 = Param[float]
+    motor5 = Param[float]
+    motor6 = Param[float]
+    motor7 = Param[float]
+
     def __init__(self):
         super().__init__("thruster_controller")
         print("Launched thruster_controller node")
@@ -94,6 +103,9 @@ class ThrusterController(Node):
             raise ValueError(
                 f"motor number {motor} out of range (should be in [0-{NUM_MOTORS-1}])"
             )
+    
+        motor_name_logical = f"motor{motor}"
+        motor = getattr(self, motor_name_logical) # replaces logical motor with actual motor in wiring
 
         LSBs = pwm_val % (2**7)
         MSBs = int(pwm_val / (2**7))
