@@ -1,4 +1,5 @@
 <launch>
     <node pkg="mrobosub_hal" type="thruster_controller.py" name="thruster_controller" output="screen">
+    <rosparam command="load" file="$(find mrobosub_hal)/params/thruster_controller.yaml" />
     </node>
 </launch>
