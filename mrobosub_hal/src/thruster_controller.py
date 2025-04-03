@@ -14,8 +14,7 @@ from mrobosub_hal.cfg import thruster_mappingConfig
 
 
 NUM_MOTORS = 8
-def thruster_mapping_callback(config, level):
-    print("updated")
+def thruster_mapping_callback(config, _):
     return config
 
 class ThrusterController(Node):
@@ -30,6 +29,7 @@ class ThrusterController(Node):
         self.serial = None
         self.connect()
         self.get_errors()  # clear errors at the start
+        self.srv = Server(thruster_mappingConfig, thruster_mapping_callback)
 
         self.object_position_service = rospy.Service(
             "emergency_stop_motors", SetBool, self.handle_emergency_stop
@@ -37,8 +37,6 @@ class ThrusterController(Node):
         self.motor_sub = rospy.Subscriber(
             "/motor_output", MotorState, self.motor_callback
         )
-
-        self.srv = Server(thruster_mappingConfig, thruster_mapping_callback)
 
     def connect(self) -> bool:
         try:
@@ -102,9 +100,8 @@ class ThrusterController(Node):
             raise ValueError(
                 f"motor number {motor} out of range (should be in [0-{NUM_MOTORS-1}])"
             )
-    
-        motor_name_logical = f"motor{motor}"
-        motor = getattr(self, motor_name_logical) # replaces logical motor with actual motor in wiring
+        
+        motor = getattr(self.srv.config, f"motor{motor}")
 
         LSBs = pwm_val % (2**7)
         MSBs = int(pwm_val / (2**7))
