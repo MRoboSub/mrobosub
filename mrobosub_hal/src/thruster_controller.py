@@ -2,7 +2,7 @@
 
 import rospy
 
-from mrobosub_lib.lib import Node, Param
+from mrobosub_lib.lib import Node
 from serial import Serial
 from serial.serialutil import SerialException
 from mrobosub_msgs.msg import MotorState
@@ -19,14 +19,6 @@ def thruster_mapping_callback(config, level):
     return config
 
 class ThrusterController(Node):
-    motor0 = Param[float]
-    motor1 = Param[float]
-    motor2 = Param[float]
-    motor3 = Param[float]
-    motor4 = Param[float]
-    motor5 = Param[float]
-    motor6 = Param[float]
-    motor7 = Param[float]
 
     def __init__(self):
         super().__init__("thruster_controller")
