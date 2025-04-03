@@ -9,9 +9,14 @@ from mrobosub_msgs.msg import MotorState
 from std_srvs.srv import SetBool, SetBoolResponse
 from typing import Optional
 
+from dynamic_reconfigure.server import Server
+from mrobosub_hal.cfg import thruster_mappingConfig
+
 
 NUM_MOTORS = 8
-
+def thruster_mapping_callback(config, level):
+    print("updated")
+    return config
 
 class ThrusterController(Node):
     motor0 = Param[float]
@@ -40,6 +45,8 @@ class ThrusterController(Node):
         self.motor_sub = rospy.Subscriber(
             "/motor_output", MotorState, self.motor_callback
         )
+
+        self.srv = Server(thruster_mappingConfig, thruster_mapping_callback)
 
     def connect(self) -> bool:
         try:
