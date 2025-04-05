@@ -10,8 +10,8 @@ class CircumnavigateOpenContinuous(TimedState):
         pass
 
     timeout: float = 10
-    yaw_twist: float = 0.2
-    surge_twist: float = 0.2
+    yaw_twist: float = 1.5
+    surge_twist: float = 1.5
 
     def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
@@ -89,7 +89,7 @@ class CircumnavigateOpenDiscreteMove(TimedState):
         pass
 
     timeout: float = 11.0
-    surge_twist: float = 0.15
+    surge_twist: float = 1.0
 
     def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)

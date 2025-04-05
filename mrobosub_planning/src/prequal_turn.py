@@ -32,7 +32,7 @@ class MovePastMarker(ForwardAndWait):
 
     target_heave: float = 1.4
     target_surge_time: float = 5
-    surge_speed: float = 0.2
+    surge_speed: float = 1.5
     wait_time: float = 1
 
     def handle_reached(self) -> Reached:
@@ -70,7 +70,7 @@ class LeaveMarker(ForwardAndWait):
 
     target_heave: float = 1.4
     target_surge_time: float = 10
-    surge_speed: float = 0.2
+    surge_speed: float = 1.5
     wait_time: float = 1
 
     def handle_reached(self) -> Reached:
@@ -86,7 +86,7 @@ class ReturnToGate(ForwardAndWait):
 
     target_heave: float = 1.4
     target_surge_time: float = 224
-    surge_speed: float = 0.2
+    surge_speed: float = 1.5
     wait_time: float = 1
 
     def handle_reached(self) -> Outcome:
