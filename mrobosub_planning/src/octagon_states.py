@@ -32,7 +32,7 @@ class GoToOctagon(TimedState):
 
     timeout: float = 20.0
     yaw_angle: float = 30.0
-    surge_speed: float = 0.15
+    surge_speed: float = 1.0
 
     def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
