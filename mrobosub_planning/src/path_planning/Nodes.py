@@ -7,10 +7,10 @@ class Node:
         self.location = location
         self.x = location[1]
         self.y = location[0]
-        self.type = None
         self.parent = None
         self.occupancy = 0
         self.cost = 0
+    
     def __lt__(self, other):
         return self.cost < other.cost
         

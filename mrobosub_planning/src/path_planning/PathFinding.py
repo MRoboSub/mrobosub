@@ -1,6 +1,6 @@
 import array
 import math
-import Nodes as nd
+from Nodes import Node
 import numpy as np
 import heapq as hq
 import rospy
@@ -28,7 +28,7 @@ class PathFinding:
         self.sub_pos = [msg.x_pos, msg.y_pos]
 
     #find path using basic heuristic  
-    def findPath(self, startNode, goalNode, OccupancyGrid):
+    def findPath(self, startNode: Node, goalNode: Node, OccupancyGrid: OccupancyGrid) -> "list[Node]":
 
         # start by creating a new empty path, open list, and closed list. and setting path_found flag to false.
         path = []
@@ -38,7 +38,7 @@ class PathFinding:
         # set path_found to false, nextNode to none, and push the start node to the openlist.
         # Open list should be a priority queue, with nodes with the least cost being at the top.
         path_found = False
-        nextNode = None
+        nextNode = startNode
         hq.heappush(open_list, startNode)
         
 
@@ -59,7 +59,7 @@ class PathFinding:
                 path_found = True
                 break
             
-            childNodes = self.getNeighbors(nextNode, self.OccupancyGrid)
+            childNodes = self.getNeighbors(nextNode, OccupancyGrid)
             for child in childNodes:
                 if child != None:
                     #check if child is in closed list or open list
@@ -85,11 +85,11 @@ class PathFinding:
             # prune the path to remove unnecessary nodes and increase speed
             prunedNodePath = self.prune_node_path(nodePath)
             # convert the node path to a pose path, which can then be used with PIDs 
-            path = self.extract_pose_path(prunedNodePath, distanceGrid)
+            path = self.extract_pose_path(prunedNodePath, OccupancyGrid)
     
         else:
             print("A* Didn't find a path yet")
-            return 0
+            return []
 
         return path
 
@@ -123,7 +123,7 @@ class PathFinding:
             x = current.x + xDeltas[i]
             y = current.y + yDeltas[i]
             if distanceGrid.isCellInGrid(x, y):
-                child = nd.Node([x, y])
+                child = Node([x, y])
                 child.setParent(current)
                 neighbors.append(child)
         return neighbors
@@ -144,7 +144,7 @@ class PathFinding:
         return path
     
     #TODO - complete extract_pose_path
-    def extract_pose_path(self, path, distanceGrid):
+    def extract_pose_path(self, path, distanceGrid) -> list:
         # The purpose of this function is to convert from the node path to pose path, such that the paths are put in the real world from
         # using x and y distance coordinates from a global start point. This coordinate frame is more useful for us because we can use the
         # coordinates to find target directions and distances for PID control.
@@ -167,9 +167,9 @@ class PathFinding:
             theta = math.atan2(delta_y, delta_x)
             #TODO - instead of pushing nodes, I should make a separate 
             # pose class and keep them separate. || or, I could make the node contain both the pose and the cell
-            new_path.append(nd.Node([current[0], current[1], theta])) # add new node to list using pose
+            new_path.append(Node([current[0], current[1], theta])) # add new node to list using pose
             
-        return path
+        return new_path
     
     # ! - this may lead to a slow path, refine this method to remove more nodes.
     def prune_node_path(self, path):

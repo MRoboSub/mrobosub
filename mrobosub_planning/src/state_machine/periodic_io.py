@@ -28,11 +28,13 @@ class PIO:
         yaw = 0.0
         heave = 0.0
         roll = 0.0
+        surge = 0.0
 
     class TargetPose:
         yaw = 0.0
         heave = 0.0
         roll = 0.0
+        surge = 0.0
 
     buoy_collision = False
 
@@ -87,6 +89,11 @@ class PIO:
     def set_target_pose_roll(cls, target_roll: float) -> None:
         cls._target_pose_roll_pub.publish(target_roll)
         cls.TargetPose.roll = target_roll
+        
+    @classmethod
+    def set_target_pose_surge(cls, target_surge: float) -> None:
+        cls._target_pose_surge_pub.publish(target_surge)
+        cls.TargetPose.surge = target_surge
 
     @classmethod
     def set_target_twist_roll(cls, override_roll: float) -> None:
@@ -256,6 +263,7 @@ class PIO:
     _target_pose_heave_pub = rospy.Publisher("/target_pose/heave", Float64, queue_size=1)
     _target_pose_yaw_pub = rospy.Publisher("/target_pose/yaw", Float64, queue_size=1)
     _target_pose_roll_pub = rospy.Publisher("/target_pose/roll", Float64, queue_size=1)
+    _target_pose_surge_pub = rospy.Publisher("/target_pose/surge", Float64, queue_size=1)
 
     _target_twist_yaw_pub = rospy.Publisher("/target_twist/yaw", Float64, queue_size=1)
     _target_twist_roll_pub = rospy.Publisher("/target_twist/roll", Float64, queue_size=1)
