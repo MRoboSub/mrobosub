@@ -35,7 +35,7 @@ class ApproachBuoyOpen(TimedState):
     class TimedOut(Outcome):
         pass
 
-    surge_speed: float = 0.15
+    surge_speed: float = 1.0
     timeout: float = 20
 
     def __init__(self, prev_outcome: Outcome) -> None:
@@ -68,8 +68,8 @@ class CenterHeaveBuoy(TimedState):
     class TimedOut(CenterHeaveBuoyData):
         pass
 
-    heave_down_speed: float = 0.2
-    heave_up_speed: float = -0.1
+    heave_down_speed: float = 1.5
+    heave_up_speed: float = -0.75
     deadband: int = 5  # pixels, or maybe 5 degrees
     timeout: float = 40.0
 
@@ -115,7 +115,7 @@ class CenterYawBuoy(TimedState):
 
     radius_thold: float = 21.0
     unseen_thold: float = 20.0
-    surge_speed: float = 0.15
+    surge_speed: float = 1.0
     yaw_factor: float = 0.045
     timeout: float = 40.0
 
@@ -174,7 +174,7 @@ class CenterYawBuoyDiscrete(TimedState):
 
     radius_thold: float = 20.0
     unseen_thold: float = 20.0
-    surge_speed: float = 0.15
+    surge_speed: float = 1.0
     # yaw_factor: float = 0.5
     timeout: float = 100.0
 
