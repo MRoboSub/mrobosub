@@ -88,7 +88,7 @@ class ThrusterController(Node):
             raise ValueError(
                 f"Thruster Controller [ERROR]: PWM value {pwm_raw} out of range (should be in [-1, 1])"
             )
-        return int((pwm_raw * 2000) + 6000)
+        return int((pwm_raw * 1600) + 6000)
 
     # in case of invalid PWM or motor number parameters, does not send any updated signal to the motor controller
     def send_signal(self, motor: int, pwm_raw: float) -> int:

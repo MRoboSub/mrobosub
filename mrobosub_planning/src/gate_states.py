@@ -43,7 +43,7 @@ class ApproachGate(TimedState):
         pass
 
     timeout: float = 150.0
-    surge_speed: float = 0.15
+    surge_speed: float = 1.0
     found_image_threshold = 50
 
     def __init__(self, prev_outcome: Outcome):
@@ -140,7 +140,7 @@ class ApproachGateImage2(TimedState):
         pass
 
     radius_thold: float = 25.0
-    surge_speed: float = 0.15
+    surge_speed: float = 1.0
     # yaw_factor: float = 0.5
     timeout: float = 100.0
     lost_image_threshold: int = 400
