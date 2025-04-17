@@ -40,7 +40,7 @@ class ThrusterController(Node):
 
     def connect(self) -> bool:
         try:
-            self.serial = Serial(self.port)
+            self.serial = Serial(self.port, timeout=0.5, write_timeout=0.5)
         except SerialException as e:
             print("Could not connect to mini maestro", e)
             return False
