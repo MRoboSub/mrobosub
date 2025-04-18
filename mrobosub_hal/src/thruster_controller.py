@@ -92,6 +92,8 @@ class ThrusterController(Node):
 
     # in case of invalid PWM or motor number parameters, does not send any updated signal to the motor controller
     def send_signal(self, motor: int, pwm_raw: float) -> int:
+        if getattr(self.srv.config, f"motor{motor}_rev"):
+            pwm_raw *= -1
         pwm_val: int = self.convert_pwm_signal(pwm_raw)
         if pwm_val == -1:
             return -1
@@ -100,7 +102,7 @@ class ThrusterController(Node):
             raise ValueError(
                 f"motor number {motor} out of range (should be in [0-{NUM_MOTORS-1}])"
             )
-        
+
         motor = getattr(self.srv.config, f"motor{motor}")
 
         LSBs = pwm_val % (2**7)
