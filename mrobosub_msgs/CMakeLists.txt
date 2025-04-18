@@ -14,6 +14,7 @@ add_message_files(
     MotorState.msg
     Imu_INS.msg
     Imu_PIMU.msg
+    Pose.msg
 )
 
 add_service_files(
