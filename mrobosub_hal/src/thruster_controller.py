@@ -14,8 +14,11 @@ from mrobosub_hal.cfg import thruster_mappingConfig
 
 
 NUM_MOTORS = 8
+
+
 def thruster_mapping_callback(config, _):
     return config
+
 
 class ThrusterController(Node):
 
@@ -85,7 +88,9 @@ class ThrusterController(Node):
     # pwm_val should be in [4000, 8000]
     def convert_pwm_signal(self, pwm_raw: float) -> int | None:
         if pwm_raw < -1 or pwm_raw > 1:
-            print(f"Thruster Controller [ERROR]: PWM value {pwm_raw} out of range (should be in [-1, 1])")
+            print(
+                f"Thruster Controller [ERROR]: PWM value {pwm_raw} out of range (should be in [-1, 1])"
+            )
             return None
         return int((pwm_raw * 1600) + 6000)
 
@@ -98,7 +103,9 @@ class ThrusterController(Node):
             return -1
 
         if motor < 0 or motor >= NUM_MOTORS:
-            print(f"ERROR: motor number {motor} out of range (should be in [0, {NUM_MOTORS-1}])")
+            print(
+                f"ERROR: motor number {motor} out of range (should be in [0, {NUM_MOTORS-1}])"
+            )
             return -1
 
         motor = getattr(self.srv.config, f"motor{motor}")
@@ -109,7 +116,7 @@ class ThrusterController(Node):
         self.get_errors()
         self.write(bytearray([0xAA, 0x0C, 0x04, motor, LSBs, MSBs]))
         # print(f"Thruster controller: sent pwm value {pwm_val} to motor {motor}")
-        
+
         return 0
 
     def motor_callback(self, msg: MotorState):
