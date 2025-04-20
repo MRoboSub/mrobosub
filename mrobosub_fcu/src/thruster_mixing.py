@@ -33,12 +33,12 @@ THRUSTER_SWAY = 0.267
 THRUSTERS = [
     ThrusterDescriptor(
         id=0,
-        yaw=-45,
-        pitch=0,
-        roll=0,
-        surge=CORNER_THRUSTER_SURGE,
-        sway=THRUSTER_SWAY,
-        heave=0,
+        yaw=-45,  # yaw of the motor axis, we use z down coordinate frame
+        pitch=0, # pitch of the motor axis
+        roll=0, # roll of the motor axis
+        surge=CORNER_THRUSTER_SURGE, # x position of motor relative to robot origin
+        sway=THRUSTER_SWAY, # y position of motor relative to robot origin
+        heave=0, # z position of motor relative to robot origin
     ),
     ThrusterDescriptor(
         id=1,
