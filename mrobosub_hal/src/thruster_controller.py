@@ -14,8 +14,11 @@ from mrobosub_hal.cfg import thruster_mappingConfig
 
 
 NUM_MOTORS = 8
+
+
 def thruster_mapping_callback(config, _):
     return config
+
 
 class ThrusterController(Node):
 
@@ -81,26 +84,30 @@ class ThrusterController(Node):
         r.success = True
         return r
 
-    # pwm_raw ranges from -1 to 1
-    # pwm_val ranges from 4000 to 8000
-    def convert_pwm_signal(self, pwm_raw: float) -> int:
+    # pwm_raw should be in [-1, 1]
+    # pwm_val should be in [4000, 8000]
+    def convert_pwm_signal(self, pwm_raw: float) -> int | None:
         if pwm_raw < -1 or pwm_raw > 1:
-            raise ValueError(
+            print(
                 f"Thruster Controller [ERROR]: PWM value {pwm_raw} out of range (should be in [-1, 1])"
             )
+            return None
         return int((pwm_raw * 1600) + 6000)
 
     # in case of invalid PWM or motor number parameters, does not send any updated signal to the motor controller
     def send_signal(self, motor: int, pwm_raw: float) -> int:
-        pwm_val: int = self.convert_pwm_signal(pwm_raw)
-        if pwm_val == -1:
+        if getattr(self.srv.config, f"motor{motor}_rev"):
+            pwm_raw *= -1
+        pwm_val = self.convert_pwm_signal(pwm_raw)
+        if pwm_val is None:
             return -1
 
         if motor < 0 or motor >= NUM_MOTORS:
-            raise ValueError(
-                f"motor number {motor} out of range (should be in [0-{NUM_MOTORS-1}])"
+            print(
+                f"ERROR: motor number {motor} out of range (should be in [0, {NUM_MOTORS-1}])"
             )
-        
+            return -1
+
         motor = getattr(self.srv.config, f"motor{motor}")
 
         LSBs = pwm_val % (2**7)
