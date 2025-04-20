@@ -4,7 +4,7 @@ from Nodes import Node
 import numpy as np
 import heapq as hq
 import rospy
-from std_msgs.msg import Float64, Float32
+from std_msgs.msg import Float64
 from OccupancyGrid import OccupancyGrid
 
 
@@ -13,21 +13,43 @@ class PathFinding:
     Subscribers
     - /pose/x_pos
     - /pose/y_pos
-
-    Publishers
-    - /path
     """
-    sub_pos = None
     def __init__(self):
         #  Initialize with the x-pose and the y-pose from the ekf.
-        rospy.Subscriber('/pose/x_pos', Float64, self.pose_callback)
-        rospy.Subscriber('/pose/y_pos', Float64, self.pose_callback)
-        # TODO This is where we will make the grid
-    
-    def pose_callback(self, msg):
-        self.sub_pos = [msg.x_pos, msg.y_pos]
+        rospy.Subscriber('/pose/x_pos', Float64, self.x_pose_callback)
+        rospy.Subscriber('/pose/y_pos', Float64, self.y_pose_callback)
+        rospy.Subscriber('/pose/yaw', Float64, self.yaw_callback)
 
-    #find path using basic heuristic  
+    def x_pose_callback(self,msg):
+        self.cur_x_pos = msg.data
+
+    def y_pose_callback(self, msg):
+        self.cur_y_pos = msg.data
+    
+    def yaw_callback(self, msg):
+        self.sub_yaw = msg.yaw
+
+    def setCurrentNode(self):
+        self.cur_pos = [self.cur_x_pos, self.cur_y_pos]
+        self.currentNode = Node(self.cur_pos)
+
+    def setGoalNode(self, x,y):
+        self.goal_pos = [x,y]
+        self.goalNode = Node(self.goal_pos)
+
+    def setTargetYaw(self, goalNode:Node, currentNode:Node):
+        deltax = goalNode.x - currentNode.x 
+        deltay = goalNode.y - currentNode.y
+        self.target_yaw = math.atan2(deltay, deltax)
+
+    def setTargetSurge(self, goalNode:Node, currentNode:Node):
+        deltax = goalNode.x - currentNode.x
+        deltay = goalNode.y - currentNode.y
+        self.target_surge = ((deltax * deltax) + (deltay * deltay))**(1/2)
+
+    def setOccupancyGrid(self, width, height, metersPerCell, CellsPerMeter, OccupiedThreshold):
+        self.occupancyGrid = OccupancyGrid(width, height, metersPerCell, CellsPerMeter, OccupiedThreshold)
+
     def findPath(self, startNode: Node, goalNode: Node, OccupancyGrid: OccupancyGrid) -> "list[Node]":
 
         # start by creating a new empty path, open list, and closed list. and setting path_found flag to false.
@@ -92,7 +114,6 @@ class PathFinding:
             return []
 
         return path
-
     
     def h_cost(self, current, goal):
         # This is the function that calculates the cost of each node. The costs in our case can be determined by using the equation
@@ -109,7 +130,6 @@ class PathFinding:
         h_cost = hor_cost * (dx + dy) + (dia_cost - 2 * hor_cost) * min(dx, dy);
         
         return h_cost
-    
  
     def getNeighbors(self, current, distanceGrid):
         # This function finds and stores all of the nodes surrounding the current node in an array. It does this by taking the "detlas" around the node,
