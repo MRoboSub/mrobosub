@@ -1,6 +1,6 @@
 <launch>
     <node
-        pkg="mrobosub_perception"
+        pkg="mrobosub_hal"
         type="webcam_pub.py"
         name="webcam_pub"
     />
