@@ -1,0 +1,52 @@
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+# A regex preceded by the negation operator '!'
+# will filter out any file or directory matching
+# the expression from being excluded.
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | devel  # ROS build directory
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+known_first_party = ["mrobosub", "mrobosub_msgs", "mrobosub_lib"]
+known_third_party = ["rospy", "std_msgs", "sensor_msgs", "geometry_msgs", "tf", "numpy", "cv2"]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+# Per-module options (matches existing mypy.ini)
+[[tool.mypy.overrides]]
+module = [
+    "mrobosub_msgs.*",
+    "std_msgs.*", 
+    "rospy",
+    "std_srvs.*",
+    "non_idealistic_states.*"
+]
+ignore_missing_imports = true
