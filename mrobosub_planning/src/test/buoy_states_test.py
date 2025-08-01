@@ -1,13 +1,17 @@
-from utils import ObjectPositionServiceMock, TargetReader, PoseMock
-from std_msgs.msg import Float64, String
-from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse  # type: ignore
 from time import sleep
+
 import rospy
+from std_msgs.msg import Float64, String
+from utils import ObjectPositionServiceMock, PoseMock, TargetReader
+
+from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse  # type: ignore
+
 
 def main() -> None:
-    rospy.init_node('test_sim')
+    rospy.init_node("test_sim")
     started = False
     sub = None
+
     def set_started(msg: String) -> None:
         nonlocal started, sub
         if started:
@@ -17,26 +21,27 @@ def main() -> None:
         if sub is not None:
             sub.unregister()
         del sub
-    sub = rospy.Subscriber('/captain/current_state', String, set_started)
+
+    sub = rospy.Subscriber("/captain/current_state", String, set_started)
 
     while not started:
         sleep(0.1)
-    print('Started!')
+    print("Started!")
     sleep(0.5)
 
     buoy_pos_mock = ObjectPositionServiceMock()
     reader = TargetReader()
     pose = PoseMock()
 
-    pose.heave = 0.
+    pose.heave = 0.0
 
     while pose.heave < reader.target_pose_heave:
         pose.heave += 0.005
-        #print(f"{pose.heave=}")
+        # print(f"{pose.heave=}")
         sleep(0.05)
         pose.publish_update()
 
-    for i in range(20*3):
+    for i in range(20 * 3):
         sleep(0.05)
 
     buoy_pos_instance = ObjectPositionResponse()
@@ -46,12 +51,11 @@ def main() -> None:
 
     buoy_pos_mock.set_position(buoy_pos_instance)
 
+    for i in range(20 * 30):
 
-    for i in range(20*30):
-        
         sleep(0.05)
-        
-        #print(f"{reader=}")
+
+        # print(f"{reader=}")
         print(f"{reader.target_twist_surge=}")
         print(f"{reader.target_twist_heave=}")
         print(f"{reader.target_pose_yaw=}")
@@ -65,7 +69,5 @@ def main() -> None:
     #     print(f"{reader.target_pose_yaw=}")
 
 
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,8 +1,9 @@
 from typing import Optional, Union
-from umrsm import State, Outcome
+
+import rospy
 from abstract_states import TimedState
 from periodic_io import PIO
-import rospy
+from umrsm import Outcome, State
 
 
 class Start(State):
@@ -62,7 +63,10 @@ class MoveToXY(TimedState):
         if not PIO.is_yaw_within_threshold(self.yaw_threshold):
             self.timer = rospy.get_time()
 
-        if not self._reached_angle and rospy.get_time() - self.timer >= self.settle_time:
+        if (
+            not self._reached_angle
+            and rospy.get_time() - self.timer >= self.settle_time
+        ):
             self._reached_angle = True
             self.timer = rospy.get_time()
 
@@ -86,7 +90,9 @@ class MoveToXY(TimedState):
     target_y: float = 0.0
     magnitude_threshold: float = 0.1
     yaw_threshold: float = 2.0
-    settle_time: float = 1.0  # should we use a separate angle settle time and position settle time
+    settle_time: float = (
+        1.0  # should we use a separate angle settle time and position settle time
+    )
     timeout: float = 20.0
 
     kP: float = 0.01  # this is the coefficient of the proportional term in PID

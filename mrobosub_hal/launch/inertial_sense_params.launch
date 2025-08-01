@@ -1,4 +1,4 @@
 <launch>
-	<node name="inertial_sense_node" pkg="inertial_sense_ros" type="inertial_sense_node" 
+	<node name="inertial_sense_node" pkg="inertial_sense_ros" type="inertial_sense_node"
 		output="screen" args="$(find mrobosub_hal)/params/inertial_sense_params.yaml"/>
 </launch>

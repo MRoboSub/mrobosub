@@ -12,7 +12,7 @@ RUN apt-get update && \
 
 RUN pip install mypy -U
 
-SHELL ["/bin/bash", "-c"] 
+SHELL ["/bin/bash", "-c"]
 
 # Create workspace structure
 RUN mkdir -p /root/catkin_ws/src && \

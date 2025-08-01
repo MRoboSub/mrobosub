@@ -44,7 +44,7 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = [
     "mrobosub_msgs.*",
-    "std_msgs.*", 
+    "std_msgs.*",
     "rospy",
     "std_srvs.*",
     "non_idealistic_states.*"

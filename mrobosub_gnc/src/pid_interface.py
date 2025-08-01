@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
+from typing import Final, Optional
+
 import rospy
-from std_msgs.msg import Float64, Bool
+from std_msgs.msg import Bool, Float64
 
 from mrobosub_lib.lib import Node, Param
-
-from typing import Optional, Final
 
 """
 expose subscribers
@@ -16,12 +16,21 @@ expose publishers
     /pid_enable
 """
 
-class PIDInterface():
+
+class PIDInterface:
     def __init__(self, pid_name, callback):
-        rospy.Subscriber(f'/{pid_name}/control_effort', Float64, self.control_effort_callback)
-        self.publisher_enable = rospy.Publisher(f'/{pid_name}/pid_enable', Bool, queue_size=1)
-        self.publisher_setpoint = rospy.Publisher(f'/{pid_name}/setpoint', Float64, queue_size=1)
-        self.publisher_state = rospy.Publisher(f'/{pid_name}/state', Float64, queue_size=1)
+        rospy.Subscriber(
+            f"/{pid_name}/control_effort", Float64, self.control_effort_callback
+        )
+        self.publisher_enable = rospy.Publisher(
+            f"/{pid_name}/pid_enable", Bool, queue_size=1
+        )
+        self.publisher_setpoint = rospy.Publisher(
+            f"/{pid_name}/setpoint", Float64, queue_size=1
+        )
+        self.publisher_state = rospy.Publisher(
+            f"/{pid_name}/state", Float64, queue_size=1
+        )
         self.effort = 0
         self.callback = callback
 

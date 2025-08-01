@@ -1,9 +1,11 @@
-from abstract_states import TimedState, TurnToYaw, AlignPathmarker
-from periodic_io import PIO, ImageTarget
-from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
-import rospy
 from typing import Type, Union
+
+import rospy
+from abstract_states import AlignPathmarker, TimedState, TurnToYaw
+from periodic_io import PIO, ImageTarget
 from umrsm import Outcome
+
+from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
 
 
 class SeenGateImageType(Outcome):

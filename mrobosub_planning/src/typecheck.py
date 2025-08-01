@@ -1,5 +1,6 @@
-from captain import transition_maps
 from inspect import signature
+
+from captain import transition_maps
 
 errors = 0
 for map_name, map in transition_maps.items():

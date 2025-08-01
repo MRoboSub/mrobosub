@@ -1,16 +1,18 @@
 #!/usr/bin/env python
 
+from typing import Final, Optional
+
 import rospy
 from std_msgs.msg import Float64
 
 from mrobosub_lib.lib import Node, Param
 
-from typing import Optional, Final
+ITERATION_RATE = 100  # Hz
 
-ITERATION_RATE = 100 #Hz
 
 def angle_error(setpoint, state):
     return (setpoint - state + 180) % 360 - 180
+
 
 class RectangleTestNode(Node):
 
@@ -25,16 +27,22 @@ class RectangleTestNode(Node):
         heave = 0
 
     def __init__(self):
-        super().__init__('rectangle_test')
-        rospy.Subscriber('/pose/yaw', Float64, self.pose_yaw_callback)
-        rospy.Subscriber('/pose/heave', Float64, self.pose_heave_callback)
-        self.yaw_target_pub = rospy.Publisher('/target_pose/yaw', Float64, queue_size=1)
-        self.heave_target_pub = rospy.Publisher('/target_pose/heave', Float64, queue_size=1)
-        self.yaw_twist_pub = rospy.Publisher('/target_twist/yaw', Float64, queue_size=1)
-        self.surge_output_pub = rospy.Publisher('/output_wrench/surge', Float64, queue_size=1)
-        self.sway_output_pub = rospy.Publisher('/output_wrench/swap', Float64, queue_size=1)
+        super().__init__("rectangle_test")
+        rospy.Subscriber("/pose/yaw", Float64, self.pose_yaw_callback)
+        rospy.Subscriber("/pose/heave", Float64, self.pose_heave_callback)
+        self.yaw_target_pub = rospy.Publisher("/target_pose/yaw", Float64, queue_size=1)
+        self.heave_target_pub = rospy.Publisher(
+            "/target_pose/heave", Float64, queue_size=1
+        )
+        self.yaw_twist_pub = rospy.Publisher("/target_twist/yaw", Float64, queue_size=1)
+        self.surge_output_pub = rospy.Publisher(
+            "/output_wrench/surge", Float64, queue_size=1
+        )
+        self.sway_output_pub = rospy.Publisher(
+            "/output_wrench/swap", Float64, queue_size=1
+        )
         self.rate = rospy.Rate(ITERATION_RATE)
-    
+
     def pose_yaw_callback(self, yaw: Float64):
         self.Pose.yaw = yaw
 
@@ -44,18 +52,21 @@ class RectangleTestNode(Node):
     def close_to(self, setpoint):
         return abs(angle_error(setpoint, self.Pose.yaw)) <= self.angle_threshold
 
-    def run(self): 
-        print('starting depth request')
+    def run(self):
+        print("starting depth request")
         start_time = rospy.get_time()
-        while rospy.get_time() - start_time < self.submerge_wait and not rospy.is_shutdown():
+        while (
+            rospy.get_time() - start_time < self.submerge_wait
+            and not rospy.is_shutdown()
+        ):
             self.heave_target_pub.publish(self.target_heave)
             self.rate.sleep()
 
-        print('starting square')
+        print("starting square")
         self.square(angle=-90, side_time=5, control_heading_on_forward=True, repeat=4)
 
     def square(self, angle=90, side_time=10, control_heading_on_forward=True, repeat=4):
-        """ moves forwards and turns the given angle 4 times. """
+        """moves forwards and turns the given angle 4 times."""
         start_yaw = self.Pose.yaw
         target_yaw = start_yaw
 
@@ -71,7 +82,7 @@ class RectangleTestNode(Node):
                 else:
                     self.yaw_twist_pub.publish(0)
                 self.rate.sleep()
-            
+
             self.surge_output_pub.publish(0)
             rospy.sleep(self.before_turn_wait)
             target_yaw += angle
@@ -88,5 +99,6 @@ class RectangleTestNode(Node):
         self.surge_output_pub.publish(0)
         self.sway_output_pub.publish(0)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     RectangleTestNode().run()

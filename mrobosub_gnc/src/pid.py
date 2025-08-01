@@ -3,16 +3,25 @@
 """
 Helper PID function file.
 """
-import rospy
-import control_math
 from typing import Optional
+
+import control_math
+import rospy
+
 
 class PIDController:
     """
     A simple PID Controller.
     """
 
-    def __init__(self, kp: float, ki: float, kd: float, imin: Optional[float] = None, imax: Optional[float] = None):
+    def __init__(
+        self,
+        kp: float,
+        ki: float,
+        kd: float,
+        imin: Optional[float] = None,
+        imax: Optional[float] = None,
+    ):
         """
         Initializes this PID Controller. Both imin and imax must be supplied for integral windup limiting.
 
@@ -46,17 +55,17 @@ class PIDController:
 
         # Proportional
         pterm = self.kp * error
-        
+
         # Integral
         self.cumulative_error += error * dt
-        iterm = self.ki * self.cumulative_error 
-        
+        iterm = self.ki * self.cumulative_error
+
         # Integral windup limiting
         if self.imin is not None and self.imax is not None:
             iterm = control_math.clamp(iterm, self.imin, self.imax)
 
         # Derivative
-        rate = (error - self.last_error) / dt 
+        rate = (error - self.last_error) / dt
         self.last_error = error
         dterm = self.kd * rate
 

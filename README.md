@@ -10,7 +10,7 @@ First install Docker Desktop (https://www.docker.com/)
 
 ### Windows:
 
-Download WSL 
+Download WSL
 ```console
 $ wsl --install
 ```
@@ -85,7 +85,7 @@ Instructions based on [this GitHub Gist comment](https://gist.github.com/cschiew
 
 1. Download and install [XQuartz](https://www.xquartz.org/)
 2. Run XQuartz and open Settings. In the security tab, enable "Allow connections from network clients". Then Restart XQuartz
-3. Run the following commands in the XQuartz terminal. 
+3. Run the following commands in the XQuartz terminal.
 You may need to run these commands each time you start XQuartz
 
         export DISPLAY=:0

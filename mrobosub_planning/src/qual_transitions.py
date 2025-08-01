@@ -1,18 +1,14 @@
-from common_states import Start, Submerge, Surface, Stop
+from common_states import Start, Stop, Submerge, Surface
 from gate_states import AlignGate, ApproachGate
 from umrsm import TransitionMap
 
 transitions: TransitionMap = {
     Start.Complete: Submerge,
-
     Submerge.Submerged: AlignGate,
     Submerge.TimedOut: AlignGate,
-
     AlignGate.ReachedAngle: ApproachGate,
     AlignGate.TimedOut: ApproachGate,
-
-    ApproachGate.SeenGateImage: ApproachGate, # do not use gate images for qualification
+    ApproachGate.SeenGateImage: ApproachGate,  # do not use gate images for qualification
     ApproachGate.TimedOut: Surface,
-
     Surface.Surfaced: Stop,
 }

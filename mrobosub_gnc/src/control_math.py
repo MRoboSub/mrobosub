@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+
 def clamp(x: float, min: float = -1, max: float = 1) -> float:
     """
     Restricts x to the range min, max. If x leaves the range then the closer extreme is returned. If min > max, then they are swapped.
@@ -10,16 +11,17 @@ def clamp(x: float, min: float = -1, max: float = 1) -> float:
     - max - one end of the range to restrict to
     """
     if min < max:
-        if x > max: 
+        if x > max:
             return max
         if x < min:
             return min
     else:
-        if x > min: 
+        if x > min:
             return min
-        if x < max: 
+        if x < max:
             return max
     return x
+
 
 def clamp_abs(x: float, abslimit: float = 1) -> float:
     """
@@ -27,9 +29,10 @@ def clamp_abs(x: float, abslimit: float = 1) -> float:
 
     Arguments
     - x - the value to clamp
-    - abslimit - the negative/positive limit 
+    - abslimit - the negative/positive limit
     """
     return clamp(x, -abslimit, abslimit)
+
 
 def deadband(x: float, limit: float = 0.1) -> float:
     """

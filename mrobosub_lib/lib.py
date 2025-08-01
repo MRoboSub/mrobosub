@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 
+from typing import Any, Final, Generic, NewType, Sequence, TypeVar
+
 import rospy
-from typing import NewType, TypeVar, Final, Sequence, Any, Generic
 
 Param = Final
+
 
 class Node:
     def __init__(self, name):
         rospy.init_node(name, anonymous=False)
-        rospy.loginfo(f'starting node {name}')
+        rospy.loginfo(f"starting node {name}")
 
         params = rospy.get_param(name, {})
         for key in params:
@@ -38,8 +40,9 @@ class ControlLoopNode(Node):
         pass
 
 
+T = TypeVar("T")
 
-T = TypeVar('T')
+
 class SubscribedVar(Generic[T]):
     def __init__(self, topic, cls, initial=None):
         self.val = initial

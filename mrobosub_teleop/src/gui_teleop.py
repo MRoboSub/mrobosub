@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
+import tkinter as tk
+from dataclasses import dataclass, field
+from math import degrees
+from typing import Final, Optional
+
 import rospy
 from std_msgs.msg import Float64
 
 from mrobosub_lib.lib import Node, Param
 
-from typing import Optional, Final
-from dataclasses import dataclass, field
-import tkinter as tk
-
-from math import degrees
 
 @dataclass
 class DOF:
@@ -34,6 +34,7 @@ class DOF:
             print(" [radians|degrees]", end="")
         print(" value")
 
+
 ALL_DOFS = [
     DOF("heave", True, False),
     DOF("surge", False, False),
@@ -43,12 +44,13 @@ ALL_DOFS = [
     DOF("pitch", True, True),
 ]
 
+
 class MainGUI(tk.Tk):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # root = tk.Tk()
 
     frame = MainGUI()

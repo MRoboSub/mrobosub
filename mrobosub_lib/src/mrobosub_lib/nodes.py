@@ -1,5 +1,5 @@
-__all__ = ('test', )
+__all__ = ("test",)
 
 
 def test():
-    print('YAY THIS WORKS')
+    print("YAY THIS WORKS")

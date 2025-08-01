@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
+from typing import Final, Optional
+
 import rospy
-from std_msgs.msg import Float64
 from pid_interface import PIDInterface
+from std_msgs.msg import Float64
 
 from mrobosub_lib.lib import Node, Param
 
-from typing import Optional, Final
 
 class SwayControlNode(Node):
     """
@@ -21,22 +22,24 @@ class SwayControlNode(Node):
     # pid_params: PIDParams
 
     def __init__(self):
-        super().__init__('surge_control')
-        self.output_sway_pub = rospy.Publisher('/output_wrench/sway', Float64, queue_size=1)
-        rospy.Subscriber('/target_twist/sway', Float64, self.target_twist_sway)
+        super().__init__("surge_control")
+        self.output_sway_pub = rospy.Publisher(
+            "/output_wrench/sway", Float64, queue_size=1
+        )
+        rospy.Subscriber("/target_twist/sway", Float64, self.target_twist_sway)
 
-        
     def target_twist_sway(self, target_twist_sway: Float64):
         self.pub_output_sway(target_twist_sway.data)
 
     def pub_output_sway(self, output: float):
         self.output_sway_pub.publish(output)
 
-    def run(self): 
+    def run(self):
         rospy.spin()
 
     def cleanup(self):
         self.output_sway_pub.publish(0)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     SwayControlNode().run()

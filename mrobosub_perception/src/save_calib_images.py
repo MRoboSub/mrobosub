@@ -1,19 +1,21 @@
 #!/usr/bin/env python
 
-import rospy
-from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
-import cv2
 import os
 import threading
 
+import cv2
+import rospy
+from cv_bridge import CvBridge
+from sensor_msgs.msg import Image
+
+
 class ImageSaverNode:
     def __init__(self):
-        rospy.init_node('image_saver_node', anonymous=True)
+        rospy.init_node("image_saver_node", anonymous=True)
         self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber('/bot_cam', Image, self.image_callback)
+        self.image_sub = rospy.Subscriber("/bot_cam", Image, self.image_callback)
         self.image_count = 0
-        self.save_directory = 'saved_images'
+        self.save_directory = "saved_images"
         self.save_flag = False
 
         # Create save directory if it doesn't exist
@@ -45,10 +47,10 @@ class ImageSaverNode:
         rospy.loginfo("Image saved: %s", filename)
         self.image_count += 1
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     try:
         image_saver_node = ImageSaverNode()
         rospy.spin()
     except rospy.ROSInterruptException:
         pass
-

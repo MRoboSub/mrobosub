@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 
-import rospy
-
-from mrobosub_lib.lib import Node
-from serial import Serial
-from serial.serialutil import SerialException
-from mrobosub_msgs.msg import MotorState
-from std_srvs.srv import SetBool, SetBoolResponse
 from typing import Optional
 
+import rospy
 from dynamic_reconfigure.server import Server
-from mrobosub_hal.cfg import thruster_mappingConfig
+from serial import Serial
+from serial.serialutil import SerialException
+from std_srvs.srv import SetBool, SetBoolResponse
 
+from mrobosub_hal.cfg import thruster_mappingConfig
+from mrobosub_lib.lib import Node
+from mrobosub_msgs.msg import MotorState
 
 NUM_MOTORS = 8
 

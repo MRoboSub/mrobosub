@@ -10,10 +10,9 @@ from types import Any, FunctionType, List, Optional, TypedDict
 
 import rospy
 import util
+from controller import Controller, RosPublisher, RosSubscriber
 from std_msgs.msg import Bool, Float32
 from util.PID import PIDController
-
-from controller import Controller, RosPublisher, RosSubscriber
 
 ITERATION_RATE = 100  # Hz
 

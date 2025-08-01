@@ -1,8 +1,9 @@
-from umrsm import Outcome
+from typing import Optional, Type, Union
+
+import rospy
 from abstract_states import TimedState, TurnToYaw
 from periodic_io import PIO
-import rospy
-from typing import Optional, Type, Union
+from umrsm import Outcome
 
 
 class CircumnavigateOpenContinuous(TimedState):
@@ -48,7 +49,9 @@ class CircumnavigateOpenDiscreteDiamondTurns(TurnToYaw):
     timeout: float = 8.0
     yaw_threshold: float = 7.5
     settle_time: float = 1.0
-    angle_per_iter: float = 360.0 / 4.0 + 3  # add 3 degrees each turn to account for drift
+    angle_per_iter: float = (
+        360.0 / 4.0 + 3
+    )  # add 3 degrees each turn to account for drift
     initial_turn: float = angle_per_iter / 2.0
 
     @property
@@ -64,7 +67,9 @@ class CircumnavigateOpenDiscreteDiamondTurns(TurnToYaw):
             self._target_yaw = (self.cum_angle - self.initial_turn * self.dir) % 360
         else:
             self.cum_angle = prev_outcome.cum_angle + abs(self.angle_per_iter)
-            self._target_yaw = (prev_outcome.curr_angle + self.angle_per_iter * self.dir) % 360
+            self._target_yaw = (
+                prev_outcome.curr_angle + self.angle_per_iter * self.dir
+            ) % 360
         PIO.set_target_twist_surge(0.0)
 
     def handle_unreached(self) -> None:
@@ -94,7 +99,9 @@ class CircumnavigateOpenDiscreteMove(TimedState):
     def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
         if not isinstance(prev_outcome, CircumnavigateOpenDiscreteData):
-            raise TypeError(f"Expected type CircumnavigateOpenDiscreteData, received {prev_outcome}")
+            raise TypeError(
+                f"Expected type CircumnavigateOpenDiscreteData, received {prev_outcome}"
+            )
         self.cum_angle = prev_outcome.cum_angle
         self.curr_yaw = prev_outcome.curr_angle
         self.ccw = prev_outcome.ccw

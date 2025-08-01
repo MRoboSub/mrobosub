@@ -1,9 +1,8 @@
-from umrsm import *
-import graphviz
-
-from captain import transition_maps
-
 from pathlib import Path
+
+import graphviz
+from captain import transition_maps
+from umrsm import *
 
 
 def generate_graph(

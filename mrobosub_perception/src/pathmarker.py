@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 
-import rospy
-from std_msgs.msg import Float64
-from sensor_msgs.msg import Image
-from mrobosub_lib.lib import Node
 import cv2
-from cv_bridge import CvBridge
-from mrobosub_msgs.srv import PathmarkerAngle, PathmarkerAngleResponse
 import numpy as np
+import rospy
+from cv_bridge import CvBridge
+from pipeline import PathmarkerPipeline
+from sensor_msgs.msg import Image
+from std_msgs.msg import Float64
 
 from mrobosub_lib.lib import Node, Param
-
-from pipeline import PathmarkerPipeline
+from mrobosub_msgs.srv import PathmarkerAngle, PathmarkerAngleResponse
 
 
 class Pathmarker(Node):
@@ -26,8 +24,10 @@ class Pathmarker(Node):
     lines_angle_hi: Param[float]
 
     def __init__(self):
-        super().__init__('pathmarker')
-        self.service = rospy.Service('pathmarker/angle', PathmarkerAngle, self.handle_request)
+        super().__init__("pathmarker")
+        self.service = rospy.Service(
+            "pathmarker/angle", PathmarkerAngle, self.handle_request
+        )
         rospy.Subscriber("bot_cam", Image, self.handle_frame, queue_size=1)
 
         self.pipeline = PathmarkerPipeline()
@@ -41,14 +41,12 @@ class Pathmarker(Node):
 
         self.resp = PathmarkerAngleResponse()
 
-
     def handle_frame(self, data):
-        image_ocv = self.br.imgmsg_to_cv2(data, desired_encoding='passthrough')
+        image_ocv = self.br.imgmsg_to_cv2(data, desired_encoding="passthrough")
 
         self.pipeline.process(image_ocv)
         self.resp.found = self.pipeline.found
         self.resp.angle = self.pipeline.angle
-
 
     def handle_request(self, msg):
         return self.resp

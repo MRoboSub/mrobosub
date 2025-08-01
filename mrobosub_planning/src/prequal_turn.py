@@ -1,7 +1,7 @@
-from umrsm import *
-from common_states import *
 import prequal_front
-from abstract_states import TurnToYaw, ForwardAndWait
+from abstract_states import ForwardAndWait, TurnToYaw
+from common_states import *
+from umrsm import *
 
 
 class TurnAroundMarker(TurnToYaw):
@@ -100,17 +100,12 @@ transitions: TransitionMap = prequal_front.transitions.copy()
 transitions.update(
     {
         prequal_front.ApproachMarker.Reached: TurnAroundMarker,
-
         TurnAroundMarker.Reached: MovePastMarker,
         TurnAroundMarker.TimedOut: MovePastMarker,
-
         MovePastMarker.Reached: TurnToGate,
-
         TurnToGate.Reached: LeaveMarker,
         TurnToGate.TimedOut: LeaveMarker,
-
         LeaveMarker.Reached: ReturnToGate,
-
         ReturnToGate.Reached: Stop,
     }
 )

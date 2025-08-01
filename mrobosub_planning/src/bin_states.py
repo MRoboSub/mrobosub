@@ -1,12 +1,14 @@
-from umrsm import Outcome
-from abstract_states import TimedState
-import periodic_io
-from periodic_io import PIO
-from mrobosub_msgs.srv import ObjectPositionResponse # type: ignore
-from typing import Union
 import math
+from typing import Union
+
+import periodic_io
 import rospy
+from abstract_states import TimedState
+from periodic_io import PIO
 from std_msgs.msg import Int32
+from umrsm import Outcome
+
+from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
 
 
 class ApproachBinOpen(TimedState):
@@ -69,9 +71,13 @@ class ApproachBinClosed(TimedState):
             y -= 0.5
             y *= -1
             self.angle_to_bin = math.atan2(y, x)
-            self.angle_to_bin = (((math.degrees(self.angle_to_bin) - 90) % 360 + 180) % 360) - 180
+            self.angle_to_bin = (
+                ((math.degrees(self.angle_to_bin) - 90) % 360 + 180) % 360
+            ) - 180
             dist_to_bin = math.sqrt(y**2 + x**2)
-            print(f"{x=:.2f}; {y=:.2f}; {self.angle_to_bin=:.2f}; {dist_to_bin=:.2f}; {self.yaw_aligned=}")
+            print(
+                f"{x=:.2f}; {y=:.2f}; {self.angle_to_bin=:.2f}; {dist_to_bin=:.2f}; {self.yaw_aligned=}"
+            )
 
             if abs(self.angle_to_bin) > self.corrective_yaw_thresh:
                 self.yaw_aligned = False
@@ -82,7 +88,9 @@ class ApproachBinClosed(TimedState):
                 # Use setpoint for yaw angle
                 PIO.set_target_twist_surge(0)
                 # adjust yaw factor in pool testing
-                PIO.set_target_pose_yaw((PIO.Pose.yaw % 360 - self.angle_to_bin * self.yaw_factor) % 360)
+                PIO.set_target_pose_yaw(
+                    (PIO.Pose.yaw % 360 - self.angle_to_bin * self.yaw_factor) % 360
+                )
             else:
                 # set surge speed decreases as closer to centered
                 juice = self.surge_speed * dist_to_bin

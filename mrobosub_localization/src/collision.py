@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
-import rospy
-from sensor_msgs.msg import Imu
-from std_msgs.msg import Float64, Bool
-from mrobosub_lib.lib import Node, Param
-from dynamic_reconfigure.server import Server
-from mrobosub_localization.cfg import collision_paramsConfig
 from math import exp
+
+import rospy
+from dynamic_reconfigure.server import Server
+from sensor_msgs.msg import Imu
+from std_msgs.msg import Bool, Float64
+
+from mrobosub_lib.lib import Node, Param
+from mrobosub_localization.cfg import collision_paramsConfig
+
 
 class CollisionDetector(Node):
     threshold: float
@@ -14,10 +17,16 @@ class CollisionDetector(Node):
 
     def __init__(self):
         super().__init__("collision")
-        self.sub = rospy.Subscriber('/mavros/imu/data', Imu, self.filter_callback)
-        self.pub_filtered = rospy.Publisher('/collision/filtered_accel', Float64, queue_size = 10)
-        self.pub_collision = rospy.Publisher('/collision/collision', Bool, queue_size = 10)
-        self.pub_collision_float = rospy.Publisher('/collision/collision_float', Float64, queue_size = 10)
+        self.sub = rospy.Subscriber("/mavros/imu/data", Imu, self.filter_callback)
+        self.pub_filtered = rospy.Publisher(
+            "/collision/filtered_accel", Float64, queue_size=10
+        )
+        self.pub_collision = rospy.Publisher(
+            "/collision/collision", Bool, queue_size=10
+        )
+        self.pub_collision_float = rospy.Publisher(
+            "/collision/collision_float", Float64, queue_size=10
+        )
         self.last_value = 0
         self.last_time = 0
 
@@ -27,12 +36,14 @@ class CollisionDetector(Node):
             self.last_value = msg.linear_acceleration.x
             self.last_time = msg.header.stamp.secs + msg.header.stamp.nsecs / 1e9
             return
-        next_time = (msg.header.stamp.secs + msg.header.stamp.nsecs / 1e9)
+        next_time = msg.header.stamp.secs + msg.header.stamp.nsecs / 1e9
         delta_time = next_time - self.last_time
-        
+
         a = exp(-delta_time / self.rc)
 
-        output = (self.last_value - msg.linear_acceleration.x) * a + msg.linear_acceleration.x
+        output = (
+            self.last_value - msg.linear_acceleration.x
+        ) * a + msg.linear_acceleration.x
         self.pub_filtered.publish(output)
         self.pub_collision.publish(-output > self.threshold)
         self.pub_collision_float.publish(-output > self.threshold)
@@ -41,12 +52,13 @@ class CollisionDetector(Node):
 
     def reconfigure_callback(self, config, level):
         self.rc = config["rc"]
-        self.threshold = config["threshold"] 
+        self.threshold = config["threshold"]
         return config
-    
+
     def run(self):
         srv = Server(collision_paramsConfig, self.reconfigure_callback)
         rospy.spin()
+
 
 if __name__ == "__main__":
     CollisionDetector().run()

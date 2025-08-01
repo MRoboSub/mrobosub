@@ -1,5 +1,5 @@
 hsv_params:
-  hue_lo: 34 
+  hue_lo: 34
   hue_hi: 100
   sat_lo: 0
   sat_hi: 255

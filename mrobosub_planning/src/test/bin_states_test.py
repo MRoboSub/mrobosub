@@ -1,17 +1,25 @@
-from enum import Enum, auto
 import gc
-from utils import binCamPosServiceMock, TargetReader, PoseMock
-from typing import Dict, List
-from std_msgs.msg import Float64, String
-from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, BinCamPosResponse  # type: ignore
-from time import sleep
+from enum import Enum, auto
 from functools import partial
+from time import sleep
+from typing import Dict, List
+
 import rospy
+from std_msgs.msg import Float64, String
+from utils import PoseMock, TargetReader, binCamPosServiceMock
+
+from mrobosub_msgs.srv import (  # type: ignore
+    BinCamPosResponse,
+    ObjectPosition,
+    ObjectPositionResponse,
+)
+
 
 def main() -> None:
-    rospy.init_node('test_sim')
+    rospy.init_node("test_sim")
     started = False
     sub = None
+
     def set_started(msg: String) -> None:
         nonlocal started, sub
         if started:
@@ -21,26 +29,27 @@ def main() -> None:
         if sub is not None:
             sub.unregister()
         del sub
-    sub = rospy.Subscriber('/captain/current_state', String, set_started)
+
+    sub = rospy.Subscriber("/captain/current_state", String, set_started)
 
     while not started:
         sleep(0.1)
-    print('Started!')
+    print("Started!")
     sleep(0.5)
 
     bin_cam_mock = binCamPosServiceMock()
     reader = TargetReader()
     pose = PoseMock()
 
-    pose.heave = 0.
+    pose.heave = 0.0
 
     while pose.heave < reader.target_pose_heave:
         pose.heave += 0.005
-        #print(f"{pose.heave=}")
+        # print(f"{pose.heave=}")
         sleep(0.05)
         pose.publish_update()
 
-    for i in range(20*3):
+    for i in range(20 * 3):
         sleep(0.05)
 
     bin_cam_instance = BinCamPosResponse()
@@ -53,11 +62,11 @@ def main() -> None:
     pose.yaw = 50
     pose.publish_update()
 
-    for i in range(20*3):
-        
+    for i in range(20 * 3):
+
         sleep(0.05)
-        
-        #print(f"{reader=}")
+
+        # print(f"{reader=}")
         print(f"{reader.target_pose_yaw=}")
 
     # bin_cam_instance.x *= -1
@@ -69,7 +78,5 @@ def main() -> None:
     #     print(f"{reader.target_pose_yaw=}")
 
 
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

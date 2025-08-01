@@ -6,43 +6,47 @@
 # - Addison Sears-Collins
 # - https://automaticaddison.com
 
+import cv2  # OpenCV library
+
 # Import the necessary libraries
-import rospy # Python library for ROS
-from sensor_msgs.msg import Image # Image is the message type
-from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Images
-import cv2 # OpenCV library
+import rospy  # Python library for ROS
+from cv_bridge import CvBridge  # Package to convert between ROS and OpenCV Images
+from sensor_msgs.msg import Image  # Image is the message type
+
 
 def callback(data):
 
-  # Used to convert between ROS and OpenCV images
-  br = CvBridge()
+    # Used to convert between ROS and OpenCV images
+    br = CvBridge()
 
-  # Output debugging information to the terminal
-  # rospy.loginfo("receiving video frame")
+    # Output debugging information to the terminal
+    # rospy.loginfo("receiving video frame")
 
-  # Convert ROS Image message to OpenCV image
-  current_frame = br.imgmsg_to_cv2(data, desired_encoding='passthrough')
+    # Convert ROS Image message to OpenCV image
+    current_frame = br.imgmsg_to_cv2(data, desired_encoding="passthrough")
 
-#   # Display image
-  cv2.imshow("debug_pathmarker", current_frame)
+    #   # Display image
+    cv2.imshow("debug_pathmarker", current_frame)
 
-  cv2.waitKey(1)
+    cv2.waitKey(1)
+
 
 def receive_message():
 
-  # Tells rospy the name of the node.
-  # Anonymous = True makes sure the node has a unique name. Random
-  # numbers are added to the end of the name.
-  rospy.init_node('bot_debug', anonymous=True)
+    # Tells rospy the name of the node.
+    # Anonymous = True makes sure the node has a unique name. Random
+    # numbers are added to the end of the name.
+    rospy.init_node("bot_debug", anonymous=True)
 
-  # Node is subscribing to the video_frames topic
-  rospy.Subscriber('bot_cam_debug', Image, callback)
+    # Node is subscribing to the video_frames topic
+    rospy.Subscriber("bot_cam_debug", Image, callback)
 
-  # spin() simply keeps python from exiting until this node is stopped
-  rospy.spin()
+    # spin() simply keeps python from exiting until this node is stopped
+    rospy.spin()
 
-  # Close down the video stream when done
-  cv2.destroyAllWindows()
+    # Close down the video stream when done
+    cv2.destroyAllWindows()
 
-if __name__ == '__main__':
-  receive_message()
+
+if __name__ == "__main__":
+    receive_message()

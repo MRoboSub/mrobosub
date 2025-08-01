@@ -2,21 +2,16 @@
 Python metaprogramming."""
 
 from __future__ import annotations
-from abc import abstractmethod
-from typing import (
-    Any,
-    Dict,
-    Optional,
-    Type,
-    Tuple,
-    TYPE_CHECKING,
-)
+
 import warnings
+from abc import abstractmethod
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Type
+
 import rospy
 from std_msgs.msg import String
 from std_srvs.srv import Trigger, TriggerRequest
-from dataclasses import dataclass
-from typing_extensions import dataclass_transform, Self
+from typing_extensions import Self, dataclass_transform
 
 STATE_TOPIC = "captain/current_state"
 SOFT_STOP_SERVICE = "captain/soft_stop"

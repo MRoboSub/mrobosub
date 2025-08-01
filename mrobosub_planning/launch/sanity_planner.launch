@@ -1,12 +1,12 @@
 <launch>
     <node name="task_planner" pkg="mrobosub_planning" type="sanity_planner.py">
-        <param 
-            textfile="$(find mrobosub_planning)/param/sanity_states.yaml" 
+        <param
+            textfile="$(find mrobosub_planning)/param/sanity_states.yaml"
             type="yaml"
             name="sanity_states"
         />
-        <param 
-            textfile="$(find mrobosub_planning)/param/globals.yaml" 
+        <param
+            textfile="$(find mrobosub_planning)/param/globals.yaml"
             type="yaml"
             name="globals"
         />

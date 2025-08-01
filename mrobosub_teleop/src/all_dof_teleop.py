@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 
+from dataclasses import dataclass, field
+from math import degrees
+from typing import Final, Optional
+
 import rospy
 from std_msgs.msg import Float64
 
 from mrobosub_lib.lib import Node, Param
-
-from typing import Optional, Final
-from dataclasses import dataclass, field
-
-from math import degrees
 
 
 @dataclass

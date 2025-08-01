@@ -1,9 +1,11 @@
+from typing import Dict, Optional, Tuple, Type, Union
+
 import rospy
-from umrsm import Outcome
 from abstract_states import AlignPathmarker, TimedState
 from periodic_io import PIO, ImageDetections, ImageTarget
+from umrsm import Outcome
+
 from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
-from typing import Dict, Optional, Tuple, Type, Union
 
 
 class ZedPause(TimedState):

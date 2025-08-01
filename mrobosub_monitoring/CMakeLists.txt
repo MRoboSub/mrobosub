@@ -5,6 +5,4 @@ project(mrobosub_monitoring)
 find_package(catkin REQUIRED COMPONENTS std_msgs)
 
 # catkin_python_setup()
-catkin_package(
-    LIBRARIES ${PROJECT_NAME}
-    CATKIN_DEPENDS rospy std_msgs)
+catkin_package(LIBRARIES ${PROJECT_NAME} CATKIN_DEPENDS rospy std_msgs)

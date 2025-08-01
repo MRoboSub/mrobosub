@@ -46,7 +46,7 @@ class ApproachGate(State):
                 return self.GoSide()
             elif rospy.get_time() - self.start_time > self.approach_scan_thld:
                 return self.GoScan()
-        
+
         return self.GoGateCont()
 
 
@@ -90,7 +90,7 @@ class CrossGate(State):
 
     def initialize(self, prev_outcome: Outcome) -> None:
         self.start_time = rospy.get_time()
-    
+
     def handle(self)-> Outcome:
         time = rospy.get_time()
         if 7 < time - self.start_time < 11:
@@ -121,11 +121,11 @@ class Spin(State):
         error = ((setpoint%360) - (state%360)) % 360
         if(error > 180): error -= 360
         return error
-    
+
     @classmethod
     def angle_error_abs(cls, setpoint, state):
         return abs(cls.angle_error(setpoint, state))
-    
+
     def initialize(self, prev_outcome: Outcome) -> None:
         self.start_time = rospy.get_time()
         self.start_heading = PIO.get_pose().yaw
@@ -151,4 +151,3 @@ class Spin(State):
 
         PIO.set_target_twist_yaw(1550)
         return self.SpinContinue()
-

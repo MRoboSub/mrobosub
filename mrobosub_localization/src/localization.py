@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
 
+from math import degrees
+from typing import Final, Optional
+
 import rospy
-from std_msgs.msg import Float64, Float32
+from geometry_msgs.msg import Quaternion
+from sensor_msgs.msg import Imu
+from std_msgs.msg import Float32, Float64
+from std_srvs.srv import Trigger
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
 from mrobosub_lib.lib import Node, Param
 
-from typing import Optional, Final
-
-from std_srvs.srv import Trigger
-from geometry_msgs.msg import Quaternion
-from sensor_msgs.msg import Imu
-
-from tf.transformations import euler_from_quaternion, quaternion_from_euler
-
-from math import degrees
 
 class StateEstimation(Node):
     """
@@ -39,17 +37,19 @@ class StateEstimation(Node):
     orientation = None
 
     def __init__(self):
-        super().__init__('localization')
-        self.heave_pub = rospy.Publisher('/pose/heave', Float64, queue_size=1)
-        self.yaw_pub = rospy.Publisher('/pose/yaw', Float64, queue_size=1)
-        self.pitch_pub = rospy.Publisher('/pose/pitch', Float64, queue_size=1)
-        self.roll_pub = rospy.Publisher('/pose/roll', Float64, queue_size=1)    
-        rospy.Subscriber('/depth/raw_depth', Float32, self.raw_depth_callback)
-        rospy.Subscriber('/mavros/imu/data', Imu, self.imu_callback)
-        rospy.Service('localization/zero_state', Trigger, lambda msg: self.handle_reset())
+        super().__init__("localization")
+        self.heave_pub = rospy.Publisher("/pose/heave", Float64, queue_size=1)
+        self.yaw_pub = rospy.Publisher("/pose/yaw", Float64, queue_size=1)
+        self.pitch_pub = rospy.Publisher("/pose/pitch", Float64, queue_size=1)
+        self.roll_pub = rospy.Publisher("/pose/roll", Float64, queue_size=1)
+        rospy.Subscriber("/depth/raw_depth", Float32, self.raw_depth_callback)
+        rospy.Subscriber("/mavros/imu/data", Imu, self.imu_callback)
+        rospy.Service(
+            "localization/zero_state", Trigger, lambda msg: self.handle_reset()
+        )
 
     def handle_reset(self):
-        previous_offsets = f'{self.heave_offset=}, {self.yaw_offset=}, {self.pitch_offset=}, {self.roll_offset=}'
+        previous_offsets = f"{self.heave_offset=}, {self.yaw_offset=}, {self.pitch_offset=}, {self.roll_offset=}"
 
         self.heave_offset = None
         self.yaw_offset = None
@@ -72,14 +72,9 @@ class StateEstimation(Node):
 
         orientation = msg.orientation
 
-        quaternion = [
-            orientation.x,
-            orientation.y, 
-            orientation.z, 
-            orientation.w
-        ]
+        quaternion = [orientation.x, orientation.y, orientation.z, orientation.w]
         euler = euler_from_quaternion(quaternion)
-        
+
         if self.yaw_offset is None:
             self.yaw_offset = degrees(-euler[2])
             self.pitch_offset = degrees(-euler[1])
@@ -99,5 +94,6 @@ class StateEstimation(Node):
     def cleanup(self):
         pass
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     StateEstimation().run()

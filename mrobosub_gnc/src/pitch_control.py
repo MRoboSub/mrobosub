@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
+from typing import Final, Optional
+
 import rospy
-from std_msgs.msg import Float64
 from pid_interface import PIDInterface
+from std_msgs.msg import Float64
 
 from mrobosub_lib.lib import Node, Param
 
-from typing import Optional, Final
 
 class PitchControlNode(Node):
     """
@@ -23,14 +24,17 @@ class PitchControlNode(Node):
     # pid_params: PIDParams
 
     def __init__(self):
-        super().__init__('heading_control')
+        super().__init__("heading_control")
         self.pid = PIDInterface("pitch_pid", self.pid_callback)
-        self.output_pitch_pub = rospy.Publisher('/output_wrench/pitch', Float64, queue_size=1)
-        rospy.Subscriber('/target_pose/pitch', Float64, self.target_pose_callback)
-        rospy.Subscriber('/pose/pitch', Float64, self.pose_callback)
-        rospy.Subscriber('/target_twist/pitch', Float64, self.target_twist_pitch_callback)
+        self.output_pitch_pub = rospy.Publisher(
+            "/output_wrench/pitch", Float64, queue_size=1
+        )
+        rospy.Subscriber("/target_pose/pitch", Float64, self.target_pose_callback)
+        rospy.Subscriber("/pose/pitch", Float64, self.pose_callback)
+        rospy.Subscriber(
+            "/target_twist/pitch", Float64, self.target_twist_pitch_callback
+        )
 
-        
     def target_pose_callback(self, target_pose: Float64):
         self.pid.set_target(target_pose.data)
 
@@ -44,11 +48,12 @@ class PitchControlNode(Node):
     def pid_callback(self, effort: float):
         self.output_pitch_pub.publish(effort)
 
-    def run(self): 
+    def run(self):
         rospy.spin()
 
     def cleanup(self):
         self.output_pitch_pub.publish(0)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     PitchControlNode().run()

@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 
-from tf.transformations import euler_matrix
+from dataclasses import dataclass
+from math import radians
+from typing import Any, Optional, Tuple
+
 import numpy as np
 import numpy.typing as npt
-from math import radians
 import rospy
 from std_msgs.msg import Float64
-from typing import Any, Tuple, Optional
+from tf.transformations import euler_matrix
 from typing_extensions import Callable
 
 from mrobosub_lib.lib import Node
 from mrobosub_msgs.msg import MotorState
-from dataclasses import dataclass
 
 
 @dataclass
@@ -34,11 +35,11 @@ THRUSTERS = [
     ThrusterDescriptor(
         id=0,
         yaw=-45,  # yaw of the motor axis, we use z down coordinate frame
-        pitch=0, # pitch of the motor axis
-        roll=0, # roll of the motor axis
-        surge=CORNER_THRUSTER_SURGE, # x position of motor relative to robot origin
-        sway=THRUSTER_SWAY, # y position of motor relative to robot origin
-        heave=0, # z position of motor relative to robot origin
+        pitch=0,  # pitch of the motor axis
+        roll=0,  # roll of the motor axis
+        surge=CORNER_THRUSTER_SURGE,  # x position of motor relative to robot origin
+        sway=THRUSTER_SWAY,  # y position of motor relative to robot origin
+        heave=0,  # z position of motor relative to robot origin
     ),
     ThrusterDescriptor(
         id=1,

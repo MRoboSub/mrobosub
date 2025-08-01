@@ -1,6 +1,6 @@
 aligngate:
   defaults:
-    target_yaw: 0 
+    target_yaw: 0
     timeout: 10
 
 approachgate:
@@ -11,7 +11,7 @@ approachgate:
 approachgateimage:
   defaults:
     timeout: 25
-    lost_image_threshold: 15 
+    lost_image_threshold: 15
 
 alignpathmarker:
   defaults:

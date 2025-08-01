@@ -98,7 +98,7 @@ ins:
       enable: true
 
 sensors:
-  messages:  
+  messages:
     imu:              # Publish IMU angular rates and linear acceleration
       topic: "imu"
       enable: true
@@ -295,7 +295,7 @@ rtk_base:
       type: serial                              # host/pc serial port, always 8N1 - IS-Ros will open and forward data from the EVB to this port
       port: "/dev/ttyACM0"                      # the host's local serial port to which data is written (not the EVB/IMX port!)
       baud_rate: 115200
-      
+
     # RTK corrections to/from ROS topics -
     ros_provider:
       type: ros_topic                           # publishes RTCM3 corrections onto the specific ROS topic
@@ -308,5 +308,3 @@ rtk_base:
 
 diagnostics:
   enable: true
-
-

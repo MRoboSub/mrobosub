@@ -1,7 +1,7 @@
 aligngate:
   defaults:
     target_heave: 1.9
-    target_yaw: 0 
+    target_yaw: 0
     timeout: 10
 
 approachgate:
@@ -16,4 +16,3 @@ approachmarker:
     target_heave: 1.2
     target_surge_time: 22
     wait_time: 1
-

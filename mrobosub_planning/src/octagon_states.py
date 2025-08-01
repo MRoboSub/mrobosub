@@ -1,7 +1,7 @@
 import rospy
-from umrsm import Outcome
-from abstract_states import TurnToYaw, TimedState
+from abstract_states import TimedState, TurnToYaw
 from periodic_io import PIO
+from umrsm import Outcome
 
 
 class TurnToOctagon(TurnToYaw):

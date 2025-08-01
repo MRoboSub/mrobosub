@@ -1,7 +1,7 @@
 /**
  * Node to process the raw depth readings from the Arduino
- * Bar30 depth sensing code and republish them. 
- * 
+ * Bar30 depth sensing code and republish them.
+ *
  * Authors:
  * - Ivan Wei (ivanw8288@gmail.com)
  * - Ayan Chowdhury (ayanc@umich.edu)
@@ -34,17 +34,17 @@ std_msgs::Float32 depth;
 /**
  * Modifies output depth to be the raw depth processed through anything
  * needed; i.e., the relative "zero" depth is subtracted.
- * 
+ *
  * Is a callback for a subscriber to the arduino depth topic.
- * 
+ *
  * Parameters:
- * - raw_depth: the depth read from the arduino, passed in through callback 
+ * - raw_depth: the depth read from the arduino, passed in through callback
  **/
 void process_depth(const std_msgs::Float32& raw_depth)
 {
     // If this is the first measurement after a reset, set the current depth as relative
     if (!initialized_rel)
-    {   
+    {
         initialized_rel = true;
         rel = raw_depth.data;
     }
@@ -56,7 +56,7 @@ void process_depth(const std_msgs::Float32& raw_depth)
 /**
  * Resets the relative "zero" depth as well as the output depth.
  **/
-void reset() 
+void reset()
 {
     initialized_rel = false;
     rel = 0;
@@ -65,7 +65,7 @@ void reset()
 
 /**
  * Callback for reset service to wrap reset().
- * 
+ *
  * Parameters
  * - request: empty service request
  * - response: empty service response
@@ -82,11 +82,11 @@ int main(int argc, char **argv)
     // Initialize node
     ros::NodeHandle nh;
     ros::init(argc, argv, NODE_NAME);
-    
+
     // Setup rate
     ros::Rate rate(PROCESS_RATE_HZ);
 
-    // Setup subscribers 
+    // Setup subscribers
     ros::Subscriber raw_depth_sub = nh.subscribe(ARDUINO_DEPTH_TOPIC, SUBSCRIBER_QUEUE_SIZE, process_depth);
     ros::Publisher depth_pub = nh.advertise<std_msgs::Float32>(OUTPUT_DEPTH_TOPIC, PUBLISHER_QUEUE_SIZE);
 
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 
     // Main publisher loop
     while (ros::ok())
-    {   
+    {
         ros::spinOnce();
 
         if (initialized_rel)

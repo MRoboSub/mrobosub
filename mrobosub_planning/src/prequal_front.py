@@ -1,9 +1,10 @@
 #!/usr/bin/env python
+from typing import Union
+
+from abstract_states import ForwardAndWait, TimedState
+from common_states import Start, Submerge
 from periodic_io import PIO, angle_error
 from umrsm import *
-from common_states import Start, Submerge
-from abstract_states import ForwardAndWait, TimedState
-from typing import Union
 
 
 class AlignGate(TimedState):
@@ -65,15 +66,11 @@ class ApproachMarker(ForwardAndWait):
 
 transitions: TransitionMap = {
     Start.Complete: Submerge,
-
     Submerge.Submerged: AlignGate,
     Submerge.TimedOut: AlignGate,
-
     AlignGate.Reached: ApproachGate,
     AlignGate.TimedOut: ApproachGate,
-
     ApproachGate.Reached: ApproachMarker,
-
     # Surface.Unreached: Surface,
     # Surface.Reached: Stop,
 }

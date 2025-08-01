@@ -2,7 +2,6 @@
 import rospy
 from periodic_io import PIO
 
-
 if __name__ == "__main__":
     rospy.init_node("stop", anonymous=True)
     rate = rospy.Rate(50)
