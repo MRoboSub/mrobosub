@@ -1,7 +1,4 @@
 <launch>
-    <node
-        pkg="mrobosub_hal"
-        type="webcam_pub.py"
-        name="webcam_pub"
-    />
+    <arg name="device_path" default="/dev/bot_cam" />
+    <node pkg="mrobosub_hal" type="botcam.py" name="botcam" args="$(arg device_path)"/>
 </launch>
