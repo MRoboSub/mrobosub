@@ -1,4 +1,0 @@
-<launch>
-  <node name="imu" pkg="mrobosub_localization" type="imu.py" output="screen">
-  </node>
-</launch>
