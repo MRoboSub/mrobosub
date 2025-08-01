@@ -54,14 +54,3 @@ repos:
     hooks:
       - id: cmake-format
         additional_dependencies: [pyyaml]
-
-  # XML formatting (for ROS launch files)
-  - repo: https://github.com/lxml/lxml
-    rev: lxml-5.3.0
-    hooks:
-      - id: lxml
-        name: xml-format
-        entry: python -c "import sys; from lxml import etree; [print(etree.tostring(etree.parse(f), pretty_print=True, encoding='unicode')) for f in sys.argv[1:]]"
-        language: python
-        files: \.(xml|launch)$
-        pass_filenames: true
