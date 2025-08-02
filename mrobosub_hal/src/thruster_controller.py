@@ -21,6 +21,10 @@ def thruster_mapping_callback(config, _):
 
 
 class ThrusterController(Node):
+    """
+    Provides /emergency_stop_motors service
+    and requires /motor_output topic
+    """
 
     def __init__(self):
         super().__init__("thruster_controller")

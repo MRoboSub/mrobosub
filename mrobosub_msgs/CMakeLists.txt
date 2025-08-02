@@ -15,6 +15,8 @@ add_message_files(
     Imu_INS.msg
     Imu_PIMU.msg
     Pose.msg
+    Detection.msg
+    Detections.msg
 )
 
 add_service_files(

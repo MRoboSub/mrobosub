@@ -13,6 +13,10 @@ from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
 
 
 class Botcam(ControlLoopNode):
+    """
+    Provides /bot_cam/on service and /bot_cam topic
+    """
+
     def __init__(self) -> None:
         self.iteration_rate = 60
         super().__init__("bot_cam")

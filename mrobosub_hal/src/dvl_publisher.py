@@ -13,15 +13,14 @@ UDP_IP = "0.0.0.0"
 UDP_PORT = 50000
 
 
-class DVLPublisher():
+class DVLPublisher:
+    """
+    Provides /dvl/raw_dvl topic
+    """
+
     def __init__(self):
         rospy.init_node("dvl_publisher")
-        self.pub_raw = rospy.Publisher('/dvl/raw_dvl', Dvl, queue_size=1)
-        self.pub_translational = rospy.Publisher('dvl/translational_data', Dvl, queue_size=1) #TODO edit DVL type to be translational
-        # cone unit vectors
-        self.coneA = np.array([np.cos(70*np.pi/180), 0, np.sin(70*np.pi/180)])
-        self.coneB = np.array([-np.cos(70*np.pi/180)*np.sin(30*np.pi/180), np.cos(70*np.pi/180)*np.cos(30*np.pi/180), np.sin(70*np.pi/180)])
-        self.coneC = np.array([-np.cos(70*np.pi/180)*np.sin(30*np.pi/180), -np.cos(70*np.pi/180)*np.cos(30*np.pi/180), np.sin(70*np.pi/180)])
+        self.pub = rospy.Publisher("/dvl/raw_dvl", Dvl, queue_size=1)
 
     def run(self):
         rate = rospy.Rate(50)
@@ -31,7 +30,7 @@ class DVLPublisher():
         sock.setblocking(False)
         sock.settimeout(0.2)
         sock.bind((UDP_IP, UDP_PORT))
- 
+
         while not rospy.is_shutdown():
             try:
                 data, addr = sock.recvfrom(1024)
@@ -42,23 +41,14 @@ class DVLPublisher():
                     continue
 
                 # parse according to spec here https://docs.ceruleansonar.com/c/dvl-50/communicating-with-the-tracker-650/outgoing-message-formats-tracker-650-to-host/usddvkfc-kalman-filter-raw-data-support-message
-                data_list = data_str.split(',')
-                self.pub_raw.publish(Dvl(*map(float, data_list[10:24+1:7])))
+                data_list = data_str.split(",")
+                self.pub.publish(Dvl(*map(float, data_list[10 : 24 + 1 : 7])))
 
-                # transform from cone axis to tranlational axis 
-                cone_A_vel = float(data_list[10])
-                cone_B_vel = float(data_list[17])
-                cone_C_vel = float(data_list[24])
-                velocities = cone_A_vel * self.coneA + cone_B_vel * self.coneB + cone_C_vel * self.coneC
-                trans_response = Dvl()
-                trans_response.velocityA = float(velocities[0]) #along surge axis
-                trans_response.velocityB = float(velocities[1]) #along sway axis
-                trans_response.velocityC = float(velocities[2]) #along heave axis (positive down)
-                self.pub_translational.publish(trans_response)
                 rate.sleep()
             except socket.timeout:
                 print("DVL UDP connection timing out, no data recieved from DVL")
         sock.close()
+
 
 if __name__ == "__main__":
     DVLPublisher().run()

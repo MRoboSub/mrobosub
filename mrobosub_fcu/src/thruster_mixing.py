@@ -1,17 +1,19 @@
 #!/usr/bin/env python
 
+from typing import Any, Tuple, Optional
+from typing_extensions import Callable, TYPE_CHECKING
 from tf.transformations import euler_matrix
 import numpy as np
-import numpy.typing as npt
 from math import radians
 import rospy
 from std_msgs.msg import Float64
-from typing import Any, Tuple, Optional
-from typing_extensions import Callable
 
 from mrobosub_lib.lib import Node
 from mrobosub_msgs.msg import MotorState
 from dataclasses import dataclass
+
+if TYPE_CHECKING:
+    import numpy.typing as npt
 
 
 @dataclass
@@ -34,11 +36,11 @@ THRUSTERS = [
     ThrusterDescriptor(
         id=0,
         yaw=-45,  # yaw of the motor axis, we use z down coordinate frame
-        pitch=0, # pitch of the motor axis
-        roll=0, # roll of the motor axis
-        surge=CORNER_THRUSTER_SURGE, # x position of motor relative to robot origin
-        sway=THRUSTER_SWAY, # y position of motor relative to robot origin
-        heave=0, # z position of motor relative to robot origin
+        pitch=0,  # pitch of the motor axis
+        roll=0,  # roll of the motor axis
+        surge=CORNER_THRUSTER_SURGE,  # x position of motor relative to robot origin
+        sway=THRUSTER_SWAY,  # y position of motor relative to robot origin
+        heave=0,  # z position of motor relative to robot origin
     ),
     ThrusterDescriptor(
         id=1,
@@ -253,7 +255,7 @@ class ThrusterMixing(Node):
         self.thruster_allocation_matrix = np.hstack((thrusters_force, thrusters_torque))
         self.inv_tam = np.linalg.pinv(self.thruster_allocation_matrix).T
 
-    def fit_matrix(self, a: float, b: float) -> npt.NDArray:
+    def fit_matrix(self, a: float, b: float) -> "npt.NDArray":
         return np.array([1, a, b, a**2, a * b, b**2, a**3, a**2 * b, a * b**2, b**3])
 
     @property
@@ -271,10 +273,10 @@ class ThrusterMixing(Node):
             output = np.dot(fit_mat, NEG_OUTPUT_FIT_CONSTANTS)
             return min(output, 0.0)
 
-    def calculate_outputs(self, demanded_forces: npt.NDArray) -> npt.NDArray:
+    def calculate_outputs(self, demanded_forces: "npt.NDArray") -> "npt.NDArray":
         return np.array([self.calculate_output(force) for force in demanded_forces])
 
-    def expected_current_draw(self, demanded_outputs: npt.NDArray) -> npt.NDArray:
+    def expected_current_draw(self, demanded_outputs: "npt.NDArray") -> "npt.NDArray":
         current_draws = []
         for output in demanded_outputs:
             if abs(output) < 0.1:
@@ -291,7 +293,7 @@ class ThrusterMixing(Node):
                 current_draws.append(max(current_draw, 0.0))
         return np.array(current_draws)
 
-    def validate_outputs(self, demanded_forces: npt.NDArray) -> Optional[MotorState]:
+    def validate_outputs(self, demanded_forces: "npt.NDArray") -> Optional[MotorState]:
         outputs = self.calculate_outputs(demanded_forces)
         current_draws = self.expected_current_draw(outputs)
         if (
@@ -304,7 +306,7 @@ class ThrusterMixing(Node):
         return None
 
     def calculate_scaled_outputs(
-        self, demanded_forces: npt.NDArray
+        self, demanded_forces: "npt.NDArray"
     ) -> Tuple[MotorState, float]:
         outputs = self.validate_outputs(demanded_forces)
         if outputs is not None:

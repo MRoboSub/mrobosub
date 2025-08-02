@@ -2,7 +2,7 @@
     <include file="$(find mrobosub_gnc)/launch/gnc.launch"/>
     <include file="$(find mrobosub_monitoring)/launch/monitoring.launch"/>
     <include file="$(find mrobosub_localization)/launch/localization.launch"/>
-    <include file="$(find mrobosub_perception)/launch/perception.launch"/>
+    <include file="$(find mrobosub_perception)/launch/perception_sim.launch"/>
     <include file="$(find mrobosub_fcu)/launch/fcu.launch"/>
     <include file="$(find mrobosub_sim)/launch/sim_hal.launch"/>
 </launch>

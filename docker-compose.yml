@@ -5,6 +5,7 @@ services:
     privileged: true
     ports:
       - "10000:10000"
+      - "1817-1818:1817-1818"
     volumes:
       - .:/root/catkin_ws/src/mrobosub
       - /tmp/.X11-unix:/tmp/.X11-unix
