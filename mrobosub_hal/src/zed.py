@@ -14,6 +14,10 @@ import subprocess
 
 
 class Zed(ControlLoopNode):
+    """
+    Provides /zed/on service and /zed/raw topic and /zed2/zed_node/rgb/image_rect_color topic
+    """
+
     def __init__(self):
         self.iteration_rate = 60
         super().__init__("zed")
