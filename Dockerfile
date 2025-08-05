@@ -8,7 +8,8 @@ RUN apt-get update && \
                         git \
                         vim \
                         screen \
-                        python3-tk
+                        python3-tk \
+                        tmux
 
 RUN pip install mypy -U
 
@@ -39,3 +40,6 @@ EXPOSE 10000
 
 RUN echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc && \
     echo "source /root/catkin_ws/devel/setup.bash" >> /root/.bashrc
+
+RUN ln -s "/root/catkin_ws/src/mrobosub/.bash_aliases" "/root/.bash_aliases"
+

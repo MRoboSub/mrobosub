@@ -1,20 +1,25 @@
+#!/usr/bin/env python
+
 from enum import Enum
 from dataclasses import dataclass, field
 from struct import Struct
-from typing_extensions import Union, Self
+from typing_extensions import Union, Self, List
 import sys
 import warnings
-from queue import SimpleQueue
-from threading import Thread, Lock, Condition
+from queue import Empty, SimpleQueue
+from threading import Thread
 
 import rospy
-from mrobosub_msgs.msg import Dvl, MotorState, Imu_INS, Imu_PIMU
+from mrobosub_lib.lib import Node
+from cv_bridge import CvBridge
+import cv2
+import numpy as np
+
+from mrobosub_msgs.msg import Dvl, MotorState, Imu_INS, Imu_PIMU, Detections, Detection
+from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse
 from std_msgs.msg import Float32
 from sensor_msgs.msg import Image
 from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
-from mrobosub_lib.lib import Node
-from cv_bridge import CvBridge
-import numpy as np
 
 import net
 
@@ -23,9 +28,15 @@ class MessageKind(Enum):
     SENSORS = 1
     BOTCAM_IMAGE = 2
     ZED_IMAGE = 3
-    MOTORS = 4
-    BOTCAM_ON = 5
-    ZED_ON = 6
+    ML_TARGET = 4
+    MOTORS = 5
+    BOTCAM_ON = 6
+    ZED_ON = 7
+
+
+class Targets(Enum):
+    GATE_RED = 0
+    GATE_BLUE = 1
 
 
 @dataclass
@@ -42,7 +53,7 @@ class SensorData:
         return SensorData(
             depth=Float32(vals[0]),
             dvl=Dvl(vals[1], vals[2], vals[3]),
-            imu_ins=Imu_INS(vals[4:6]),
+            imu_ins=Imu_INS(vals[4:7]),
             imu_pimu=Imu_PIMU(vals[6:9], vals[9:12], vals[12]),
         )
 
@@ -53,23 +64,28 @@ class SensorData:
 
 @dataclass
 class ImageData:
+    time: float
     image: np.ndarray
 
     @classmethod
     def unpack(cls, data: bytes) -> Self:
-        FORMAT = Struct("! 2LQ")
-        PIXEL_DEPTH = 4  # RGBA
-        (w, h, l) = FORMAT.unpack(data[: FORMAT.size])
+        FORMAT = Struct("! d 2L Q")
+        PIXEL_DEPTH = 4  # BGRA
+        (time, w, h, l) = FORMAT.unpack(data[: FORMAT.size])
         data = data[FORMAT.size :]
-        assert w * h * PIXEL_DEPTH == l
+        assert (
+            w * h * PIXEL_DEPTH == l
+        ), f"width={w}, height={h}, len={l} (PIXEL_DEPTH={PIXEL_DEPTH})"
         assert len(data) == l
+        buf = np.frombuffer(data, count=l, dtype=np.uint8).reshape((h, w, PIXEL_DEPTH))
         return cls(
-            image=np.array(data).reshape((w, h, PIXEL_DEPTH)),
+            time=time,
+            image=buf,
         )
 
     @property
     def encoding(self) -> str:
-        return "bgra8"
+        return "rgba8"
 
 
 @dataclass
@@ -84,6 +100,61 @@ class ZedImage(ImageData):
     @property
     def kind(self) -> MessageKind:
         return MessageKind.ZED_IMAGE
+
+
+ML_TARGET_FORMAT = Struct("! b 4f")
+
+
+@dataclass
+class MLTargetData:
+    target_kind: Targets
+    left: float
+    top: float
+    right: float
+    bottom: float
+
+    @classmethod
+    def unpack(cls, data: bytes) -> Self:
+        kind, tlx, tly, brx, bry = ML_TARGET_FORMAT.unpack(data)
+        return cls(Targets(kind), tlx, tly, brx, bry)
+
+    @property
+    def width(self) -> float:
+        return self.right - self.left
+
+    @property
+    def height(self) -> float:
+        return self.bottom - self.top
+
+    @property
+    def x_position(self) -> float:
+        return (self.right + self.left) / 2
+
+    @property
+    def y_position(self) -> float:
+        return (self.bottom + self.top) / 2
+
+
+@dataclass
+class MLTargetsData:
+    targets: List[MLTargetData]
+    width: float
+    height: float
+
+    @classmethod
+    def unpack(cls, data: bytes) -> Self:
+        FORMAT = Struct("! b f f")
+        count, width, height = FORMAT.unpack(data[: FORMAT.size])
+        data = data[FORMAT.size :]
+        targets = []
+        for _ in range(count):
+            targets.append(MLTargetData.unpack(data[: ML_TARGET_FORMAT.size]))
+            data = data[ML_TARGET_FORMAT.size :]
+        return cls(targets, width, height)
+
+    @property
+    def kind(self) -> MessageKind:
+        return MessageKind.ML_TARGET
 
 
 @dataclass
@@ -126,7 +197,7 @@ class ZedOnData:
         return MessageKind.ZED_ON
 
 
-MessageReceiveData = Union[SensorData, ImageData]
+MessageReceiveData = Union[SensorData, ZedImage, BotcamImage, MLTargetData]
 MessageSendData = Union[MotorData, BotcamOnData, ZedOnData]
 MessageData = Union[MessageReceiveData, MessageSendData]
 
@@ -136,7 +207,7 @@ class SimDepth:
         self.depth_pub = rospy.Publisher("/depth/raw_depth", Float32, queue_size=1)
 
     def handle_sensors(self, data: SensorData):
-        self.depth_pub.publish(data.depth.value)
+        self.depth_pub.publish(data.depth)
 
 
 class SimDvl:
@@ -162,6 +233,7 @@ class SimBotcam:
         self.hal = hal
         self.botcam_pub = rospy.Publisher("/bot_cam", Image, queue_size=1)
         self.br = CvBridge()
+        self.last_image_time = 0
         rospy.Service("/bot_cam/on", SetBool, self.handle_on_service)
 
     def handle_on_service(self, req: SetBoolRequest) -> SetBoolResponse:
@@ -169,6 +241,9 @@ class SimBotcam:
         return SetBoolResponse(success=True)
 
     def handle_images(self, data: BotcamImage):
+        if data.time < self.last_image_time:
+            return
+        self.last_image_time = data.time
         image = self.br.cv2_to_imgmsg(data.image, encoding="bgr8")
         self.botcam_pub.publish(image)
 
@@ -181,6 +256,7 @@ class SimZed:
             "/zed2/zed_node/rgb/image_rect_color", Image, queue_size=1
         )
         self.br = CvBridge()
+        self.last_image_time = 0
         rospy.Service("/zed/on", SetBool, self.handle_on_service)
 
     def handle_on_service(self, req: SetBoolRequest) -> SetBoolResponse:
@@ -188,6 +264,9 @@ class SimZed:
         return SetBoolResponse(success=True)
 
     def handle_images(self, data: ZedImage):
+        if data.time < self.last_image_time:
+            return
+        self.last_image_time = data.time
         self.zed_raw_pub.publish(
             self.br.cv2_to_imgmsg(data.image, encoding=data.encoding)
         )
@@ -201,11 +280,13 @@ class SimZed:
         return frame[:, : (width // 2), :]
 
     def crop(self, frame):
+        frame = np.copy(frame)
         left, right, top, bottom = 130, 50, 40, 60
         frame[:, :left] = frame[:, -right:] = frame[:top, :] = frame[-bottom:, :] = [
+            0,
+            0,
             255,
-            0,
-            0,
+            255,
         ]
         return frame
 
@@ -219,6 +300,31 @@ class SimThrusterController:
 
     def callback(self, data: MotorState):
         self.hal.send(MotorData(data))
+
+
+class SimML:
+    def __init__(self) -> None:
+        self.detections_pub = rospy.Publisher(
+            "/ml/detections", Detections, queue_size=1
+        )
+
+    def handle_targets(self, data: MLTargetsData):
+        message = Detections(
+            detections=tuple(
+                Detection(
+                    left=target.left,
+                    top=target.top,
+                    right=target.right,
+                    bottom=target.bottom,
+                    confidence=1.0,
+                    classification=target.target_kind.value,
+                )
+                for target in data.targets
+            ),
+            width=data.width,
+            height=data.height,
+        )
+        self.detections_pub.publish(message)
 
 
 MSG_HEADER = Struct("!b")
@@ -237,12 +343,18 @@ class SimHal(Node):
 
         def main(self):
             while self.live:
-                data = self.queue.get()
-                self.live = net.send(self.client, data)
+                try:
+                    data = self.queue.get(timeout=0.5)
+                except Empty:
+                    continue
+                self.live = self.live and net.send(self.client, data)
+
+        def stop(self):
+            self.live = False
 
     def __init__(self, incoming_port: int, outgoing_port: int):
         super().__init__("sim_hal")
-        self.clients: list[SimHal.Client] = []
+        self.clients: List[SimHal.Client] = []
         self.outgoing_server = net.Server(
             "0.0.0.0", outgoing_port, self.outgoing_callback
         )
@@ -258,6 +370,7 @@ class SimHal(Node):
         self.botcam = SimBotcam(self)
         self.zed = SimZed(self)
         self.thruster_controller = SimThrusterController(self)
+        self.ml = SimML()
 
     def send(self, data: MessageSendData):
         byte_data = MSG_HEADER.pack(data.kind.value) + data.pack()
@@ -281,19 +394,22 @@ class SimHal(Node):
         if data is None:
             warnings.warn("Failed to fully receive message")
             return
-        kind = MSG_HEADER.unpack(data[: MSG_HEADER.size])
+        (kind,) = MSG_HEADER.unpack(data[: MSG_HEADER.size])
         data = data[MSG_HEADER.size :]
-        if kind == MessageKind.SENSORS:
+        if kind == MessageKind.SENSORS.value:
             data = SensorData.unpack(data)
             self.depth.handle_sensors(data)
             self.dvl.handle_sensors(data)
             self.imu.handle_sensors(data)
-        elif kind == MessageKind.BOTCAM_IMAGE:
+        elif kind == MessageKind.BOTCAM_IMAGE.value:
             data = BotcamImage.unpack(data)
             self.botcam.handle_images(data)
-        elif kind == MessageKind.ZED_IMAGE:
+        elif kind == MessageKind.ZED_IMAGE.value:
             data = ZedImage.unpack(data)
             self.zed.handle_images(data)
+        elif kind == MessageKind.ML_TARGET.value:
+            data = MLTargetsData.unpack(data)
+            self.ml.handle_targets(data)
         else:
             warnings.warn(f"Unknown message {kind=}")
 
@@ -303,8 +419,12 @@ class SimHal(Node):
         rospy.spin()
         self.outgoing_server.stop()
         self.incoming_server.stop()
+        for client in self.clients:
+            client.stop()
         self.outgoing_server_thread.join()
         self.incoming_server_thread.join()
+        for client in self.clients:
+            client.thread.join()
 
 
 if __name__ == "__main__":
