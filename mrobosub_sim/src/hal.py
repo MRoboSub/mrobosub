@@ -244,7 +244,7 @@ class SimBotcam:
         if data.time < self.last_image_time:
             return
         self.last_image_time = data.time
-        image = self.br.cv2_to_imgmsg(data.image, encoding="bgr8")
+        image = self.br.cv2_to_imgmsg(data.image, encoding=data.encoding)
         self.botcam_pub.publish(image)
 
 
