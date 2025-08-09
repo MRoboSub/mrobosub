@@ -248,8 +248,7 @@ class ThrusterMixing(Node):
             np.dot(self.fit_matrix(-1.0, self.voltage), POS_POWER_FIT_CONSTANTS)
         )
         thrusters_force = (
-            THRUSTERS_ROTATIONS
-            @ np.array([self.thruster_max_force, 0.0, 0.0])[None, :, None]
+            THRUSTERS_ROTATIONS @ np.array([1.0, 0.0, 0.0])[None, :, None]
         ).squeeze()
         thrusters_torque = np.cross(THRUSTERS_TRANSLATION, thrusters_force)
         self.thruster_allocation_matrix = np.hstack((thrusters_force, thrusters_torque))
