@@ -26,7 +26,7 @@ class Targets(Enum):
 
 class MlSrvNode(Node):
     recent_positions: List[Optional[ObjectPositionResponse]]
-    red_is_left: bool = False
+    red_is_left: bool = True
 
     def __init__(self):
         super().__init__("ml_srv")

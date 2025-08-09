@@ -1,6 +1,6 @@
-Kp: -0.03
-Ki: -0.0
-Kd: -0.025
+Kp: 0.03
+Ki: 0.0
+Kd: 0.025
 upper_limit: 2
 lower_limit: -2
 angle_error: true
