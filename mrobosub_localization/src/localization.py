@@ -9,7 +9,7 @@ from typing import Optional, Final
 
 from std_srvs.srv import Trigger
 from geometry_msgs.msg import Quaternion
-from sensor_msgs.msg import Imu
+from mrobosub_msgs.msg import Imu_INS
 
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
@@ -19,7 +19,7 @@ class StateEstimation(Node):
     """
     Subscribers
     - /depth/raw_depth
-    - /imu/data
+    - /imu_INS
     """
 
     """
@@ -45,7 +45,7 @@ class StateEstimation(Node):
         self.pitch_pub = rospy.Publisher('/pose/pitch', Float64, queue_size=1)
         self.roll_pub = rospy.Publisher('/pose/roll', Float64, queue_size=1)    
         rospy.Subscriber('/depth/raw_depth', Float32, self.raw_depth_callback)
-        rospy.Subscriber('/mavros/imu/data', Imu, self.imu_callback)
+        rospy.Subscriber('/imu_INS', Imu_INS, self.imu_callback)
         rospy.Service('localization/zero_state', Trigger, lambda msg: self.handle_reset())
 
     def handle_reset(self):
@@ -70,15 +70,16 @@ class StateEstimation(Node):
 
     def imu_callback(self, msg):
 
-        orientation = msg.orientation
-
-        quaternion = [
-            orientation.x,
-            orientation.y, 
-            orientation.z, 
-            orientation.w
-        ]
-        euler = euler_from_quaternion(quaternion)
+        # orientation = msg.orientation
+        #
+        # quaternion = [
+        #     orientation.x,
+        #     orientation.y,
+        #     orientation.z,
+        #     orientation.w
+        # ]
+        # euler = euler_from_quaternion(quaternion)
+        euler = msg.theta
         
         if self.yaw_offset is None:
             self.yaw_offset = degrees(-euler[2])
