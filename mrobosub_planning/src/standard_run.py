@@ -9,7 +9,7 @@ from umrsm import TransitionMap
 
 
 transitions: TransitionMap = {
-    Start.Complete: Submerge.with_params(target_heave=2.),
+    Start.Complete: Submerge.with_params(target_heave=1.),
 
     Submerge.Submerged: AlignGate,
     Submerge.TimedOut: AlignGate,

@@ -140,7 +140,7 @@ class ApproachGateImage2(TimedState):
         pass
 
     radius_thold: float = 25.0
-    surge_speed: float = 1.0
+    surge_speed: float = 1.5
     # yaw_factor: float = 0.5
     timeout: float = 100.0
     lost_image_threshold: int = 400
@@ -222,6 +222,8 @@ class ApproachGateImage2(TimedState):
             # Center
             if self.angle_count != 0:
                 self.avg_angle = self.angle_sum / self.angle_count
+                print(f"{self.avg_angle=} ({self.angle_sum}/{self.angle_count})")
+                self.angle_count = 0
             PIO.set_target_pose_yaw(self.avg_angle)
             if PIO.is_yaw_within_threshold(2):
                 self.iter = self.RESET_ITER - 1
@@ -309,7 +311,8 @@ class Spin(TimedState):
         super().__init__(prev_outcome)
 
     def handle_if_not_timedout(self) -> None:
-        PIO.set_target_twist_yaw(0.12)
+        PIO.set_target_twist_yaw(2.0)
+        PIO.set_target_twist_surge(0)
         PIO.set_target_pose_heave(1)
         return None
 
