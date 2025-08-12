@@ -29,7 +29,7 @@ class ThrusterDescriptor:
 
 
 THRUSTER_MAX_CURRENT_DRAW = 15.0  # amps
-SUB_MAX_CURRENT_DRAW = 50.0  # amps
+SUB_MAX_CURRENT_DRAW = 6.0  # amps
 CORNER_THRUSTER_SURGE = 0.2921
 CENTER_THRUSTER_SURGE = 0.127
 THRUSTER_SWAY = 0.267
@@ -346,6 +346,8 @@ class ThrusterMixing(Node):
             forces *= scale
 
         outputs, scale_factor = self.calculate_scaled_outputs(forces)
+        if scale_factor != 1.0:
+            print('Scale: ', scale_factor)
         scale *= scale_factor
         est_current = np.sum(
             self.expected_current_draw(
