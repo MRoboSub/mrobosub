@@ -10,7 +10,7 @@ import numpy as np
 # todo: parameterize this in the launch file
 UDP_IP = "0.0.0.0"
 # UDP_IP = "192.168.2.9"
-UDP_PORT = 50000
+UDP_PORT = 27000
 
 
 class DVLPublisher:
@@ -27,7 +27,7 @@ class DVLPublisher:
 
         # connect to socket containing the DVL information
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.setblocking(False)
+        sock.setblocking(True) #False
         sock.settimeout(0.2)
         sock.bind((UDP_IP, UDP_PORT))
 
