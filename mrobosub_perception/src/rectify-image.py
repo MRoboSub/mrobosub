@@ -24,11 +24,12 @@ class RectifiedImage(Node):
         
         self.sub = rospy.Subscriber('/bot_cam', Image, self.handle_frame, queue_size=1)
         self.rectified_pub = rospy.Publisher(f'/rectified_image', Image, queue_size=1)
-        self.srv = Server(hsv_paramsConfig, self.reconfigure_callback, 'hsv_params')
+        #self.srv = Server(hsv_paramsConfig, self.reconfigure_callback, 'hsv_params')
         self.map_x, self.map_y = None, None
 
     def handle_frame(self, msg):
         bgr_img = self.br.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+        print(bgr_img.shape[:2])
         cropped_img = crop_to_circle(bgr_img, self.crop_radius)
 
         if self.map_x is None or self.map_y is None:
@@ -38,10 +39,10 @@ class RectifiedImage(Node):
         rectified_img = cv2.remap(cropped_img, self.map_x, self.map_y, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
         self.rectified_pub.publish(self.br.cv2_to_imgmsg(rectified_img, encoding='bgr8'))
 
-    def reconfigure_callback(self, config, level):
-        self.f = config["f"]
-        self.crop_radius = config["crop_radius"]
-        return config
+    #def reconfigure_callback(self, config, level):
+    #    self.f = config["f"]
+    #    self.crop_radius = config["crop_radius"]
+    #    return config
 
     def run(self):
         rospy.spin()
