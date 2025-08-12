@@ -90,7 +90,7 @@ class ThrusterController(Node):
 
     # pwm_raw should be in [-1, 1]
     # pwm_val should be in [4000, 8000]
-    def convert_pwm_signal(self, pwm_raw: float) -> int | None:
+    def convert_pwm_signal(self, pwm_raw: float) -> Optional[int]:
         if pwm_raw < -1 or pwm_raw > 1:
             print(
                 f"Thruster Controller [ERROR]: PWM value {pwm_raw} out of range (should be in [-1, 1])"

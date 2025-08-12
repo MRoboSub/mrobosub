@@ -7,6 +7,7 @@ import numpy as np
 from math import radians
 import rospy
 from std_msgs.msg import Float64
+from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
 
 from mrobosub_lib.lib import Node
 from mrobosub_msgs.msg import MotorState
@@ -231,6 +232,12 @@ class ThrusterMixing(Node):
         self.current_pub = rospy.Publisher(
             "/motor_output/current", Float64, queue_size=1
         )
+        self.enabled = True
+        self.enable_service = rospy.Service('/thruster_mixing/enable', SetBool, self.handle_enable_request)
+
+    def handle_enable_request(self, request: SetBoolRequest):
+        self.enabled = request.data
+        return SetBoolResponse(True, f'Set enabled to {self.enabled}')
 
     def run(self):
         self.timer = rospy.Timer(rospy.Duration.from_sec(1.0 / RATE), self.update)
@@ -327,6 +334,8 @@ class ThrusterMixing(Node):
         return (lb_outputs, lower_bound)
 
     def update(self, _timer_event: Any):
+        if not self.enabled:
+            return
         wrench = np.array(list(self.wrench.values()))
         forces = self.inv_tam @ wrench
 
