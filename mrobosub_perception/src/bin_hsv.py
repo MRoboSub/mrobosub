@@ -28,7 +28,7 @@ class BinHsv(Node):
 
         self.always_run = rospy.myargv(sys.argv)[1] != "0" #input 1 for always_run to not have to do service calls always_run:=1
 
-        self.sub = rospy.Subscriber('/bot_cam', Image, self.handle_frame, queue_size=1)
+        self.sub = rospy.Subscriber('/rectified_image', Image, self.handle_frame, queue_size=1)
         self.serv = TimedService('/bin_object_position', ObjectPosition, self.timing_threshold)
         self.mask_pub = rospy.Publisher(f'/bin_mask', Image, queue_size=1)
         self.enhanced_pub = rospy.Publisher(f'/bin_enhanced', Image, queue_size=1)
