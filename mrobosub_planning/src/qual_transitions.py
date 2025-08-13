@@ -3,7 +3,7 @@ from gate_states import AlignGate, ApproachGate
 from umrsm import TransitionMap
 
 transitions: TransitionMap = {
-    Start.Complete: Submerge,
+    Start.Complete: Submerge.with_params(target_heave=0.75),
 
     Submerge.Submerged: AlignGate,
     Submerge.TimedOut: AlignGate,
