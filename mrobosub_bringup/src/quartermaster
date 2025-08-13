@@ -24,8 +24,8 @@ rospack = rospkg.RosPack()
 planning_pkg = Path(rospack.get_path('mrobosub_planning'))
 capt_launch = None
 
-rospy.wait_for_service('/arming/cmd')
-arm_srv = rospy.ServiceProxy('/arming/cmd', SetBool)
+rospy.wait_for_service('/thruster_mixing/enable')
+arm_srv = rospy.ServiceProxy('/thruster_mixing/enable', SetBool)
 
 rospy.wait_for_service('/localization/zero_state')
 zero_srv = rospy.ServiceProxy('/localization/zero_state', Trigger)
@@ -47,10 +47,12 @@ led_on_pub = rospy.Publisher('/led/on', Bool, queue_size=1)
 hall_effect_inputs = {'strange': False, 'charm': False}
 
 def set_strange(new_value: Bool):
-    hall_effect_inputs['strange'] = new_value.data
+    if not new_value.data:
+        hall_effect_inputs['strange'] = not hall_effect_inputs['strange']
 
 def set_charm(new_value: Bool):
-    hall_effect_inputs['charm'] = new_value.data
+    if not new_value.data:
+        hall_effect_inputs['charm'] = not hall_effect_inputs['charm']
 
 rospy.Subscriber('/buttons/strange', Bool, set_strange)
 rospy.Subscriber('/buttons/charm', Bool, set_charm)
