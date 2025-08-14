@@ -13,6 +13,7 @@ import qual_transitions
 import pathmarker_test
 import alignment_test
 import spin_test
+import heave_test
 import path_to_bin_transitions
 import rospy
 import sys
@@ -31,6 +32,7 @@ transition_maps: Dict[str, TransitionMap] = {
     "pathmarker_test": pathmarker_test.transitions,
     "qual": qual_transitions.transitions,
     "path_to_bin": path_to_bin_transitions.transitions,
+    "heave_test": heave_test.transitions,
 }
 
 
