@@ -33,16 +33,13 @@ def crop_to_circle(image: np.ndarray, radius: int) -> np.ndarray:
     
     return result
 
-
-def generate_rectify_maps(image: np.ndarray, f: int) -> Tuple[np.ndarray, np.ndarray]:
+def generate_rectify_maps(h: int, w: int, f: int) -> Tuple[np.ndarray, np.ndarray]:
     # THe theory behind this function is that the image is distorted by a fisheye lens which produces
     # an orthogonal distortion. We need to undistort this raw image to get a rectified image.
     # See https://en.wikipedia.org/wiki/Fisheye_lens.
 
     # Also this just generates the maps, as the maps just rely on the image dimensions and the
     # f(ocal length), so they can be calculated ahead of time and be reused for every remap.
-    
-    h, w = image.shape[:2]
     cx, cy = w // 2, h // 2
    
     # allows us to vectorize our computations
