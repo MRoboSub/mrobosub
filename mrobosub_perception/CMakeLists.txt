@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS mrobosub_msgs dynamic_reconfigure)
 generate_dynamic_reconfigure_options(
     cfg/hsv_params.cfg
     cfg/pathmarker_params.cfg
+    cfg/rectify_params.cfg
 )
 
 ## System dependencies are found with CMake's conventions
