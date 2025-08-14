@@ -44,18 +44,24 @@ led_strange_pub = rospy.Publisher('/led/strange', Bool, queue_size=1)
 led_charm_pub = rospy.Publisher('/led/charm', Bool, queue_size=1)
 led_on_pub = rospy.Publisher('/led/on', Bool, queue_size=1)
 
-hall_effect_inputs = {'strange': False, 'charm': False}
+hall_effect_inputs = {'strange': True, 'charm': False}
+hall_effect_last_inputs = {'strange': False, 'charm': False}
+
 
 def set_strange(new_value: Bool):
-    if not new_value.data:
+    if not new_value.data and hall_effect_last_inputs['strange']:
         hall_effect_inputs['strange'] = not hall_effect_inputs['strange']
+        print('strange changed')
+    hall_effect_last_inputs['strange'] = new_value.data
 
 def set_charm(new_value: Bool):
-    if not new_value.data:
+    if not new_value.data and hall_effect_last_inputs['charm']:
         hall_effect_inputs['charm'] = not hall_effect_inputs['charm']
+        print('charm changed')
+    hall_effect_last_inputs['charm'] = new_value.data
 
-rospy.Subscriber('/buttons/strange', Bool, set_strange)
-rospy.Subscriber('/buttons/charm', Bool, set_charm)
+strange_sub = rospy.Subscriber('/buttons/strange', Bool, set_strange)
+charm_sub = rospy.Subscriber('/buttons/charm', Bool, set_charm)
 strange_input = False
 charm_input = False
 
@@ -67,8 +73,8 @@ while not rospy.is_shutdown():
 
     prev_state = curr_state
 
-    strange_input = hall_effect_inputs['strange'] or strange_input
-    charm_input = hall_effect_inputs['charm'] or charm_input
+    strange_input = hall_effect_inputs['strange'] # or strange_input
+    charm_input = hall_effect_inputs['charm'] # or charm_input
     #strange_input = charm_input = strange_input or charm_input 
 
     curr_state = RobotState(strange_input + charm_input)
