@@ -40,13 +40,24 @@ def generate_rectify_maps(h: int, w: int, f: int) -> Tuple[np.ndarray, np.ndarra
 
     # Also this just generates the maps, as the maps just rely on the image dimensions and the
     # f(ocal length), so they can be calculated ahead of time and be reused for every remap.
-    cx, cy = w // 2, h // 2
+    # h *= 3
+    # w *= 3
+    
+    # We are going to "oversample" by 3
+
+    cx, cy = w // 2 - 8, h // 2  + 4
    
     # allows us to vectorize our computations
     x_u, y_u = np.meshgrid(np.arange(w), np.arange(h))
 
     x_rel = x_u - cx
     y_rel = y_u - cy
+
+    #x_rel = x_rel.astype(np.float32)
+    #y_rel = y_rel.astype(np.float32)
+
+    #x_rel *= 2
+    #y_rel *= 2
 
     # calculate the distance r_u from the center from the image
     r_u = np.sqrt(x_rel**2 + y_rel**2)
@@ -55,7 +66,7 @@ def generate_rectify_maps(h: int, w: int, f: int) -> Tuple[np.ndarray, np.ndarra
     phi = np.arctan2(y_rel, x_rel)
 
     # calculate theta from r_u and f
-    theta = np.arctan(r_u / f)
+    theta = np.arctan2(r_u, f)
 
     # Use the formula for the distorted radius for a orthogonal distortion
     r_d = f * np.sin(theta)

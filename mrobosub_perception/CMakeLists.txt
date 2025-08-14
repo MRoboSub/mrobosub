@@ -12,6 +12,7 @@ generate_dynamic_reconfigure_options(
     cfg/hsv_params.cfg
     cfg/pathmarker_params.cfg
     cfg/rectify_params.cfg
+    cfg/dummy_botcam_params.cfg
 )
 
 ## System dependencies are found with CMake's conventions
