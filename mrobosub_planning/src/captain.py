@@ -3,7 +3,7 @@ from typing import Dict, Type
 from importlib import import_module
 from umrsm import StateMachine, State, TransitionMap, Outcome
 import common_states
-import standard_run
+import standard_run2
 
 # import prequal_strafe
 import prequal_turn
@@ -23,7 +23,7 @@ import traceback
 
 # maybe change this to something hacky like getting .transitions from the machine name module?
 transition_maps: Dict[str, TransitionMap] = {
-    "standard": standard_run.transitions,
+    "standard": standard_run2.transitions,
     "bin_test": bin_transitions.transitions,
     "prequal_turn": prequal_turn.transitions,
     "buoy": buoy_transitions.transitions,

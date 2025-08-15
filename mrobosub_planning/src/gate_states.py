@@ -1,8 +1,8 @@
-from abstract_states import TimedState, TurnToYaw, AlignPathmarker
+from abstract_states import CenterOnPathmarker, TimedState, TurnToYaw, AlignPathmarker
 from periodic_io import PIO, ImageTarget
 from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
 import rospy
-from typing import Type, Union
+from typing import Type, Union, Optional
 from umrsm import Outcome
 
 
@@ -66,6 +66,47 @@ class ApproachGate(TimedState):
             # if red_response.found:
             # Prefer red because red bin is probably easier to see
             return self.SeenGateImage(red_response, ImageTarget.GATE_RED)
+        # else:
+        #     return self.SeenGateImage(blue_response, ImageTarget.GATE_BLUE)
+
+        self.times_seen += 1
+        return None
+
+    def handle_once_timedout(self) -> TimedOut:
+        PIO.set_target_twist_surge(0)
+
+        return self.TimedOut()
+
+
+class ApproachGate2(TimedState):
+    class SeenPathmarker(Outcome):
+        pass
+
+    class TimedOut(Outcome):
+        pass
+
+    timeout: float = 150.0
+    surge_speed: float = 1.0
+    found_image_threshold = 50
+
+    def __init__(self, prev_outcome: Outcome):
+        super().__init__(prev_outcome)
+        PIO.activate_bot_cam()
+        self.times_seen = 0
+
+    def handle_if_not_timedout(self) -> Union[SeenPathmarker, None]:
+        PIO.set_target_twist_surge(self.surge_speed)
+        PIO.set_target_pose_heave(0.75)
+
+        pm_exists = PIO.query_pathmarker() is not None
+
+        if not pm_exists:
+            return None
+
+        if self.times_seen >= self.found_image_threshold:
+            # if red_response.found:
+            # Prefer red because red bin is probably easier to see
+            return self.SeenPathmarker()
         # else:
         #     return self.SeenGateImage(blue_response, ImageTarget.GATE_BLUE)
 
@@ -280,6 +321,59 @@ class AlignBuoyPathmarker(AlignPathmarker):
 
     def handle_once_timedout(self) -> TimedOut:
         return self.TimedOut()
+
+
+class CenterSlalomPathmarker1(CenterOnPathmarker):
+    class Centered(Outcome):
+        pass
+
+    class TimedOut(Outcome):
+        pass
+
+    timeout: float = 40.0
+
+    def handle_if_not_timedout(self) -> Optional[Outcome]:
+        PIO.set_target_pose_yaw(0.0)
+        return super().handle_if_not_timedout()
+
+    def handle_aligned(self) -> Outcome:
+        return self.Centered()
+
+    def handle_once_timedout(self) -> Outcome:
+        return self.TimedOut()
+
+
+class CenterSlalomPathmarker2(CenterOnPathmarker):
+    class Centered(Outcome):
+        pass
+
+    class TimedOut(Outcome):
+        pass
+
+    timeout: float = 40.0
+
+    def handle_aligned(self) -> Outcome:
+        return self.Centered()
+
+    def handle_once_timedout(self) -> Outcome:
+        return self.TimedOut()
+
+
+class AlignSlalom(TimedState):
+    class Finished(Outcome):
+        pass
+
+    sway_speed = 1.0
+    timeout = 15.0
+    target_heave = 1.0
+
+    def handle_if_not_timedout(self) -> Optional[Outcome]:
+        PIO.set_target_twist_sway(self.sway_speed)
+        PIO.set_target_pose_heave(self.target_heave)
+        return None
+
+    def handle_once_timedout(self) -> Finished:
+        return self.Finished()
 
 
 class GuessBuoyAngle(TurnToYaw):
