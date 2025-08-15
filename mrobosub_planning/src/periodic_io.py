@@ -191,19 +191,18 @@ class PIO:
             print("Pathmarker service is not active")
             return None
         print(f"{resp=}")
-        if resp.found:
-            convertedAngle: float = (90 + resp.angle) + cls.Pose.yaw
-            if convertedAngle > 90:  # if pointing behind us flip 180
-                convertedAngle -= 180
-            elif convertedAngle < -90:
-                convertedAngle += 180
-            return cls.PathmarkerPosition(
-                centroid_x=resp.centroid_x,
-                centroid_y=resp.centroid_y,
-                angle=convertedAngle,
-            )
-        else:
+        if not resp.found:
             return None
+        convertedAngle: float = (90 + resp.angle) + cls.Pose.yaw
+        if convertedAngle > 90:  # if pointing behind us flip 180
+            convertedAngle -= 180
+        elif convertedAngle < -90:
+            convertedAngle += 180
+        return cls.PathmarkerPosition(
+            centroid_x=resp.centroid_x,
+            centroid_y=resp.centroid_y,
+            angle=convertedAngle,
+        )
 
     @classmethod
     def query_buoy(cls) -> ObjectPositionResponse:

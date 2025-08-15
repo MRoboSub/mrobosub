@@ -1,6 +1,6 @@
 import rospy
 from umrsm import Outcome
-from abstract_states import AlignPathmarker, TimedState
+from abstract_states import AlignPathmarker, TimedState, CenterOnPathmarker
 from periodic_io import PIO, ImageDetections, ImageTarget
 from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
 from typing import Dict, Optional, Tuple, Type, Union
@@ -22,6 +22,59 @@ class ZedPause(TimedState):
 
     def handle_once_timedout(self) -> TimedOut:
         return self.TimedOut()
+
+
+class Slalom(TimedState):
+    class TimedOut(Outcome):
+        pass
+
+    class SeenBinsPathmarker(Outcome):
+        pass
+
+    timeout: float = 40.0
+    surge_speed: float = 1.0
+    target_heave: float = 1.0
+
+    def __init__(self, prev_outcome: Outcome):
+        super().__init__(prev_outcome)
+        PIO.activate_bot_cam()
+        self.found_count = 0
+
+    def handle_if_not_timedout(self) -> Optional[Outcome]:
+        PIO.set_target_twist_surge(self.surge_speed)
+        PIO.set_target_pose_heave(self.target_heave)
+        pm_res = PIO.query_pathmarker_full()
+        if pm_res is None:
+            return None
+
+        if pm_res.centroid_x > 0.5:
+            self.found_count += 1
+        else:
+            self.found_count = 0
+
+        if self.found_count > 10:
+            return self.SeenBinsPathmarker()
+
+        return None
+
+    def handle_once_timedout(self) -> Outcome:
+        return self.TimedOut()
+
+class CenterBinsPathmarker(CenterOnPathmarker):
+    class Centered(Outcome):
+        pass
+
+    class TimedOut(Outcome):
+        pass
+
+    timeout: float = 40.0
+
+    def handle_aligned(self) -> Outcome:
+        return self.Centered()
+
+    def handle_once_timedout(self) -> Outcome:
+        return self.TimedOut()
+
 
 
 class SeenBuoyType(Outcome):
