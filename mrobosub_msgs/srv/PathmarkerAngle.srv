@@ -1,3 +1,5 @@
 ---
 bool found
 float32 angle
+float32 centroid_x
+float32 centroid_y

@@ -59,6 +59,8 @@ class PathmarkerHsv(Node):
             if detection is not None:
                 response.found = True
                 response.angle = detection.angle
+                response.centroid_x = detection.x / bgr_img.shape[1]
+                response.centroid_y = detection.y / bgr_img.shape[0]
 
             self.serv.set_result(response)
         

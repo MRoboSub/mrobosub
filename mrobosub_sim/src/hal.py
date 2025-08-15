@@ -231,7 +231,7 @@ class SimImu:
 class SimBotcam:
     def __init__(self, hal: "SimHal") -> None:
         self.hal = hal
-        self.botcam_pub = rospy.Publisher("/bot_cam", Image, queue_size=1)
+        self.botcam_pub = rospy.Publisher("/rectified_image", Image, queue_size=1)
         self.br = CvBridge()
         self.last_image_time = 0
         rospy.Service("/bot_cam/on", SetBool, self.handle_on_service)
