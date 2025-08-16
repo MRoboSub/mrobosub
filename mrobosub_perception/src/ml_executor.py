@@ -20,7 +20,7 @@ def load_yolo():
     path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     yolo_path = os.path.join(path, "yolov5")
 
-    model_path = os.path.join(path, "models/comp_gate_2024.pt")
+    model_path = os.path.join(path, "models/2025_best.pt")
     model = torch.hub.load(
         yolo_path, "custom", path=model_path, source="local"
     )  # local repo
