@@ -1,4 +1,4 @@
-from gate_states import AlignBuoyPathmarker, ApproachGate
+from gate_states import AlignSlalomPathmarker, ApproachGate
 from buoy_states import ApproachBuoyOpen
 from common_states import Start, Submerge, Surface, Stop
 from abstract_states import CenterOnPathmarker

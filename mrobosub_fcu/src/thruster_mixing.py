@@ -29,7 +29,7 @@ class ThrusterDescriptor:
 
 
 THRUSTER_MAX_CURRENT_DRAW = 15.0  # amps
-SUB_MAX_CURRENT_DRAW = 6.0  # amps
+SUB_MAX_CURRENT_DRAW = 10.0  # amps
 CORNER_THRUSTER_SURGE = 0.2921
 CENTER_THRUSTER_SURGE = 0.127
 THRUSTER_SWAY = 0.267
@@ -233,11 +233,13 @@ class ThrusterMixing(Node):
             "/motor_output/current", Float64, queue_size=1
         )
         self.enabled = True
-        self.enable_service = rospy.Service('/thruster_mixing/enable', SetBool, self.handle_enable_request)
+        self.enable_service = rospy.Service(
+            "/thruster_mixing/enable", SetBool, self.handle_enable_request
+        )
 
     def handle_enable_request(self, request: SetBoolRequest):
         self.enabled = request.data
-        return SetBoolResponse(True, f'Set enabled to {self.enabled}')
+        return SetBoolResponse(True, f"Set enabled to {self.enabled}")
 
     def run(self):
         self.timer = rospy.Timer(rospy.Duration.from_sec(1.0 / RATE), self.update)
@@ -347,7 +349,7 @@ class ThrusterMixing(Node):
 
         outputs, scale_factor = self.calculate_scaled_outputs(forces)
         if scale_factor != 1.0:
-            print('Scale: ', scale_factor)
+            print("Scale: ", scale_factor)
         scale *= scale_factor
         est_current = np.sum(
             self.expected_current_draw(

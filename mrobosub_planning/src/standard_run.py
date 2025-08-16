@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from common_states import Start, Submerge, Surface, Stop
-from gate_states import AlignGate, AlignBuoyPathmarker, ApproachGate, Spin, ApproachGateImage, ApproachGateImage2, SpinFinish, GuessBuoyAngle
+from gate_states import AlignGate, AlignSlalomPathmarker, ApproachGate, Spin, ApproachGateImage, ApproachGateImage2, SpinFinish, GuessBuoyAngle
 from buoy_states import ApproachBuoyOpen, AlignBinsPathmarker, BuoyPause, CenterHeaveBuoy, CenterYawBuoy, CenterYawBuoyDiscrete, ZedPause
 from circumnavigate_states import CircumnavigateOpenDiscreteDiamondTurns, CircumnavigateOpenDiscreteMove
 from bin_states import ApproachBinOpen, ApproachBinClosed, CenterCameraToBin, Descend, CenterLeftDropper, DropMarker, Spin180
@@ -35,12 +35,12 @@ transitions: TransitionMap = {
 
     Spin.TimedOut: SpinFinish,
 
-    SpinFinish.Reached: AlignBuoyPathmarker,
-    SpinFinish.TimedOut: AlignBuoyPathmarker,
+    SpinFinish.Reached: AlignSlalomPathmarker,
+    SpinFinish.TimedOut: AlignSlalomPathmarker,
 
-    AlignBuoyPathmarker.AlignedToBuoy: ZedPause,  # ApproachBuoyOpen,
-    AlignBuoyPathmarker.NoMeasurements: GuessBuoyAngle,
-    AlignBuoyPathmarker.TimedOut: GuessBuoyAngle,
+    AlignSlalomPathmarker.AlignedToSlalom: ZedPause,  # ApproachBuoyOpen,
+    AlignSlalomPathmarker.NoMeasurements: GuessBuoyAngle,
+    AlignSlalomPathmarker.TimedOut: GuessBuoyAngle,
 
     GuessBuoyAngle.Reached: ZedPause,
     GuessBuoyAngle.TimedOut: ZedPause,
