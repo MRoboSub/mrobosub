@@ -42,23 +42,26 @@ class Slalom(TimedState):
 
     def handle_if_not_timedout(self) -> Optional[Outcome]:
         PIO.set_target_twist_surge(self.surge_speed)
+        PIO.set_target_twist_sway(0.0)
         PIO.set_target_pose_heave(self.target_heave)
         pm_res = PIO.query_pathmarker_full()
         if pm_res is None:
             return None
 
-        if pm_res.centroid_x > 0.5:
+        if pm_res.centroid_y > 0.5:
             self.found_count += 1
         else:
             self.found_count = 0
 
         if self.found_count > 10:
-            return self.SeenBinsPathmarker()
+            # return self.SeenBinsPathmarker()
+            return None
 
         return None
 
     def handle_once_timedout(self) -> Outcome:
         return self.TimedOut()
+
 
 class CenterBinsPathmarker(CenterOnPathmarker):
     class Centered(Outcome):
@@ -74,7 +77,6 @@ class CenterBinsPathmarker(CenterOnPathmarker):
 
     def handle_once_timedout(self) -> Outcome:
         return self.TimedOut()
-
 
 
 class SeenBuoyType(Outcome):

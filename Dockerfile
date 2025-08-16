@@ -9,7 +9,8 @@ RUN apt-get update && \
                         vim \
                         screen \
                         python3-tk \
-                        tmux
+                        tmux \
+                        typing_extensions
 
 RUN pip install mypy -U
 
@@ -41,5 +42,6 @@ EXPOSE 10000
 RUN echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc && \
     echo "source /root/catkin_ws/devel/setup.bash" >> /root/.bashrc
 
-RUN ln -s "/root/catkin_ws/src/mrobosub/.bash_aliases" "/root/.bash_aliases"
+RUN ln -s "/root/catkin_ws/src/mrobosub/.bash_aliases" "/root/.bash_aliases" && \
+    "/root/catkin_ws/src/mrobosub/.tmux.conf" "/root/.tmux.conf"
 
