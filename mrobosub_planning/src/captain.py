@@ -24,6 +24,8 @@ import traceback
 # maybe change this to something hacky like getting .transitions from the machine name module?
 transition_maps: Dict[str, TransitionMap] = {
     "standard": standard_run2.transitions,
+    "test_spin": standard_run2.test_spin,
+    "test_speed": standard_run2.test_speed,
     "bin_test": bin_transitions.transitions,
     "prequal_turn": prequal_turn.transitions,
     "buoy": buoy_transitions.transitions,

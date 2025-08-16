@@ -284,3 +284,4 @@ class CenterOnPathmarker(TimedState):
             self.centered_count = 0
         if self.centered_count > 50:
             return self.handle_aligned()
+        return None

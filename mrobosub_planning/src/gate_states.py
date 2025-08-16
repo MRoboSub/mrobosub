@@ -98,17 +98,13 @@ class ApproachGate2(TimedState):
         PIO.set_target_twist_surge(self.surge_speed)
         PIO.set_target_pose_heave(0.75)
 
-        pm_exists = PIO.query_pathmarker() is not None
+        pm_res = PIO.query_pathmarker_full()
 
-        if not pm_exists:
+        if pm_res is None:
             return None
 
         if self.times_seen >= self.found_image_threshold:
-            # if red_response.found:
-            # Prefer red because red bin is probably easier to see
             return self.SeenPathmarker()
-        # else:
-        #     return self.SeenGateImage(blue_response, ImageTarget.GATE_BLUE)
 
         self.times_seen += 1
         return None
@@ -287,8 +283,8 @@ class ApproachGateImage2(TimedState):
         return self.TimedOut()
 
 
-class AlignBuoyPathmarker(AlignPathmarker):
-    class AlignedToBuoy(Outcome):
+class AlignSlalomPathmarker(AlignPathmarker):
+    class AlignedToSlalom(Outcome):
         pass
 
     class NoMeasurements(Outcome):
@@ -297,12 +293,15 @@ class AlignBuoyPathmarker(AlignPathmarker):
     class TimedOut(Outcome):
         pass
 
+    angle_offset = 0.0
+    target_heave = 1.0
     yaw_threshold = 2.5
     timeout = 10.0
 
     def handle_if_not_timedout(self) -> Union[Outcome, None]:
         outcome = super().handle_if_not_timedout()
         if self.iter == 100 and hasattr(self, "target_angle"):
+            self.target_angle += self.angle_offset
             self.target_angle %= 360
             self.target_angle += 360
             self.target_angle %= 360
@@ -311,10 +310,11 @@ class AlignBuoyPathmarker(AlignPathmarker):
             if 180 <= self.target_angle < 270:
                 self.target_angle -= 180
             print(f"adjusted_setpoint: {self.target_angle=}")
+            PIO.set_target_pose_heave(self.target_heave)
         return outcome
 
-    def handle_aligned(self) -> AlignedToBuoy:
-        return self.AlignedToBuoy()
+    def handle_aligned(self) -> AlignedToSlalom:
+        return self.AlignedToSlalom()
 
     def handle_no_measurements(self) -> NoMeasurements:
         return self.NoMeasurements()
@@ -396,18 +396,21 @@ class GuessBuoyAngle(TurnToYaw):
 
 
 class Spin(TimedState):
-    timeout: float = 30.0
 
     class TimedOut(Outcome):
         pass
+
+    timeout: float = 30.0
+    target_heave: float = 1.0
+    speed: float = 2.0
 
     def __init__(self, prev_outcome: Outcome) -> None:
         super().__init__(prev_outcome)
 
     def handle_if_not_timedout(self) -> None:
-        PIO.set_target_twist_yaw(2.0)
+        PIO.set_target_twist_yaw(self.speed)
         PIO.set_target_twist_surge(0)
-        PIO.set_target_pose_heave(1)
+        PIO.set_target_pose_heave(self.target_heave)
         return None
 
     def handle_once_timedout(self) -> TimedOut:

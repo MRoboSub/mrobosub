@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from umrsm import TransitionMap
 from common_states import Start, Submerge, Surface, Stop
-from gate_states import AlignGate, AlignBuoyPathmarker, ApproachGate, ApproachGateImage
+from gate_states import AlignGate, AlignSlalomPathmarker, ApproachGate, ApproachGateImage
 # from buoy_states import ApproachBuoyOpen, OldApproachBuoyClosed, FindGlyph, FallBack, PassBuoy, Pause, ContingencyApproach, ContingencySubmerge, Ascend
 
 
