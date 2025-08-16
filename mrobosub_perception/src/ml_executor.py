@@ -21,6 +21,8 @@ def load_yolo():
     yolo_path = os.path.join(path, "yolov5")
 
     model_path = os.path.join(path, "models/2025_best.pt")
+    print(yolo_path)
+    print(model_path)
     model = torch.hub.load(
         yolo_path, "custom", path=model_path, source="local"
     )  # local repo

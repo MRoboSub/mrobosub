@@ -8,13 +8,13 @@ from umrsm import Outcome, TransitionMap
 
 slalom_heave = 1.0
 CustomAlignSlalomPathmarker = AlignSlalomPathmarker.with_params(angle_offset=0.0, target_heave=slalom_heave)
-CustomSlalom = Slalom.with_params(target_heave=slalom_heave, surge_speed=1.0)
+CustomSlalom = Slalom.with_params(target_heave=slalom_heave, surge_speed=1.0, timeout=45.) # 33
 
 class GoToOctagon(TimedState):
     class Finished(Outcome):
         pass
 
-    timeout: float = 20.0
+    timeout: float = 40.0
 
     def handle_if_not_timedout(self) -> None:
         PIO.set_target_twist_surge(1.5)
@@ -29,14 +29,14 @@ transitions: TransitionMap = {
     Submerge.Submerged: AlignGate,
     Submerge.TimedOut: AlignGate,
 
-    AlignGate.ReachedAngle: ApproachGate2,
-    AlignGate.TimedOut: ApproachGate2,
+    AlignGate.ReachedAngle: ApproachGate2.with_params(timeout=30.), # 23
+    AlignGate.TimedOut: ApproachGate2.with_params(timeout=30.), # 23
 
     ApproachGate2.SeenPathmarker: CenterSlalomPathmarker1,
     ApproachGate2.TimedOut: Surface,
 
-    CenterSlalomPathmarker1.Centered: Spin,
-    CenterSlalomPathmarker1.TimedOut: Spin,
+    CenterSlalomPathmarker1.Centered: Spin.with_params(timeout=35.0, speed=0.5),
+    CenterSlalomPathmarker1.TimedOut: Spin.with_params(timeout=35.0, speed=0.5),
 
     Spin.TimedOut: SpinFinish,
 
@@ -66,8 +66,8 @@ transitions: TransitionMap = {
 test_spin: TransitionMap = {
     Start.Complete: Submerge.with_params(target_heave=0.5),
 
-    Submerge.TimedOut: Spin.with_params(target_heave=0.5),
-    Submerge.Submerged: Spin.with_params(target_heave=0.5),
+    Submerge.TimedOut: Spin.with_params(target_heave=0.5, speed=-0.5),
+    Submerge.Submerged: Spin.with_params(target_heave=0.5, speed=-0.5),
 
     Spin.TimedOut: Surface
 }
