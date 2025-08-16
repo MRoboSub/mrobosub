@@ -11,7 +11,7 @@ from pathlib import Path
 import warnings
 
 
-USE_ML = False
+USE_ML = True
 
 
 class RobotState(Enum):
@@ -52,6 +52,7 @@ def pub_on_led(val: bool):
 
 
 def pub_led(led: str, val: bool):
+    print(f"setting {led} to {val}")
     if led == "strange":
         pub_strange_led(val)
     if led == "charm":

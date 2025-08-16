@@ -36,8 +36,8 @@ class Botcam(ControlLoopNode):
         self.h = 1080
         self.map_x, self.map_y = self.generate_undistort_maps(self.f, self.w, self.h) # TODO: Should this be dynamic?
         self.srv = Server(rectify_paramsConfig, self.reconfigure_callback, 'rectify_params')
-        self.output_w = 640
-        self.output_h = 480
+        self.output_w = int(1920 / 2)
+        self.output_h = int(1080 / 2)
 
 
     def handle_on_service(self, req: SetBoolRequest):
