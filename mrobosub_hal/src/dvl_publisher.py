@@ -27,7 +27,7 @@ class DVLPublisher:
 
         # connect to socket containing the DVL information
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.setblocking(True) #False
+        sock.setblocking(True)  # False
         sock.settimeout(0.2)
         sock.bind((UDP_IP, UDP_PORT))
 

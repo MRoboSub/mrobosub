@@ -76,8 +76,28 @@ class PIO:
         return magnitude <= threshold
 
     @classmethod
+    def is_magnitude_within_threshold(cls, threshold: float) -> float:
+        magnitude: float = cls.calculate_distance_to_target()
+        return magnitude <= threshold
+
+    @classmethod
     def is_heave_within_threshold(cls, threshold: float) -> float:
         return abs(cls.TargetPose.heave - cls.Pose.heave) <= threshold
+
+    @classmethod
+    def calculate_yaw_to_target(cls) -> float:
+        # the direction vector to the target d = v2 - v1
+        # the angle to this would be arctan(dy / dx)
+        dx = cls.TargetPose.x - cls.Pose.x
+        dy = cls.TargetPose.y - cls.Pose.y
+
+        return math.atan2(dy, dx) * 180 / math.pi
+
+    @classmethod
+    def calculate_distance_to_target(cls) -> float:
+        dx = cls.TargetPose.x - cls.Pose.x
+        dy = cls.TargetPose.y - cls.Pose.y
+        return math.sqrt(dx**2 + dy**2)
 
     @classmethod
     def calculate_yaw_to_target(cls) -> float:
@@ -113,6 +133,16 @@ class PIO:
     def set_target_pose_roll(cls, target_roll: float) -> None:
         cls._target_pose_roll_pub.publish(target_roll)
         cls.TargetPose.roll = target_roll
+
+    @classmethod
+    def set_target_pose_x(cls, target_x: float) -> None:
+        cls._target_pose_x_pub.publish(target_x)
+        cls.TargetPose.x = target_x
+
+    @classmethod
+    def set_target_pose_y(cls, target_y: float) -> None:
+        cls._target_pose_y_pub.publish(target_y)
+        cls.TargetPose.y = target_y
 
     @classmethod
     def set_target_pose_x(cls, target_x: float) -> None:
