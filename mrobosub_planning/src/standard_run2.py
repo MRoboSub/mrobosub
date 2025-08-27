@@ -43,6 +43,8 @@ transitions: TransitionMap = {
 
     Submerge.Submerged: Forward,
     Forward.Finished: Surface,
+
+    Surface.Surfaced: Surface,
     # Submerge.TimedOut: AlignGate,
 
     # AlignGate.ReachedAngle: ApproachGate2.with_params(timeout=30.), # 23
