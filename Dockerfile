@@ -10,7 +10,8 @@ RUN apt-get update && \
                         screen \
                         python3-tk \
                         tmux \
-                        typing_extensions
+                        python3-typing-extensions \
+                        python3-scipy
 
 RUN pip install mypy -U
 
