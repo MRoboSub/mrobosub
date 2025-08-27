@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="mrobosub_tests" type="motor_test.py" name="motor_test" output="screen">
+    </node>
+</launch>

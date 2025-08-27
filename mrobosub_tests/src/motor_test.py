@@ -7,7 +7,7 @@ class MotorTestNode:
     STOP_POWER = 0
 
     FORWARD_POWER = 0.1
-    MOTOR_TIME_S = 3
+    MOTOR_TIME_S = 5
     NUM_MOTORS = 8
 
     def __init__(self):

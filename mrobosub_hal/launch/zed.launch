@@ -1,0 +1,4 @@
+<launch>
+    <arg name="device_path" default="/dev/zed2" />
+    <node name="zed" pkg="mrobosub_hal" type="zed.py" args="$(arg device_path)" />
+</launch>

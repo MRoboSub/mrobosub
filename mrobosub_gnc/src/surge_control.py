@@ -16,33 +16,14 @@ class SurgeControlNode(Node):
     Publishers
     - /output_wrench/surge
     """
-    # pid_params: PIDParams
-
-    max_accel: float
 
     def __init__(self):
         super().__init__('surge_control')
         self.output_surge_pub = rospy.Publisher('/output_wrench/surge', Float64, queue_size=1)
-        self.at_twist_pub = rospy.Publisher('/at_twist/surge', Bool, queue_size=1)
         rospy.Subscriber('/target_twist/surge', Float64, self.target_twist_surge)
 
-        self.prev_time = rospy.get_time()
-        self.prev_output = 0
-
-        
-    def target_twist_surge(self, msg: Float64):
-        desired_change = msg.data - self.prev_output
-        dt = min(0.1, rospy.get_time() - self.prev_time)
-        max_abs_change = self.max_accel * dt
-        limited_change = signum(desired_change) * min(abs(desired_change), max_abs_change)
-        output = self.prev_output + limited_change
-
-        self.prev_output = output
-        self.prev_time = rospy.get_time()
-        
-        self.pub_output_surge(output)
-        self.at_twist_pub.publish(abs(msg.data - output) <= 0.0001)
-        
+    def target_twist_surge(self, target_twist_surge: Float64):
+        self.pub_output_surge(target_twist_surge.data)
 
     def pub_output_surge(self, output: float):
         self.output_surge_pub.publish(output)

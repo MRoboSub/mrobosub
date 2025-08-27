@@ -8,115 +8,185 @@ import rospy
 from std_msgs.msg import Bool, Float64
 from std_srvs.srv import SetBool, Trigger
 from pathlib import Path
+import warnings
+
 
 USE_ML = True
+
 
 class RobotState(Enum):
     ambient = 0
     ready = 1
     running = 2
 
-rospy.init_node('quartermaster')
 
-curr_state = RobotState.ambient
+rospy.init_node("quartermaster")
 
-rospack = rospkg.RosPack()
-planning_pkg = Path(rospack.get_path('mrobosub_planning'))
-capt_launch = None
-
-rospy.wait_for_service('/arming/cmd')
-arm_srv = rospy.ServiceProxy('/arming/cmd', SetBool)
-
-rospy.wait_for_service('/localization/zero_state')
-zero_srv = rospy.ServiceProxy('/localization/zero_state', Trigger)
-
-if USE_ML:
-    rospy.wait_for_service('/object_position/gate_red')
+state = RobotState.ambient
 
 rate = rospy.Rate(10)
-target_twist_yaw_pub = rospy.Publisher('/target_twist/yaw', Float64, queue_size=1)
-target_twist_roll_pub = rospy.Publisher('/target_twist/roll', Float64, queue_size=1)
-target_twist_surge_pub = rospy.Publisher('/target_twist/surge', Float64, queue_size=1)
-target_twist_sway_pub = rospy.Publisher('/target_twist/sway', Float64, queue_size=1)
-target_twist_heave_pub = rospy.Publisher('/target_twist/heave', Float64, queue_size = 1)
 
-led_strange_pub = rospy.Publisher('/led/strange', Bool, queue_size=1)
-led_charm_pub = rospy.Publisher('/led/charm', Bool, queue_size=1)
-led_on_pub = rospy.Publisher('/led/on', Bool, queue_size=1)
+led_strange_pub = rospy.Publisher("/led/strange", Bool, queue_size=1)
+led_charm_pub = rospy.Publisher("/led/charm", Bool, queue_size=1)
+led_on_pub = rospy.Publisher("/led/on", Bool, queue_size=1)
 
-hall_effect_inputs = {'strange': False, 'charm': False}
+hall_effect_triggered = {"strange": False, "charm": False}
+hall_effect_last_inputs = {"strange": False, "charm": False}
+
+led_states = {"strange": False, "charm": False, "on": False}
+
+
+def pub_strange_led(val: bool):
+    led_strange_pub.publish(val)
+    led_states["strange"] = val
+
+
+def pub_charm_led(val: bool):
+    led_charm_pub.publish(val)
+    led_states["charm"] = val
+
+
+def pub_on_led(val: bool):
+    led_on_pub.publish(val)
+    led_states["on"] = val
+
+
+def pub_led(led: str, val: bool):
+    print(f"setting {led} to {val}")
+    if led == "strange":
+        pub_strange_led(val)
+    if led == "charm":
+        pub_charm_led(val)
+    if led == "on":
+        pub_on_led(val)
+
+
+pub_strange_led(False)
+pub_charm_led(False)
+pub_on_led(False)
+
+
+rospack = rospkg.RosPack()
+planning_pkg = Path(rospack.get_path("mrobosub_planning"))
+capt_launch = None
+
+rospy.wait_for_service("/thruster_mixing/enable")
+enable_srv = rospy.ServiceProxy("/thruster_mixing/enable", SetBool)
+
+
+def enable_thruster_mixing():
+    enable_resp = enable_srv(True)
+    retries = 0
+    while not enable_resp.success and retries < 10:
+        enable_resp = enable_srv(True)
+        retries += 1
+    rospy.loginfo(
+        f"arming response: {enable_resp.success}; {enable_resp.message}; {retries} retries"
+    )
+
+
+rospy.wait_for_service("/localization/zero_state")
+zero_srv = rospy.ServiceProxy("/localization/zero_state", Trigger)
+
+
+def zero_state():
+    zero_resp = zero_srv()
+    retries = 0
+    while not zero_resp.success and retries < 10:
+        zero_resp = zero_srv()
+        retries += 1
+    rospy.loginfo(
+        f"zero response: {zero_resp.success}; {zero_resp.message}; {retries} retries"
+    )
+
+
+if USE_ML:
+    rospy.wait_for_service("/object_position/gate_red")
+
 
 def set_strange(new_value: Bool):
-    hall_effect_inputs['strange'] = new_value.data
+    if not new_value.data and hall_effect_last_inputs["strange"]:
+        hall_effect_triggered["strange"] = True
+        print("strange changed")
+    hall_effect_last_inputs["strange"] = new_value.data
+
 
 def set_charm(new_value: Bool):
-    hall_effect_inputs['charm'] = new_value.data
+    if not new_value.data and hall_effect_last_inputs["charm"]:
+        hall_effect_triggered["charm"] = True
+        print("charm changed")
+    hall_effect_last_inputs["charm"] = new_value.data
 
-rospy.Subscriber('/buttons/strange', Bool, set_strange)
-rospy.Subscriber('/buttons/charm', Bool, set_charm)
-strange_input = False
-charm_input = False
 
-while not rospy.is_shutdown(): 
-    led_on_pub.publish(True)
+strange_sub = rospy.Subscriber("/buttons/strange", Bool, set_strange)
+charm_sub = rospy.Subscriber("/buttons/charm", Bool, set_charm)
+
+capt_launch = None
+timeout_time = 0
+timeout_disable = None
+
+while not rospy.is_shutdown():
+    pub_on_led(True)
 
     # KEEP THIS LINE
     rate.sleep()
 
-    prev_state = curr_state
-
-    strange_input = hall_effect_inputs['strange'] or strange_input
-    charm_input = hall_effect_inputs['charm'] or charm_input
-    #strange_input = charm_input = strange_input or charm_input 
-
-    curr_state = RobotState(strange_input + charm_input)
-    if curr_state != prev_state:
-        print(f'{strange_input=} {charm_input=}')
-
-    if False: # curr_state == RobotState.ready:
-        target_twist_yaw_pub.publish(0.0)
-        target_twist_roll_pub.publish(0.0)
-        target_twist_surge_pub.publish(0.0)
-        target_twist_sway_pub.publish(0.0)
-        target_twist_heave_pub.publish(0.0)
-
-    if curr_state == prev_state:
+    if rospy.get_time() < timeout_time:
+        hall_effect_triggered = {"strange": False, "charm": False}
         continue
-    elif curr_state == RobotState.ambient:
-        arm_resp = arm_srv(False)
-        rospy.loginfo(f'arming response: {arm_resp.success}; {arm_resp.message}')
-    elif curr_state == RobotState.ready:
-        zero_srv()
-        
-        if capt_launch is not None:
-            capt_launch.shutdown()
-            capt_launch = None
-        
-        if prev_state == RobotState.running:
-            arm_srv(True)
-            soft_stop = rospy.ServiceProxy('/captain/soft_stop', Trigger)
-            try:
-                res = soft_stop()
-            except:
-                pass
-            rospy.loginfo('Soft stopping state machine (from quartermaster)')
-        else:
-            arm_resp = arm_srv(True)
-            retries = 0
-            while not arm_resp.success and retries < 10:
-                arm_resp = arm_srv(True)
-                retries += 1
-            rospy.loginfo(f'arming response: {arm_resp.success}; {arm_resp.message}; {retries} retries')
-    else:
-        rospy.loginfo('starting state machine (from quartermaster)')
+
+    if timeout_disable is not None:
+        pub_led(timeout_disable, False)
+        timeout_disable = None
+
+    if not any(hall_effect_triggered.values()):
+        continue
+
+    timeout_time = rospy.get_time() + 5
+    if hall_effect_triggered["strange"]:
+        pub_strange_led(True)
+        timeout_disable = "strange"
+    elif hall_effect_triggered["charm"]:
+        pub_charm_led(True)
+        timeout_disable = "charm"
+
+    hall_effect_triggered = {"strange": False, "charm": False}
+
+    print(f"{led_states=}")
+
+    if state == RobotState.ambient:
+        enable_thruster_mixing()
+        zero_state()
+
+        state = RobotState.ready
+
+    elif state == RobotState.ready:
+        rospy.loginfo("starting state machine (from quartermaster)")
         uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
         roslaunch.configure_logging(uuid)
         capt_launch = roslaunch.parent.ROSLaunchParent(
-            uuid, [str(planning_pkg / 'launch' / 'captain.launch')]
+            uuid, [str(planning_pkg / "launch" / "captain.launch")]
         )
         capt_launch.start()
 
-    led_strange_pub.publish(bool(strange_input))
-    led_charm_pub.publish(bool(charm_input))
+        state = RobotState.running
 
+    elif state == RobotState.running:
+        soft_stop = rospy.ServiceProxy("/captain/soft_stop", Trigger)
+        try:
+            res = soft_stop()
+        except:
+            pass
+        rospy.loginfo("Soft stopping state machine (from quartermaster)")
 
+        if capt_launch is not None:
+            capt_launch.shutdown()
+            capt_launch = None
+        else:
+            warnings.warn(
+                "Switching from running to ambient, but there is no capt_launch"
+            )
+
+        enable_thruster_mixing()
+
+        state = RobotState.ambient

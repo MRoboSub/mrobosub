@@ -16,11 +16,10 @@ class IMU(Node):
         self.pimu_pub = rospy.Publisher("/imu_PIMU", Imu_PIMU, queue_size=1)
 
     def did_ins_callback(self, msg):
-        self.did_ins_pub.publish(msg.theta)
-
+        (x, y, z) = msg.theta
+        self.did_ins_pub.publish((x, y, -z))
 
     def did_pimu_sub(self, msg):
-
         m = Imu_PIMU()
         m.dtheta = msg.dtheta
         m.dvel = msg.dvel

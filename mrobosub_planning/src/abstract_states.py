@@ -255,3 +255,33 @@ class AlignPathmarker(TimedState):
             if self.yaw_threshold_count > 30:
                 return self.handle_aligned()
         return None
+
+
+class CenterOnPathmarker(TimedState):
+    @abstractmethod
+    def handle_aligned(self) -> Outcome:
+        pass
+
+    def __init__(self, prev_outcome: Outcome):
+        super().__init__(prev_outcome)
+        PIO.activate_bot_cam()
+        self.centered_count = 0
+
+    def handle_if_not_timedout(self) -> Optional[Outcome]:
+        pm_resp = PIO.query_pathmarker_full()
+        if pm_resp is None:
+            PIO.set_target_twist_surge(0.0)
+            PIO.set_target_twist_sway(0.0)
+            return None
+
+        x_diff = pm_resp.centroid_x - 0.5
+        y_diff = pm_resp.centroid_y - 0.5
+        PIO.set_target_twist_sway(3 * x_diff)
+        PIO.set_target_twist_surge(-3 * y_diff)
+        if abs(x_diff) < 0.1 and abs(y_diff) < 0.1:
+            self.centered_count += 1
+        else:
+            self.centered_count = 0
+        if self.centered_count > 50:
+            return self.handle_aligned()
+        return None

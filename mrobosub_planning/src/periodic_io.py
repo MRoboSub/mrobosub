@@ -1,4 +1,5 @@
 import math
+from typing_extensions import NamedTuple
 import rosgraph
 import rospy
 from std_msgs.msg import Float64, Bool, Int32
@@ -68,7 +69,7 @@ class PIO:
     @classmethod
     def is_yaw_within_threshold(cls, threshold: float) -> float:
         return abs(angle_error(cls.TargetPose.yaw, cls.Pose.yaw)) <= threshold
-    
+
     @classmethod
     def is_magnitude_within_threshold(cls, threshold: float) -> float:
         magnitude: float = cls.calculate_distance_to_target()
@@ -77,7 +78,7 @@ class PIO:
     @classmethod
     def is_heave_within_threshold(cls, threshold: float) -> float:
         return abs(cls.TargetPose.heave - cls.Pose.heave) <= threshold
-    
+
     @classmethod
     def calculate_yaw_to_target(cls) -> float:
         # the direction vector to the target d = v2 - v1
@@ -86,13 +87,12 @@ class PIO:
         dy = cls.TargetPose.y - cls.Pose.y
 
         return math.atan2(dy, dx) * 180 / math.pi
-    
+
     @classmethod
     def calculate_distance_to_target(cls) -> float:
         dx = cls.TargetPose.x - cls.Pose.x
         dy = cls.TargetPose.y - cls.Pose.y
         return math.sqrt(dx**2 + dy**2)
-
 
     # @classmethod
     # def set_absolute_heading(cls, heading):
@@ -113,7 +113,7 @@ class PIO:
     def set_target_pose_roll(cls, target_roll: float) -> None:
         cls._target_pose_roll_pub.publish(target_roll)
         cls.TargetPose.roll = target_roll
-    
+
     @classmethod
     def set_target_pose_x(cls, target_x: float) -> None:
         cls._target_pose_x_pub.publish(target_x)
@@ -173,21 +173,36 @@ class PIO:
             None otherwise.
         """
 
+        pm_pos = cls.query_pathmarker_full()
+        if pm_pos is None:
+            return None
+        return pm_pos.angle
+
+    class PathmarkerPosition(NamedTuple):
+        centroid_x: float
+        centroid_y: float
+        angle: float
+
+    @classmethod
+    def query_pathmarker_full(cls) -> Optional[PathmarkerPosition]:
         try:
             resp = cls._pathmarker_srv()
         except rospy.service.ServiceException as e:
             print("Pathmarker service is not active")
             return None
         print(f"{resp=}")
-        if resp.found:
-            convertedAngle: float = (90 + resp.angle) + cls.Pose.yaw
-            if convertedAngle > 90:  # if pointing behind us flip 180
-                convertedAngle -= 180
-            elif convertedAngle < -90:
-                convertedAngle += 180
-            return convertedAngle
-        else:
+        if not resp.found:
             return None
+        convertedAngle: float = (90 + resp.angle) + cls.Pose.yaw
+        if convertedAngle > 90:  # if pointing behind us flip 180
+            convertedAngle -= 180
+        elif convertedAngle < -90:
+            convertedAngle += 180
+        return cls.PathmarkerPosition(
+            centroid_x=resp.centroid_x,
+            centroid_y=resp.centroid_y,
+            angle=convertedAngle,
+        )
 
     @classmethod
     def query_buoy(cls) -> ObjectPositionResponse:
@@ -281,11 +296,11 @@ class PIO:
         @staticmethod
         def x_callback(msg: Float64) -> None:
             PIO.Pose.x = msg.data
-        
+
         @staticmethod
         def y_callback(msg: Float64) -> None:
             PIO.Pose.y = msg.data
-       
+
         @staticmethod
         def collision_callback(msg: Bool) -> None:
             PIO.buoy_collision = msg.data
@@ -299,25 +314,41 @@ class PIO:
     rospy.Subscriber("/collision/collision", Bool, Callbacks.collision_callback)
 
     # Publishers
-    _target_pose_heave_pub = rospy.Publisher("/target_pose/heave", Float64, queue_size=1)
+    _target_pose_heave_pub = rospy.Publisher(
+        "/target_pose/heave", Float64, queue_size=1
+    )
     _target_pose_yaw_pub = rospy.Publisher("/target_pose/yaw", Float64, queue_size=1)
     _target_pose_roll_pub = rospy.Publisher("/target_pose/roll", Float64, queue_size=1)
     _target_pose_x_pub = rospy.Publisher("/target_pose/x", Float64, queue_size=1)
     _target_pose_y_pub = rospy.Publisher("/target_pose/y", Float64, queue_size=1)
 
     _target_twist_yaw_pub = rospy.Publisher("/target_twist/yaw", Float64, queue_size=1)
-    _target_twist_roll_pub = rospy.Publisher("/target_twist/roll", Float64, queue_size=1)
-    _target_twist_surge_pub = rospy.Publisher("/target_twist/surge", Float64, queue_size=1)
-    _target_twist_sway_pub = rospy.Publisher("/target_twist/sway", Float64, queue_size=1)
-    _target_twist_heave_pub = rospy.Publisher("/target_twist/heave", Float64, queue_size=1)
+    _target_twist_roll_pub = rospy.Publisher(
+        "/target_twist/roll", Float64, queue_size=1
+    )
+    _target_twist_surge_pub = rospy.Publisher(
+        "/target_twist/surge", Float64, queue_size=1
+    )
+    _target_twist_sway_pub = rospy.Publisher(
+        "/target_twist/sway", Float64, queue_size=1
+    )
+    _target_twist_heave_pub = rospy.Publisher(
+        "/target_twist/heave", Float64, queue_size=1
+    )
 
     _left_dropper_pub = rospy.Publisher("/left_servo/angle", Int32, queue_size=1)
     _right_dropper_pub = rospy.Publisher("/right_servo/angle", Int32, queue_size=1)
 
     # Services
-    _pathmarker_srv = rospy.ServiceProxy("/pathmarker_angle", PathmarkerAngle, persistent=True)
-    _bin_cam_pos_srv = rospy.ServiceProxy("/bin_object_position", ObjectPosition, persistent=True)
-    _hsv_buoy_position_srv = rospy.ServiceProxy("/buoy_object_position", ObjectPosition, persistent=True)
+    _pathmarker_srv = rospy.ServiceProxy(
+        "/pathmarker_angle", PathmarkerAngle, persistent=True
+    )
+    _bin_cam_pos_srv = rospy.ServiceProxy(
+        "/bin_object_position", ObjectPosition, persistent=True
+    )
+    _hsv_buoy_position_srv = rospy.ServiceProxy(
+        "/buoy_object_position", ObjectPosition, persistent=True
+    )
 
     # also old
     _object_position_srvs: Dict[ImageTarget, rospy.ServiceProxy] = {}

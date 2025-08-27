@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import os
 import time
 import typing
@@ -8,7 +10,8 @@ import psutil
 from std_msgs.msg import Float64
 
 
-OVERHEATING_TIME = 3  # seconds 
+OVERHEATING_TIME = 3  # seconds
+
 
 class TemperatureController:
     def __init__(self):
@@ -16,8 +19,8 @@ class TemperatureController:
 
     def is_overheating(self) -> bool:
         return any(
-            temp.critical is not None and temp.current >= temp.critical 
-            for _, temperatures in psutil.sensors_temperatures().items() 
+            temp.critical is not None and temp.current >= temp.critical
+            for _, temperatures in psutil.sensors_temperatures().items()
             for temp in temperatures
         )
 
@@ -26,13 +29,19 @@ class TemperatureController:
         for _ in range(10):
             if rospy.is_shutdown():
                 break
-            for axis in ('surge', 'sway', 'heave', 'yaw', 'roll', 'pitch'):
-                rospy.Publisher(f"/output_wrench/{axis}", Float64, queue_size=1).publish(0)
-                rospy.Publisher(f"/target_twist/{axis}", Float64, queue_size=1).publish(0)
+            for axis in ("surge", "sway", "heave", "yaw", "roll", "pitch"):
+                rospy.Publisher(
+                    f"/output_wrench/{axis}", Float64, queue_size=1
+                ).publish(0)
+                rospy.Publisher(f"/target_twist/{axis}", Float64, queue_size=1).publish(
+                    0
+                )
             shutdown_rate.sleep()
         rospy.signal_shutdown(f"Jetson Sensor Overheating Detected")
         time.sleep(2)
-        os.system("sudo shutdown -h now")  # should run without needing password: %shutdown ALL=(root) NOPASSWD: /sbin/shutdown
+        os.system(
+            "sudo shutdown -h now"
+        )  # should run without needing password: %shutdown ALL=(root) NOPASSWD: /sbin/shutdown
 
     def run(self):
         rate = rospy.Rate(5)
@@ -45,6 +54,7 @@ class TemperatureController:
             else:
                 last_check = None
             rate.sleep()
+
 
 if __name__ == "__main__":
     TemperatureController().run()

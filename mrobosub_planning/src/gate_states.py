@@ -1,8 +1,8 @@
-from abstract_states import TimedState, TurnToYaw, AlignPathmarker
+from abstract_states import CenterOnPathmarker, TimedState, TurnToYaw, AlignPathmarker
 from periodic_io import PIO, ImageTarget
 from mrobosub_msgs.srv import ObjectPositionResponse  # type: ignore
 import rospy
-from typing import Type, Union
+from typing import Type, Union, Optional
 from umrsm import Outcome
 
 
@@ -78,6 +78,43 @@ class ApproachGate(TimedState):
         return self.TimedOut()
 
 
+class ApproachGate2(TimedState):
+    class SeenPathmarker(Outcome):
+        pass
+
+    class TimedOut(Outcome):
+        pass
+
+    timeout: float = 150.0
+    surge_speed: float = 1.0
+    found_image_threshold = 50
+
+    def __init__(self, prev_outcome: Outcome):
+        super().__init__(prev_outcome)
+        PIO.activate_bot_cam()
+        self.times_seen = 0
+
+    def handle_if_not_timedout(self) -> Union[SeenPathmarker, None]:
+        PIO.set_target_twist_surge(self.surge_speed)
+        PIO.set_target_pose_heave(0.75)
+
+        pm_res = PIO.query_pathmarker_full()
+
+        if pm_res is None:
+            return None
+
+        if self.times_seen >= self.found_image_threshold:
+            return self.SeenPathmarker()
+
+        self.times_seen += 1
+        return None
+
+    def handle_once_timedout(self) -> TimedOut:
+        PIO.set_target_twist_surge(0)
+
+        return self.TimedOut()
+
+
 class ApproachGateImage(TimedState):
     class GoneThroughGate(Outcome):
         planet: ImageTarget
@@ -140,7 +177,7 @@ class ApproachGateImage2(TimedState):
         pass
 
     radius_thold: float = 25.0
-    surge_speed: float = 1.0
+    surge_speed: float = 1.5
     # yaw_factor: float = 0.5
     timeout: float = 100.0
     lost_image_threshold: int = 400
@@ -222,6 +259,8 @@ class ApproachGateImage2(TimedState):
             # Center
             if self.angle_count != 0:
                 self.avg_angle = self.angle_sum / self.angle_count
+                print(f"{self.avg_angle=} ({self.angle_sum}/{self.angle_count})")
+                self.angle_count = 0
             PIO.set_target_pose_yaw(self.avg_angle)
             if PIO.is_yaw_within_threshold(2):
                 self.iter = self.RESET_ITER - 1
@@ -244,8 +283,8 @@ class ApproachGateImage2(TimedState):
         return self.TimedOut()
 
 
-class AlignBuoyPathmarker(AlignPathmarker):
-    class AlignedToBuoy(Outcome):
+class AlignSlalomPathmarker(AlignPathmarker):
+    class AlignedToSlalom(Outcome):
         pass
 
     class NoMeasurements(Outcome):
@@ -254,12 +293,15 @@ class AlignBuoyPathmarker(AlignPathmarker):
     class TimedOut(Outcome):
         pass
 
+    angle_offset = 15.0
+    target_heave = 1.0
     yaw_threshold = 2.5
     timeout = 10.0
 
     def handle_if_not_timedout(self) -> Union[Outcome, None]:
         outcome = super().handle_if_not_timedout()
         if self.iter == 100 and hasattr(self, "target_angle"):
+            self.target_angle += self.angle_offset
             self.target_angle %= 360
             self.target_angle += 360
             self.target_angle %= 360
@@ -268,16 +310,70 @@ class AlignBuoyPathmarker(AlignPathmarker):
             if 180 <= self.target_angle < 270:
                 self.target_angle -= 180
             print(f"adjusted_setpoint: {self.target_angle=}")
+            PIO.set_target_pose_heave(self.target_heave)
         return outcome
 
-    def handle_aligned(self) -> AlignedToBuoy:
-        return self.AlignedToBuoy()
+    def handle_aligned(self) -> AlignedToSlalom:
+        return self.AlignedToSlalom()
 
     def handle_no_measurements(self) -> NoMeasurements:
         return self.NoMeasurements()
 
     def handle_once_timedout(self) -> TimedOut:
         return self.TimedOut()
+
+
+class CenterSlalomPathmarker1(CenterOnPathmarker):
+    class Centered(Outcome):
+        pass
+
+    class TimedOut(Outcome):
+        pass
+
+    timeout: float = 40.0
+
+    def handle_if_not_timedout(self) -> Optional[Outcome]:
+        PIO.set_target_pose_yaw(0.0)
+        return super().handle_if_not_timedout()
+
+    def handle_aligned(self) -> Outcome:
+        return self.Centered()
+
+    def handle_once_timedout(self) -> Outcome:
+        return self.TimedOut()
+
+
+class CenterSlalomPathmarker2(CenterOnPathmarker):
+    class Centered(Outcome):
+        pass
+
+    class TimedOut(Outcome):
+        pass
+
+    timeout: float = 40.0
+
+    def handle_aligned(self) -> Outcome:
+        return self.Centered()
+
+    def handle_once_timedout(self) -> Outcome:
+        return self.TimedOut()
+
+
+class AlignSlalom(TimedState):
+    class Finished(Outcome):
+        pass
+
+    sway_speed = 1.0
+    timeout = 15.0
+    target_heave = 1.0
+
+    def handle_if_not_timedout(self) -> Optional[Outcome]:
+        PIO.set_target_twist_sway(self.sway_speed)
+        PIO.set_target_pose_heave(self.target_heave)
+        return None
+
+    def handle_once_timedout(self) -> Finished:
+        return self.Finished()
 
 
 class GuessBuoyAngle(TurnToYaw):
@@ -300,17 +396,21 @@ class GuessBuoyAngle(TurnToYaw):
 
 
 class Spin(TimedState):
-    timeout: float = 30.0
 
     class TimedOut(Outcome):
         pass
+
+    timeout: float = 30.0
+    target_heave: float = 1.0
+    speed: float = 2.0
 
     def __init__(self, prev_outcome: Outcome) -> None:
         super().__init__(prev_outcome)
 
     def handle_if_not_timedout(self) -> None:
-        PIO.set_target_twist_yaw(0.12)
-        PIO.set_target_pose_heave(1)
+        PIO.set_target_twist_yaw(self.speed)
+        PIO.set_target_twist_surge(0)
+        PIO.set_target_pose_heave(self.target_heave)
         return None
 
     def handle_once_timedout(self) -> TimedOut:

@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="mrobosub_perception" type="rectify_image.py" name="rectify_image" />
+</launch>

@@ -28,7 +28,7 @@ class PathmarkerHsv(Node):
 
         self.always_run = rospy.myargv(sys.argv)[1] != "0" #input 1 for always_run to not have to do service calls always_run:=1
 
-        self.sub = rospy.Subscriber('/bot_cam', Image, self.handle_frame, queue_size=1)
+        self.sub = rospy.Subscriber('/rectified_image', Image, self.handle_frame, queue_size=1)
         self.serv = TimedService('/pathmarker_angle', PathmarkerAngle, self.timing_threshold)
         self.mask_pub = rospy.Publisher(f'/pathmarker_mask', Image, queue_size=1)
         self.annotated_pub = rospy.Publisher(f'/pathmarker_annotated', Image, queue_size=1)
@@ -59,6 +59,8 @@ class PathmarkerHsv(Node):
             if detection is not None:
                 response.found = True
                 response.angle = detection.angle
+                response.centroid_x = detection.x / bgr_img.shape[1]
+                response.centroid_y = detection.y / bgr_img.shape[0]
 
             self.serv.set_result(response)
         

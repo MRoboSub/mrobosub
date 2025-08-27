@@ -8,6 +8,7 @@ project(mrobosub_hal)
 find_package(catkin REQUIRED dynamic_reconfigure)
 generate_dynamic_reconfigure_options(
   cfg/thruster_mapping.cfg
+  cfg/rectify_params.cfg
   #...
 )
 

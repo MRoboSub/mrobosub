@@ -32,7 +32,7 @@ class HsvTuner(Node):
 
         self.set_pipeline_params()
 
-        self.img_sub = rospy.Subscriber("bot_cam", Image, self.handle_frame, queue_size=1)
+        self.img_sub = rospy.Subscriber("/rectified_image", Image, self.handle_frame, queue_size=1)
 
         self.blur_pub = rospy.Publisher('/tuner/blurred', Image, queue_size=1)
         self.hsv_pub = rospy.Publisher('/tuner/hsv_filtered', Image, queue_size=1)

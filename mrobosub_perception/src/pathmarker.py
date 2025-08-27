@@ -28,7 +28,7 @@ class Pathmarker(Node):
     def __init__(self):
         super().__init__('pathmarker')
         self.service = rospy.Service('pathmarker/angle', PathmarkerAngle, self.handle_request)
-        rospy.Subscriber("bot_cam", Image, self.handle_frame, queue_size=1)
+        rospy.Subscriber("/rectified_image", Image, self.handle_frame, queue_size=1)
 
         self.pipeline = PathmarkerPipeline()
         self.br = CvBridge()
