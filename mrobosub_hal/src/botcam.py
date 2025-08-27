@@ -31,7 +31,7 @@ class Botcam(ControlLoopNode):
         # TODO: Publish here if config param is set
         self.pub = rospy.Publisher("bot_cam", Image, queue_size=1)
         self.rectified_pub = rospy.Publisher("/rectified_image", Image, queue_size=1)
-        self.f = 631
+        self.f = 800
         self.w = 1920
         self.h = 1080
         self.map_x, self.map_y = self.generate_undistort_maps(self.f, self.w, self.h) # TODO: Should this be dynamic?
@@ -62,7 +62,7 @@ class Botcam(ControlLoopNode):
         self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
         self.cap.set(cv2.CAP_PROP_EXPOSURE, 1000)
         subprocess.call(
-            f"v4l2-ctl -d {self.device_path} -c white_balance_temperature_auto=0 -c brightness=64 -c exposure_auto=3",
+            f"v4l2-ctl -d {self.device_path} -c white_balance_temperature_auto=0 -c brightness=-64 -c exposure_auto=1 -c exposure_absolute=4 -c contrast=50",
             shell=True,
         )
 

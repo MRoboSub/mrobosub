@@ -276,8 +276,8 @@ class CenterOnPathmarker(TimedState):
 
         x_diff = pm_resp.centroid_x - 0.5
         y_diff = pm_resp.centroid_y - 0.5
-        PIO.set_target_twist_sway(2 * x_diff)
-        PIO.set_target_twist_surge(2 * y_diff)
+        PIO.set_target_twist_sway(3 * x_diff)
+        PIO.set_target_twist_surge(-3 * y_diff)
         if abs(x_diff) < 0.1 and abs(y_diff) < 0.1:
             self.centered_count += 1
         else:

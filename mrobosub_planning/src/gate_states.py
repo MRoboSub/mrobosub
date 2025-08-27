@@ -293,7 +293,7 @@ class AlignSlalomPathmarker(AlignPathmarker):
     class TimedOut(Outcome):
         pass
 
-    angle_offset = 0.0
+    angle_offset = 15.0
     target_heave = 1.0
     yaw_threshold = 2.5
     timeout = 10.0

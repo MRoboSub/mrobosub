@@ -120,6 +120,7 @@ sensors:
       enable: true
 
 gps1:
+  enabled: false
   type: 'M8'
   antenna_offset: [0, 0, 0]                     # X,Y,Z offset in meters in Sensor Frame to GPS 1 antenna
   gpsTimeUserDelay: 0.0
