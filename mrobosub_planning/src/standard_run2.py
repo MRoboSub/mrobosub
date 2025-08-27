@@ -35,7 +35,7 @@ class Forward(TimedState):
         PIO.set_target_pose_heave(1.2)
         return None
 
-    def handle_once_timedout(self):
+    def handle_once_timedout(self) -> Finished:
         return self.Finished()
 
 transitions: TransitionMap = {
@@ -88,7 +88,7 @@ test_spin: TransitionMap = {
     Spin.TimedOut: Surface
 }
 
-class Forward(TimedState):
+class SpeedForward(TimedState):
     class Finished(Outcome):
         pass
 
@@ -105,8 +105,8 @@ class Forward(TimedState):
 test_speed: TransitionMap = {
     Start.Complete: Submerge.with_params(target_heave=0.5),
 
-    Submerge.TimedOut: Forward,
-    Submerge.Submerged: Forward,
+    Submerge.TimedOut: SpeedForward,
+    Submerge.Submerged: SpeedForward,
 
-    Forward.Finished: Surface,
+    SpeedForward.Finished: Surface,
 }
