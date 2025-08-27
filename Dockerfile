@@ -1,4 +1,4 @@
-FROM osrf/ros:noetic-desktop
+FROM docker.io/osrf/ros:noetic-desktop
 
 # turtlebot3 packages, vim, screen
 RUN apt-get update && \
