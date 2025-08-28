@@ -1,47 +1,40 @@
-FROM osrf/ros:noetic-desktop
+FROM docker.io/osrf/ros:jazzy-desktop
 
-# turtlebot3 packages, vim, screen
 RUN apt-get update && \
-    apt-get install -y  python3-catkin-tools \
-                        python-is-python3 \
+    apt-get install -y  python-is-python3 \
                         python3-pip \
                         git \
                         vim \
                         screen \
                         python3-tk \
+                        libudev-dev \
+                        mypy \
                         tmux \
-                        typing_extensions
-
-RUN pip install mypy -U
+                        less \
+                        ros-jazzy-ros2-control \
+                        ros-jazzy-ros2-controllers \
+                        python3-typing-extensions \
+                        python3-scipy \
+                        python3-transforms3d
 
 SHELL ["/bin/bash", "-c"] 
 
 # Create workspace structure
-RUN mkdir -p /root/catkin_ws/src && \
-    cd /root/catkin_ws && \
-    source /opt/ros/noetic/setup.bash && \
-    catkin build
-
-# Unity simulation
-RUN cd /root/catkin_ws/src && \
-    git clone https://github.com/Unity-Technologies/ROS-TCP-Endpoint
-
-# Build new packages
-RUN cd /root/catkin_ws && \
-    source /root/catkin_ws/devel/setup.bash && \
-    catkin build
+RUN mkdir -p /root/ros2_ws/src && \
+    cd /root/ros2_ws && \
+    source /opt/ros/jazzy/setup.bash && \
+    colcon build --symlink-install && \
+    source /root/ros2_ws/install/setup.bash && \
+    rosdep install --from-paths /root/ros2_ws/src -y --ignore-src
 
 # Copy dotfiles
 COPY .vimrc /root/
-COPY .screenrc /root/
 
-WORKDIR /root/catkin_ws
+WORKDIR /root/ros2_ws/src/
 
 EXPOSE 10000
 
-RUN echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc && \
-    echo "source /root/catkin_ws/devel/setup.bash" >> /root/.bashrc
-
-RUN ln -s "/root/catkin_ws/src/mrobosub/.bash_aliases" "/root/.bash_aliases" && \
-    "/root/catkin_ws/src/mrobosub/.tmux.conf" "/root/.tmux.conf"
+RUN echo "source /opt/ros/jazzy/setup.bash" >> /root/.bashrc && \
+    echo "source /root/ros2_ws/install/setup.bash" >> /root/.bashrc && \
+    ln -s "/root/ros2_ws/src/.bash_aliases" "/root/.bash_aliases"
 

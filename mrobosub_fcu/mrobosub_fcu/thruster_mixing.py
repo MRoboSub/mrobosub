@@ -1,20 +1,17 @@
 #!/usr/bin/env python
 
-from typing import Any, Tuple, Optional
-from typing_extensions import Callable, TYPE_CHECKING
-from tf.transformations import euler_matrix
+from typing import Any, Callable
+from transforms3d._gohlketransforms import euler_matrix
 import numpy as np
+import numpy.typing as npt
 from math import radians
-import rospy
+import rclpy
 from std_msgs.msg import Float64
-from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
+from std_srvs.srv import SetBool, SetBool_Request, SetBool_Response
 
-from mrobosub_lib.lib import Node
+from mrobosub_lib import Node
 from mrobosub_msgs.msg import MotorState
 from dataclasses import dataclass
-
-if TYPE_CHECKING:
-    import numpy.typing as npt
 
 
 @dataclass
@@ -29,7 +26,7 @@ class ThrusterDescriptor:
 
 
 THRUSTER_MAX_CURRENT_DRAW = 15.0  # amps
-SUB_MAX_CURRENT_DRAW = 8.0  # amps
+SUB_MAX_CURRENT_DRAW = 50.0  # amps
 CORNER_THRUSTER_SURGE = 0.2921
 CENTER_THRUSTER_SURGE = 0.127
 THRUSTER_SWAY = 0.267
@@ -222,28 +219,35 @@ class ThrusterMixing(Node):
         self.calculate_TAM()
         self.wrench = {dof: 0 for dof in DOFS}
         self.wrench_subs = {
-            dof: rospy.Subscriber(
-                f"/output_wrench/{dof}", Float64, self.make_wrench_callback(dof)
+            dof: self.create_subscription(
+                Float64,
+                f"/output_wrench/{dof}",
+                self.make_wrench_callback(dof),
+                qos_profile=1,
             )
             for dof in DOFS
         }
-        self.motor_pub = rospy.Publisher("/motor_output", MotorState, queue_size=1)
-        self.scale_pub = rospy.Publisher("/motor_output/scale", Float64, queue_size=1)
-        self.current_pub = rospy.Publisher(
-            "/motor_output/current", Float64, queue_size=1
+        self.motor_pub = self.create_publisher(
+            MotorState, "/motor_output", qos_profile=1
+        )
+        self.scale_pub = self.create_publisher(
+            Float64, "/motor_output/scale", qos_profile=1
+        )
+        self.current_pub = self.create_publisher(
+            Float64, "/motor_output/current", qos_profile=1
         )
         self.enabled = True
-        self.enable_service = rospy.Service(
-            "/thruster_mixing/enable", SetBool, self.handle_enable_request
+        self.enable_service = self.create_service(
+            SetBool, "/thruster_mixing/enable", self.handle_enable_request
         )
 
-    def handle_enable_request(self, request: SetBoolRequest):
+    def handle_enable_request(self, request: SetBool_Request):
         self.enabled = request.data
-        return SetBoolResponse(True, f"Set enabled to {self.enabled}")
+        return SetBool_Response(True, f"Set enabled to {self.enabled}")
 
     def run(self):
-        self.timer = rospy.Timer(rospy.Duration.from_sec(1.0 / RATE), self.update)
-        rospy.spin()
+        self.timer = self.create_timer(1.0 / RATE, self.update)
+        rclpy.spin(self)
 
     def make_wrench_callback(self, dof: str) -> Callable[[Float64], None]:
         # direction dofs are in newtons, angle dofs are in newton-meters
@@ -301,7 +305,7 @@ class ThrusterMixing(Node):
                 current_draws.append(max(current_draw, 0.0))
         return np.array(current_draws)
 
-    def validate_outputs(self, demanded_forces: "npt.NDArray") -> Optional[MotorState]:
+    def validate_outputs(self, demanded_forces: "npt.NDArray") -> MotorState | None:
         outputs = self.calculate_outputs(demanded_forces)
         current_draws = self.expected_current_draw(outputs)
         if (
@@ -310,17 +314,17 @@ class ThrusterMixing(Node):
             and np.max(current_draws) < THRUSTER_MAX_CURRENT_DRAW
             and np.sum(current_draws) < SUB_MAX_CURRENT_DRAW
         ):
-            return MotorState(*outputs)
+            return MotorState(motors=outputs)
         return None
 
     def calculate_scaled_outputs(
         self, demanded_forces: "npt.NDArray"
-    ) -> Tuple[MotorState, float]:
+    ) -> tuple[MotorState, float]:
         outputs = self.validate_outputs(demanded_forces)
         if outputs is not None:
             return (outputs, 1.0)
 
-        lb_outputs = MotorState(*([0.0] * NUM_MOTORS))
+        lb_outputs = MotorState(motors=[0.0] * NUM_MOTORS)
         lower_bound = 0.0
         upper_bound = 1.0
         NUM_ITERS = 5
@@ -335,7 +339,7 @@ class ThrusterMixing(Node):
 
         return (lb_outputs, lower_bound)
 
-    def update(self, _timer_event: Any):
+    def update(self):
         if not self.enabled:
             return
         wrench = np.array(list(self.wrench.values()))
@@ -351,16 +355,10 @@ class ThrusterMixing(Node):
         if scale_factor != 1.0:
             print("Scale: ", scale_factor)
         scale *= scale_factor
-        est_current = np.sum(
-            self.expected_current_draw(
-                np.array([getattr(outputs, f"motor{i}") for i in range(NUM_MOTORS)])
-            )
+        est_current = Float64(
+            data=np.sum(self.expected_current_draw(np.array(outputs.motors)))
         )
 
         self.current_pub.publish(est_current)
-        self.scale_pub.publish(scale)
+        self.scale_pub.publish(Float64(data=scale))
         self.motor_pub.publish(outputs)
-
-
-if __name__ == "__main__":
-    ThrusterMixing().run()

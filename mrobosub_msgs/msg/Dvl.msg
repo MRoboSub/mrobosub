@@ -1,3 +1,0 @@
-float32 velocityA
-float32 velocityB
-float32 velocityC
