@@ -2,7 +2,7 @@
   "name": "Michigan RoboSub Main Software Project",
   "dockerComposeFile": "../docker-compose.yml",
   "service": "mrobosub",
-  "workspaceFolder": "/root/catkin_ws/src/mrobosub",
+  "workspaceFolder": "/root/ros2_ws/src",
   "shutdownAction": "stopCompose",
   "customizations": {
     "vscode": {
