@@ -1,0 +1,5 @@
+<launch>
+  <include file="$(find-pkg-share mrobosub_gnc)/launch/gnc_launch.xml"/>
+  <include file="$(find-pkg-share mrobosub_localization)/launch/localization_launch.xml"/>
+  <include file="$(find-pkg-share mrobosub_hal)/launch/hal_launch.xml"/>
+</launch>
