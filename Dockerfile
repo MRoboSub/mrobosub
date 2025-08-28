@@ -11,6 +11,8 @@ RUN apt-get update && \
                         python3-tk \
                         tmux \
                         python3-typing-extensions \
+                        libudev-dev \
+                        ros-noetic-pid \
                         python3-scipy
 
 RUN pip install mypy -U
