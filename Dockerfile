@@ -19,6 +19,13 @@ RUN apt-get update && \
 
 SHELL ["/bin/bash", "-c"] 
 
+RUN mkdir -p /root/jlb_pid_ws/src && \
+    cd /root/jlb_pid_ws/src && \
+    git clone https://github.com/HenryLeC/ros2-pid.git && \
+    cd /root/jlb_pid_ws && \
+    source /opt/ros/jazzy/setup.bash && \
+    colcon build --symlink-install
+
 # Create workspace structure
 RUN mkdir -p /root/ros2_ws/src && \
     cd /root/ros2_ws && \
@@ -36,5 +43,6 @@ EXPOSE 10000
 
 RUN echo "source /opt/ros/jazzy/setup.bash" >> /root/.bashrc && \
     echo "source /root/ros2_ws/install/setup.bash" >> /root/.bashrc && \
+    echo "source /root/jlb_pid_ws/install/setup.bash" >> /root/.bashrc && \
     ln -s "/root/ros2_ws/src/.bash_aliases" "/root/.bash_aliases"
 
