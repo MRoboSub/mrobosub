@@ -1,0 +1,4 @@
+<launch>
+  <node name="sway_control" pkg="mrobosub_gnc" type="sway_control.py">
+  </node>
+</launch>

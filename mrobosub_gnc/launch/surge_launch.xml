@@ -1,5 +1,0 @@
-<launch>
-  <node name="surge_control" pkg="mrobosub_gnc" exec="surge_control">
-    <rosparam command="load" file="$(find-pkg-share mrobosub_gnc)/params/surge_control.yaml" />
-  </node>
-</launch>

@@ -1,7 +1,0 @@
-<launch>
-  <node name="roll_control" pkg="mrobosub_gnc" exec="roll_control">
-  </node>
-  <node name="roll_pid" ns="roll_pid" pkg="mrobosub_gnc" exec="pid_controller">
-    <rosparam command="load"  file="$(find-pkg-share mrobosub_gnc)/params/roll_pid.yaml" />
-  </node>
-</launch>

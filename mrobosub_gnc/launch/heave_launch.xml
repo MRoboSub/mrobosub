@@ -1,8 +1,0 @@
-<launch>
-  <node name="heave_control" pkg="mrobosub_gnc" exec="heave_control">
-    <rosparam command="load" file="$(find-pkg-share mrobosub_gnc)/params/heave_control.yaml" />
-  </node>
-  <node name="heave_pid" ns="heave_pid" pkg="mrobosub_gnc" exec="pid_controller">
-    <rosparam command="load" file="$(find-pkg-share mrobosub_gnc)/params/heave_pid.yaml" />
-  </node>
-</launch>
