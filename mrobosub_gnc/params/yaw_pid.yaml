@@ -1,7 +1,20 @@
-Kp: 0.03
-Ki: 0.0
-Kd: 0.01
-upper_limit: 2
-lower_limit: -2
-angle_error: true
-angle_wrap: 360.0
+/yaw_pid:
+  yaw_pid:
+    ros__parameters:
+      kp: 0.03
+      ki: 0.0
+      kd: 0.01
+
+      plant_topic: "state"
+      setpoint_topic: "setpoint"
+      enable_topic: "enable"
+      controller_topic: "control_effort"
+
+      upper_limit: 999999.0
+      lower_limit: -999999.0
+      windup_limit: 999999.0
+      update_rate: 1000.0
+
+      # TODO!: See pitch_pid
+      # angle_error: true
+      # angle_wrap: 360.0

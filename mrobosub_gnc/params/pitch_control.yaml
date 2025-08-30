@@ -1,0 +1,5 @@
+pitch_control:
+  ros__parameters:
+    feed_forward: 0.0
+    clamp: false
+    max_output: 0.0

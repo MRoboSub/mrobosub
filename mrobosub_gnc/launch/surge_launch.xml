@@ -1,0 +1,4 @@
+<launch>
+  <node name="surge_control" pkg="mrobosub_gnc" exec="passthrough_dof_controller" args="surge">
+  </node>
+</launch>
