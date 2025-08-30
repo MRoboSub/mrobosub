@@ -1,14 +1,8 @@
 #!/usr/bin/env python
-'''
-Heave Control Node
-Author: Nolan
-Date: 2022-11-20
-Last Edit: Alex Bowler
-'''
 
-import rclpy
+import rospy
 
-from mrobosub_lib import Node
+from mrobosub_lib.lib import Node, Param
 from std_msgs.msg import Float64
 from pid_interface import PIDInterface
 
@@ -26,6 +20,7 @@ class HeaveControlNode(Node):
     Publishers
     - /output_wrench/heave
     """
+    # pid_params: PIDParams
 
     feed_forward: float
     max_heave: float
@@ -35,10 +30,10 @@ class HeaveControlNode(Node):
     def __init__(self):
         super().__init__('heave_control')
         self.pid = PIDInterface("heave_pid", self.pid_callback)
-        self.output_heave_pub = self.create_publisher(Float64, '/output_wrench/heave', qos_profile=1)
-        self.create_subscription(Float64, '/target_pose/heave', self.target_pose_callback, qos_profile=10)
-        self.create_subscription(Float64, '/pose/heave', self.pose_callback, qos_profile=10)
-        self.create_subscription(Float64, '/target_twist/heave', self.target_twist_heave, qos_profile=10)
+        self.output_heave_pub = rospy.Publisher('/output_wrench/heave', Float64, queue_size=1)
+        rospy.Subscriber('/target_pose/heave', Float64, self.target_pose_callback)
+        rospy.Subscriber('/pose/heave', Float64, self.pose_callback)
+        rospy.Subscriber('/target_twist/heave', Float64, self.target_twist_heave)
 
         
     def target_pose_callback(self, target_pose: Float64):
@@ -63,15 +58,10 @@ class HeaveControlNode(Node):
         self.output_heave_pub.publish(output)
 
     def run(self): 
-        # believe the main here in the init takes care of the rospy spin? Need to double check
-        pass
+        rospy.spin()
 
     def cleanup(self):
         self.output_heave_pub.publish(0)
 
 if __name__ == '__main__':
-    node = HeaveControlNode()
-    try:
-        rclpy.spin(node)
-    finally:
-        node.cleanup()
+    HeaveControlNode().run()
