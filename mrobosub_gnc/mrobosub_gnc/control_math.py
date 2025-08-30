@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+'''
+Basic Math Functions for the Control Library
+Author: shbhgrwl (Shrey?)
+Date: 2022-09-28
+Last Edit: Alex Bowler
+'''
+
 
 def clamp(x: float, min: float = -1, max: float = 1) -> float:
     """

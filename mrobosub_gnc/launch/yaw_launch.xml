@@ -1,0 +1,7 @@
+<launch>
+  <node name="yaw_control" pkg="mrobosub_gnc" exec="yaw_control">
+  </node>
+  <node name="yaw_pid" ns="yaw_pid" pkg="mrobosub_gnc" exec="pid_controller">
+    <rosparam command="load"  file="$(find-pkg-share mrobosub_gnc)/params/yaw_pid.yaml" />
+  </node>
+</launch>
