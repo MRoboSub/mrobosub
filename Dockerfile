@@ -19,22 +19,32 @@ RUN apt-get update && \
 
 SHELL ["/bin/bash", "-c"] 
 
+USER 1000:1000
+
+RUN mkdir -p /home/ubuntu/jlb_pid_ws/src && \
+    cd /home/ubuntu/jlb_pid_ws/src && \
+    git clone https://github.com/HenryLeC/ros2-pid.git && \
+    cd /home/ubuntu/jlb_pid_ws && \
+    source /opt/ros/jazzy/setup.bash && \
+    colcon build --symlink-install
+
 # Create workspace structure
-RUN mkdir -p /root/ros2_ws/src && \
-    cd /root/ros2_ws && \
+RUN mkdir -p /home/ubuntu/ros2_ws/src && \
+    cd /home/ubuntu/ros2_ws && \
     source /opt/ros/jazzy/setup.bash && \
     colcon build --symlink-install && \
-    source /root/ros2_ws/install/setup.bash && \
-    rosdep install --from-paths /root/ros2_ws/src -y --ignore-src
+    source /home/ubuntu/ros2_ws/install/setup.bash
+#    rosdep install --from-paths /home/ubuntu/ros2_ws/src -y --ignore-src
 
 # Copy dotfiles
 COPY .vimrc /root/
 
-WORKDIR /root/ros2_ws/src/
+WORKDIR /home/ubuntu/ros2_ws/src/
 
 EXPOSE 10000
 
-RUN echo "source /opt/ros/jazzy/setup.bash" >> /root/.bashrc && \
-    echo "source /root/ros2_ws/install/setup.bash" >> /root/.bashrc && \
-    ln -s "/root/ros2_ws/src/.bash_aliases" "/root/.bash_aliases"
+RUN echo "source /opt/ros/jazzy/setup.bash" >> /home/ubuntu/.bashrc && \
+    echo "source /home/ubuntu/ros2_ws/install/setup.bash" >> /home/ubuntu/.bashrc && \
+    echo "source /home/ubuntu/jlb_pid_ws/install/setup.bash" >> /home/ubuntu/.bashrc && \
+    ln -s "/home/ubuntu/ros2_ws/src/.bash_aliases" "/home/ubuntu/.bash_aliases"
 

@@ -1,2 +1,5 @@
-feed_forward: 0
-max_heave: 10
+heave_control:
+  ros__parameters:
+    feed_forward: 0.0
+    max_output: 10.0
+    clamp: true

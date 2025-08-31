@@ -1,12 +1,14 @@
 version: "3"
 services:
   mrobosub:
-    image: mrobosub/mrobosub2
+    build:
+      context: .
+      dockerfile: Dockerfile
     privileged: true
     ports:
       - "10000:10000"
     volumes:
-      - .:/root/ros2_ws/src/
+      - .:/home/ubuntu/ros2_ws/src/
       - /tmp/.X11-unix:/tmp/.X11-unix
     environment:
       - DISPLAY=host.docker.internal:0.0
