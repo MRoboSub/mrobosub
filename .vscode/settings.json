@@ -2,13 +2,13 @@
     "files.eol": "\n",
     "python.autoComplete.extraPaths": [
         "/opt/ros/jazzy/lib/python3.12/site-packages/",
-        "/root/ros2_ws/build/mrobosub_lib",
-        "/root/ros2_ws/build/package2"
+        "/home/ubuntu/ros2_ws/build/mrobosub_lib",
+        "/home/ubuntu/ros2_ws/build/package2"
     ],
     "python.analysis.extraPaths": [
         "/opt/ros/jazzy/lib/python3.12/site-packages/",
-        "/root/ros2_ws/build/mrobosub_lib",
-        "/root/ros2_ws/build/package2"
+        "/home/ubuntu/ros2_ws/build/mrobosub_lib",
+        "/home/ubuntu/ros2_ws/build/package2"
     ],
     "cmake.configureOnOpen": false,
     "[python]": {
