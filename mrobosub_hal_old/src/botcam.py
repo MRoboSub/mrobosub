@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import rclpy
+import rospy
 from sensor_msgs.msg import Image
 import cv2
 from cv_bridge import CvBridge
@@ -29,9 +29,8 @@ class Botcam(ControlLoopNode):
         self.br = CvBridge()
         rospy.Service("/bot_cam/on", SetBool, self.handle_on_service)
         # TODO: Publish here if config param is set
-        self.pub = self.create_publisher(Image, "/bot_cam", qos_profile=1)
-        self.rectified_pub = self.create_publisher(Image, "/rectified_image", qos_profile=1=1)
-
+        self.pub = rospy.Publisher("bot_cam", Image, queue_size=1)
+        self.rectified_pub = rospy.Publisher("/rectified_image", Image, queue_size=1)
         self.f = 800
         self.w = 1920
         self.h = 1080

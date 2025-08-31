@@ -4,7 +4,7 @@
 import cv2
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
-import rclpy
+import rospy
 import sys
 
 from mrobosub_lib.lib import ControlLoopNode
@@ -24,9 +24,11 @@ class Zed(ControlLoopNode):
         self.device_path = sys.argv[1]
         self.on = False
         self.br = CvBridge()
-        self.raw_pub = self.create_publisher(Image, "/zed/raw", qos_profile=1)
+        self.raw_pub = rospy.Publisher("/zed/raw", Image, queue_size=1)
         rospy.Service("/zed/on", SetBool, self.handle_on_service)
-        self.pub = self.create_publisher(Image, "/zed2/zed_node/rgb/image_rect_color", qos_profile=1) 
+        self.pub = rospy.Publisher(
+            "/zed2/zed_node/rgb/image_rect_color", Image, queue_size=1
+        )
 
     def handle_on_service(self, req: SetBoolRequest):
         if req.data == self.on:
