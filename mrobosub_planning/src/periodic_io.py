@@ -40,8 +40,6 @@ class PIO:
         x = 0.0
         y = 0.0
 
-    buoy_collision = False
-
     # @classmethod
     # def heading_within_threshold(cls, threshold):
     #     return angle_error_abs(PIO.heading_value, PIO.current_heading) <= threshold
@@ -159,10 +157,6 @@ class PIO:
     @classmethod
     def set_right_dropper_angle(cls, angle: int) -> None:
         cls._right_dropper_pub.publish(angle)
-
-    # @classmethod
-    # def get_pose(cls) -> Namespace[Pose]:
-    #     return cls.Pose
 
     @classmethod
     def query_pathmarker(cls) -> Optional[float]:
@@ -301,17 +295,12 @@ class PIO:
         def y_callback(msg: Float64) -> None:
             PIO.Pose.y = msg.data
 
-        @staticmethod
-        def collision_callback(msg: Bool) -> None:
-            PIO.buoy_collision = msg.data
-
     # Subscribers
     rospy.Subscriber("/pose/yaw", Float64, Callbacks.yaw_callback)
     rospy.Subscriber("/pose/heave", Float64, Callbacks.heave_callback)
     rospy.Subscriber("/pose/roll", Float64, Callbacks.roll_callback)
     rospy.Subscriber("/pose/x", Float64, Callbacks.x_callback)
     rospy.Subscriber("/pose/y", Float64, Callbacks.y_callback)
-    rospy.Subscriber("/collision/collision", Bool, Callbacks.collision_callback)
 
     # Publishers
     _target_pose_heave_pub = rospy.Publisher(
