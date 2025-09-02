@@ -2,7 +2,7 @@ from typing import Optional, Union
 from umrsm import State, Outcome
 from abstract_states import TimedState
 from periodic_io import PIO
-import rospy
+import rclpy
 
 
 class Start(State):
@@ -47,7 +47,7 @@ class Stop(State):
     def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
         PIO.reset_target_twist()
-        self.rate = rospy.Rate(50)
+        self.rate = self.create_rate(50)
 
     def handle(self) -> None:
         for _ in range(20):
