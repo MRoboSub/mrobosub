@@ -1,7 +1,7 @@
 import math
 from typing_extensions import NamedTuple
-import rosgraph
-import rospy
+import rclpy
+from rclpy.node import Node
 from std_msgs.msg import Float64, Bool, Int32
 from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, PathmarkerAngle  # type: ignore
 from typing import Dict, Type, Mapping, Optional, Tuple
@@ -25,6 +25,60 @@ ImageDetections = Dict[ImageTarget, ObjectPositionResponse]
 
 
 class PIO:
+    '''
+    Public interface class for publishers and subscribers
+    '''
+    def __init__(self, node: Node):
+        '''
+        @param node - the node class which will have the publishers and subscribers
+        '''
+        ## TODO: This is probably not the most efficient way to setup publishers and subscribers
+        ##       should probably just have each node have a publishers/subscribers to whatever they actually need
+        self._node = node
+        # Subscribers
+        node.create_subscription(Float64, "/pose/yaw", Callbacks.yaw_callback, 10)
+        node.create_subscription(Float64, "/pose/heave",  Callbacks.heave_callback, 10)
+        node.create_subscription(Float64, "/pose/roll",  Callbacks.roll_callback, 10)
+        node.create_subscription(Float64, "/pose/x",  Callbacks.x_callback, 10)
+        node.create_subscription(Float64, "/pose/y",  Callbacks.y_callback, 10)
+
+        # Publishers
+        _target_pose_heave_pub = node.create_publisher(Float64, "/target_pose/heave", 1)
+        _target_pose_yaw_pub = node.Publisher(Float64, "/target_pose/yaw",  queue_size=1)
+        _target_pose_roll_pub = node.create_publisher(Float64, "/target_pose/roll", 1)
+        _target_pose_x_pub = node.create_publisher(Float64, "/target_pose/x", 1)
+        _target_pose_y_pub = node.create_publisher(Float64, "/target_pose/y", 1)
+
+        _target_twist_yaw_pub = node.create_publisher(Float64, "/target_twist/yaw", 1)
+        _target_twist_roll_pub = node.create_publisher(Float64, "/target_twist/roll", 1)
+        _target_twist_surge_pub = node.create_publisher(Float64, "/target_twist/surge", 1)
+        _target_twist_sway_pub = node.create_publisher(Float64, "/target_twist/sway", 1)
+        _target_twist_heave_pub = node.create_publisher(Float64, "/target_twist/heave", 1)
+
+        _left_dropper_pub = node.create_publisher(Int32, "/left_servo/angle", 1)
+        _right_dropper_pub = node.create_publisher(Int32, "/right_servo/angle", 1)
+
+        # Services
+        _pathmarker_srv = rospy.ServiceProxy(
+            "/pathmarker_angle", PathmarkerAngle, persistent=True
+        )
+        _bin_cam_pos_srv = rospy.ServiceProxy(
+            "/bin_object_position", ObjectPosition, persistent=True
+        )
+        _hsv_buoy_position_srv = rospy.ServiceProxy(
+            "/buoy_object_position", ObjectPosition, persistent=True
+        )
+
+        # also old
+        _object_position_srvs: Dict[ImageTarget, rospy.ServiceProxy] = {}
+        for glyph in ImageTarget:
+            _object_position_srvs[glyph] = rospy.ServiceProxy(
+                f"/object_position/{glyph.name.lower()}", ObjectPosition, persistent=True
+            )
+
+        _zed_on_srv = rospy.ServiceProxy("/zed/on", SetBool, persistent=True)
+        _bot_cam_on_srv = rospy.ServiceProxy("/bot_cam/on", SetBool, persistent=True)
+
 
     class Pose:
         yaw = 0.0
@@ -294,57 +348,3 @@ class PIO:
         @staticmethod
         def y_callback(msg: Float64) -> None:
             PIO.Pose.y = msg.data
-
-    # Subscribers
-    rospy.Subscriber("/pose/yaw", Float64, Callbacks.yaw_callback)
-    rospy.Subscriber("/pose/heave", Float64, Callbacks.heave_callback)
-    rospy.Subscriber("/pose/roll", Float64, Callbacks.roll_callback)
-    rospy.Subscriber("/pose/x", Float64, Callbacks.x_callback)
-    rospy.Subscriber("/pose/y", Float64, Callbacks.y_callback)
-
-    # Publishers
-    _target_pose_heave_pub = rospy.Publisher(
-        "/target_pose/heave", Float64, queue_size=1
-    )
-    _target_pose_yaw_pub = rospy.Publisher("/target_pose/yaw", Float64, queue_size=1)
-    _target_pose_roll_pub = rospy.Publisher("/target_pose/roll", Float64, queue_size=1)
-    _target_pose_x_pub = rospy.Publisher("/target_pose/x", Float64, queue_size=1)
-    _target_pose_y_pub = rospy.Publisher("/target_pose/y", Float64, queue_size=1)
-
-    _target_twist_yaw_pub = rospy.Publisher("/target_twist/yaw", Float64, queue_size=1)
-    _target_twist_roll_pub = rospy.Publisher(
-        "/target_twist/roll", Float64, queue_size=1
-    )
-    _target_twist_surge_pub = rospy.Publisher(
-        "/target_twist/surge", Float64, queue_size=1
-    )
-    _target_twist_sway_pub = rospy.Publisher(
-        "/target_twist/sway", Float64, queue_size=1
-    )
-    _target_twist_heave_pub = rospy.Publisher(
-        "/target_twist/heave", Float64, queue_size=1
-    )
-
-    _left_dropper_pub = rospy.Publisher("/left_servo/angle", Int32, queue_size=1)
-    _right_dropper_pub = rospy.Publisher("/right_servo/angle", Int32, queue_size=1)
-
-    # Services
-    _pathmarker_srv = rospy.ServiceProxy(
-        "/pathmarker_angle", PathmarkerAngle, persistent=True
-    )
-    _bin_cam_pos_srv = rospy.ServiceProxy(
-        "/bin_object_position", ObjectPosition, persistent=True
-    )
-    _hsv_buoy_position_srv = rospy.ServiceProxy(
-        "/buoy_object_position", ObjectPosition, persistent=True
-    )
-
-    # also old
-    _object_position_srvs: Dict[ImageTarget, rospy.ServiceProxy] = {}
-    for glyph in ImageTarget:
-        _object_position_srvs[glyph] = rospy.ServiceProxy(
-            f"/object_position/{glyph.name.lower()}", ObjectPosition, persistent=True
-        )
-
-    _zed_on_srv = rospy.ServiceProxy("/zed/on", SetBool, persistent=True)
-    _bot_cam_on_srv = rospy.ServiceProxy("/bot_cam/on", SetBool, persistent=True)

@@ -1,6 +1,7 @@
 from umrsm import State, Outcome
 from periodic_io import PIO
-import rospy
+import rclpy
+from rclpy.clock import clock, 
 from typing import Optional, List, Union
 from abc import abstractmethod
 
@@ -14,10 +15,10 @@ class TimedState(State):
 
     def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
-        self.start_time = rospy.get_time()
+        self.start_time = self.get_clock().now().nanoseconds/(1e9)
 
     def handle(self) -> Optional[Outcome]:
-        if rospy.get_time() - self.start_time >= self.timeout:
+        if self.get_clock().now().nanoseconds/(1e9) - self.start_time >= self.timeout:
             return self.handle_once_timedout()
         return self.handle_if_not_timedout()
 
@@ -50,7 +51,7 @@ class ForwardAndWait(State):
 
     def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
-        self.start_time = rospy.get_time()
+        self.start_time = self.get_clock().now().nanoseconds/(1e9)
         self.waiting = False
 
     def handle(self) -> Optional[Outcome]:
@@ -58,14 +59,14 @@ class ForwardAndWait(State):
             PIO.set_target_twist_surge(self.surge_speed)
             PIO.set_target_pose_heave(self.target_heave)
 
-            if rospy.get_time() - self.start_time >= self.target_surge_time:
+            if self.get_clock().now().nanoseconds/(1e9) - self.start_time >= self.target_surge_time:
                 PIO.set_target_twist_surge(0)
                 self.waiting = True
-                self.start_time = rospy.get_time()
+                self.start_time = self.get_clock().now().nanoseconds/(1e9)
         else:
             PIO.set_target_twist_surge(0)
 
-            if rospy.get_time() - self.start_time >= self.wait_time:
+            if self.get_clock().now().nanoseconds/(1e9) - self.start_time >= self.wait_time:
                 return self.handle_reached()
 
         return self.handle_unreached()
@@ -112,18 +113,18 @@ class DoubleTimedState(State):
 
     def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
-        self.start_time = rospy.get_time()
+        self.start_time = self.get_clock().now().nanoseconds/(1e9)
         self.timed_out_first = False
 
     def handle(self) -> Optional[Outcome]:
         if not self.timed_out_first:
             outcome = self.handle_first_phase()
-            if rospy.get_time() - self.start_time >= self.phase_one_time:
+            if self.get_clock().now().nanoseconds/(1e9) - self.start_time >= self.phase_one_time:
                 self.timed_out_first = True
-                self.start_time = rospy.get_time()
+                self.start_time = self.get_clock().now().nanoseconds/(1e9)
         else:
             outcome = self.handle_second_phase()
-            if rospy.get_time() - self.start_time >= self.phase_two_time:
+            if self.get_clock().now().nanoseconds/(1e9) - self.start_time >= self.phase_two_time:
                 outcome = self.handle_once_timedout()
 
         return outcome
@@ -166,15 +167,15 @@ class TurnToYaw(TimedState):
 
     def __init__(self, prev_outcome: Outcome):
         super().__init__(prev_outcome)
-        self.timer = rospy.get_time()
+        self.timer = self.get_clock().now().nanoseconds/(1e9)
 
     def handle_if_not_timedout(self) -> Optional[Outcome]:
         PIO.set_target_pose_yaw(self.target_yaw)
 
         if not PIO.is_yaw_within_threshold(self.yaw_threshold):
-            self.timer = rospy.get_time()
+            self.timer = self.get_clock().now().nanoseconds/(1e9)
 
-        if rospy.get_time() - self.timer >= self.settle_time:
+        if self.get_clock().now().nanoseconds/(1e9) - self.timer >= self.settle_time:
             return self.handle_reached()
 
         return self.handle_unreached()
@@ -235,16 +236,16 @@ class AlignPathmarker(TimedState):
             return None
         if self.iter < 100:
             pm_resp = PIO.query_pathmarker()
-            print(f"{pm_resp=}")
+            self.get_logger().info({f"{pm_resp=}"})
             if pm_resp is not None:
                 self.measurements.append(pm_resp)
             return None
         if self.iter == 100:
-            print("Calculating target")
+            self.get_logger().info({"Calculating target"})
             if len(self.measurements) < 20:
                 return self.handle_no_measurements()
             self.target_angle = sum(self.measurements) / len(self.measurements)
-            print(f"{self.target_angle=}")
+            self.get_logger().info({f"{self.target_angle=}"})
             self.yaw_threshold_count = 0
         if self.iter >= 100:
             PIO.set_target_pose_yaw(self.target_angle)
