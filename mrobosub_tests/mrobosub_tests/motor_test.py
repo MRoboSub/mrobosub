@@ -45,3 +45,7 @@ class MotorTest(Node):
             msg.motors[i] = self.STOP_POWER
         self.pub.publish(msg)
         self.get_logger().info("Motor test complete")
+
+    # Muskaan Note: we need to call stop() somewhere!!! run gets called by the main() function defined in mrobosub_lib/__init__.py,
+    # but stop() does not.
+    # TODO pls do this

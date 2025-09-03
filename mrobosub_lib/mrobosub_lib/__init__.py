@@ -28,7 +28,7 @@ def main(constructor: Callable[[], Node]):
     node = constructor()
     
     node.run()
-    node.cleanup() #muskaan note: where is this cleanup function defined?? I don't see it defined in MotorTest, for example
+    node.cleanup()
 
     rclpy.shutdown()
     

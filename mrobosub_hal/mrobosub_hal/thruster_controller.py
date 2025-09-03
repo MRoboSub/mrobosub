@@ -38,8 +38,8 @@ class ThrusterController(Node):
         self.get_errors()  # clear errors at the start
         self.srv = Server(thruster_mappingConfig, thruster_mapping_callback)
 
-        self.object_position_service = rospy.Service(
-            "emergency_stop_motors", SetBool, self.handle_emergency_stop
+        self.object_position_service = self.create_service(
+            SetBool, "emergency_stop_motors", self.handle_emergency_stop
         )
         self.motor_sub = self.create_subscription(MotorState,
             "/motor_output", self.motor_callback, 1

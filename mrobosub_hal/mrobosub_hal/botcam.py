@@ -27,7 +27,7 @@ class Botcam(ControlLoopNode):
         self.device_path = sys.argv[1]
         self.on = False
         self.br = CvBridge()
-        rospy.Service("/bot_cam/on", SetBool, self.handle_on_service)
+        self.create_service(SetBool, "/bot_cam/on", self.handle_on_service)
         # TODO: Publish here if config param is set
         self.pub = self.create_publisher(Image, "/bot_cam", qos_profile=1)
         self.rectified_pub = self.create_publisher(Image, "/rectified_image", qos_profile=1=1)

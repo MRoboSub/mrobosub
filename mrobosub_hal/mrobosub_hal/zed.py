@@ -25,7 +25,7 @@ class Zed(ControlLoopNode):
         self.on = False
         self.br = CvBridge()
         self.raw_pub = self.create_publisher(Image, "/zed/raw", qos_profile=1)
-        rospy.Service("/zed/on", SetBool, self.handle_on_service)
+        self.create_service(SetBool, "/zed/on", self.handle_on_service)
         self.pub = self.create_publisher(Image, "/zed2/zed_node/rgb/image_rect_color", qos_profile=1) 
 
     def handle_on_service(self, req: SetBoolRequest):
