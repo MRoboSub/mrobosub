@@ -41,8 +41,8 @@ class ThrusterController(Node):
         self.object_position_service = rospy.Service(
             "emergency_stop_motors", SetBool, self.handle_emergency_stop
         )
-        self.motor_sub = rospy.Subscriber(
-            "/motor_output", MotorState, self.motor_callback
+        self.motor_sub = self.create_subscription(MotorState,
+            "/motor_output", self.motor_callback, 1
         )
 
     def connect(self) -> bool:

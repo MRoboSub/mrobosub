@@ -11,6 +11,7 @@ class Node(RosNode):
         self.get_logger().info(f"starting node {node_name}...")
 
         self._thread = threading.Thread(target=rclpy.spin, args=(self,), daemon=True)
+        # muskaan note: why are we using daemon = True here?
         self._thread.start()
 
     def run(self):
@@ -27,7 +28,7 @@ def main(constructor: Callable[[], Node]):
     node = constructor()
     
     node.run()
-    node.cleanup()
+    node.cleanup() #muskaan note: where is this cleanup function defined?? I don't see it defined in MotorTest, for example
 
     rclpy.shutdown()
     
