@@ -17,6 +17,8 @@ RUN apt-get update && \
                         python3-scipy \
                         python3-transforms3d
 
+RUN echo "ALL ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers
+
 SHELL ["/bin/bash", "-c"] 
 
 USER 1000:1000
