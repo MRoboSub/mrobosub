@@ -13,6 +13,7 @@ class Node(RosNode):
         self._thread = threading.Thread(target=rclpy.spin, args=(self,), daemon=True)
         # muskaan note: why are we using daemon = True here?
         self._thread.start()
+        # TODO: what about ros params?? we were parsing them here in ros1 but are now parsing them nowhere
 
     def run(self):
         pass
