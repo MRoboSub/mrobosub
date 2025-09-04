@@ -1,7 +1,7 @@
 {
   "name": "Michigan RoboSub Main Software Project",
   "dockerComposeFile": "../docker-compose.yml",
-  "service": "mrobosub",
+  "service": "mrobosub_ros1",
   "workspaceFolder": "/root/catkin_ws/src/mrobosub",
   "shutdownAction": "stopCompose",
   "customizations": {
