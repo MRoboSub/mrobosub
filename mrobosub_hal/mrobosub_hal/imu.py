@@ -33,15 +33,15 @@ class IMU(Node):
         
         self.pimu_pub.publish(m)
 
-    # def run(self):
-    #     rospy.spin()
+    def run(self):
+        rclpy.spin()
 
 if __name__ == "__main__":
     rclpy.init()
     node = IMU()
-    rclpy.spin(node)
-    node.cleanup()
-    rclpy.shutdown()
-
-# TODO: the if __name__ = "main" part of this code is WRONG DO NOT MERGE THIS
+    try:
+        rclpy.run(node)
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
 

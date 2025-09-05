@@ -32,6 +32,7 @@ class DVLPublisher (Node):
         sock.bind((UDP_IP, UDP_PORT))
 
         while rclpy.ok():
+            rclpy.spin_some(self, timeout_sec=0.0)
             try:
                 data, addr = sock.recvfrom(1024)
                 data_str = data.decode()
@@ -51,4 +52,10 @@ class DVLPublisher (Node):
 
 
 if __name__ == "__main__":
-    DVLPublisher().run()
+    rclpy.init()
+    node = DVLPublisher()
+    try:
+        rclpy.run(node)
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()

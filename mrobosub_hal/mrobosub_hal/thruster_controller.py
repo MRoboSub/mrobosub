@@ -142,6 +142,7 @@ class ThrusterController(Node):
 
     def run(self):
         while rclpy.ok():
+            rclpy.spin_some(self, timeout_sec=0.0)
             for i in range(NUM_MOTORS):
                 self.send_signal(i, self.motor_outputs[i])
 
@@ -149,4 +150,10 @@ class ThrusterController(Node):
 
 
 if __name__ == "__main__":
-    ThrusterController().run()
+    rclpy.init()
+    node = ThrusterController()
+    try:
+        rclpy.run(node)
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()

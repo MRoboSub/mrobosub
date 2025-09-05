@@ -9,28 +9,28 @@ import sys
 import numpy as np
 from dynamic_reconfigure.server import Server
 
-from mrobosub_lib.lib import ControlLoopNode
+from mrobosub_lib.lib import Node
 
 from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
 
 from mrobosub_hal.cfg import rectify_paramsConfig
 
-
-class Botcam(ControlLoopNode):
+class Botcam(Node):
     """
     Provides /bot_cam/on service and /bot_cam topic
     """ # TODO: Update
 
     def __init__(self) -> None:
-        self.iteration_rate = 60
         super().__init__("bot_cam")
+        self.iteration_rate = 60
+        self.rate = self.create_rate(self.iteration_rate)
         self.device_path = sys.argv[1]
         self.on = False
         self.br = CvBridge()
         self.create_service(SetBool, "/bot_cam/on", self.handle_on_service)
         # TODO: Publish here if config param is set
         self.pub = self.create_publisher(Image, "/bot_cam", qos_profile=1)
-        self.rectified_pub = self.create_publisher(Image, "/rectified_image", qos_profile=1=1)
+        self.rectified_pub = self.create_publisher(Image, "/rectified_image", qos_profile=1)
 
         self.f = 800
         self.w = 1920
@@ -69,6 +69,11 @@ class Botcam(ControlLoopNode):
 
     def close_capture(self):
         self.cap.release()
+
+    def run(self):
+        while rclpy.ok():
+            self.loop()
+            self.rate.sleep()
 
     def loop(self):
         if not self.on:
@@ -145,4 +150,10 @@ class Botcam(ControlLoopNode):
 
 
 if __name__ == "__main__":
-    Botcam().run()
+    rclpy.init()
+    node = Botcam()
+    try:
+        rclpy.run(node)
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
