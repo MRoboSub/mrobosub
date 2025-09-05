@@ -4,7 +4,7 @@ import rclpy
 import sys
 import argparse
 
-from mrobosub_lib import Node, main as lib_main
+from mrobosub_lib import Node
 from rcl_interfaces.msg import ParameterDescriptor
 from std_msgs.msg import Float64
 from .pid_interface import PIDInterface
@@ -98,8 +98,18 @@ class PidDofControlNode(Node):
 
 
 def run():
+    rclpy.init()
+
+
     parser = argparse.ArgumentParser()
     parser.add_argument("dof_name", type=str, help="Name of the DOF")
     args = parser.parse_args(sys.argv[1:2])
 
-    lib_main(PidDofControlNode, args.dof_name)
+    node = PidDofControlNode(args.dof_name)
+    
+    rclpy.spin(node)
+
+    node.cleanup()
+    node.destroy_node()
+    rclpy.shutdown()
+
