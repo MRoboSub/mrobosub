@@ -48,11 +48,11 @@ class PIO(Node):
         self.target_pose = Pose()
 
         # Subscribers
-        self.create_subscription(Float64, "/pose/yaw", self.yaw_callback, 10)
-        self.create_subscription(Float64, "/pose/heave", self.heave_callback, 10)
-        self.create_subscription(Float64, "/pose/roll", self.roll_callback, 10)
-        self.create_subscription(Float64, "/pose/x", self.x_callback, 10)
-        self.create_subscription(Float64, "/pose/y", self.y_callback, 10)
+        self._yaw_sub = self.create_subscription(Float64, "/pose/yaw", self.yaw_callback, 10)
+        self._heave_sub = self.create_subscription(Float64, "/pose/heave", self.heave_callback, 10)
+        self._roll_sub = self.create_subscription(Float64, "/pose/roll", self.roll_callback, 10)
+        self._x_sub = self.create_subscription(Float64, "/pose/x", self.x_callback, 10)
+        self._y_sub = self.create_subscription(Float64, "/pose/y", self.y_callback, 10)
 
         # Publishers
         self._target_pose_heave_pub = self.create_publisher(Float64, "/target_pose/heave", 1)
@@ -142,74 +142,74 @@ class PIO(Node):
 
     def set_target_pose_yaw(self, target_yaw: float) -> None:
         msg = Float64()
-        msg.data = target_yaw
+        msg.data = float(target_yaw)
         self._target_pose_yaw_pub.publish(msg)
         self.target_pose.yaw = target_yaw
 
     def set_target_pose_heave(self, target_heave: float) -> None:
         msg = Float64()
-        msg.data = target_heave
+        msg.data = float(target_heave)
         self._target_pose_heave_pub.publish(msg)
         self.target_pose.heave = target_heave
 
     def set_target_pose_roll(self, target_roll: float) -> None:
         msg = Float64()
-        msg.data = target_roll
+        msg.data = float(target_roll)
         self._target_pose_roll_pub.publish(msg)
         self.target_pose.roll = target_roll
 
     def set_target_pose_x(self, target_x: float) -> None:
         msg = Float64()
-        msg.data = target_x
+        msg.data = float(target_x)
         self._target_pose_x_pub.publish(msg)
         self.target_pose.x = target_x
 
     def set_target_pose_y(self, target_y: float) -> None:
         msg = Float64()
-        msg.data = target_y
+        msg.data = float(target_y)
         self._target_pose_y_pub.publish(msg)
         self.target_pose.y = target_y
 
     def set_target_twist_roll(self, override_roll: float) -> None:
         msg = Float64()
-        msg.data = override_roll
+        msg.data = float(override_roll)
         self._target_twist_roll_pub.publish(msg)
 
     def set_target_twist_yaw(self, override_yaw: float) -> None:
         msg = Float64()
-        msg.data = override_yaw
+        msg.data = float(override_yaw)
         self._target_twist_yaw_pub.publish(msg)
 
     def set_target_twist_surge(self, override_surge: float) -> None:
         msg = Float64()
-        msg.data = override_surge
+        msg.data = float(override_surge)
         self._target_twist_surge_pub.publish(msg)
 
     def set_target_twist_sway(self, override_sway: float) -> None:
         msg = Float64()
-        msg.data = override_sway
+        msg.data = float(override_sway)
         self._target_twist_sway_pub.publish(msg)
 
     def set_target_twist_heave(self, override_heave: float) -> None:
         msg = Float64()
-        msg.data = override_heave
+        msg.data = float(override_heave)
         self._target_twist_heave_pub.publish(msg)
 
     def reset_target_twist(self) -> None:
-        self.set_target_twist_heave(0)
-        self.set_target_twist_yaw(0)
-        self.set_target_twist_surge(0)
-        self.set_target_twist_roll(0)
-        self.set_target_twist_sway(0)
+        self.set_target_twist_heave(0.)
+        self.set_target_twist_yaw(0.)
+        self.set_target_twist_surge(0.)
+        self.set_target_twist_roll(0.)
+        self.set_target_twist_sway(0.)
 
     def set_left_dropper_angle(self, angle: int) -> None:
         msg = Int32()
-        msg.data = angle
+        msg.data = int(angle)
         self._left_dropper_pub.publish(msg)
 
     def set_right_dropper_angle(self, angle: int) -> None:
         msg = Int32()
-        msg.data = angle
+        msg.data = int(angle)
         self._right_dropper_pub.publish(msg)
 
     # @classmethod

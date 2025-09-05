@@ -1,7 +1,5 @@
-from umrsm import State, Outcome
-from periodic_io import PIO
+from mrobosub_planning.umrsm import State, Outcome
 import rclpy
-from rclpy.clock import clock, 
 from typing import Optional, List, Union
 from abc import abstractmethod
 
@@ -13,12 +11,12 @@ class TimedState(State):
     override handle_once_timedout iff cleanup is needed after timeout
     """
 
-    def __init__(self, prev_outcome: Outcome):
-        super().__init__(prev_outcome)
-        self.start_time = self.get_clock().now().nanoseconds/(1e9)
+    def __init__(self, prev_outcome: Outcome, node: rclpy.node.Node):
+        super().__init__(prev_outcome, node)
+        self.start_time = self.io_node.get_clock().now().nanoseconds/(1e9)
 
     def handle(self) -> Optional[Outcome]:
-        if self.get_clock().now().nanoseconds/(1e9) - self.start_time >= self.timeout:
+        if self.io_node.get_clock().now().nanoseconds/(1e9) - self.start_time >= self.timeout:
             return self.handle_once_timedout()
         return self.handle_if_not_timedout()
 
@@ -49,24 +47,24 @@ class ForwardAndWait(State):
     surge_speed: float
     """
 
-    def __init__(self, prev_outcome: Outcome):
-        super().__init__(prev_outcome)
-        self.start_time = self.get_clock().now().nanoseconds/(1e9)
+    def __init__(self, prev_outcome: Outcome, node: rclpy.node.Node):
+        super().__init__(prev_outcome, node)
+        self.start_time = self.io_node.get_clock().now().nanoseconds/(1e9)
         self.waiting = False
 
     def handle(self) -> Optional[Outcome]:
         if not self.waiting:
-            PIO.set_target_twist_surge(self.surge_speed)
-            PIO.set_target_pose_heave(self.target_heave)
+            self.io_node.set_target_twist_surge(self.surge_speed)
+            self.io_node.set_target_pose_heave(self.target_heave)
 
-            if self.get_clock().now().nanoseconds/(1e9) - self.start_time >= self.target_surge_time:
-                PIO.set_target_twist_surge(0)
+            if self.io_node.get_clock().now().nanoseconds/(1e9) - self.start_time >= self.target_surge_time:
+                self.io_node.set_target_twist_surge(0)
                 self.waiting = True
-                self.start_time = self.get_clock().now().nanoseconds/(1e9)
+                self.start_time = self.io_node.get_clock().now().nanoseconds/(1e9)
         else:
-            PIO.set_target_twist_surge(0)
+            self.io_node.set_target_twist_surge(0)
 
-            if self.get_clock().now().nanoseconds/(1e9) - self.start_time >= self.wait_time:
+            if self.io_node.get_clock().now().nanoseconds/(1e9) - self.start_time >= self.wait_time:
                 return self.handle_reached()
 
         return self.handle_unreached()
@@ -111,20 +109,20 @@ class DoubleTimedState(State):
     phase_two_time: float
     """
 
-    def __init__(self, prev_outcome: Outcome):
-        super().__init__(prev_outcome)
-        self.start_time = self.get_clock().now().nanoseconds/(1e9)
+    def __init__(self, prev_outcome: Outcome, node: rclpy.node.Node):
+        super().__init__(prev_outcome, node)
+        self.start_time = self.io_node.get_clock().now().nanoseconds/(1e9)
         self.timed_out_first = False
 
     def handle(self) -> Optional[Outcome]:
         if not self.timed_out_first:
             outcome = self.handle_first_phase()
-            if self.get_clock().now().nanoseconds/(1e9) - self.start_time >= self.phase_one_time:
+            if self.io_node.get_clock().now().nanoseconds/(1e9) - self.start_time >= self.phase_one_time:
                 self.timed_out_first = True
-                self.start_time = self.get_clock().now().nanoseconds/(1e9)
+                self.start_time = self.io_node.get_clock().now().nanoseconds/(1e9)
         else:
             outcome = self.handle_second_phase()
-            if self.get_clock().now().nanoseconds/(1e9) - self.start_time >= self.phase_two_time:
+            if self.io_node.get_clock().now().nanoseconds/(1e9) - self.start_time >= self.phase_two_time:
                 outcome = self.handle_once_timedout()
 
         return outcome
@@ -165,17 +163,17 @@ class TurnToYaw(TimedState):
     timeout: float
     """
 
-    def __init__(self, prev_outcome: Outcome):
-        super().__init__(prev_outcome)
-        self.timer = self.get_clock().now().nanoseconds/(1e9)
+    def __init__(self, prev_outcome: Outcome, node: rclpy.node.Node):
+        super().__init__(prev_outcome, node)
+        self.timer = self.io_node.get_clock().now().nanoseconds/(1e9)
 
     def handle_if_not_timedout(self) -> Optional[Outcome]:
-        PIO.set_target_pose_yaw(self.target_yaw)
+        self.io_node.set_target_pose_yaw(self.target_yaw)
 
-        if not PIO.is_yaw_within_threshold(self.yaw_threshold):
-            self.timer = self.get_clock().now().nanoseconds/(1e9)
+        if not self.io_node.is_yaw_within_threshold(self.yaw_threshold):
+            self.timer = self.io_node.get_clock().now().nanoseconds/(1e9)
 
-        if self.get_clock().now().nanoseconds/(1e9) - self.timer >= self.settle_time:
+        if self.io_node.get_clock().now().nanoseconds/(1e9) - self.timer >= self.settle_time:
             return self.handle_reached()
 
         return self.handle_unreached()
@@ -224,18 +222,18 @@ class AlignPathmarker(TimedState):
 
     def __init__(self, prev_outcome: Outcome) -> None:
         super().__init__(prev_outcome)
-        PIO.activate_bot_cam()
+        self.io_node.activate_bot_cam()
         self.last_known_angle: Optional[float] = None
         self.iter = 0
         self.measurements: List[float] = []
 
     def handle_if_not_timedout(self) -> Union[Outcome, None]:
-        PIO.set_target_twist_surge(0)
+        self.io_node.set_target_twist_surge(0)
         self.iter += 1
         if self.iter < 50:
             return None
         if self.iter < 100:
-            pm_resp = PIO.query_pathmarker()
+            pm_resp = self.io_node.query_pathmarker()
             self.get_logger().info({f"{pm_resp=}"})
             if pm_resp is not None:
                 self.measurements.append(pm_resp)
@@ -248,8 +246,8 @@ class AlignPathmarker(TimedState):
             self.get_logger().info({f"{self.target_angle=}"})
             self.yaw_threshold_count = 0
         if self.iter >= 100:
-            PIO.set_target_pose_yaw(self.target_angle)
-            if PIO.is_yaw_within_threshold(self.yaw_threshold):
+            self.io_node.set_target_pose_yaw(self.target_angle)
+            if self.io_node.is_yaw_within_threshold(self.yaw_threshold):
                 self.yaw_threshold_count += 1
             else:
                 self.yaw_threshold_count = 0
@@ -263,22 +261,22 @@ class CenterOnPathmarker(TimedState):
     def handle_aligned(self) -> Outcome:
         pass
 
-    def __init__(self, prev_outcome: Outcome):
-        super().__init__(prev_outcome)
-        PIO.activate_bot_cam()
+    def __init__(self, prev_outcome: Outcome, node: rclpy.node.Node):
+        super().__init__(prev_outcome, node)
+        self.io_node.activate_bot_cam()
         self.centered_count = 0
 
     def handle_if_not_timedout(self) -> Optional[Outcome]:
-        pm_resp = PIO.query_pathmarker_full()
+        pm_resp = self.io_node.query_pathmarker_full()
         if pm_resp is None:
-            PIO.set_target_twist_surge(0.0)
-            PIO.set_target_twist_sway(0.0)
+            self.io_node.set_target_twist_surge(0.0)
+            self.io_node.set_target_twist_sway(0.0)
             return None
 
         x_diff = pm_resp.centroid_x - 0.5
         y_diff = pm_resp.centroid_y - 0.5
-        PIO.set_target_twist_sway(3 * x_diff)
-        PIO.set_target_twist_surge(-3 * y_diff)
+        self.io_node.set_target_twist_sway(3 * x_diff)
+        self.io_node.set_target_twist_surge(-3 * y_diff)
         if abs(x_diff) < 0.1 and abs(y_diff) < 0.1:
             self.centered_count += 1
         else:
