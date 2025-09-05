@@ -1,14 +1,14 @@
 {
     "files.eol": "\n",
     "python.autoComplete.extraPaths": [
-        "/root/catkin_ws/devel/lib/python3/dist-packages",
-        "/root/catkin_ws/src/mrobosub/mrobosub_lib/src",
-        "/opt/ros/noetic/lib/python3/dist-packages"
+        "/opt/ros/jazzy/lib/python3.12/site-packages/",
+        "/home/ubuntu/ros2_ws/build/mrobosub_lib",
+        "/home/ubuntu/ros2_ws/build/package2"
     ],
     "python.analysis.extraPaths": [
-        "/root/catkin_ws/devel/lib/python3/dist-packages",
-        "/root/catkin_ws/src/mrobosub/mrobosub_lib/src",
-        "/opt/ros/noetic/lib/python3/dist-packages"
+        "/opt/ros/jazzy/lib/python3.12/site-packages/",
+        "/home/ubuntu/ros2_ws/build/mrobosub_lib",
+        "/home/ubuntu/ros2_ws/build/package2"
     ],
     "cmake.configureOnOpen": false,
     "[python]": {
@@ -17,4 +17,3 @@
     "python.analysis.typeCheckingMode": "basic",
     "python.analysis.autoImportCompletions": true
 }
-

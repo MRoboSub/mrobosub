@@ -1,0 +1,4 @@
+<launch>
+  <node name="sway_control" pkg="mrobosub_gnc" exec="passthrough_dof_controller" args="sway">
+  </node>
+</launch>
