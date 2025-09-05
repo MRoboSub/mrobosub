@@ -1,4 +1,0 @@
-<launch>
-    <node pkg="mrobosub_hal" type="dvl_publisher.py" name="dvl_publisher" output="screen">
-    </node>
-</launch>
