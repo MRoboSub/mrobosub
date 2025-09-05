@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import rospy
+import rclpy
 
 from mrobosub_lib.lib import Node
 from serial import Serial
@@ -28,28 +28,28 @@ class ThrusterController(Node):
 
     def __init__(self):
         super().__init__("thruster_controller")
-        print("Launched thruster_controller node")
+        self.get_logger().info("Launched thruster_controller node")
         self.port = "/dev/serial/by-id/usb-Pololu_Corporation_Pololu_Mini_Maestro_12-Channel_USB_Servo_Controller_00467345-if00"
         self.emergency_stop = False
         self.motor_outputs = [0] * NUM_MOTORS
-        self.rate = rospy.Rate(50)
+        self.rate = self.create_rate(50)
         self.serial = None
         self.connect()
         self.get_errors()  # clear errors at the start
         self.srv = Server(thruster_mappingConfig, thruster_mapping_callback)
 
-        self.object_position_service = rospy.Service(
-            "emergency_stop_motors", SetBool, self.handle_emergency_stop
+        self.object_position_service = self.create_service(
+            SetBool, "emergency_stop_motors", self.handle_emergency_stop
         )
-        self.motor_sub = rospy.Subscriber(
-            "/motor_output", MotorState, self.motor_callback
+        self.motor_sub = self.create_subscription(MotorState,
+            "/motor_output", self.motor_callback, 1
         )
 
     def connect(self) -> bool:
         try:
             self.serial = Serial(self.port, timeout=0.5, write_timeout=0.5)
         except SerialException as e:
-            print("Could not connect to mini maestro", e)
+            self.get_logger().info("Could not connect to mini maestro", e)
             return False
         return True
 
@@ -62,7 +62,7 @@ class ThrusterController(Node):
             self.serial.write(data)
             return True
         except SerialException as e:
-            print("write error:", e)
+            self.get_logger().info("write error:", e)
             self.serial.close()
             self.connect()
         return False
@@ -75,7 +75,7 @@ class ThrusterController(Node):
         try:
             return self.serial.read(len)
         except SerialException as e:
-            print("read error:", e)
+            self.get_logger().info("read error:", e)
             self.serial.close()
             self.connect()
         return None
@@ -92,7 +92,7 @@ class ThrusterController(Node):
     # pwm_val should be in [4000, 8000]
     def convert_pwm_signal(self, pwm_raw: float) -> Optional[int]:
         if pwm_raw < -1 or pwm_raw > 1:
-            print(
+            self.get_logger().info(
                 f"Thruster Controller [ERROR]: PWM value {pwm_raw} out of range (should be in [-1, 1])"
             )
             return None
@@ -107,7 +107,7 @@ class ThrusterController(Node):
             return -1
 
         if motor < 0 or motor >= NUM_MOTORS:
-            print(
+            self.get_logger().info(
                 f"ERROR: motor number {motor} out of range (should be in [0, {NUM_MOTORS-1}])"
             )
             return -1
@@ -119,7 +119,7 @@ class ThrusterController(Node):
 
         self.get_errors()
         self.write(bytearray([0xAA, 0x0C, 0x04, motor, LSBs, MSBs]))
-        # print(f"Thruster controller: sent pwm value {pwm_val} to motor {motor}")
+        # self.get_logger().info(f"Thruster controller: sent pwm value {pwm_val} to motor {motor}")
 
         return 0
 
@@ -137,11 +137,12 @@ class ThrusterController(Node):
             return
         error_code = int.from_bytes(error, "little")
         if error_code != 0:
-            print(f"Thruster controller: error code = {error_code}")
+            self.get_logger().info(f"Thruster controller: error code = {error_code}")
             # eg: error_code 16 means 00010000 which is the 5th error bit set
 
     def run(self):
-        while not rospy.is_shutdown():
+        while rclpy.ok():
+            rclpy.spin_some(self, timeout_sec=0.0)
             for i in range(NUM_MOTORS):
                 self.send_signal(i, self.motor_outputs[i])
 
@@ -149,4 +150,10 @@ class ThrusterController(Node):
 
 
 if __name__ == "__main__":
-    ThrusterController().run()
+    rclpy.init()
+    node = ThrusterController()
+    try:
+        rclpy.run(node)
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()

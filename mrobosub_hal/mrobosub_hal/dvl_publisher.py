@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 import socket
-
-import rospy
+import rclpy
 from mrobosub_msgs.msg import Dvl
 import numpy as np
+from mrobosub_lib.lib import Node
 
 
 # todo: parameterize this in the launch file
@@ -13,17 +13,17 @@ UDP_IP = "0.0.0.0"
 UDP_PORT = 27000
 
 
-class DVLPublisher:
+class DVLPublisher (Node):
     """
     Provides /dvl/raw_dvl topic
     """
 
     def __init__(self):
-        rospy.init_node("dvl_publisher")
-        self.pub = rospy.Publisher("/dvl/raw_dvl", Dvl, queue_size=1)
+        super().__init__('dvl_publisher')
+        self.pub = self.create_publisher(Dvl, "/dvl/raw_dvl", qos_profile=1) 
 
     def run(self):
-        rate = rospy.Rate(50)
+        rate = self.create_rate(50)
 
         # connect to socket containing the DVL information
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -31,7 +31,8 @@ class DVLPublisher:
         sock.settimeout(0.2)
         sock.bind((UDP_IP, UDP_PORT))
 
-        while not rospy.is_shutdown():
+        while rclpy.ok():
+            rclpy.spin_some(self, timeout_sec=0.0)
             try:
                 data, addr = sock.recvfrom(1024)
                 data_str = data.decode()
@@ -46,9 +47,15 @@ class DVLPublisher:
 
                 rate.sleep()
             except socket.timeout:
-                print("DVL UDP connection timing out, no data recieved from DVL")
+                self.get_logger().info("DVL UDP connection timing out, no data recieved from DVL")
         sock.close()
 
 
 if __name__ == "__main__":
-    DVLPublisher().run()
+    rclpy.init()
+    node = DVLPublisher()
+    try:
+        rclpy.run(node)
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()

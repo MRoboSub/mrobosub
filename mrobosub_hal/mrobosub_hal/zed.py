@@ -4,31 +4,30 @@
 import cv2
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
-import rospy
+import rclpy
 import sys
 
-from mrobosub_lib.lib import ControlLoopNode
+from mrobosub_lib.lib import Node
 
 from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
 import subprocess
 
 
-class Zed(ControlLoopNode):
+class Zed(Node):
     """
     Provides /zed/on service and /zed/raw topic and /zed2/zed_node/rgb/image_rect_color topic
     """
 
     def __init__(self):
-        self.iteration_rate = 60
         super().__init__("zed")
+        self.iteration_rate = 60
+        self.rate = self.create_rate(self.iteration_rate)
         self.device_path = sys.argv[1]
         self.on = False
         self.br = CvBridge()
-        self.raw_pub = rospy.Publisher("/zed/raw", Image, queue_size=1)
-        rospy.Service("/zed/on", SetBool, self.handle_on_service)
-        self.pub = rospy.Publisher(
-            "/zed2/zed_node/rgb/image_rect_color", Image, queue_size=1
-        )
+        self.raw_pub = self.create_publisher(Image, "/zed/raw", qos_profile=1)
+        self.create_service(SetBool, "/zed/on", self.handle_on_service)
+        self.pub = self.create_publisher(Image, "/zed2/zed_node/rgb/image_rect_color", qos_profile=1) 
 
     def handle_on_service(self, req: SetBoolRequest):
         if req.data == self.on:
@@ -77,6 +76,17 @@ class Zed(ControlLoopNode):
             img = self.br.cv2_to_imgmsg(frame_cropped, encoding="bgr8")
             self.pub.publish(img)
 
+    def run(self):
+        while rclpy.ok():
+            self.loop()
+            self.rate.sleep()
+
 
 if __name__ == "__main__":
-    Zed().run()
+    rclpy.init()
+    node = Zed()
+    try:
+        rclpy.run(node)
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()

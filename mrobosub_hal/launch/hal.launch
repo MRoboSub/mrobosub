@@ -1,8 +1,0 @@
-<launch>
-  <include file="$(find mrobosub_hal)/launch/run_arduino.launch"/>
-  <include file="$(find mrobosub_hal)/launch/dvl_publisher.launch"/>
-  <include file="$(find mrobosub_hal)/launch/imu.launch"/>
-  <include file="$(find mrobosub_hal)/launch/thruster_controller.launch"/>
-  <include file="$(find mrobosub_hal)/launch/botcam.launch"/>
-  <include file="$(find mrobosub_hal)/launch/zed.launch"/>
-</launch>

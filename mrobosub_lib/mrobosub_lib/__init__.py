@@ -7,17 +7,11 @@ import rclpy
 from rclpy.node import Node as RosNode
 from typing import Callable
 
-import threading
-
-
 class Node(RosNode):
     def __init__(self, node_name: str, *args, **kawrgs):
         super().__init__(node_name, *args, **kawrgs)
         self.get_logger().info(f"starting node {node_name}...")
-
-    def _start_thread(self):
-        self.__thread = threading.Thread(target=self.run, daemon=True)
-        self.__thread.start()
+        # TODO: what about ros params?? we were parsing them here in ros1 but are now parsing them nowhere
 
     def run(self):
         """
@@ -27,23 +21,3 @@ class Node(RosNode):
         Otherwise, self._start_thread() must be called to run this function in a separate thread
         """
         pass
-
-    def cleanup(self):
-        self.destroy_node()
-        self.__thread.join()
-
-
-def main(constructor: type[Node], *args, **kwargs):
-    """
-    Main entry point for constructing and spinning mrobosub nodes
-    args and kwargs are passed to node constructor
-    """
-    rclpy.init()
-
-    node = constructor(*args, **kwargs)
-
-    node._start_thread()
-    rclpy.spin(node)
-
-    node.cleanup()
-    rclpy.shutdown()

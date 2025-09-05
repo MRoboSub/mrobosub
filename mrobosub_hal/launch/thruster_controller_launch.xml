@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="mrobosub_hal" exec="thruster_controller" name="thruster_controller" output="screen">
+    </node>
+</launch>
