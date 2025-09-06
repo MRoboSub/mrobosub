@@ -447,12 +447,8 @@ class SimHal(Node):
             client.thread.join()
 
 
-def run():
+def main():
     rclpy.init()
     global node
     node = SimHal(int(sys.argv[1]), int(sys.argv[2]))
     node.run()
-
-
-if __name__ == "__main__":
-    run()

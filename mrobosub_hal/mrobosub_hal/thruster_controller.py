@@ -159,14 +159,10 @@ class ThrusterController(Node):
             self.send_signal(i, self.motor_outputs[i])
 
 
-def run():
+def main():
     rclpy.init()
     node = ThrusterController()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
         pass
-
-
-if __name__ == "__main__":
-    run()

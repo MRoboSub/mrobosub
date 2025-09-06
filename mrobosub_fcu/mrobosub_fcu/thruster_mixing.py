@@ -365,3 +365,13 @@ class ThrusterMixing(Node):
         self.current_pub.publish(est_current)
         self.scale_pub.publish(Float64(data=scale))
         self.motor_pub.publish(outputs)
+
+
+def main():
+    rclpy.init()
+
+    node = ThrusterMixing()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass

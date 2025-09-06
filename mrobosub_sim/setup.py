@@ -22,7 +22,7 @@ setup(
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "hal = mrobosub_sim.hal:run",
+            "hal = mrobosub_sim.hal:main",
         ],
     },
 )

@@ -23,7 +23,7 @@ setup(
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "thruster_controller = mrobosub_hal.thruster_controller:run",
+            "thruster_controller = mrobosub_hal.thruster_controller:main",
         ],
     },
 )
