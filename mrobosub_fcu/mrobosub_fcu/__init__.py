@@ -1,7 +1,13 @@
-from mrobosub_lib import main
+import rclpy
 
 
 def thruster_mixing():
     from .thruster_mixing import ThrusterMixing
 
-    main(ThrusterMixing)
+    rclpy.init()
+
+    node = ThrusterMixing()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass

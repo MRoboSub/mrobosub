@@ -7,7 +7,7 @@ import numpy.typing as npt
 from math import radians
 import rclpy
 from std_msgs.msg import Float64
-from std_srvs.srv import SetBool, SetBool_Request, SetBool_Response
+from std_srvs.srv import SetBool
 
 from mrobosub_lib import Node
 from mrobosub_msgs.msg import MotorState
@@ -217,7 +217,7 @@ class ThrusterMixing(Node):
     def __init__(self) -> None:
         super().__init__("thruster_mixing")
         self.calculate_TAM()
-        self.wrench = {dof: 0 for dof in DOFS}
+        self.wrench = {dof: 0.0 for dof in DOFS}
         self.wrench_subs = {
             dof: self.create_subscription(
                 Float64,
@@ -241,13 +241,16 @@ class ThrusterMixing(Node):
             SetBool, "/thruster_mixing/enable", self.handle_enable_request
         )
 
-    def handle_enable_request(self, request: SetBool_Request):
-        self.enabled = request.data
-        return SetBool_Response(True, f"Set enabled to {self.enabled}")
-
-    def run(self):
         self.timer = self.create_timer(1.0 / RATE, self.update)
-        rclpy.spin(self)
+
+    def handle_enable_request(
+        self, req: SetBool.Request, res: SetBool.Response
+    ) -> SetBool.Response:
+        self.enabled = req.data
+
+        res.success = self.enabled
+        res.message = f"Set enabled to {self.enabled}"
+        return res
 
     def make_wrench_callback(self, dof: str) -> Callable[[Float64], None]:
         # direction dofs are in newtons, angle dofs are in newton-meters
