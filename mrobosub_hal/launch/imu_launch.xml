@@ -1,5 +1,5 @@
 <launch>
-  <node name="imu" pkg="mrobosub_hal" exec="imu" output="screen" />
-  <node name="inertial_sense_node" pkg="inertial_sense_ros" exec="inertial_sense_node"
+  <!-- https://github.com/inertialsense/inertial-sense-sdk/tree/main/ROS/ros2 -->
+  <node name="inertial_sense_ros2_node" pkg="inertial_sense_ros2" exec="inertial_sense_ros2_node"
     output="screen" args="$(find-pkg-share mrobosub_hal)/params/inertial_sense_params.yaml"/>
 </launch>
