@@ -7,7 +7,10 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "ms-python.python"
+        "ms-python.python",
+        "Gruntfuggly.todo-tree",
+        "eamodio.gitlens",
+        "ms-python.black-formatter"
       ]
     }
   }
