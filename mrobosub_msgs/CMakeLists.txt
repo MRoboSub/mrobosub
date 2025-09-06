@@ -13,10 +13,11 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-    "msg/MotorState.msg"
-    "msg/Pose.msg"
     "msg/Detection.msg"
     "msg/Detections.msg"
+    "msg/Dvl.msg"
+    "msg/MotorState.msg"
+    "msg/Pose.msg"
     "srv/BinCamPos.srv"
     "srv/HsvFilterImage.srv"
     "srv/ObjectPosition.srv"
