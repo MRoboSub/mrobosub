@@ -211,24 +211,27 @@ MessageData = Union[MessageReceiveData, MessageSendData]
 
 
 class SimDepth:
-    def __init__(self, node: Node) -> None:
-        self.depth_pub = node.create_publisher(Float32, "/depth/raw_depth", 1)
+    def __init__(self, hal: "SimHal") -> None:
+        self.hal = hal
+        self.depth_pub = self.hal.create_publisher(Float32, "/depth/raw_depth", 1)
 
     def handle_sensors(self, data: SensorData):
         self.depth_pub.publish(data.depth)
 
 
 class SimDvl:
-    def __init__(self, node: Node) -> None:
-        self.dvl_pub = node.create_publisher(Dvl, "/dvl/raw_dvl", 1)
+    def __init__(self, hal: "SimHal") -> None:
+        self.hal = hal
+        self.dvl_pub = self.hal.create_publisher(Dvl, "/dvl/raw_dvl", 1)
 
     def handle_sensors(self, data: SensorData):
         self.dvl_pub.publish(data.dvl)
 
 
 class SimImu:
-    def __init__(self, node: Node) -> None:
-        self.imu_pub = node.create_publisher(Imu, "/imu", 1)
+    def __init__(self, hal: "SimHal") -> None:
+        self.hal = hal
+        self.imu_pub = self.hal.create_publisher(Imu, "/imu", 1)
 
     def handle_sensors(self, data: SensorData):
         self.imu_pub.publish(data.imu)
@@ -319,8 +322,9 @@ class SimThrusterController:
 
 
 class SimML:
-    def __init__(self, node: Node) -> None:
-        self.detections_pub = node.create_publisher(Detections, "/ml/detections", 1)
+    def __init__(self, hal: "SimHal") -> None:
+        self.hal = hal
+        self.detections_pub = self.hal.create_publisher(Detections, "/ml/detections", 1)
 
     def handle_targets(self, data: MLTargetsData):
         message = Detections(
