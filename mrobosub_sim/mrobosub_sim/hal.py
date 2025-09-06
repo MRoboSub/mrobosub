@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
+from ast import Set
 from enum import Enum
 from dataclasses import dataclass, field
+from re import L
 from struct import Struct
 from typing_extensions import Union, Self, List
 import sys
@@ -9,19 +11,20 @@ import warnings
 from queue import Empty, SimpleQueue
 from threading import Thread
 
-import rospy
-from mrobosub_lib.lib import Node
+import rclpy
+from mrobosub_lib import Node
 from cv_bridge import CvBridge
 import cv2
 import numpy as np
 
-from mrobosub_msgs.msg import Dvl, MotorState, Imu_INS, Imu_PIMU, Detections, Detection
-from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse
-from std_msgs.msg import Float32
-from sensor_msgs.msg import Image
-from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
+from mrobosub_msgs.msg import Dvl, MotorState, Detections, Detection
+from mrobosub_msgs.srv import ObjectPosition
+from geometry_msgs.msg import Vector3
+from std_msgs.msg import Float32, Header
+from sensor_msgs.msg import Image, Imu
+from std_srvs.srv import SetBool
 
-import net
+from . import net
 
 
 class MessageKind(Enum):
@@ -43,18 +46,23 @@ class Targets(Enum):
 class SensorData:
     depth: Float32
     dvl: Dvl
-    imu_ins: Imu_INS
-    imu_pimu: Imu_PIMU
+    # imu_ins: Imu_INS
+    imu: Imu
 
     @staticmethod
     def unpack(data: bytes) -> "SensorData":
         FORMAT = Struct("! f 3f 3f 3f3ff")
         vals = FORMAT.unpack(data)
         return SensorData(
-            depth=Float32(vals[0]),
-            dvl=Dvl(vals[1], vals[2], vals[3]),
-            imu_ins=Imu_INS(vals[4:7]),
-            imu_pimu=Imu_PIMU(vals[6:9], vals[9:12], vals[12]),
+            depth=Float32(data=vals[0]),
+            dvl=Dvl(velocity=[vals[1], vals[2], vals[3]]),
+            # imu_ins=Imu_INS(vals[4:7]),
+            # TODO: fix header to actually sync timestamp with sim
+            imu=Imu(
+                header=Header(stamp=node.get_clock().now().to_msg()),
+                angular_velocity=Vector3(x=vals[6], y=vals[7], z=vals[8]),
+                linear_acceleration=Vector3(x=vals[9], y=vals[10], z=vals[11]),
+            ),
         )
 
     @property
@@ -163,7 +171,7 @@ class MotorData:
 
     def pack(self) -> bytes:
         FORMAT = Struct("! 8f")
-        data = [getattr(self.state, f"motor{i}") for i in range(8)]
+        data = [self.state.motors[i] for i in range(8)]
         return FORMAT.pack(*data)
 
     @property
@@ -203,42 +211,48 @@ MessageData = Union[MessageReceiveData, MessageSendData]
 
 
 class SimDepth:
-    def __init__(self) -> None:
-        self.depth_pub = rospy.Publisher("/depth/raw_depth", Float32, queue_size=1)
+    def __init__(self, node: Node) -> None:
+        self.node = node
+        self.depth_pub = self.node.create_publisher(Float32, "/depth/raw_depth", 1)
 
     def handle_sensors(self, data: SensorData):
         self.depth_pub.publish(data.depth)
 
 
 class SimDvl:
-    def __init__(self) -> None:
-        self.dvl_pub = rospy.Publisher("/dvl/raw_dvl", Dvl, queue_size=1)
+    def __init__(self, node: Node) -> None:
+        self.node = node
+        self.dvl_pub = self.node.create_publisher(Dvl, "/dvl/raw_dvl", 1)
 
     def handle_sensors(self, data: SensorData):
         self.dvl_pub.publish(data.dvl)
 
 
 class SimImu:
-    def __init__(self) -> None:
-        self.ins_pub = rospy.Publisher("/imu_INS", Imu_INS, queue_size=1)
-        self.pimu_pub = rospy.Publisher("/imu_PIMU", Imu_PIMU, queue_size=1)
+    def __init__(self, node: Node) -> None:
+        self.node = node
+        self.imu_pub = self.node.create_publisher(Imu, "/imu", 1)
 
     def handle_sensors(self, data: SensorData):
-        self.ins_pub.publish(data.imu_ins)
-        self.pimu_pub.publish(data.imu_pimu)
+        self.imu_pub.publish(data.imu)
 
 
 class SimBotcam:
     def __init__(self, hal: "SimHal") -> None:
         self.hal = hal
-        self.botcam_pub = rospy.Publisher("/rectified_image", Image, queue_size=1)
+        self.botcam_pub = self.hal.create_publisher(Image, "/rectified_image", 1)
         self.br = CvBridge()
         self.last_image_time = 0
-        rospy.Service("/bot_cam/on", SetBool, self.handle_on_service)
+        self.botcam_on_srv = self.hal.create_service(
+            SetBool, "/bot_cam/on", self.handle_on_service
+        )
 
-    def handle_on_service(self, req: SetBoolRequest) -> SetBoolResponse:
+    def handle_on_service(
+        self, req: SetBool.Request, res: SetBool.Response
+    ) -> SetBool.Response:
         self.hal.send(BotcamOnData(req.data))
-        return SetBoolResponse(success=True)
+        res.success = True
+        return res
 
     def handle_images(self, data: BotcamImage):
         if data.time < self.last_image_time:
@@ -251,17 +265,22 @@ class SimBotcam:
 class SimZed:
     def __init__(self, hal: "SimHal") -> None:
         self.hal = hal
-        self.zed_raw_pub = rospy.Publisher("/zed/raw", Image, queue_size=1)
-        self.zed_crop_pub = rospy.Publisher(
-            "/zed2/zed_node/rgb/image_rect_color", Image, queue_size=1
+        self.zed_raw_pub = self.hal.create_publisher(Image, "/zed/raw", 1)
+        self.zed_crop_pub = self.hal.create_publisher(
+            Image, "/zed2/zed_node/rgb/image_rect_color", 1
         )
         self.br = CvBridge()
         self.last_image_time = 0
-        rospy.Service("/zed/on", SetBool, self.handle_on_service)
+        self.zed_on_srv = self.hal.create_service(
+            SetBool, "/zed/on", self.handle_on_service
+        )
 
-    def handle_on_service(self, req: SetBoolRequest) -> SetBoolResponse:
+    def handle_on_service(
+        self, req: SetBool.Request, res: SetBool.Response
+    ) -> SetBool.Response:
         self.hal.send(ZedOnData(req.data))
-        return SetBoolResponse(success=True)
+        res.success = True
+        return res
 
     def handle_images(self, data: ZedImage):
         if data.time < self.last_image_time:
@@ -294,8 +313,8 @@ class SimZed:
 class SimThrusterController:
     def __init__(self, hal: "SimHal") -> None:
         self.hal = hal
-        self.motor_state_sub = rospy.Subscriber(
-            "/motor_output", MotorState, self.callback
+        self.motor_state_sub = self.hal.create_subscription(
+            MotorState, "/motor_output", self.callback, 1
         )
 
     def callback(self, data: MotorState):
@@ -303,9 +322,10 @@ class SimThrusterController:
 
 
 class SimML:
-    def __init__(self) -> None:
-        self.detections_pub = rospy.Publisher(
-            "/ml/detections", Detections, queue_size=1
+    def __init__(self, node: Node) -> None:
+        self.node = node
+        self.detections_pub = self.node.create_publisher(
+            Detections, "/ml/detections", 1
         )
 
     def handle_targets(self, data: MLTargetsData):
@@ -354,7 +374,7 @@ class SimHal(Node):
 
     def __init__(self, incoming_port: int, outgoing_port: int):
         super().__init__("sim_hal")
-        self.clients: List[SimHal.Client] = []
+        self.net_clients: List[SimHal.Client] = []
         self.outgoing_server = net.Server(
             "0.0.0.0", outgoing_port, self.outgoing_callback
         )
@@ -364,21 +384,21 @@ class SimHal(Node):
         )
         self.incoming_server_thread = Thread(target=self.incoming_server.run)
 
-        self.depth = SimDepth()
-        self.dvl = SimDvl()
-        self.imu = SimImu()
+        self.depth = SimDepth(self)
+        self.dvl = SimDvl(self)
+        self.imu = SimImu(self)
         self.botcam = SimBotcam(self)
         self.zed = SimZed(self)
         self.thruster_controller = SimThrusterController(self)
-        self.ml = SimML()
+        self.ml = SimML(self)
 
     def send(self, data: MessageSendData):
         byte_data = MSG_HEADER.pack(data.kind.value) + data.pack()
         i = 0
-        while i < len(self.clients):
-            client = self.clients[i]
+        while i < len(self.net_clients):
+            client = self.net_clients[i]
             if not client.live:
-                client = self.clients.pop(i)
+                client = self.net_clients.pop(i)
                 client.thread.join()
                 continue
             client.queue.put(byte_data)
@@ -387,7 +407,7 @@ class SimHal(Node):
     def outgoing_callback(self, client: net.socket):
         new_client = self.Client(client)
         new_client.thread.start()
-        self.clients.append(new_client)
+        self.net_clients.append(new_client)
 
     def incoming_callback(self, client: net.socket):
         data = net.recv(client)
@@ -416,16 +436,23 @@ class SimHal(Node):
     def run(self):
         self.outgoing_server_thread.start()
         self.incoming_server_thread.start()
-        rospy.spin()
+        rclpy.spin(self)
         self.outgoing_server.stop()
         self.incoming_server.stop()
-        for client in self.clients:
+        for client in self.net_clients:
             client.stop()
         self.outgoing_server_thread.join()
         self.incoming_server_thread.join()
-        for client in self.clients:
+        for client in self.net_clients:
             client.thread.join()
 
 
+def run():
+    rclpy.init()
+    global node
+    node = SimHal(int(sys.argv[1]), int(sys.argv[2]))
+    node.run()
+
+
 if __name__ == "__main__":
-    SimHal(int(sys.argv[1]), int(sys.argv[2])).run()
+    run()
