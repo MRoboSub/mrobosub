@@ -2,15 +2,12 @@
 
 import sys
 import warnings
-from ast import Set
 from dataclasses import dataclass, field
 from enum import Enum
 from queue import Empty, SimpleQueue
-from re import L
 from struct import Struct
 from threading import Thread
 
-import cv2
 import numpy as np
 import rclpy
 from cv_bridge import CvBridge
@@ -23,7 +20,6 @@ from typing_extensions import List, Self, Union
 
 from mrobosub_lib import Node
 from mrobosub_msgs.msg import Detection, Detections, Dvl, ImuINS, ImuPIMU, MotorState
-from mrobosub_msgs.srv import ObjectPosition
 
 from . import net
 
