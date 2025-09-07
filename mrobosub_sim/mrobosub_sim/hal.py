@@ -1,28 +1,29 @@
 #!/usr/bin/env python
 
-from ast import Set
-from enum import Enum
-from dataclasses import dataclass, field
-from re import L
-from struct import Struct
-from typing_extensions import Union, Self, List
 import sys
 import warnings
+from ast import Set
+from dataclasses import dataclass, field
+from enum import Enum
 from queue import Empty, SimpleQueue
+from re import L
+from struct import Struct
 from threading import Thread
 
-import rclpy
-from mrobosub_lib import Node
-from cv_bridge import CvBridge
 import cv2
 import numpy as np
-
-from mrobosub_msgs.msg import Dvl, MotorState, Detections, Detection
-from mrobosub_msgs.srv import ObjectPosition
+import rclpy
+from cv_bridge import CvBridge
 from geometry_msgs.msg import Vector3
-from std_msgs.msg import Float32, Header
+from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Image, Imu
+from std_msgs.msg import Float32, Header
 from std_srvs.srv import SetBool
+from typing_extensions import List, Self, Union
+
+from mrobosub_lib import Node
+from mrobosub_msgs.msg import Detection, Detections, Dvl, ImuINS, ImuPIMU, MotorState
+from mrobosub_msgs.srv import ObjectPosition
 
 from . import net
 
@@ -46,24 +47,35 @@ class Targets(Enum):
 class SensorData:
     depth: Float32
     dvl: Dvl
-    # imu_ins: Imu_INS
-    imu: Imu
+    imu_ins: ImuINS
+    imu_pimu: ImuPIMU
 
     @staticmethod
     def unpack(data: bytes) -> "SensorData":
         FORMAT = Struct("! f 3f 3f 3f3ff")
         vals = FORMAT.unpack(data)
-        return SensorData(
-            depth=Float32(data=vals[0]),
-            dvl=Dvl(velocity=[vals[1], vals[2], vals[3]]),
-            # imu_ins=Imu_INS(vals[4:7]),
-            # TODO: fix header to actually sync timestamp with sim
-            imu=Imu(
-                header=Header(stamp=node.get_clock().now().to_msg()),
-                angular_velocity=Vector3(x=vals[6], y=vals[7], z=vals[8]),
-                linear_acceleration=Vector3(x=vals[9], y=vals[10], z=vals[11]),
-            ),
-        )
+
+        header = Header()
+        header.stamp = node.get_clock().now().to_msg()
+
+        depth = Float32()
+        depth.data = vals[0]
+
+        dvl = Dvl()
+        dvl.header = header
+        dvl.vel = Vector3(x=vals[1], y=vals[2], z=vals[3])
+
+        imu_ins = ImuINS()
+        imu_ins.header.stamp = node.get_clock().now().to_msg()
+        imu_ins.theta = Vector3(x=vals[4], y=vals[5], z=vals[6])
+
+        imu_pimu = ImuPIMU()
+        imu_pimu.header.stamp = imu_ins.header.stamp
+        imu_pimu.dtheta = Vector3(x=vals[7], y=vals[8], z=vals[9])
+        imu_pimu.dvel = Vector3(x=vals[10], y=vals[11], z=vals[12])
+        imu_pimu.dt = vals[13]
+
+        return SensorData(depth=depth, dvl=dvl, imu_ins=imu_ins, imu_pimu=imu_pimu)
 
     @property
     def kind(self) -> MessageKind:
@@ -231,10 +243,12 @@ class SimDvl:
 class SimImu:
     def __init__(self, hal: "SimHal") -> None:
         self.hal = hal
-        self.imu_pub = self.hal.create_publisher(Imu, "/imu", 1)
+        self.imu_ins_pub = self.hal.create_publisher(ImuINS, "/imu_INS", 1)
+        self.imu_pimu_pub = self.hal.create_publisher(ImuPIMU, "/imu_PIMU", 1)
 
     def handle_sensors(self, data: SensorData):
-        self.imu_pub.publish(data.imu)
+        self.imu_ins_pub.publish(data.imu_ins)
+        self.imu_pimu_pub.publish(data.imu_pimu)
 
 
 class SimBotcam:
