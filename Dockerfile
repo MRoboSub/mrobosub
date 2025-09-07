@@ -31,7 +31,7 @@ RUN mkdir -p /home/ubuntu/jlb_pid_ws/src && \
     source /opt/ros/jazzy/setup.bash && \
     colcon build --symlink-install
     
-    RUN mkdir -p /home/ubuntu/inertial_sense_ws/src && \
+RUN mkdir -p /home/ubuntu/inertial_sense_ws/src && \
     cd /home/ubuntu/inertial_sense_ws/src && \
     git clone https://github.com/inertialsense/inertial-sense-sdk.git && \
     cd inertial-sense-sdk && \
