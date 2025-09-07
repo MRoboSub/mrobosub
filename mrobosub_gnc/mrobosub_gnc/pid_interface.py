@@ -25,7 +25,7 @@ class PIDInterface:
             qos_profile=1,
         )
         self.publisher_enable = node.create_publisher(
-            Bool, f"/{pid_name}/pid_enable", qos_profile=1
+            Bool, f"/{pid_name}/enable", qos_profile=1
         )
         self.publisher_setpoint = node.create_publisher(
             Float64, f"/{pid_name}/setpoint", qos_profile=1
