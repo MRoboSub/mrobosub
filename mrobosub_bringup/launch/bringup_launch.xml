@@ -1,0 +1,8 @@
+<launch>
+    <include file="$(find-pkg-share mrobosub_gnc)/launch/gnc.launch"/>
+    <include file="$(find-pkg-share mrobosub_hal)/launch/hal.launch"/>
+    <!-- <include file="$(find mrobosub_monitoring)/launch/monitoring.launch"/> -->
+    <include file="$(find-pkg-share mrobosub_localization)/launch/localization.launch"/>
+    <include file="$(find-pkg-share mrobosub_perception)/launch/perception.launch"/>
+    <include file="$(find-pkg-share mrobosub_fcu)/launch/fcu.launch"/>
+</launch>

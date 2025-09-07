@@ -1,0 +1,5 @@
+<launch>
+  <include file="$(find-pkg-share mrobosub_bringup)/launch/bringup.launch" />
+  <node pkg="mrobosub_bringup" exec="quartermaster" name="quartermaster">
+  </node>
+</launch>
