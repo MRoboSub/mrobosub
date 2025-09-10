@@ -248,7 +248,7 @@ class ThrusterMixing(Node):
     ) -> SetBool.Response:
         self.enabled = req.data
 
-        res.success = self.enabled
+        res.success = True
         res.message = f"Set enabled to {self.enabled}"
         return res
 
