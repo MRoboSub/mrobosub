@@ -460,3 +460,7 @@ def main():
     global node
     node = SimHal(int(sys.argv[1]), int(sys.argv[2]))
     node.run()
+
+
+if __name__ == "__main__":
+    main()
