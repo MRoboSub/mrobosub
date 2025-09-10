@@ -1,0 +1,6 @@
+<launch>
+    <arg name="incoming_port" default="1817" />
+    <arg name="outgoing_port" default="1818" />
+    <node name="sim_hal" pkg="mrobosub_sim" type="hal.py" args="$(arg incoming_port) $(arg outgoing_port)" output="screen" />
+</launch>
+
