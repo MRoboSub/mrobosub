@@ -44,11 +44,11 @@ class PIDInterface:
         return self.effort
 
     def set_current(self, current: float):
-        self.publisher_state.publish(Float64(data=current))
+        self.publisher_state.publish(Float64(data=float(current)))
 
     def set_target(self, target: float):
         self.publisher_enable.publish(Bool(data=True))
-        self.publisher_setpoint.publish(Float64(data=target))
+        self.publisher_setpoint.publish(Float64(data=float(target)))
 
     def disable(self):
         self.publisher_enable.publish(Bool(data=False))

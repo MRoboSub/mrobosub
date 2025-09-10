@@ -106,11 +106,10 @@ def main():
 
     node = PidDofControlNode(args.dof_name)
 
-    rclpy.spin(node)
-
-    node.cleanup()
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == "__main__":
