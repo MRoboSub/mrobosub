@@ -241,13 +241,11 @@ class ThrusterMixing(Node):
             SetBool, "/thruster_mixing/enable", self.handle_enable_request
         )
 
+        self.timer = self.create_timer(1.0 / RATE, self.update)
+
     def handle_enable_request(self, request: SetBool_Request):
         self.enabled = request.data
         return SetBool_Response(True, f"Set enabled to {self.enabled}")
-
-    def run(self):
-        self.timer = self.create_timer(1.0 / RATE, self.update)
-        rclpy.spin(self)
 
     def make_wrench_callback(self, dof: str) -> Callable[[Float64], None]:
         # direction dofs are in newtons, angle dofs are in newton-meters
@@ -362,3 +360,11 @@ class ThrusterMixing(Node):
         self.current_pub.publish(est_current)
         self.scale_pub.publish(Float64(data=scale))
         self.motor_pub.publish(outputs)
+
+def main():
+    rclpy.init()
+    node = ThrusterMixing()
+    rclpy.spin(node)
+
+if __name__ == "__main__":
+    main()

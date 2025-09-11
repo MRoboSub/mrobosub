@@ -17,7 +17,7 @@ class IMU(Node):
         super().__init__('imu')
         self.get_logger().info("Launched imu node")
         self.did_ins_sub = self.create_subscription(imu_msgs.DID_INS1, "/ins_eul_uvw_ned", self.did_ins_callback, 1) # for DID_INS1
-        self.pimu_sub = self.create_subscription(imu_msgs.PIMU, "/pimu", self.did_pimu_sub, 1) # for DID_PIMU
+        self.pimu_sub = self.create_subscription(imu_msgs.PIMU, "/pimu", self.did_pimu_callback, 1) # for DID_PIMU
         self.did_ins_pub = self.create_publisher(Imu_INS, "/imu_INS", qos_profile=1)
         self.pimu_pub = self.create_publisher(Imu_PIMU, "/imu_PIMU", qos_profile=1) 
 
@@ -25,23 +25,19 @@ class IMU(Node):
         (x, y, z) = msg.theta
         self.did_ins_pub.publish((x, y, -z))
 
-    def did_pimu_sub(self, msg):
+    def did_pimu_callback(self, msg):
         m = Imu_PIMU()
         m.dtheta = msg.dtheta
         m.dvel = msg.dvel
         m.dt = msg.dt
-        
+
         self.pimu_pub.publish(m)
 
-    def run(self):
-        rclpy.spin()
 
-if __name__ == "__main__":
+def main():
     rclpy.init()
     node = IMU()
-    try:
-        rclpy.run(node)
-    finally:
-        node.destroy_node()
-        rclpy.shutdown()
+    rclpy.spin(node)
 
+if __name__ == "__main__":
+    main()

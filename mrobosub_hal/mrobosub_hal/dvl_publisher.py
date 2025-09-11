@@ -20,42 +20,38 @@ class DVLPublisher (Node):
 
     def __init__(self):
         super().__init__('dvl_publisher')
-        self.pub = self.create_publisher(Dvl, "/dvl/raw_dvl", qos_profile=1) 
-
-    def run(self):
-        rate = self.create_rate(50)
+        self.pub = self.create_publisher(Dvl, "/dvl/raw_dvl", qos_profile=1)
 
         # connect to socket containing the DVL information
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.setblocking(True)  # False
-        sock.settimeout(0.2)
-        sock.bind((UDP_IP, UDP_PORT))
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.setblocking(True)  # False
+        self.sock.settimeout(0.2)
+        self.sock.bind((UDP_IP, UDP_PORT))
+        self.timer = self.create_timer(1.0/50, self.loop)
 
-        while rclpy.ok():
-            rclpy.spin_some(self, timeout_sec=0.0)
-            try:
-                data, addr = sock.recvfrom(1024)
-                data_str = data.decode()
+    def destroy_node(self):
+        self.sock.close()
+        super().destroy_node()
 
-                if not data_str.startswith("$DVKFC"):
-                    rate.sleep()
-                    continue
+    def loop(self):
+        try:
+            data, addr = self.sock.recvfrom(1024)
+            data_str = data.decode()
 
-                # parse according to spec here https://docs.ceruleansonar.com/c/dvl-50/communicating-with-the-tracker-650/outgoing-message-formats-tracker-650-to-host/usddvkfc-kalman-filter-raw-data-support-message
-                data_list = data_str.split(",")
-                self.pub.publish(Dvl(*map(float, data_list[10 : 24 + 1 : 7])))
+            if not data_str.startswith("$DVKFC"):
+                return
 
-                rate.sleep()
-            except socket.timeout:
-                self.get_logger().info("DVL UDP connection timing out, no data recieved from DVL")
-        sock.close()
+            # parse according to spec here https://docs.ceruleansonar.com/c/dvl-50/communicating-with-the-tracker-650/outgoing-message-formats-tracker-650-to-host/usddvkfc-kalman-filter-raw-data-support-message
+            data_list = data_str.split(",")
+            self.pub.publish(Dvl(*map(float, data_list[10 : 24 + 1 : 7])))
 
+        except socket.timeout:
+            self.get_logger().info("DVL UDP connection timing out, no data recieved from DVL")
 
-if __name__ == "__main__":
+def main():
     rclpy.init()
     node = DVLPublisher()
-    try:
-        rclpy.run(node)
-    finally:
-        node.destroy_node()
-        rclpy.shutdown()
+    rclpy.spin(node)
+
+if __name__ == "__main__":
+    main()

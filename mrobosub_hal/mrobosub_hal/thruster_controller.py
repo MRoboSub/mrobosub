@@ -32,7 +32,6 @@ class ThrusterController(Node):
         self.port = "/dev/serial/by-id/usb-Pololu_Corporation_Pololu_Mini_Maestro_12-Channel_USB_Servo_Controller_00467345-if00"
         self.emergency_stop = False
         self.motor_outputs = [0] * NUM_MOTORS
-        self.rate = self.create_rate(50)
         self.serial = None
         self.connect()
         self.get_errors()  # clear errors at the start
@@ -44,6 +43,8 @@ class ThrusterController(Node):
         self.motor_sub = self.create_subscription(MotorState,
             "/motor_output", self.motor_callback, 1
         )
+
+        self.timer = self.create_timer(1.0/50, self.loop)
 
     def connect(self) -> bool:
         try:
@@ -140,20 +141,15 @@ class ThrusterController(Node):
             self.get_logger().info(f"Thruster controller: error code = {error_code}")
             # eg: error_code 16 means 00010000 which is the 5th error bit set
 
-    def run(self):
-        while rclpy.ok():
-            rclpy.spin_some(self, timeout_sec=0.0)
-            for i in range(NUM_MOTORS):
-                self.send_signal(i, self.motor_outputs[i])
-
-            self.rate.sleep()
+    def loop(self):
+        for i in range(NUM_MOTORS):
+            self.send_signal(i, self.motor_outputs[i])
 
 
-if __name__ == "__main__":
+def main():
     rclpy.init()
     node = ThrusterController()
-    try:
-        rclpy.run(node)
-    finally:
-        node.destroy_node()
-        rclpy.shutdown()
+    rclpy.spin(node)
+
+if __name__ == "__main__":
+    main()
