@@ -97,19 +97,20 @@ class PidDofControlNode(Node):
         self.output_pub.publish(Float64(data=0.0))
 
 
-def run():
+def main():
     rclpy.init()
-
 
     parser = argparse.ArgumentParser()
     parser.add_argument("dof_name", type=str, help="Name of the DOF")
     args = parser.parse_args(sys.argv[1:2])
 
     node = PidDofControlNode(args.dof_name)
-    
-    rclpy.spin(node)
 
-    node.cleanup()
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
 
+
+if __name__ == "__main__":
+    main()
