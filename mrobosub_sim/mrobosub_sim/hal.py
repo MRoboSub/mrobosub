@@ -12,8 +12,7 @@ import numpy as np
 import rclpy
 from cv_bridge import CvBridge
 from geometry_msgs.msg import Vector3
-from nav_msgs.msg import Odometry
-from sensor_msgs.msg import Image, Imu
+from sensor_msgs.msg import Image
 from std_msgs.msg import Float32, Header
 from std_srvs.srv import SetBool
 from typing_extensions import List, Self, Union
@@ -59,7 +58,7 @@ class SensorData:
 
         dvl = Dvl()
         dvl.header = header
-        dvl.vel = Vector3(x=vals[1], y=vals[2], z=vals[3])
+        dvl.velocity = Vector3(x=vals[1], y=vals[2], z=vals[3])
 
         imu_ins = ImuINS()
         imu_ins.header.stamp = node.get_clock().now().to_msg()
