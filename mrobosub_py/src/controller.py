@@ -13,8 +13,7 @@ class RosPublisher(TypedDict):
     topic: str
     data_type: Any
     name: str
-
-
+    
 class Controller(Node):
     def __init__(
         self,
@@ -23,7 +22,8 @@ class Controller(Node):
         subscribers: List[RosSubscriber],
         publishers: List[RosPublisher],
     ):
-        super().__init__(node, iteration_rate)
+        rospy.init_node(node, anonymous=False)
+        self.rate = rospy.Rate(iteration_rate)
 
         subscribe(subscribers)
         publish(publishers)
@@ -40,3 +40,12 @@ class Controller(Node):
             publishers[publisher["name"]] = rospy.Publisher(
                 publisher["topic"], publisher["data_type"]
             )
+
+    def run(self):
+        while not rospy.is_shutdown():
+            self()
+
+            self.rate.sleep()
+    
+    def __call__():
+        raise NotImplementedError
