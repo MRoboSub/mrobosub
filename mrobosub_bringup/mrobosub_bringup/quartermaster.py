@@ -32,13 +32,9 @@ class LedState:
     charm:   bool
     led_on:  bool
 
-# Note: I removed the dependency on this "USE_ML" constant and the accompanying code waiting for the red_gate service.
-#       Let's talk about how we can make more robust ML code.
-
 class Quartermaster(Node):
     def __init__(self):
         super().__init__("quartermaster")
-        # TODO: Can this be managed better?
         self.current_state          = RobotState.ambient
         self.hall_effect_triggered  = HallEffectState(strange=False, charm=False)
         self.hall_effect_last       = HallEffectState(strange=False, charm=False)
@@ -273,19 +269,11 @@ class Quartermaster(Node):
 def main(args=None):
     multiprocessing.set_start_method('spawn')
     rclpy.init(args=args)
-    
     quartermaster = Quartermaster()
-
-    executor = SingleThreadedExecutor()
-    executor.add_node(quartermaster)
-
     try:
-        executor.spin()
+        rclpy.spin(quartermaster)
     except KeyboardInterrupt:
         pass
-    finally:
-        quartermaster.destroy_node()
-        rclpy.shutdown()
 
 
 if __name__ == "__main__":
