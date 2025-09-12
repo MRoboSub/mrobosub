@@ -158,7 +158,7 @@ class DOFTeleop(Node):
             dof["twist"].publish(0)
 
 
-def run():
+def main():
     rclpy.init()
 
     try:
@@ -167,3 +167,7 @@ def run():
         pass
     except Exception as e:
         print(f"Error occurred: {e}")
+
+
+if __name__ == "__main__":
+    main()

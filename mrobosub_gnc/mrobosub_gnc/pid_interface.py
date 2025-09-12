@@ -13,12 +13,24 @@ expose publishers
     /pid_enable
 """
 
-class PIDInterface():
+
+class PIDInterface:
     def __init__(self, node: Node, pid_name: str, callback):
-        self.subscriber = node.create_subscription(Float64, f'/{pid_name}/control_effort', self.control_effort_callback, qos_profile=1)
-        self.publisher_enable = node.create_publisher(Bool, f'/{pid_name}/pid_enable', qos_profile=1)
-        self.publisher_setpoint = node.create_publisher(Float64, f'/{pid_name}/setpoint', qos_profile=1)
-        self.publisher_state = node.create_publisher(Float64, f'/{pid_name}/state', qos_profile=1)
+        self.subscriber = node.create_subscription(
+            Float64,
+            f"/{pid_name}/control_effort",
+            self.control_effort_callback,
+            qos_profile=1,
+        )
+        self.publisher_enable = node.create_publisher(
+            Bool, f"/{pid_name}/enable", qos_profile=1
+        )
+        self.publisher_setpoint = node.create_publisher(
+            Float64, f"/{pid_name}/setpoint", qos_profile=1
+        )
+        self.publisher_state = node.create_publisher(
+            Float64, f"/{pid_name}/state", qos_profile=1
+        )
         self.effort = 0
         self.callback = callback
 
@@ -29,12 +41,12 @@ class PIDInterface():
     def get_effort(self):
         return self.effort
 
-    def set_current(self, current):
-        self.publisher_state.publish(current)
+    def set_current(self, current: float):
+        self.publisher_state.publish(Float64(data=float(current)))
 
-    def set_target(self, target):
-        self.publisher_enable.publish(True)
-        self.publisher_setpoint.publish(target)
+    def set_target(self, target: float):
+        self.publisher_enable.publish(Bool(data=True))
+        self.publisher_setpoint.publish(Float64(data=float(target)))
 
     def disable(self):
-        self.publisher_enable.publish(False)
+        self.publisher_enable.publish(Bool(data=False))

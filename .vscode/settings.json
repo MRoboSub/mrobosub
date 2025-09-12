@@ -2,12 +2,16 @@
     "files.eol": "\n",
     "python.autoComplete.extraPaths": [
         "/opt/ros/jazzy/lib/python3.12/site-packages/",
+        "/home/ubuntu/inertial_sense_ws/build/inertial_sense_ros2",
         "/home/ubuntu/ros2_ws/build/mrobosub_lib",
+        "/home/ubuntu/ros2_ws/install/mrobosub_msgs/lib/python3.12/site-packages/",
         "/home/ubuntu/ros2_ws/build/package2"
     ],
     "python.analysis.extraPaths": [
         "/opt/ros/jazzy/lib/python3.12/site-packages/",
+        "/home/ubuntu/inertial_sense_ws/build/inertial_sense_ros2",
         "/home/ubuntu/ros2_ws/build/mrobosub_lib",
+        "/home/ubuntu/ros2_ws/install/mrobosub_msgs/lib/python3.12/site-packages/",
         "/home/ubuntu/ros2_ws/build/package2"
     ],
     "cmake.configureOnOpen": false,
