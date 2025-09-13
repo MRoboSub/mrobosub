@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from tokenize import Single
 from typing import Dict, Type
 from importlib import import_module
 from mrobosub_planning.umrsm import StateMachine, State, TransitionMap, Outcome
@@ -7,7 +8,7 @@ import mrobosub_planning.standard_run as standard_run
 
 # import prequal_strafe
 import rclpy
-from rclpy.executors import MultiThreadedExecutor
+from rclpy.executors import SingleThreadedExecutor
 import threading
 from rclpy.node import Node
 import sys
@@ -61,7 +62,9 @@ def main(args=None):
     captain_node = PIO(name="captain")
     captain_node.get_logger().info("Captain Node Created")
 
-    t = threading.Thread(target=rclpy.spin, args=(captain_node,), daemon=True)
+    executor = SingleThreadedExecutor()
+    executor.add_node(captain_node)
+    t = threading.Thread(target=executor.spin, daemon=False)
     t.start()
     captain_node.get_logger().info("Captain Node Spinning")
 
@@ -86,8 +89,9 @@ def main(args=None):
         for _ in range(20):
             captain_node.reset_target_twist()
             rate.sleep()
-
-    t.join()
+    finally:
+        executor.shutdown()
+        t.join()
 
 if __name__ == "__main__":
     main()
