@@ -185,7 +185,7 @@ class StateMachine:
         self._soft_stop_srv = self.node.create_service(Trigger, SOFT_STOP_SERVICE, self.soft_stop)
         self.stop_signal_recvd = False
 
-    def soft_stop(self, data) -> Tuple[bool, str]:
+    def soft_stop(self) -> Tuple[bool, str]:
         self.stop_signal_recvd = True
         return True, type(self.current_state).__qualname__
 

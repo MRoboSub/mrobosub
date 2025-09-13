@@ -2,6 +2,7 @@ import math
 from typing_extensions import NamedTuple
 import rclpy
 from rclpy.node import Node
+from rclpy.service import Service
 from std_msgs.msg import Float64, Bool, Int32
 # from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse, PathmarkerAngle  # type: ignore
 from typing import Dict, Type, Mapping, Optional, Tuple
@@ -282,7 +283,7 @@ class PIO(Node):
     #             results[g] = resp
     #     return results
 
-    def _call_service(self, service, request, error_string:str) -> bool:
+    def _call_service(self, service: Service, request: SetBool.Request, error_string:str) -> bool:
         success = True
         future = service.call_async(request)
         #timeout is set to 2s 

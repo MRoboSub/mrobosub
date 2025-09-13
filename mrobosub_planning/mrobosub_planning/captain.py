@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from tokenize import Single
-from typing import Dict, Type
+from typing import Dict, Type, Optional, Sequence
 from importlib import import_module
 from mrobosub_planning.umrsm import StateMachine, State, TransitionMap, Outcome
 import mrobosub_planning.common_states as common_states
@@ -57,7 +57,7 @@ def state_class_from_str(full_state: str, transitions: TransitionMap) -> Type[St
     found_state = unique_found_states.pop()
     return found_state
 
-def main(args=None):
+def main(args: Optional[Sequence[str]]=None):
     rclpy.init(args=args)
     captain_node = PIO(name="captain")
     captain_node.get_logger().info("Captain Node Created")

@@ -220,8 +220,8 @@ class AlignPathmarker(TimedState):
     def handle_aligned(self) -> Outcome:
         pass
 
-    def __init__(self, prev_outcome: Outcome) -> None:
-        super().__init__(prev_outcome)
+    def __init__(self, prev_outcome: Outcome, node: rclpy.node.Node) -> None:
+        super().__init__(prev_outcome, node)
         self.io_node.activate_bot_cam()
         self.last_known_angle: Optional[float] = None
         self.iter = 0
@@ -234,16 +234,16 @@ class AlignPathmarker(TimedState):
             return None
         if self.iter < 100:
             pm_resp = self.io_node.query_pathmarker()
-            self.get_logger().info({f"{pm_resp=}"})
+            self.io_node.get_logger().info({f"{pm_resp=}"})
             if pm_resp is not None:
                 self.measurements.append(pm_resp)
             return None
         if self.iter == 100:
-            self.get_logger().info({"Calculating target"})
+            self.io_node.get_logger().info({"Calculating target"})
             if len(self.measurements) < 20:
                 return self.handle_no_measurements()
             self.target_angle = sum(self.measurements) / len(self.measurements)
-            self.get_logger().info({f"{self.target_angle=}"})
+            self.io_node.get_logger().info({f"{self.target_angle=}"})
             self.yaw_threshold_count = 0
         if self.iter >= 100:
             self.io_node.set_target_pose_yaw(self.target_angle)
