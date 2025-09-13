@@ -57,7 +57,7 @@ def state_class_from_str(full_state: str, transitions: TransitionMap) -> Type[St
     found_state = unique_found_states.pop()
     return found_state
 
-def main(args: Optional[Sequence[str]]=None):
+def main(args: Optional[Sequence[str]]=None) -> None:
     rclpy.init(args=args)
     captain_node = PIO(name="captain")
     captain_node.get_logger().info("Captain Node Created")
