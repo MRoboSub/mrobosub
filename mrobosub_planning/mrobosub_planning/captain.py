@@ -61,9 +61,7 @@ def main(args=None):
     captain_node = PIO(name="captain")
     captain_node.get_logger().info("Captain Node Created")
 
-    exec = MultiThreadedExecutor(num_threads=2)
-    exec.add_node(captain_node)
-    t = threading.Thread(target=exec.spin, daemon=True)
+    t = threading.Thread(target=rclpy.spin, args=(captain_node,), daemon=True)
     t.start()
     captain_node.get_logger().info("Captain Node Spinning")
 
@@ -86,10 +84,9 @@ def main(args=None):
         captain_node.get_logger().info(f"{traceback.format_exc()}")
         rate = captain_node.create_rate(50)
         for _ in range(20):
-            PIO.reset_target_twist()
+            captain_node.reset_target_twist()
             rate.sleep()
 
-    exec.shutdown()
     t.join()
 
 if __name__ == "__main__":
