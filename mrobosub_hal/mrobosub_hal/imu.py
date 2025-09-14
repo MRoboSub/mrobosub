@@ -36,7 +36,7 @@ class IMU(Node):
         m.theta.y = y
         m.theta.z = -z
 
-    def did_pimu_callback(self, msg):
+    def did_pimu_callback(self, msg: PIMU):
         m = ImuPIMU()
         m.header = msg.header
         m.dtheta = msg.dtheta
