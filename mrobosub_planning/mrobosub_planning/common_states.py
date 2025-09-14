@@ -79,3 +79,25 @@ class Stop(State):
 
 
 Surface = Stop
+class Surge(TimedState):
+    class Surged(Outcome):
+        pass
+
+    class TimedOut(Outcome):
+        pass
+    distance = 10
+    velocity = 2
+    timeout: float = distance/velocity
+
+
+    def handle_if_not_timedout(self) -> Union[Surged, None]:
+        self.timeout = self.distance/self.velocity
+        self.io_node.set_target_twist_surge(self.velocity);
+
+        #if self.io_node.calculate_distance_to_target():
+        #    return self.Submerged()
+        return None
+
+    def handle_once_timedout(self) -> Surged:
+        return self.Surged();
+     
