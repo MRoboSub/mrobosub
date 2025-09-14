@@ -49,3 +49,6 @@ def main():
     node = PassthroughDofController(args.dof_name)
 
     rclpy.spin(node)
+
+if __name__ == "__main__":
+    main()

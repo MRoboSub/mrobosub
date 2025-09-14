@@ -95,7 +95,7 @@ class PidDofControlNode(Node):
         self.output_pub.publish(Float64(data=0.0))
         super().destroy_node()  
 
-def run():
+def main():
     rclpy.init()
 
     parser = argparse.ArgumentParser()
@@ -105,4 +105,8 @@ def run():
     node = PidDofControlNode(args.dof_name)
     
     rclpy.spin(node)
+
+
+if __name__ == "__main__":
+    main()
 

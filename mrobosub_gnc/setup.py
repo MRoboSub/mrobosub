@@ -23,7 +23,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "pid_dof_controller = mrobosub_gnc.pid_dof_controller:run",
+            "pid_dof_controller = mrobosub_gnc.pid_dof_controller:main",
             "passthrough_dof_controller = mrobosub_gnc.passthrough_dof_controller:main",
         ],
     },
