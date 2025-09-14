@@ -6,6 +6,7 @@
   <description>The mrobosub_hal package</description>
   <maintainer email="michiganroboticsubmarine@gmail.com">Michigan Robotic Submarine</maintainer>
   <license>BSD-2.0</license>
+
   <depend>mrobosub_msgs</depend>
 
   <test_depend>ament_copyright</test_depend>

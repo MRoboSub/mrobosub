@@ -21,6 +21,6 @@ setup(
     license="BSD-2.0",
     tests_require=["pytest"],
     entry_points={
-        "console_scripts": ["all_dof_teleop = mrobosub_teleop.all_dof_teleop:run"],
+        "console_scripts": ["all_dof_teleop = mrobosub_teleop.all_dof_teleop:main"],
     },
 )

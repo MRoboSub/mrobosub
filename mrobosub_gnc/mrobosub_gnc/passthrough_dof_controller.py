@@ -41,7 +41,7 @@ class PassthroughDofController(Node):
 
 def main():
     rclpy.init()
-    
+
     parser = argparse.ArgumentParser()
     parser.add_argument("dof_name", type=str, help="Name of the DOF")
     args = parser.parse_args(sys.argv[1:2])

@@ -7,7 +7,7 @@ import numpy.typing as npt
 from math import radians
 import rclpy
 from std_msgs.msg import Float64
-from std_srvs.srv import SetBool, SetBool_Request, SetBool_Response
+from std_srvs.srv import SetBool
 
 from mrobosub_lib import Node
 from mrobosub_msgs.msg import MotorState
@@ -217,7 +217,7 @@ class ThrusterMixing(Node):
     def __init__(self) -> None:
         super().__init__("thruster_mixing")
         self.calculate_TAM()
-        self.wrench = {dof: 0 for dof in DOFS}
+        self.wrench = {dof: 0.0 for dof in DOFS}
         self.wrench_subs = {
             dof: self.create_subscription(
                 Float64,
@@ -243,9 +243,14 @@ class ThrusterMixing(Node):
 
         self.timer = self.create_timer(1.0 / RATE, self.update)
 
-    def handle_enable_request(self, request: SetBool_Request):
-        self.enabled = request.data
-        return SetBool_Response(True, f"Set enabled to {self.enabled}")
+    def handle_enable_request(
+        self, req: SetBool.Request, res: SetBool.Response
+    ) -> SetBool.Response:
+        self.enabled = req.data
+
+        res.success = True
+        res.message = f"Set enabled to {self.enabled}"
+        return res
 
     def make_wrench_callback(self, dof: str) -> Callable[[Float64], None]:
         # direction dofs are in newtons, angle dofs are in newton-meters
@@ -361,10 +366,16 @@ class ThrusterMixing(Node):
         self.scale_pub.publish(Float64(data=scale))
         self.motor_pub.publish(outputs)
 
+
 def main():
     rclpy.init()
+
     node = ThrusterMixing()
-    rclpy.spin(node)
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+
 
 if __name__ == "__main__":
     main()

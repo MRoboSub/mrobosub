@@ -103,10 +103,8 @@ def main():
     args = parser.parse_args(sys.argv[1:2])
 
     node = PidDofControlNode(args.dof_name)
-    
     rclpy.spin(node)
 
 
 if __name__ == "__main__":
     main()
-

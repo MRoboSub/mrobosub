@@ -20,6 +20,6 @@ setup(
     license="BSD-2.0",
     tests_require=["pytest"],
     entry_points={
-        "console_scripts": ["thruster_mixing = mrobosub_fcu:thruster_mixing"],
+        "console_scripts": ["thruster_mixing = mrobosub_fcu.thruster_mixing:main"],
     },
 )
