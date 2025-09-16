@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from tokenize import Single
 from typing import Dict, Type, Optional, Sequence
 from importlib import import_module
@@ -58,7 +57,7 @@ def state_class_from_str(full_state: str, transitions: TransitionMap) -> Type[St
     return found_state
 
 def main(args: Optional[Sequence[str]]=None) -> None:
-    rclpy.init(args=args)
+    rclpy.init()
     captain_node = PIO(name="captain")
     captain_node.get_logger().info("Captain Node Created")
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from mrobosub_planning.common_states import Start, Submerge, Surface, Stop
 from mrobosub_planning.umrsm import TransitionMap
 

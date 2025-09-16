@@ -185,9 +185,11 @@ class StateMachine:
         self._soft_stop_srv = self.node.create_service(Trigger, SOFT_STOP_SERVICE, self.soft_stop)
         self.stop_signal_recvd = False
 
-    def soft_stop(self) -> Tuple[bool, str]:
+    def soft_stop(self, , req: Trigger.Request, res: Trigger.Response) -> Trigger.Response:
         self.stop_signal_recvd = True
-        return True, type(self.current_state).__qualname__
+        res.success = True
+        res.message = type(self.current_state).__qualname__
+        return res
 
     def run(self, hz: int = 50) -> Optional[Outcome]:
         """Performs a run, beginning with the StartState and ending when it reaches StopState.
