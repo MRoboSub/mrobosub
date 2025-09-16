@@ -18,11 +18,12 @@ class IMU(Node):
     def __init__(self):
         super().__init__("imu")
         self.get_logger().info("Launched imu node")
+
         self.did_ins_sub = self.create_subscription(
             DIDINS1, "/did_ins1", self.did_ins_callback, 1
         )  # for DID_INS1
         self.pimu_sub = self.create_subscription(
-            PIMU, "/pimu", self.did_pimu_sub, 1
+            PIMU, "/pimu", self.did_pimu_callback, 1
         )  # for DID_PIMU
         self.did_ins_pub = self.create_publisher(ImuINS, "/imu_INS", qos_profile=1)
         self.pimu_pub = self.create_publisher(ImuPIMU, "/imu_PIMU", qos_profile=1)
@@ -35,9 +36,7 @@ class IMU(Node):
         m.theta.y = y
         m.theta.z = -z
 
-        self.did_ins_pub.publish(m)
-
-    def did_pimu_sub(self, msg: PIMU):
+    def did_pimu_callback(self, msg: PIMU):
         m = ImuPIMU()
         m.header = msg.header
         m.dtheta = msg.dtheta

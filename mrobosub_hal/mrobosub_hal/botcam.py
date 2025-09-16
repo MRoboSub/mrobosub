@@ -23,7 +23,6 @@ class Botcam(Node):
     def __init__(self) -> None:
         super().__init__("bot_cam")
         self.iteration_rate = 60
-        self.rate = self.create_rate(self.iteration_rate)
         self.device_path = sys.argv[1]
         self.on = False
         self.br = CvBridge()
@@ -39,6 +38,7 @@ class Botcam(Node):
         self.srv = Server(rectify_paramsConfig, self.reconfigure_callback, 'rectify_params')
         self.output_w = int(1920 / 2)
         self.output_h = int(1080 / 2)
+        self.timer = self.create_timer(1.0/self.iteration_rate, self.loop)
 
 
     def handle_on_service(self, req: SetBoolRequest):
@@ -69,11 +69,6 @@ class Botcam(Node):
 
     def close_capture(self):
         self.cap.release()
-
-    def run(self):
-        while rclpy.ok():
-            self.loop()
-            self.rate.sleep()
 
     def loop(self):
         if not self.on:
@@ -147,13 +142,10 @@ class Botcam(Node):
         map_y = y_d.astype(np.float32)
         return map_x, map_y
 
-
-
-if __name__ == "__main__":
+def main():
     rclpy.init()
     node = Botcam()
-    try:
-        rclpy.run(node)
-    finally:
-        node.destroy_node()
-        rclpy.shutdown()
+    rclpy.spin(node)  
+
+if __name__ == "__main__":
+    main()

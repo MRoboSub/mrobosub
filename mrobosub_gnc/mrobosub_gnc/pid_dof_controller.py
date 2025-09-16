@@ -9,8 +9,6 @@ from rcl_interfaces.msg import ParameterDescriptor
 from std_msgs.msg import Float64
 from .pid_interface import PIDInterface
 
-from typing import Optional, Final
-
 
 class PidDofControlNode(Node):
     """
@@ -93,9 +91,9 @@ class PidDofControlNode(Node):
             output = min(0, output)
         self.output_pub.publish(Float64(data=output))
 
-    def cleanup(self):
+    def destroy_node(self):
         self.output_pub.publish(Float64(data=0.0))
-
+        super().destroy_node()  
 
 def main():
     rclpy.init()
@@ -105,11 +103,7 @@ def main():
     args = parser.parse_args(sys.argv[1:2])
 
     node = PidDofControlNode(args.dof_name)
-
-    try:
-        rclpy.spin(node)
-    except KeyboardInterrupt:
-        pass
+    rclpy.spin(node)
 
 
 if __name__ == "__main__":

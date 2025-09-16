@@ -4,8 +4,6 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64, Bool
 
-from typing import Optional, Final
-
 """
 expose subscribers
     /control_effort

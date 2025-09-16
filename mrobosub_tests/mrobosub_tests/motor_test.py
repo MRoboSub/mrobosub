@@ -25,7 +25,9 @@ class MotorTest(Node):
     def run(self):
         active_motor = 0
 
+        # Not using timer here because we only want to spin X times. I tested this code and it works as is.
         while rclpy.ok() and active_motor < self.NUM_MOTORS:
+            rclpy.spin_once(self)
             msg = MotorState()
             for i in range(self.NUM_MOTORS):
                 if i==active_motor:
@@ -46,6 +48,11 @@ class MotorTest(Node):
         self.pub.publish(msg)
         self.get_logger().info("Motor test complete")
 
-    # Muskaan Note: we need to call stop() somewhere!!! run gets called by the main() function defined in mrobosub_lib/__init__.py,
-    # but stop() does not.
-    # TODO pls do this
+def main():
+    rclpy.init()
+    node = MotorTest()
+    node.run()
+    node.stop()
+
+if __name__ == "__main__":
+    main()

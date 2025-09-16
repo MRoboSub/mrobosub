@@ -21,7 +21,7 @@ setup(
     license="BSD-2.0",
     tests_require=["pytest"],
     entry_points={
-        "console_scripts": [
+        'console_scripts': [
             "pid_dof_controller = mrobosub_gnc.pid_dof_controller:main",
             "passthrough_dof_controller = mrobosub_gnc.passthrough_dof_controller:main",
         ],

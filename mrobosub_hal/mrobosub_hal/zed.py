@@ -21,13 +21,13 @@ class Zed(Node):
     def __init__(self):
         super().__init__("zed")
         self.iteration_rate = 60
-        self.rate = self.create_rate(self.iteration_rate)
         self.device_path = sys.argv[1]
         self.on = False
         self.br = CvBridge()
         self.raw_pub = self.create_publisher(Image, "/zed/raw", qos_profile=1)
         self.create_service(SetBool, "/zed/on", self.handle_on_service)
-        self.pub = self.create_publisher(Image, "/zed2/zed_node/rgb/image_rect_color", qos_profile=1) 
+        self.pub = self.create_publisher(Image, "/zed2/zed_node/rgb/image_rect_color", qos_profile=1)
+        self.timer = self.create_timer(1.0/self.iteration_rate, self.loop)
 
     def handle_on_service(self, req: SetBoolRequest):
         if req.data == self.on:
@@ -76,17 +76,12 @@ class Zed(Node):
             img = self.br.cv2_to_imgmsg(frame_cropped, encoding="bgr8")
             self.pub.publish(img)
 
-    def run(self):
-        while rclpy.ok():
-            self.loop()
-            self.rate.sleep()
 
-
-if __name__ == "__main__":
+def main():
     rclpy.init()
     node = Zed()
-    try:
-        rclpy.run(node)
-    finally:
-        node.destroy_node()
-        rclpy.shutdown()
+    rclpy.spin(node)
+
+if __name__ == "__main__":
+    main()
+

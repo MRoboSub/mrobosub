@@ -1,4 +1,6 @@
 FROM docker.io/osrf/ros:jazzy-desktop
+# MacOS users with Apple Silicon should use the line below instead:
+# FROM --platform=linux/arm64 docker.io/osrf/ros:jazzy-desktop
 
 RUN apt-get update && \
     apt-get install -y  python-is-python3 \

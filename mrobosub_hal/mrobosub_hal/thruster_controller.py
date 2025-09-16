@@ -26,7 +26,6 @@ class ThrusterController(Node):
         self.port = "/dev/serial/by-id/usb-Pololu_Corporation_Pololu_Mini_Maestro_12-Channel_USB_Servo_Controller_00467345-if00"
         self.emergency_stop = False
         self.motor_outputs = [0] * NUM_MOTORS
-        self.timer = self.create_timer(1.0 / 50.0, self.event_loop)  # 50 Hz
         self.serial: Serial | None = None
         self.connect()
         self.get_errors()  # clear errors at the start
@@ -52,6 +51,8 @@ class ThrusterController(Node):
                 description="List of motor IDs for each thruster on the thruster controller"
             ),
         )
+
+        self.timer = self.create_timer(1.0/50, self.loop)
 
     def connect(self) -> bool:
         try:
@@ -153,8 +154,7 @@ class ThrusterController(Node):
             self.get_logger().info(f"Thruster controller: error code = {error_code}")
             # eg: error_code 16 means 00010000 which is the 5th error bit set
 
-    # Called at 50 Hz by self.timer
-    def event_loop(self):
+    def loop(self):
         for i in range(NUM_MOTORS):
             self.send_signal(i, self.motor_outputs[i])
 

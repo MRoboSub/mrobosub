@@ -6,8 +6,6 @@ import rclpy
 from std_msgs.msg import Float64, Bool
 from mrobosub_lib import Node
 
-from typing import Optional, Final
-
 
 class PassthroughDofController(Node):
     """
@@ -36,8 +34,9 @@ class PassthroughDofController(Node):
     def pub_output_dof(self, output: float):
         self.output_pub.publish(output)
 
-    def cleanup(self):
+    def destroy_node(self):
         self.output_pub.publish(0)
+        super().destroy_node()        
 
 
 def main():
@@ -50,11 +49,6 @@ def main():
     node = PassthroughDofController(args.dof_name)
 
     rclpy.spin(node)
-
-    node.cleanup()
-    node.destroy_node()
-    rclpy.shutdown()
-
 
 if __name__ == "__main__":
     main()
