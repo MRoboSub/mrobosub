@@ -20,7 +20,7 @@ class Zed(Node):
 
     def __init__(self):
         super().__init__("zed")
-        self.iteration_rate = 50
+        self.iteration_rate = 60
         self.device_path = sys.argv[1]
         self.on = False
         self.br = CvBridge()
