@@ -268,7 +268,7 @@ class Quartermaster(Node):
 
 def main():
     multiprocessing.set_start_method('spawn')
-    rclpy.init(args=args)
+    rclpy.init()
     quartermaster = Quartermaster()
     try:
         rclpy.spin(quartermaster)
