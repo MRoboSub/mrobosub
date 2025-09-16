@@ -1,40 +1,24 @@
-#!/usr/bin/env python
-from typing import Dict, Type
+from tokenize import Single
+from typing import Dict, Type, Optional, Sequence
 from importlib import import_module
-from umrsm import StateMachine, State, TransitionMap, Outcome
-import common_states
-import standard_run2
+from mrobosub_planning.umrsm import StateMachine, State, TransitionMap, Outcome
+import mrobosub_planning.common_states as common_states
+import mrobosub_planning.standard_run as standard_run
 
 # import prequal_strafe
-import prequal_turn
-import buoy_transitions
-import bin_transitions
-import qual_transitions
-import pathmarker_test
-import alignment_test
-import spin_test
-import heave_test
-import path_to_bin_transitions
-import rospy
+import rclpy
+from rclpy.executors import SingleThreadedExecutor
+import threading
+from rclpy.node import Node
 import sys
-from periodic_io import PIO
+from mrobosub_planning.periodic_io import Captain
 import traceback
 
 
 # maybe change this to something hacky like getting .transitions from the machine name module?
 transition_maps: Dict[str, TransitionMap] = {
-    "standard": standard_run2.transitions,
-    "test_spin": standard_run2.test_spin,
-    "test_speed": standard_run2.test_speed,
-    "bin_test": bin_transitions.transitions,
-    "prequal_turn": prequal_turn.transitions,
-    "buoy": buoy_transitions.transitions,
-    "alignment": alignment_test.transitions,
-    "spin": spin_test.transitions,
-    "pathmarker_test": pathmarker_test.transitions,
-    "qual": qual_transitions.transitions,
-    "path_to_bin": path_to_bin_transitions.transitions,
-    "heave_test": heave_test.transitions,
+    "standard": standard_run.transitions,
+    # "heave_test": heave_test.transitions,
 }
 
 
@@ -64,18 +48,25 @@ def state_class_from_str(full_state: str, transitions: TransitionMap) -> Type[St
     unique_found_states = set(outcome_to_state(outcome) for outcome in found_outcomes)
     
     if '.' in full_state:
-        unique_found_states = set(state for state in unique_found_states if state.__module__ == full_state.split(".")[0])
+        unique_found_states = set(state for state in unique_found_states if state.__module__.removeprefix("mrobosub_planning.") == full_state.split(".")[0])
 
     if len(unique_found_states) != 1:
         raise ValueError(f'{full_state=} does not uniquely describe a state. {unique_found_states=}')
     
     found_state = unique_found_states.pop()
     return found_state
-    
 
-if __name__ == "__main__":
-    rospy.init_node("captain")
-    
+def main(args: Optional[Sequence[str]]=None) -> None:
+    rclpy.init()
+    captain_node = Captain(name="captain")
+    captain_node.get_logger().info("Captain Node Created")
+
+    executor = SingleThreadedExecutor()
+    executor.add_node(captain_node)
+    t = threading.Thread(target=executor.spin, daemon=False)
+    t.start()
+    captain_node.get_logger().info("Captain Node Spinning")
+
     # Syntax `roslaunch mrobosub_planning captain.launch machine:=<machine> state:=<state|module.state>`
     machine_name = sys.argv[1]
     full_state = sys.argv[2]
@@ -87,12 +78,19 @@ if __name__ == "__main__":
         transition_maps[machine_name],
         starting_state,
         common_states.Stop,
+        captain_node
     )
     try:
         machine.run()
     except Exception as e:
-        print(traceback.format_exc())
-        rate = rospy.Rate(50)
+        captain_node.get_logger().info(f"{traceback.format_exc()}")
+        rate = captain_node.create_rate(50)
         for _ in range(20):
-            PIO.reset_target_twist()
+            captain_node.reset_target_twist()
             rate.sleep()
+    finally:
+        executor.shutdown()
+        t.join()
+
+if __name__ == "__main__":
+    main()

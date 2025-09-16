@@ -1,5 +1,8 @@
-defaults:
-    timeout: 30
-    yaw_threshold: 2
-    surge_speed: 0.2
+captain:
+  ros__parameters:
+    globals:
+      defaults:
+        timeout: 30
+        yaw_threshold: 2
+        surge_speed: 0.2
     

@@ -2,6 +2,7 @@ from umrsm import *
 import graphviz
 
 from captain import transition_maps
+from mrobosub_planning.umrsm import TransitionMap
 
 from pathlib import Path
 

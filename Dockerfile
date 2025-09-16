@@ -60,6 +60,9 @@ WORKDIR /home/ubuntu/ros2_ws/src/
 
 EXPOSE 10000
 
+# Add coloring to ros messages
+RUN echo "export RCUTILS_COLORIZED_OUTPUT=1" >> /home/ubuntu/.bashrc
+
 RUN echo "source /opt/ros/jazzy/setup.bash" >> /home/ubuntu/.bashrc && \
     echo "source /home/ubuntu/jlb_pid_ws/install/setup.bash" >> /home/ubuntu/.bashrc && \
     echo "source /home/ubuntu/inertial_sense_ws/install/setup.bash" >> /home/ubuntu/.bashrc && \

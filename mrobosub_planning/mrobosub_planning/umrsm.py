@@ -12,11 +12,12 @@ from typing import (
     TYPE_CHECKING,
 )
 import warnings
-import rospy
+import rclpy
 from std_msgs.msg import String
-from std_srvs.srv import Trigger, TriggerRequest
+from std_srvs.srv import Trigger
 from dataclasses import dataclass
 from typing_extensions import dataclass_transform, Self
+from mrobosub_planning.periodic_io import Captain
 
 STATE_TOPIC = "captain/current_state"
 SOFT_STOP_SERVICE = "captain/soft_stop"
@@ -102,12 +103,18 @@ class State(metaclass=StateMeta):
     Each State also contains class variables for each parameter on the parameter server, which
         can be accessed using self. Data that should be shared between calls of handle should be
         set as an instance variable.
+    The state also shares the captain node, which can be used for io
     """
 
     _num_unexpected_params = 0
 
-    def __init__(self, prev_outcome: Outcome):
+    def __init__(self, prev_outcome: Outcome, node: Captain):
+        """
+        node: The io_node which can be used via the Periodic_IO interface to access various publishers
+        and subscribers, and can be used to create new publishers/subscribers
+        """
         self.prev_outcome = prev_outcome
+        self.io_node = node
 
     @abstractmethod
     def handle(self) -> Optional[Outcome]:
@@ -155,6 +162,7 @@ class StateMachine:
         transitions: TransitionMap,
         StartState: Type[State],
         StopState: Type[State],
+        captainNode: Captain
     ):
         """Creates a new state machine.
 
@@ -165,36 +173,45 @@ class StateMachine:
         StartState: the class of the state to begin with
         StopState: the class of the state to end with. when this state is reach, its handle will be
             called once, then the run method will return.
+        captainNode: the captain node from which all the publishers/subscribers and other ros things for the
+            various states are built off of
         """
         self.name = name
         self.StartState = StartState
         self.transitions = transitions
         self.StopState = StopState
+        self.node = captainNode
 
-        self._soft_stop_srv = rospy.Service(SOFT_STOP_SERVICE, Trigger, self.soft_stop)
+        self._soft_stop_srv = self.node.create_service(Trigger, SOFT_STOP_SERVICE, self.soft_stop)
         self.stop_signal_recvd = False
 
-    def soft_stop(self, data: TriggerRequest) -> Tuple[bool, str]:
+    def soft_stop(self, req: Trigger.Request, res: Trigger.Response) -> Trigger.Response:
         self.stop_signal_recvd = True
-        return True, type(self.current_state).__qualname__
+        res.success = True
+        res.message = type(self.current_state).__qualname__
+        return res
 
     def run(self, hz: int = 50) -> Optional[Outcome]:
         """Performs a run, beginning with the StartState and ending when it reaches StopState.
 
         Returns the Outcome from calling handle() on StopState.
         """
-        rate = rospy.Rate(hz)
-        publisher = rospy.Publisher(STATE_TOPIC, String, queue_size=1)
-        self.current_state = self.StartState(InitTransition())
+        rate = self.node.create_rate(hz)
+        publisher = self.node.create_publisher(String, STATE_TOPIC, 1)
+        self.current_state = self.StartState(InitTransition(), self.node)
         while type(self.current_state) != self.StopState:
             self.run_once(publisher)
             rate.sleep()
-        publisher.publish(type(self.current_state).__qualname__)
+        msg = String()
+        msg.data = type(self.current_state).__qualname__
+        publisher.publish(msg)
         return self.current_state.handle()
 
-    def run_once(self, state_topic_pub: rospy.Publisher) -> None:
+    def run_once(self, state_topic_pub: rclpy.publisher.Publisher) -> None:
         """Runs one iteration of the state machine"""
-        state_topic_pub.publish(type(self.current_state).__qualname__)
+        msg = String()
+        msg.data = type(self.current_state).__qualname__
+        state_topic_pub.publish(msg)
 
         outcome = self.current_state.handle()
         if self.stop_signal_recvd:
@@ -202,7 +219,7 @@ class StateMachine:
                 outcome = SoftStopTransition()
             NextState = self.StopState
             outcome_name = "!! Abort !!"
-            rospy.loginfo(
+            self.node.get_logger().info(
                 f"Aborting from state {type(self.current_state).__qualname__} and moving to stop state"
             )
         else:
@@ -213,11 +230,11 @@ class StateMachine:
             NextState = self.transitions[outcome_type]
 
             if type(self.current_state) == NextState:
-                rospy.logdebug(
+                self.node.get_logger().warn(
                     f"{type(self.current_state).__qualname__} contains a type which returns itself!"
                 )
 
-        rospy.loginfo(
+        self.node.get_logger().info(
             f"transition {type(self.current_state).__qualname__} --[{outcome_name}]--> {NextState.__qualname__}"
         )
-        self.current_state = NextState(outcome)
+        self.current_state = NextState(outcome, self.node)
