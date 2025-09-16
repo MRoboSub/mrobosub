@@ -33,7 +33,6 @@ class Pose:
     x:float = 0.0
     y:float = 0.0
 
-# maybe change this name to captain node, as that is what it is used by
 class Captain(Node):
     '''
     Public interface class for publishers and subscribers
