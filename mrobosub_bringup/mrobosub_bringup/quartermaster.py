@@ -266,7 +266,7 @@ class Quartermaster(Node):
             self.current_state = RobotState.ambient
 
 
-def main(args=None):
+def main():
     multiprocessing.set_start_method('spawn')
     rclpy.init(args=args)
     quartermaster = Quartermaster()
