@@ -34,13 +34,13 @@ class Pose:
     y:float = 0.0
 
 # maybe change this name to captain node, as that is what it is used by
-class PIO(Node):
+class Captain(Node):
     '''
     Public interface class for publishers and subscribers
     '''
     def __init__(self, name:str='captain'):
         '''
-        @param name - name of the PIO (should be captain)
+        @param name - name of the node (should be captain)
         '''
         super().__init__(name)
 

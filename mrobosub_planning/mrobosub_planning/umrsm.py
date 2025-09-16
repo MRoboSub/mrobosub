@@ -17,7 +17,7 @@ from std_msgs.msg import String
 from std_srvs.srv import Trigger
 from dataclasses import dataclass
 from typing_extensions import dataclass_transform, Self
-from mrobosub_planning.periodic_io import PIO
+from mrobosub_planning.periodic_io import Captain
 
 STATE_TOPIC = "captain/current_state"
 SOFT_STOP_SERVICE = "captain/soft_stop"
@@ -108,7 +108,7 @@ class State(metaclass=StateMeta):
 
     _num_unexpected_params = 0
 
-    def __init__(self, prev_outcome: Outcome, node: PIO):
+    def __init__(self, prev_outcome: Outcome, node: Captain):
         """
         node: The io_node which can be used via the Periodic_IO interface to access various publishers
         and subscribers, and can be used to create new publishers/subscribers
@@ -162,7 +162,7 @@ class StateMachine:
         transitions: TransitionMap,
         StartState: Type[State],
         StopState: Type[State],
-        captainNode: PIO
+        captainNode: Captain
     ):
         """Creates a new state machine.
 
@@ -185,7 +185,7 @@ class StateMachine:
         self._soft_stop_srv = self.node.create_service(Trigger, SOFT_STOP_SERVICE, self.soft_stop)
         self.stop_signal_recvd = False
 
-    def soft_stop(self, , req: Trigger.Request, res: Trigger.Response) -> Trigger.Response:
+    def soft_stop(self, req: Trigger.Request, res: Trigger.Response) -> Trigger.Response:
         self.stop_signal_recvd = True
         res.success = True
         res.message = type(self.current_state).__qualname__

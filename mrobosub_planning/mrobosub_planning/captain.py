@@ -11,7 +11,7 @@ from rclpy.executors import SingleThreadedExecutor
 import threading
 from rclpy.node import Node
 import sys
-from mrobosub_planning.periodic_io import PIO
+from mrobosub_planning.periodic_io import Captain
 import traceback
 
 
@@ -58,7 +58,7 @@ def state_class_from_str(full_state: str, transitions: TransitionMap) -> Type[St
 
 def main(args: Optional[Sequence[str]]=None) -> None:
     rclpy.init()
-    captain_node = PIO(name="captain")
+    captain_node = Captain(name="captain")
     captain_node.get_logger().info("Captain Node Created")
 
     executor = SingleThreadedExecutor()
