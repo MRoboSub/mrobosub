@@ -1,6 +1,6 @@
 <launch>
   <node name="joystick_teleop" pkg="mrobosub_teleop" exec="joystick_teleop." required="true" output="screen">
-    <rosparam command="load" file="$(find-pkg-share mrobosub_teleop)/resource/joystick_controls_b2a.yaml" />
+    <param from="$(find-pkg-share mrobosub_teleop)/param/joystick_controls_b2a.yaml" />
   </node>
   <node name="joy_node" pkg="joy" type="joy_node"/>
 </launch>
