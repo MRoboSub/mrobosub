@@ -1,7 +1,5 @@
 from setuptools import find_packages, setup
 
-from mrobosub_teleop.mrobosub_teleop import joystick_teleop
-
 package_name = "mrobosub_lib"
 
 setup(
