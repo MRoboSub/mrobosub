@@ -22,7 +22,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "motor_test = mrobosub_tests:motor_test",
+            "motor_test = mrobosub_tests.motor_test:main",
         ],
     },
 )

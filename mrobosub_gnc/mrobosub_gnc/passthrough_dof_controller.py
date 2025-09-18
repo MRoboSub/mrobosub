@@ -4,9 +4,7 @@ import argparse
 import sys
 import rclpy
 from std_msgs.msg import Float64, Bool
-from mrobosub_lib import Node, main as lib_main
-
-from typing import Optional, Final
+from mrobosub_lib import Node
 
 
 class PassthroughDofController(Node):
@@ -36,13 +34,21 @@ class PassthroughDofController(Node):
     def pub_output_dof(self, output: float):
         self.output_pub.publish(output)
 
-    def cleanup(self):
+    def destroy_node(self):
         self.output_pub.publish(0)
+        super().destroy_node()        
 
 
 def main():
+    rclpy.init()
+
     parser = argparse.ArgumentParser()
     parser.add_argument("dof_name", type=str, help="Name of the DOF")
     args = parser.parse_args(sys.argv[1:2])
 
-    lib_main(PassthroughDofController, args.dof_name)
+    node = PassthroughDofController(args.dof_name)
+
+    rclpy.spin(node)
+
+if __name__ == "__main__":
+    main()

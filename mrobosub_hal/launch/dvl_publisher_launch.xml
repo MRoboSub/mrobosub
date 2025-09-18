@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="mrobosub_hal" exec="dvl_publisher" name="dvl_publisher" output="screen">
+    </node>
+</launch>
