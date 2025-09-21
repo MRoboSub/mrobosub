@@ -2,7 +2,7 @@
 
 from functools import partial
 
-import rospy
+import rclpy
 import rospkg
 from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse
 import cv2
@@ -68,13 +68,13 @@ def handle_obj_request(idx, msg):
     return obj_msg
 
 if __name__ == '__main__':
-    print("made it to main")
-    rospy.init_node('ml_server', anonymous=False)
+    rclpy.init()
+    node = rclpy.create_node('ml_server')
     print(sys.version)
-    print("node initialized")
+    node.get_logger().info('Created node')
 
     # Intialize ros services for each of the objects
-    mk_service = lambda name, idx: rospy.Service(f'object_position/{name}', ObjectPosition, lambda msg : handle_obj_request(idx.value, msg))
+    mk_service = lambda name, idx: node.create_service(ObjectPosition, f'object_position/{name}',  lambda msg,_ : handle_obj_request(idx.value, msg))
     abydos_srv = mk_service('abydos',Targets.ABYDOS)
     earth_srv = mk_service('earth',Targets.EARTH)
     taurus_srv = mk_service('taurus',Targets.TAURUS)
@@ -82,4 +82,4 @@ if __name__ == '__main__':
     auriga_srv = mk_service('auriga',Targets.AURIGA)
     cetus_srv = mk_service('cetus',Targets.CETUS)
 
-    rospy.spin()
+    rclpy.spin(node) 

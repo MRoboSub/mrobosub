@@ -1,4 +1,4 @@
-import rospy
+import rclpy
 from mrobosub_lib.lib import Node
 from dynamic_reconfigure.server import Server
 from sensor_msgs.msg import Image
@@ -10,17 +10,17 @@ class DummyBotCam(Node):
     def __init__(self):
         super().__init__('dummy_botcam')
         self.br = CvBridge()
-        self.pub = rospy.Publisher('/dummy_botcam', Image, queue_size=1)
+        self.pub = self.create.publisher( Image, '/dummy_botcam', queue_size=1)
         self.srv = Server(dummy_botcam_paramsConfig, self.reconfigure_callback, 'dummy_botcam_config')
         self.image_number = 1
+        self.timer = self.create_timer(1, self.loop)
+        
 
     def reconfigure_callback(self, config, level):
         self.image_number = config["image_number"]
         return config
 
-    def run(self):
-        rate = rospy.Rate(1)
-        while not rospy.is_shutdown():
+    def loop(self):
             img_path = f"../dummy_botcam_images/{self.image_number}.png"
             try:
                 cv_img = cv2.imread(img_path)
@@ -30,7 +30,7 @@ class DummyBotCam(Node):
                 img_msg = self.br.cv2_to_imgmsg(cv_img, encoding='bgr8')
                 self.pub.publish(img_msg)
             except Exception as e:
-                rospy.logerr(f"Failed to publish dummy botcam image {img_path}: {e}")
+                self.get_logger().error(f"Failed to publish dummy botcam image {img_path}: {e}")
 
 if __name__ == "__main__":
     node = DummyBotCam()
