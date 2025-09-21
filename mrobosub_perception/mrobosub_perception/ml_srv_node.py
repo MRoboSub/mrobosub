@@ -3,7 +3,7 @@
 from typing import List, Optional
 from enum import Enum
 
-import rospy
+import rclpy
 import numpy as np
 import cv2
 from cv_bridge import CvBridge
@@ -34,9 +34,9 @@ class MlSrvNode(Node):
         self.bridge = CvBridge()
 
         # Intialize ros services for each of the objects
-        mk_service = lambda name, idx: rospy.Service(
-            f"object_position/{name}",
+        mk_service = lambda name, idx: self.create_service(
             ObjectPosition,
+            f"object_position/{name}",
             lambda msg: self.handle_obj_request(idx.value, msg),
         )
         self.gate_red_srv = mk_service("gate_red", Targets.GATE_RED)
@@ -46,17 +46,17 @@ class MlSrvNode(Node):
 
         # Subscribe to the ZED left image and depth topics
         # For a full list of zed topics, see https://www.stereolabs.com/docs/ros/zed-node/#published-topics
-        rospy.Subscriber(
-            "/zed2/zed_node/rgb/image_rect_color",
+        self.create_subscription(
             Image,
+            "/zed2/zed_node/rgb/image_rect_color",
             self.zed_callback,
             queue_size=1,
         )
-        rospy.Subscriber("/ml/detections", Detections, self.detections_callback)
+        self.create_subscription(Detections, "/ml/detections", self.detections_callback)
 
-        self.run_until_pub = rospy.Publisher("/ml/run_until", Float64, queue_size=1)
+        self.run_until_pub = self.create_publisher(Float64, "/ml/run_until", queue_size=1)
 
-        self.bbox_pub = rospy.Publisher("/ml/annotated", Image, queue_size=10)
+        self.bbox_pub = self.create_publisher(Image, "/ml/annotated", queue_size=10)
         self.last_image = None
 
     def zed_callback(self, image: Image):
@@ -166,14 +166,15 @@ class MlSrvNode(Node):
         self.bbox_pub.publish(msg)
 
     def handle_obj_request(self, idx, msg):
-        self.run_until_pub.publish(rospy.get_time() + TIME_THRESHOLD)
+        self.run_until_pub.publish(rclpy.get_time() + TIME_THRESHOLD)
         while self.recent_positions[idx] == None:
-            rospy.sleep(0.005)
+            rclpy.sleep(0.005)
         return self.recent_positions[idx]
 
-    def run(self):
-        rospy.spin()
-
+def main():
+    rclpy.init()
+    node = MlSrvNode()
+    rclpy.spin(node)
 
 if __name__ == "__main__":
-    MlSrvNode().run()
+    main()
