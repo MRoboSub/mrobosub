@@ -5,7 +5,7 @@ import sys
 import time
 
 import torch
-import rospy
+import rclpy
 import numpy as np
 from cv_bridge import CvBridge
 from mrobosub_lib.lib import Node
@@ -34,16 +34,16 @@ class MlExecutor(Node):
     def __init__(self):
         super().__init__("ml_executor")
         self.model = load_yolo()
-        self.run_until_time = float("inf") if rospy.myargv(sys.argv)[1] != "0" else 0
+        self.run_until_time = float("inf") if rclpy.myargv(sys.argv)[1] != "0" else 0
         self.bridge = CvBridge()
-        rospy.Subscriber(
-            "/zed2/zed_node/rgb/image_rect_color", Image, self.zed_callback
+        self.create_subscription(
+            Image, "/zed2/zed_node/rgb/image_rect_color", self.zed_callback
         )
-        rospy.Subscriber("/ml/run_until", Float64, self.run_until_callback)
-        self.detection_pub = rospy.Publisher("/ml/detections", Detections, queue_size=1)
+        self.create_subscription(Float64, "/ml/run_until", self.run_until_callback)
+        self.detection_pub = self.create_publisher(Detections, "/ml/detections", queue_size=1)
 
     def zed_callback(self, image: Image):
-        if rospy.get_time() > self.run_until_time:
+        if rclpy.get_time() > self.run_until_time:
             return
 
         start = time.time()
@@ -66,9 +66,12 @@ class MlExecutor(Node):
     def run_until_callback(self, message: Float64):
         self.run_until_time = max(self.run_until_time, message.data)
 
-    def run(self):
-        rospy.spin()
 
-
+def main():
+    rclpy.init()
+    node = MlExecutor()
+    rclpy.spin(node)
+ 
+       
 if __name__ == "__main__":
-    MlExecutor().run()
+    main()
