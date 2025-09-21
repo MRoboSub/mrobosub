@@ -6,7 +6,7 @@ import cv2
 import sys
 
 from cv_bridge import CvBridge
-import rospy
+import rclpy
 from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse
 from timed_service import TimedService
 from dynamic_reconfigure.server import Server
@@ -17,7 +17,7 @@ from mrobosub_perception.cfg import hsv_paramsConfig
 from hsv_pipeline import HsvPipeline
 import utils
 
-class BuoyHsv(Node):
+class BinHsv(Node):
     hsv_params: Param[dict]
     timing_threshold: Param[float]
 
@@ -28,37 +28,37 @@ class BuoyHsv(Node):
 
         self.always_run = rospy.myargv(sys.argv)[1] != "0" #input 1 for always_run to not have to do service calls always_run:=1
 
-        self.sub = rospy.Subscriber('/zed2/zed_node/rgb/image_rect_color', Image, self.handle_frame, queue_size=1)
-        self.serv = TimedService('/buoy_object_position', ObjectPosition, self.timing_threshold)
-        self.mask_pub = rospy.Publisher(f'/buoy_mask', Image, queue_size=1)
-        self.annotated_pub = rospy.Publisher(f'/buoy_annotated', Image, queue_size=1)
+        self.sub = self.create_subcriber(Image, '/rectified_image', self.handle_frame, qos_profile=1)
+        self.serv = TimedService('/bin_object_position', ObjectPosition, self.timing_threshold)
+        self.mask_pub = self.create_publisher(f'/bin_mask', Image, queue_size=1)
+        self.enhanced_pub = rospy.Publisher(f'/bin_enhanced', Image, queue_size=1)
+        self.annotated_pub = rospy.Publisher(f'/bin_annotated', Image, queue_size=1)
         self.srv = Server(hsv_paramsConfig, self.reconfigure_callback, 'hsv_params')
 
     def handle_frame(self, msg):
         if(self.serv.should_run() or self.always_run):
             bgr_img = self.br.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-            pipeline = HsvPipeline(**self.hsv_params, color_space=cv2.COLOR_RGB2HSV)
-            mask = pipeline.filter_image(bgr_img)
+            pipeline = HsvPipeline(**self.hsv_params, color_space=cv2.COLOR_BGR2HSV)
+            mask, enhanced_img = pipeline.filter_image(bgr_img, return_enhanced=True)
             detection = pipeline.find_circular_object(mask)
 
             if detection is not None:
-                annotated_img = cv2.circle(bgr_img, (detection.x,detection.y), int(detection.radius), (255,255,255), 2)
+                annotated_img = cv2.drawMarker(bgr_img, (detection.x,detection.y), (255,255,255), markerType=cv2.MARKER_CROSS)
             else:
                 annotated_img = bgr_img
 
             self.mask_pub.publish(self.br.cv2_to_imgmsg(mask, encoding='mono8'))
+            self.enhanced_pub.publish(self.br.cv2_to_imgmsg(enhanced_img, encoding='bgr8'))
             self.annotated_pub.publish(self.br.cv2_to_imgmsg(annotated_img, encoding='bgr8'))
             
             response = ObjectPositionResponse()
             if detection is not None:
                 x_theta, y_theta = utils.pixels_to_angles(bgr_img, detection.x, detection.y)
                 response.found = True
-                response.x_position = detection.radius
-                response.y_position = detection.y
+                response.x_position = detection.x / bgr_img.shape[1]
+                response.y_position = detection.y / bgr_img.shape[0]
                 response.x_theta = x_theta
                 response.y_theta = y_theta
-                # TODO add raidus to service type
-                response.confidence = detection.radius
 
             self.serv.set_result(response)
         
@@ -69,5 +69,5 @@ class BuoyHsv(Node):
     
 
 if __name__=='__main__' :
-    node = BuoyHsv()
+    node = BinHsv()
     rospy.spin()
