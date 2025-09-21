@@ -69,7 +69,9 @@ class MlExecutor(Node):
 
 def main():
     rclpy.init()
-    node = MlExecutor(float("inf") if sys.argv[1] != "0" else 0)
+    node = MlExecutor(
+        float("inf") if rclpy.utilities.remove_ros_args(sys.argv)[1] != "0" else 0,
+    )
     rclpy.spin(node)
  
        
