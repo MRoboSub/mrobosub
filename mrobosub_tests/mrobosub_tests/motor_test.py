@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import rclpy
 from mrobosub_lib import Node
 

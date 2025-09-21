@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import sys
 import warnings
 from dataclasses import dataclass, field

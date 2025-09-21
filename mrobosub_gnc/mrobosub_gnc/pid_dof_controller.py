@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import rclpy
 import sys
 import argparse
