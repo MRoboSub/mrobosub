@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-#hsv_filter
 from typing import Tuple
 import cv2
 import sys
@@ -15,7 +14,15 @@ from mrobosub_lib.lib import Node, Param
 from mrobosub_perception.cfg import hsv_paramsConfig
 
 from hsv_pipeline import HsvPipeline
-import utils
+
+def pixels_to_angles(frame, x_pos: int, y_pos: int, fov_x=110, fov_y=70) -> Tuple[int, int]:
+    height, width = frame.shape[0:2]
+    d_x = x_pos - (width / 2)
+    d_y = y_pos - (height / 2)
+    theta_x = (d_x * fov_x) / width
+    theta_y = (d_y * fov_y) / height
+    return theta_x, theta_y
+
 
 class BinHsv(Node):
     hsv_params: Param[dict]
@@ -53,7 +60,7 @@ class BinHsv(Node):
             
             response = ObjectPositionResponse()
             if detection is not None:
-                x_theta, y_theta = utils.pixels_to_angles(bgr_img, detection.x, detection.y)
+                x_theta, y_theta = pixels_to_angles(bgr_img, detection.x, detection.y)
                 response.found = True
                 response.x_position = detection.x / bgr_img.shape[1]
                 response.y_position = detection.y / bgr_img.shape[0]
