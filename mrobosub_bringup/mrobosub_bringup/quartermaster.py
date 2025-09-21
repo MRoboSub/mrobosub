@@ -43,7 +43,7 @@ class Quartermaster(Node):
         self.timeout_disabled_led   = None
         
         qos_profile = QoSProfile(depth=1)
-        self.led_strange_pub     = self.create_publisher(Bool, "/led/strange", qos_profile) # Is the import for the message types the same?
+        self.led_strange_pub     = self.create_publisher(Bool, "/led/strange", qos_profile)
         self.led_charm_pub       = self.create_publisher(Bool, "/led/charm", qos_profile)
         self.led_on_pub          = self.create_publisher(Bool, "/led/on", qos_profile)
 
