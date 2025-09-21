@@ -3,7 +3,7 @@
 <package format="3">
   <name>mrobosub_localization</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>synthesis of sensor information to determine robot state</description>
   <maintainer email="michiganroboticsubmarine@gmail.com">Michigan Robotic Submarine</maintainer>
   <license>BSD-2.0</license>
 
