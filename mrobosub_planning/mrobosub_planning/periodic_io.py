@@ -23,7 +23,6 @@ class ImageTarget(Enum):
     GATE_RED = auto()
 
 
-# ImageDetections = Dict[ImageTarget, ObjectPositionResponse]
 
 @dataclass
 class Pose:
@@ -71,17 +70,8 @@ class Captain(Node):
         self._right_dropper_pub = self.create_publisher(Int32, "/right_servo/angle", 1)
 
         # Services
-        # TODO: Don't need these until perception is properly updated / new game states
-        # _pathmarker_srv = rospy.ServiceProxy(
-        #     "/pathmarker_angle", PathmarkerAngle, persistent=True
-        # )
-        # _bin_cam_pos_srv = rospy.ServiceProxy(
-        #     "/bin_object_position", ObjectPosition, persistent=True
-        # )
-        # _hsv_buoy_position_srv = rospy.ServiceProxy(
-        #     "/buoy_object_position", ObjectPosition, persistent=True
-        # )
-
+        # TODO: Add services for perception topics when those are created.
+        
         self._zed_on_srv = self.create_client(SetBool, "/zed/on")
         attempt_counter = 0
         while not self._zed_on_srv.wait_for_service(timeout_sec=1.0) and attempt_counter < 5:
@@ -97,25 +87,6 @@ class Captain(Node):
             attempt_counter += 1
         if attempt_counter == 5:
             self.get_logger().error('Failed to connect to "/bot_cam/on\" service')
-
-    # def query_BinCamPos(cls) -> Optional[ObjectPositionResponse]:
-    #     """Request the x, y position on the camera of the bin (0,0) being the center +y is up and +x is right,
-    #       and found which is True if we have data
-
-    #     Returns:
-    #         x, y position on the camera of the bin and found
-    #         None otherwise.
-    #     """
-
-    #     try:
-    #         resp = cls._bin_cam_pos_srv()
-    #     except rospy.service.ServiceException as e:
-    #         print("Cannot reach bin object position service")
-    #         return None
-    #     if resp.found:
-    #         return resp
-    #     else:
-    #         return None
 
     def is_yaw_within_threshold(self, threshold: float) -> float:
         return abs(angle_error(self.target_pose.yaw, self.pose.yaw)) <= threshold
@@ -212,81 +183,11 @@ class Captain(Node):
         msg.data = int(angle)
         self._right_dropper_pub.publish(msg)
 
-    # @classmethod
-    # def query_pathmarker(cls) -> Optional[float]:
-    #     """Request a the pathmaker angle.
-
-    #     Returns:
-    #         angle of path marker in global frame (i.e. same frame as the Pose.yaw) if found
-    #         None otherwise.
-    #     """
-
-    #     pm_pos = cls.query_pathmarker_full()
-    #     if pm_pos is None:
-    #         return None
-    #     return pm_pos.angle
-
-    # class PathmarkerPosition(NamedTuple):
-    #     centroid_x: float
-    #     centroid_y: float
-    #     angle: float
-
-    # @classmethod
-    # def query_pathmarker_full(cls) -> Optional[PathmarkerPosition]:
-    #     try:
-    #         resp = cls._pathmarker_srv()
-    #     except rospy.service.ServiceException as e:
-    #         print("Pathmarker service is not active")
-    #         return None
-    #     print(f"{resp=}")
-    #     if not resp.found:
-    #         return None
-    #     convertedAngle: float = (90 + resp.angle) + cls.Pose.yaw
-    #     if convertedAngle > 90:  # if pointing behind us flip 180
-    #         convertedAngle -= 180
-    #     elif convertedAngle < -90:
-    #         convertedAngle += 180
-    #     return cls.PathmarkerPosition(
-    #         centroid_x=resp.centroid_x,
-    #         centroid_y=resp.centroid_y,
-    #         angle=convertedAngle,
-    #     )
-
-    # @classmethod
-    # def query_buoy(cls) -> ObjectPositionResponse:
-    #     try:
-    #         return cls._hsv_buoy_position_srv()
-    #     except rospy.ServiceException as e:
-    #         print(f"Buoy service cannot be called with error: {e}")
-    #         obj_msg = ObjectPositionResponse()
-    #         obj_msg.found = False
-    #         return obj_msg
-
-    # @classmethod
-    # def query_image(cls, image_type: Optional[ImageTarget]) -> ObjectPositionResponse:
-    #     if image_type is not None:
-    #         try:
-    #             return cls._object_position_srvs[image_type]()
-    #         except rospy.ServiceException:
-    #             pass
-    #     obj_msg = ObjectPositionResponse()
-    #     obj_msg.found = False
-    #     return obj_msg
-
-    # @classmethod
-    # def query_all_images(cls) -> ImageDetections:
-    #     results = {}
-    #     for g in ImageTarget:
-    #         resp = cls.query_image(g)
-    #         if resp.found:
-    #             results[g] = resp
-    #     return results
-
     def _call_service(self, service: Service, request: SetBool.Request, error_string:str) -> bool:
         success = True
         future = service.call_async(request)
-        #timeout is set to 2s 
-        # Potentially can add future callbacks to perform this async, but for now like this
+        # TODO: Potentially can add future callbacks to perform this async, but for now like this
+        # Timeout is set to 2s 
         rclpy.spin_until_future_complete(self, future, timeout_sec=2.0)
         if not future.done():
             self.get_logger().error(f"{error_string}: Service call timed out")
@@ -334,8 +235,6 @@ class Captain(Node):
         success = success and self._call_service(self._bot_cam_on_srv, self.req, "Turning BotCam Off")
         return success
 
-    # private:
-    # Callback methods
     def yaw_callback(self, msg: Float64) -> None:
         self.pose.yaw = msg.data
 

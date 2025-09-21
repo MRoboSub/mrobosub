@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import socket
 import rclpy
 from mrobosub_msgs.msg import Dvl

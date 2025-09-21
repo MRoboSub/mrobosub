@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from py_compile import main
 import rclpy
 from std_msgs.msg import Float64

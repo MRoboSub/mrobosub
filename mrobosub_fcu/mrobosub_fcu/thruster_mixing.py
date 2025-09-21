@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from typing import Any, Callable
 from transforms3d._gohlketransforms import euler_matrix
 import numpy as np
@@ -369,12 +367,8 @@ class ThrusterMixing(Node):
 
 def main():
     rclpy.init()
-
     node = ThrusterMixing()
-    try:
-        rclpy.spin(node)
-    except KeyboardInterrupt:
-        pass
+    rclpy.spin(node)
 
 
 if __name__ == "__main__":
