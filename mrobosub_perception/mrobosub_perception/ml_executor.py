@@ -31,10 +31,10 @@ def load_yolo():
 
 
 class MlExecutor(Node):
-    def __init__(self):
+    def __init__(self, run_until_time: float):
         super().__init__("ml_executor")
         self.model = load_yolo()
-        self.run_until_time = float("inf") if rclpy.myargv(sys.argv)[1] != "0" else 0
+        self.run_until_time = run_until_time
         self.bridge = CvBridge()
         self.create_subscription(
             Image, "/zed2/zed_node/rgb/image_rect_color", self.zed_callback
@@ -69,7 +69,7 @@ class MlExecutor(Node):
 
 def main():
     rclpy.init()
-    node = MlExecutor()
+    node = MlExecutor(float("inf") if sys.argv[1] != "0" else 0)
     rclpy.spin(node)
  
        
