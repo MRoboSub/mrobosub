@@ -1,0 +1,3 @@
+<launch>
+  <node name="localization" pkg="mrobosub_localization" exec="localization"/>
+</launch>
