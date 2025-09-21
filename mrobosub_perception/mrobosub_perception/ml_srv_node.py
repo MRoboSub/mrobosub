@@ -37,7 +37,7 @@ class MlSrvNode(Node):
         mk_service = lambda name, idx: self.create_service(
             ObjectPosition,
             f"object_position/{name}",
-            lambda msg: self.handle_obj_request(idx.value, msg),
+            lambda msg, _: self.handle_obj_request(idx.value, msg),
         )
         self.gate_red_srv = mk_service("gate_red", Targets.GATE_RED)
         self.gate_blue_srv = mk_service("gate_blue", Targets.GATE_BLUE)
