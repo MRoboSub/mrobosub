@@ -5,7 +5,7 @@ package_name = "mrobosub_localization"
 
 setup(
     name=package_name,
-    version="0.0.0",
+    version="2.0.0",
     packages=find_packages(exclude=["test"]),
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
@@ -14,9 +14,9 @@ setup(
     ],
     install_requires=["setuptools"],
     zip_safe=True,
-    maintainer="ubuntu",
-    maintainer_email="henry@lunar-glass.com",
-    description="TODO: Package description",
+    maintainer="Michigan Robotic Submarine",
+    maintainer_email="michiganroboticsubmarine@gmail.com",
+    description="synthesis of sensor information to determine robot state",
     license="BSD-2.0",
     tests_require=["pytest"],
     entry_points={

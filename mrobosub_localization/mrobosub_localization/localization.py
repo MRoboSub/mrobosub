@@ -106,10 +106,10 @@ class StateEstimation(Node):
         self.pitch_offset = None
         self.roll_offset = None
 
-        self.heave_pub.publish(Float32(data=0))
-        self.yaw_pub.publish(Float32(data=0))
-        self.pitch_pub.publish(Float32(data=0))
-        self.roll_pub.publish(Float32(data=0))
+        self.heave_pub.publish(Float64(data=0))
+        self.yaw_pub.publish(Float64(data=0))
+        self.pitch_pub.publish(Float64(data=0))
+        self.roll_pub.publish(Float64(data=0))
 
         res.success = True
         res.message = previous_offsets
@@ -119,7 +119,7 @@ class StateEstimation(Node):
     def raw_depth_callback(self, raw_depth: Float32):
         if self.heave_offset is None:
             self.heave_offset = raw_depth.data
-        self.heave_pub.publish(Float32(data=raw_depth.data - self.heave_offset))
+        self.heave_pub.publish(Float64(data=raw_depth.data - self.heave_offset))
 
     def imu_callback(self, msg: ImuINS):
 
@@ -147,9 +147,9 @@ class StateEstimation(Node):
         pitch = degrees(-euler.y) - self.pitch_offset
         roll = degrees(euler.x) - self.roll_offset
 
-        self.yaw_pub.publish(Float32(data=yaw))
-        self.pitch_pub.publish(Float32(data=pitch))
-        self.roll_pub.publish(Float32(data=roll))
+        self.yaw_pub.publish(Float64(data=yaw))
+        self.pitch_pub.publish(Float64(data=pitch))
+        self.roll_pub.publish(Float64(data=roll))
 
 
 def main(args=None):
