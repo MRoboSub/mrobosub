@@ -119,7 +119,7 @@ class StateEstimation(Node):
     def raw_depth_callback(self, raw_depth: Float32):
         if self.heave_offset is None:
             self.heave_offset = raw_depth.data
-        self.heave_pub.publish(Float32(data=raw_depth.data - self.heave_offset))
+        self.heave_pub.publish(Float64(data=raw_depth.data - self.heave_offset))
 
     def imu_callback(self, msg: ImuINS):
 
