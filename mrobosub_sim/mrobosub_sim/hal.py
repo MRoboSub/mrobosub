@@ -56,7 +56,7 @@ class SensorData:
 
         dvl = Dvl()
         dvl.header = header
-        dvl.velocity = Vector3(x=vals[1], y=vals[2], z=vals[3])
+        dvl.velocity = np.array(vals[1:4])
 
         imu_ins = ImuINS()
         imu_ins.header.stamp = node.get_clock().now().to_msg()
