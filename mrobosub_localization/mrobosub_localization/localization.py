@@ -106,10 +106,10 @@ class StateEstimation(Node):
         self.pitch_offset = None
         self.roll_offset = None
 
-        self.heave_pub.publish(Float32(data=0))
-        self.yaw_pub.publish(Float32(data=0))
-        self.pitch_pub.publish(Float32(data=0))
-        self.roll_pub.publish(Float32(data=0))
+        self.heave_pub.publish(Float64(data=0))
+        self.yaw_pub.publish(Float64(data=0))
+        self.pitch_pub.publish(Float64(data=0))
+        self.roll_pub.publish(Float64(data=0))
 
         res.success = True
         res.message = previous_offsets
