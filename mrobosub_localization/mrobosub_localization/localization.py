@@ -147,9 +147,9 @@ class StateEstimation(Node):
         pitch = degrees(-euler.y) - self.pitch_offset
         roll = degrees(euler.x) - self.roll_offset
 
-        self.yaw_pub.publish(Float32(data=yaw))
-        self.pitch_pub.publish(Float32(data=pitch))
-        self.roll_pub.publish(Float32(data=roll))
+        self.yaw_pub.publish(Float64(data=yaw))
+        self.pitch_pub.publish(Float64(data=pitch))
+        self.roll_pub.publish(Float64(data=roll))
 
 
 def main(args=None):
