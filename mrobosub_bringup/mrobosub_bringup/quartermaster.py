@@ -11,7 +11,7 @@ from std_msgs.msg import Bool, Float64
 from std_srvs.srv import SetBool, Trigger
 from rclpy.executors import SingleThreadedExecutor
 
-from mrobosub_lib    import Node
+from mrobosub_lib.mrobosub_lib import Node
 from .               import constants as const
 from .launch_manager import LaunchManager
 
@@ -93,7 +93,7 @@ class Quartermaster(Node):
         b = Bool()
         b.data = val
         self.led_on_pub.publish(b)
-        self.led_states.on = val
+        self.led_states.led_on = val
 
 
     def pub_led(self, led: str, val: bool):
@@ -181,7 +181,7 @@ class Quartermaster(Node):
             return
 
         request = Trigger.Request()
-        self.thruster_mixing_future = self.soft_stop_srv.call_async(request)
+        self.soft_stop_future = self.soft_stop_srv.call_async(request)
     
         def callback(future):
             try: 
@@ -196,7 +196,7 @@ class Quartermaster(Node):
         self.soft_stop_future.add_done_callback(callback)
 
    
-   def timer_callback(self):
+    def timer_callback(self):
         # In order to visually ensure quartermaster has started, turn on the LED
         self.pub_on_led(True)
 
@@ -211,8 +211,8 @@ class Quartermaster(Node):
         # We want the LED showing that we have triggered a specific hall effect sensor to turn off
         # after 5 seconds.
         if self.timeout_disabled_led is not None:
-            self.pub_led(timeout_disable, False)
-            self.timeout_disable = None
+            self.pub_led(self.timeout_disabled_led, False)
+            self.timeout_disabled_led = None
 
         # We don't want to advance the state machine if both are false. Only on the rising edge.
         if (self.hall_effect_triggered.strange is False) and (self.hall_effect_triggered.charm is False):
@@ -224,10 +224,10 @@ class Quartermaster(Node):
 
         if self.hall_effect_triggered.strange:
             self.pub_strange_led(True)
-            self.timeout_disable = "strange"
+            self.timeout_disabled_led = "strange"
         elif self.hall_effect_triggered.charm:
             self.pub_charm_led(True)
-            self.timeout_disable = "charm"
+            self.timeout_disabled_led = "charm"
 
         # Zero hall effects.
         self.hall_effect_triggered.strange = False
