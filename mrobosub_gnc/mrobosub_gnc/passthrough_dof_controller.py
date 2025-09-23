@@ -33,8 +33,8 @@ class PassthroughDofController(Node):
         self.output_pub.publish(Float64(data=output))
 
     def destroy_node(self):
-        self.output_pub.publish(Float64(data=0))
-        super().destroy_node()
+        self.output_pub.publish(Float64(data=0.0))
+        super().destroy_node()        
 
 
 def main():
