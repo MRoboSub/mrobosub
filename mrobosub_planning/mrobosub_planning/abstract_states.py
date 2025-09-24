@@ -234,7 +234,7 @@ class AlignPathmarker(TimedState):
         if self.iter < 50:
             return None
         if self.iter < 100:
-            pm_resp = self.io.query_pathmarker()
+            pm_resp = self.io.query_pathmarker()  # type: ignore # TODO: remove once ML is migrated
             self.io.logger.info({f"{pm_resp=}"})
             if pm_resp is not None:
                 self.measurements.append(pm_resp)
@@ -286,7 +286,7 @@ class CenterOnPathmarker(TimedState):
         self.centered_count = 0
 
     def handle_if_not_timedout(self) -> Outcome | None:
-        pm_resp = self.io.query_pathmarker_full()  # type: ignore # Will not work until ML is migrated
+        pm_resp = self.io.query_pathmarker_full()  # type: ignore # TODO: remove once ML is migrated
         if pm_resp is None:
             self.io.set_target_twist_surge(0.0)
             self.io.set_target_twist_sway(0.0)
