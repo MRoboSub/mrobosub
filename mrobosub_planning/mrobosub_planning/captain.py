@@ -1,17 +1,16 @@
-from tokenize import Single
 from typing import Dict, Type, Optional, Sequence
 from importlib import import_module
 from mrobosub_planning.umrsm import StateMachine, State, TransitionMap, Outcome
 import mrobosub_planning.common_states as common_states
 import mrobosub_planning.standard_run as standard_run
 
-# import prequal_strafe
+from mrobosub_lib import Node
+
 import rclpy
 from rclpy.executors import SingleThreadedExecutor
 import threading
-from rclpy.node import Node
 import sys
-from mrobosub_planning.periodic_io import Captain
+from mrobosub_planning.periodic_io import Interface
 import traceback
 
 
@@ -28,69 +27,94 @@ def state_class_from_str(full_state: str, transitions: TransitionMap) -> Type[St
 
     Arguments:
         full_state (str): The state passed into roslaunch. Could be in the format `state` or `module.state`.
-        transitions (TransitionMap): The transition map from the associated machine name. 
-    
+        transitions (TransitionMap): The transition map from the associated machine name.
+
     Returns:
         The class object for the state or a ValueError if there is an error finding the state.
     """
+
     def outcome_to_state_str(outcome: Type[Outcome]) -> str:
-        return outcome.__qualname__.split('.')[0]
-    
+        return outcome.__qualname__.split(".")[0]
+
     def outcome_to_state(outcome: Type[Outcome]) -> Type[State]:
         module = import_module(outcome.__module__)
         return getattr(module, outcome_to_state_str(outcome))
-    
-    if full_state.count('.') > 1:
+
+    if full_state.count(".") > 1:
         raise ValueError(f"{full_state} should have at most one '.'")
 
-    state = full_state.split('.')[-1]
-    found_outcomes = [outcome for outcome in transitions.keys() if outcome_to_state_str(outcome) == state]
+    state = full_state.split(".")[-1]
+    found_outcomes = [
+        outcome
+        for outcome in transitions.keys()
+        if outcome_to_state_str(outcome) == state
+    ]
     unique_found_states = set(outcome_to_state(outcome) for outcome in found_outcomes)
-    
-    if '.' in full_state:
-        unique_found_states = set(state for state in unique_found_states if state.__module__.removeprefix("mrobosub_planning.") == full_state.split(".")[0])
+
+    if "." in full_state:
+        unique_found_states = set(
+            state
+            for state in unique_found_states
+            if state.__module__.removeprefix("mrobosub_planning.")
+            == full_state.split(".")[0]
+        )
 
     if len(unique_found_states) != 1:
-        raise ValueError(f'{full_state=} does not uniquely describe a state. {unique_found_states=}')
-    
+        raise ValueError(
+            f"{full_state=} does not uniquely describe a state. {unique_found_states=}"
+        )
+
     found_state = unique_found_states.pop()
     return found_state
 
-def main(args: Optional[Sequence[str]]=None) -> None:
-    rclpy.init()
-    captain_node = Captain(name="captain")
-    captain_node.get_logger().info("Captain Node Created")
 
-    executor = SingleThreadedExecutor()
-    executor.add_node(captain_node)
-    t = threading.Thread(target=executor.spin, daemon=False)
-    t.start()
-    captain_node.get_logger().info("Captain Node Spinning")
+class Captain(Node):
+    def __init__(self, machine_name: str, full_state: str) -> None:
+        super().__init__("captain")
+        self.machine_name = machine_name
+        self.starting_state = state_class_from_str(
+            full_state, transition_maps[machine_name]
+        )
+
+    def run(self) -> None:
+        io = Interface(self)
+        machine = StateMachine(
+            self.machine_name,
+            transition_maps[self.machine_name],
+            self.starting_state,
+            common_states.Stop,
+            io,
+        )
+
+        try:
+            machine.run()
+        except Exception as e:
+            self.get_logger().info(f"{traceback.format_exc()}")
+            rate = self.create_rate(50)
+            for _ in range(20):
+                io.reset_target_twist()
+                rate.sleep()
+
+
+def main() -> None:
+    rclpy.init()
 
     # Syntax `roslaunch mrobosub_planning captain.launch machine:=<machine> state:=<state|module.state>`
     machine_name = sys.argv[1]
     full_state = sys.argv[2]
 
-    starting_state = state_class_from_str(full_state, transition_maps[machine_name])
-    
-    machine = StateMachine(
-        machine_name,
-        transition_maps[machine_name],
-        starting_state,
-        common_states.Stop,
-        captain_node
-    )
-    try:
-        machine.run()
-    except Exception as e:
-        captain_node.get_logger().info(f"{traceback.format_exc()}")
-        rate = captain_node.create_rate(50)
-        for _ in range(20):
-            captain_node.reset_target_twist()
-            rate.sleep()
-    finally:
-        executor.shutdown()
-        t.join()
+    captain_node = Captain(machine_name, full_state)
+
+    executor = SingleThreadedExecutor()
+    executor.add_node(captain_node)
+    t = threading.Thread(target=executor.spin, daemon=False)
+    t.start()
+
+    captain_node.run()
+
+    executor.shutdown()
+    t.join()
+
 
 if __name__ == "__main__":
     main()
