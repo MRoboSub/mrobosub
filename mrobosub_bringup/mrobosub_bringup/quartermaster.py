@@ -63,14 +63,16 @@ class Quartermaster(Node):
             Bool, "/buttons/charm", self.handle_charm_change, 1
         )
 
+        executor = rclpy.get_global_executor()
+        complete_future = executor.create_task(lambda: None)
         self.thruster_mixing_srv = self.create_client(
             SetBool, "/thruster_mixing/enable"
         )
-        self.thruster_mixing_future = None
+        self.thruster_mixing_future = complete_future
         self.zero_state_srv = self.create_client(Trigger, "/localization/zero_state")
-        self.zero_state_future = None
+        self.zero_state_future = complete_future
         self.soft_stop_srv = self.create_client(Trigger, "/captain/soft_stop")
-        self.soft_stop_future = None
+        self.soft_stop_future = complete_future
 
         planning_pkg_path = get_package_share_directory("mrobosub_planning")
         captain_file_path = os.path.join(
@@ -249,15 +251,12 @@ class Quartermaster(Node):
         if self.current_state == RobotState.AMBIENT:
             self.get_logger().info("reached state machine")
             # Needed to ensure the service isn't called before the future is returned
-            if (
-                self.thruster_mixing_future is None
-                or self.thruster_mixing_future.done()
-            ):
+            if self.thruster_mixing_future.done():
                 self.thruster_mixing_future = self.executor.create_task(
                     self.call_thruster_mixing_srv()
                 )
 
-            if self.zero_state_future is None or self.zero_state_future.done():
+            if self.zero_state_future.done():
                 self.zero_state_future = self.executor.create_task(
                     self.call_zero_state_srv()
                 )
@@ -271,7 +270,7 @@ class Quartermaster(Node):
 
         elif self.current_state == RobotState.RUNNING:
             self.get_logger().info("soft stopping state machine")
-            if self.soft_stop_future is None or self.soft_stop_future.done():
+            if self.soft_stop_future.done():
                 self.soft_stop_future = self.executor.create_task(
                     self.call_soft_stop_srv()
                 )
@@ -280,10 +279,7 @@ class Quartermaster(Node):
             #       Or maybe that could be part of the callback for the future?
             self.captain_launcher.stop()
 
-            if (
-                self.thruster_mixing_future is None
-                or self.thruster_mixing_future.done()
-            ):
+            if self.thruster_mixing_future.done():
                 self.thruster_mixing_future = self.executor.create_task(
                     self.call_thruster_mixing_srv()
                 )
