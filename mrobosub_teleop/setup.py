@@ -23,7 +23,7 @@ setup(
     entry_points={
         "console_scripts": [
             "all_dof_teleop = mrobosub_teleop.all_dof_teleop:run",
-            "joystick_teleop" = "mrobosub_teleop.joystick_teleop:main",
+            "joystick_teleop = mrobosub_teleop.joystick_teleop:main",
         ],
     },
 )
