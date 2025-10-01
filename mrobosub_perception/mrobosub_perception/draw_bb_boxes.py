@@ -25,7 +25,7 @@ def load_yolo():
     model_path = os.path.join(path, "models/model_2a.pt")
     model = torch.hub.load(yolo_path, 'custom', path=model_path, source='local')  # local repo
     model.conf = 0.25  # NMS confidence threshold
-    return model
+    return model.to(device)
 
 WIDTH = 672
 HEIGHT = 376
