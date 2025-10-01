@@ -50,11 +50,11 @@ class MlSrvNode(Node):
             Image,
             "/zed2/zed_node/rgb/image_rect_color",
             self.zed_callback,
-            queue_size=1,
+            qos_profile=1,
         )
         self.create_subscription(Detections, "/ml/detections", self.detections_callback)
 
-        self.run_until_pub = self.create_publisher(Float64, "/ml/run_until", queue_size=1)
+        self.run_until_pub = self.create_publisher(Float64, "/ml/run_until", qos_profile=1)
 
         self.bbox_pub = self.create_publisher(Image, "/ml/annotated", queue_size=10)
         self.last_image = None
@@ -166,9 +166,10 @@ class MlSrvNode(Node):
         self.bbox_pub.publish(msg)
 
     def handle_obj_request(self, idx, msg):
-        self.run_until_pub.publish(rclpy.get_time() + TIME_THRESHOLD)
+        self.run_until_pub.publish(self.get_clock().now().nanoseconds / 1e9 + TIME_THRESHOLD)
+        rate = self.create_rate(1/0.005)
         while self.recent_positions[idx] == None:
-            rclpy.sleep(0.005)
+            rate.sleep()
         return self.recent_positions[idx]
 
 def main():
