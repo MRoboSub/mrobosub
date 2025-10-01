@@ -1,40 +1,48 @@
 #!/usr/bin/env python
 
-import rospy # Python library for ROS
+from email.mime import image
+import rclpy # Python library for ROS
 from sensor_msgs.msg import Image # Image is the message type
 import cv2 # OpenCV library
 from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Images
+from mrobosub_lib import Node
 
-def publish_message():
+class PngPub(Node):
+    def __init__(self):
+      
+      # Node is publishing to the video_frames topic using
+      # the message type Image
+      rclpy.init()
+      node = rclpy.create_node('png_pub_py')
+      node.get_logger().info('Created node')
+      self.pub = self.create_publisher(Image,'/zed2/zed_node/rgb/image_rect_color',qos_profile=10)
+    
+      self.timer = self.create_timer(1 / 10.0, self.loop)
 
-  # Node is publishing to the video_frames topic using
-  # the message type Image
-  pub = rospy.Publisher('/zed2/zed_node/rgb/image_rect_color', Image, queue_size=10)
+      # Create a VideoCapture object
+      # The argument '0' gets the default webcam.
+      self.img = cv2.imread("./bbox.png")
+      #cap.set(cv2.CAP_PROP_EXPOSURE, -8)
 
-  rospy.init_node('png_pub_py', anonymous=True)
+      # Used to convert between ROS and OpenCV images
+      self.br = CvBridge()
 
-  # Go through the loop 10 times per second
-  rate = rospy.Rate(10) # 10hz
+      #print(type(img))
 
-  # Create a VideoCapture object
-  # The argument '0' gets the default webcam.
-  img = cv2.imread("./bbox.png")
-  #cap.set(cv2.CAP_PROP_EXPOSURE, -8)
 
-  # Used to convert between ROS and OpenCV images
-  br = CvBridge()
 
-  #print(type(img))
+    def loop(self):
+      #While ROS is still running.  
+      self.pub.publish(self.br.cv2_to_imgmsg(self.img, encoding='bgr8'))
 
-  # While ROS is still running.
-  while not rospy.is_shutdown():
-    pub.publish(br.cv2_to_imgmsg(img, encoding='bgr8'))
+      
+      
+def main():
+  rclpy.init()
+  node = PngPub()
+  rclpy.spin(node)
+        
 
-    # Sleep just enough to maintain the desired rate
-    rate.sleep()
 
-if __name__ == '__main__':
-  try:
-    publish_message()
-  except rospy.ROSInterruptException as e:
-    raise e
+if __name__ == "__main__":
+  main()

@@ -5,10 +5,10 @@ import numpy as np
 from typing import Tuple
 
 from cv_bridge import CvBridge
-import rospy
+import rclpy
 from dynamic_reconfigure.server import Server
 from sensor_msgs.msg import Image
-from mrobosub_lib.lib import Node
+from mrobosub_lib import Node
 from mrobosub_perception.cfg import rectify_paramsConfig
 
 def crop_to_circle(image: np.ndarray, radius: int) -> np.ndarray:
@@ -92,8 +92,10 @@ class RectifiedImage(Node):
         self.h, self.w = 640, 480
         self.shape = None
         
-        self.sub = rospy.Subscriber('/dummy_botcam', Image, self.handle_frame, queue_size=1)
-        self.rectified_pub = rospy.Publisher(f'/rectified_image', Image, queue_size=1)
+        # self.sub = rospy.Subscriber('/dummy_botcam', Image, self.handle_frame, queue_size=1) OLD
+        self.sub = self.create_subscription(Image, '/dummy_botcam', self.handle_frame,qos_profile=1)
+        # self.rectified_pub = rospy.Publisher(f'/rectified_image', Image, queue_size=1) OLD
+        self.rectified_pub = self.create_publisher( Image, f'/rectified_image', qos_profile=1)
         self.srv = Server(rectify_paramsConfig, self.reconfigure_callback, 'rectify_params')
 
     def handle_frame(self, msg):
@@ -113,9 +115,11 @@ class RectifiedImage(Node):
         self.map_x, self.map_y = generate_rectify_maps(self.h, self.w, self.f)
         return config
 
-    def run(self):
-        rospy.spin()
+def main():
+    rclpy.init()
+    node = RectifiedImage()
+    rclpy.spin(node)
 
 if __name__== '__main__':
-    RectifiedImage().run()
+    main()
 

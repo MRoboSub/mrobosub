@@ -56,3 +56,23 @@ class Stop(State):
 
 
 Surface = Stop
+
+class Go(TimedState):
+
+    class TimedOut(Outcome):
+        pass
+
+    timeout: float = 10.0
+    target_surge: float = 1.
+    target_yaw: float = 0.1
+    stop_surge: float = 0.0
+    
+
+    def handle_if_not_timedout(self) -> None:
+        self.io_node.set_target_twist_surge(self.target_surge)
+        self.io_node.set_target_twist_yaw(self.target_yaw)
+        return None
+
+    def handle_once_timedout(self) -> TimedOut:
+        self.io_node.set_target_twist_surge(self.stop_surge)
+        return self.TimedOut()
