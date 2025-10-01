@@ -6,34 +6,55 @@ import cv2
 import sys
 
 from cv_bridge import CvBridge
-import rospy
+import rclpy.utilities
 from mrobosub_msgs.srv import PathmarkerAngle, PathmarkerAngleResponse
 from timed_service import TimedService
-from dynamic_reconfigure.server import Server
 from sensor_msgs.msg import Image
-from mrobosub_lib.lib import Node, Param
-from mrobosub_perception.cfg import hsv_paramsConfig
+#from mrobosub_lib import Node
+from rclpy.node import Node
+
 import numpy as np
 
 from hsv_pipeline import HsvPipeline
-
 class PathmarkerHsv(Node):
-    hsv_params: Param[dict]
-    timing_threshold: Param[float]
-
-    def __init__(self):
+    
+    def __init__(self,args):
         super().__init__('pathmarker_hsv')
-
+        self.declare_parameters(
+            namespace='',
+            parameters=[
+                ('hsv_params.ros__parameters.hue_lo', ),
+                ('hsv_params.ros__parameters.hue_hi', None),
+                ('hsv_params.ros__parameters.sat_lo', None),
+                ('hsv_params.ros__parameters.sat_hi', None),
+                ('hsv_params.ros__parameters.val_lo', None),
+                ('hsv_params.ros__parameters.val_hi', None),
+                ('hsv_params.ros__parameters.wb_shift', None),
+                ('hsv_params.ros__parameters.wb_scale', None),
+                ('hsv_params.ros__parameters.white_balance', None),
+                ('hsv_params.ros__parameters.histogram_equalization', None),
+                ('hsv_params.ros__parameters.erode_radius', None),
+                ('hsv_params.ros__parameters.dilate_radius', None),
+                ('hsv_params.ros__parameters.median_radius', None),
+                ('hsv_params.ros__parameters.gaussian_radius', None),
+                ('hsv_params.ros__parameters.timing_threshold', None)
+            ])
         self.br = CvBridge()
 
-        self.always_run = rospy.myargv(sys.argv)[1] != "0" #input 1 for always_run to not have to do service calls always_run:=1
+        self.always_run = [1] != "0" #input 1 for always_run to not have to do service calls always_run:=1
 
-        self.sub = rospy.Subscriber('/rectified_image', Image, self.handle_frame, queue_size=1)
-        self.serv = TimedService('/pathmarker_angle', PathmarkerAngle, self.timing_threshold)
-        self.mask_pub = rospy.Publisher(f'/pathmarker_mask', Image, queue_size=1)
-        self.annotated_pub = rospy.Publisher(f'/pathmarker_annotated', Image, queue_size=1)
-        self.srv = Server(hsv_paramsConfig, self.reconfigure_callback, 'hsv_params')
+        #self.sub = rospy.Subscriber('/rectified_image', Image, self.handle_frame, queue_size=1)
+        self.sub = self.create_subscription(Image, '/rectified_image', self.handle_frame, 1)
+        
+        self.serv = TimedService(self, PathmarkerAngle, '/pathmarker_angle', self.get_parameter("hsv_params.ros__parameters.timing_threshold").value)
 
+        #self.mask_pub = rospy.Publisher(f'/pathmarker_mask', Image, queue_size=1)
+        self.mask_pub = self.create_publisher({Image}, '/pathmarker_mask', qos_profile = 1)
+
+        #self.annotated_pub = rospy.Publisher(f'/pathmarker_annotated', Image, queue_size=1)
+        self.annotated_pub = self.create_publisher({Image}, '/pathmarker_annotated', qos_profile = 1)
+        
+    
     def handle_frame(self, msg):
         if(self.serv.should_run() or self.always_run):
             bgr_img = self.br.imgmsg_to_cv2(msg, desired_encoding='bgr8')
@@ -63,13 +84,9 @@ class PathmarkerHsv(Node):
                 response.centroid_y = detection.y / bgr_img.shape[0]
 
             self.serv.set_result(response)
-        
-
-    def reconfigure_callback(self, config, level):
-        self.hsv_params.update({k: v for k, v in config.items() if k in self.hsv_params})
-        return config
     
 
 if __name__=='__main__' :
-    node = PathmarkerHsv()
-    rospy.spin()
+    args = rclpy.utilities.remove_ros_args(sys.argv)
+    node = PathmarkerHsv(args)
+    rclpy.spin(node)
