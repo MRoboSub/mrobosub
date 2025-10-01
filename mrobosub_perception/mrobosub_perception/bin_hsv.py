@@ -21,18 +21,18 @@ class BinHsv(Node):
     hsv_params: Param[dict]
     timing_threshold: Param[float]
 
-    def __init__(self):
+    def __init__(self, always_run: bool):
         super().__init__('buoy_hsv')
 
         self.br = CvBridge()
 
-        self.always_run = rospy.myargv(sys.argv)[1] != "0" #input 1 for always_run to not have to do service calls always_run:=1
+        self.always_run = always_run
 
         self.sub = self.create_subcriber(Image, '/rectified_image', self.handle_frame, qos_profile=1)
-        self.serv = TimedService('/bin_object_position', ObjectPosition, self.timing_threshold)
-        self.mask_pub = self.create_publisher(f'/bin_mask', Image, queue_size=1)
-        self.enhanced_pub = rospy.Publisher(f'/bin_enhanced', Image, queue_size=1)
-        self.annotated_pub = rospy.Publisher(f'/bin_annotated', Image, queue_size=1)
+        self.serv = TimedService(self, '/bin_object_position', ObjectPosition, self.timing_threshold)
+        self.mask_pub = self.create_publisher(Image, f'/bin_mask', queue_size=1)
+        self.enhanced_pub = self.create_publisher(Image, f'/bin_enhanced', queue_size=1)
+        self.annotated_pub = self.create_publisher(Image, f'/bin_annotated', queue_size=1)
         self.srv = Server(hsv_paramsConfig, self.reconfigure_callback, 'hsv_params')
 
     def handle_frame(self, msg):
@@ -68,6 +68,11 @@ class BinHsv(Node):
         return config
     
 
+def main():
+    rclpy.init()
+    node = BinHsv(rclpy.utilities.remove_ros_args(sys.argv)[1] != "0")
+    rclpy.spin(node)
+
+
 if __name__=='__main__' :
-    node = BinHsv()
-    rospy.spin()
+    main()
