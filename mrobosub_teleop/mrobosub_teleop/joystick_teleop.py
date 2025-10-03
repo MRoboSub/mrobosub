@@ -2,16 +2,12 @@
 
 from enum import Enum
 from typing import List
-
-from matplotlib import axes
-import rclpy
 from sensor_msgs.msg import Joy
 from std_msgs.msg import Float64
-from typing import Dict, Union, Tuple
+from typing import Dict, Tuple
 from mrobosub_lib import Node
-import os
-from ament_index_python.packages import get_package_share_directory
-
+import yaml
+import rclpy
 
 class ButtonCommand(int, Enum):
     INCREASE = 1
@@ -91,26 +87,16 @@ class DOF:
         self.scale_p = scale_p
         self.istogglable = istoggleable
 
-        self.twist_pub = node.create_publisher(
-            Float64, f"/target_twist/{name}", qos_profile=1
-        )
-        self.pose_pub = node.create_publisher(
-            Float64, f"/target_pose/{name}", qos_profile=1
-        )
-        self.pose_sub = node.create_subscription(
-            Float64, f"/pose/{name}", self.pose_callback, qos_profile=1
-        )
+        self.twist_pub = node.create_publisher(Float64, f"/target_twist/{name}", qos_profile=1)
+        self.pose_pub = node.create_publisher(Float64, f"/target_pose/{name}", qos_profile=1)
+        self.pose_sub = node.create_subscription(  Float64, f"/pose/{name}", self.pose_callback, qos_profile=1)
 
     def pose_callback(self, msg: Float64) -> None:
         self.pos = msg.data
 
     def update(self, command: ButtonCommand, scale: float) -> None:
-        self.state ^= int(
-            not bool(abs(command)) and self.istogglable
-        )  # toggle if command is TOGGLE && istoggleable
-        self.scale = (
-            self.scale_t * self.state + self.scale_p * (1 - self.state)
-        ) * scale  # set scale based on state
+        self.state ^= int(not bool(abs(command)) and self.istogglable)  # toggle if command is TOGGLE && istoggleable
+        self.scale = ( self.scale_t * self.state + self.scale_p * (1 - self.state)) * scale  # set scale based on state
         self.setPoint = self.pos + self.scale_p * scale
 
     def publish(self) -> None:
@@ -155,14 +141,10 @@ class Joystick_teleop(Node):
         super().__init__("joystick_teleopn")
         # load params
 
-        paramsfile = paramsfile = (
-            "/home/ubuntu/ros2_ws/src/mrobosub_teleop/params/joystick_controls_b2a.yaml"
-        )
+        paramsfile = paramsfile = ("/home/ubuntu/ros2_ws/src/mrobosub_teleop/params/joystick_controls_b2a.yaml")
         # load directly from params folder, instead of ros2 param server (do not support recursive dict)
 
         with open(paramsfile, "r") as f:
-            import yaml
-
             params = yaml.safe_load(f)
         self.axes = params["axes"]
         self.buttons = params["buttons"]
@@ -170,17 +152,13 @@ class Joystick_teleop(Node):
         print(self.axes)
         print(self.buttons)
 
-        self.input_subscriber = self.create_subscription(
-            Joy, "/joy", self.joystick_callback, qos_profile=1
-        )
-        self.wrench_pubs = [
-            self.create_publisher(Float64, f"/output_wrench/{axis}", qos_profile=1)
-            for axis in ["sway", "surge", "heave", "yaw", "roll", "pitch"]
-        ]
+        self.input_subscriber = self.create_subscription(Joy, "/joy", self.joystick_callback, qos_profile=1)
+        self.wrench_pubs = [self.create_publisher(Float64, f"/output_wrench/{axis}", qos_profile=1) for axis in ["sway", "surge", "heave", "yaw", "roll", "pitch"]]
         # Globals
         self.buttonsInstance: List[Button] = []
         self.DOFInstance: Dict[str, DOF] = {}
         self.stateMachineMode = False
+        self._hard_stop = False
         self.timer = self.create_timer(1.0 / 50, self.loop)
         for i in range(6):
             if DOFConfig := self.axes.get(str(i)):
@@ -204,18 +182,13 @@ class Joystick_teleop(Node):
     def joystick_callback(self, msg: Joy):
         for button in self.buttonsInstance:
             button.update(msg.buttons[button.idx] == 1)
-            if button.rise_edge:
-                name, command = button.command
-                if name == "estop":
-                    self.hard_stop()
-                    return
-                elif name == "switch":
-                    self.stateMachineMode ^= True
-                else:
-                    if tar := self.DOFInstance.get(name):
-                        tar.update(command, msg.axes[tar.idx])
-                    else:
-                        raise ValueError(f"Button command {name} not recognised")
+            if not button.rise_edge:
+                continue
+            name, command = button.command
+            self._hard_stop |= (name == "estop")
+            self.stateMachineMode ^= (name == "switch")
+            if name not in ("estop", "switch"):
+                (self.DOFInstance.get(name) or (_ for _ in ()).throw(ValueError(f"Button command {name} not recognised"))).update(command, msg.axes[self.DOFInstance[name].idx])
 
     def hard_stop(self):
         for pub in self.wrench_pubs:
@@ -223,7 +196,7 @@ class Joystick_teleop(Node):
         return
 
     def loop(self):
-        if not self.stateMachineMode:
+        if not (self._hard_stop and self.stateMachineMode):
             for dof in self.DOFInstance.values():
                 dof.publish()
             else:
@@ -234,7 +207,6 @@ def main():
     rclpy.init()
     node = Joystick_teleop()
     rclpy.spin(node)
-
 
 if __name__ == "__main__":
     main()
