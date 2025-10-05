@@ -22,7 +22,6 @@ class BinHsv(Node):
 
         self.declare_params()
         self.timing_threshold = self.get_parameter('timing_threshold').get_parameter_value().double_value
-        self.get_logger().info(f"{self.timing_threshold=}")
 
         self.br = CvBridge()
 
