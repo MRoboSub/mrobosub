@@ -40,10 +40,10 @@ class MlExecutor(Node):
             Image, "/zed2/zed_node/rgb/image_rect_color", self.zed_callback
         )
         self.create_subscription(Float64, "/ml/run_until", self.run_until_callback)
-        self.detection_pub = self.create_publisher(Detections, "/ml/detections", queue_size=1)
+        self.detection_pub = self.create_publisher(Detections, "/ml/detections", qos_profile=1)
 
     def zed_callback(self, image: Image):
-        if rclpy.get_time() > self.run_until_time:
+        if self.get_clock().now().nanoseconds / 1e9 > self.run_until_time:
             return
 
         start = time.time()
