@@ -24,6 +24,7 @@ setup(
     entry_points={
         'console_scripts': [
             'bin_hsv = mrobosub_perception.bin_hsv:main',
+            'pathmarker_hsv= mrobosub_perception.hsv_pathmarker:main'
         ],
     },
 )

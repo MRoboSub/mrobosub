@@ -6,7 +6,8 @@ class TimedResponseType(Protocol):
     """
     For typing, ensures response has the valid field
     """
-    valid: bool
+    @property
+    def valid(self) -> bool:...
 
 TimedResponse = TypeVar("TimedResponse", bound=TimedResponseType)
 
@@ -33,7 +34,7 @@ class TimedService():
         self.srv = node.create_service(ServiceType, service_name, self._handle_obj_request)
 
 
-    def _handle_obj_request(self, req: Any, res: TimedResponse) -> TimedResponse:
+    def _handle_obj_request[T: TimedResponseType](self, req: Any, res: T) -> T:
         """
         Returns the response in the buffer if it exists, if not returns response with valid field false
         """

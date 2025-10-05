@@ -1,4 +1,4 @@
-hsv_params:
+hsv_pathmarker:
   ros__parameters:
     hue_lo: 34 
     hue_hi: 100
