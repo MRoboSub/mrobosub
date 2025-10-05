@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import rclpy
 
 from inertial_sense_ros2.msg import DIDINS1, PIMU

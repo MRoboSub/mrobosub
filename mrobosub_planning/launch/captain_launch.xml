@@ -3,7 +3,5 @@
     <arg name="state" default="common_states.Start" />
     <node name="captain" pkg="mrobosub_planning" exec="captain" 
         output="screen" args="$(var machine) $(var state)">
-        <param from="$(find-pkg-share mrobosub_planning)/param/globals.yaml" />
-        <param from="$(find-pkg-share mrobosub_planning)/param/common.yaml" />
     </node>
 </launch>

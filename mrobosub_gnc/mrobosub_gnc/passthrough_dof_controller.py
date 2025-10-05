@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import argparse
 import sys
 import rclpy
@@ -32,10 +30,10 @@ class PassthroughDofController(Node):
         self.pub_output_dof(target_twist.data)
 
     def pub_output_dof(self, output: float):
-        self.output_pub.publish(output)
+        self.output_pub.publish(Float64(data=output))
 
     def destroy_node(self):
-        self.output_pub.publish(0)
+        self.output_pub.publish(Float64(data=0))
         super().destroy_node()        
 
 

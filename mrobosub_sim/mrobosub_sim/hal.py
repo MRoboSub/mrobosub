@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import sys
 import warnings
 from dataclasses import dataclass, field
@@ -15,7 +13,7 @@ from geometry_msgs.msg import Vector3
 from sensor_msgs.msg import Image
 from std_msgs.msg import Float32, Header
 from std_srvs.srv import SetBool
-from typing_extensions import List, Self, Union
+from typing_extensions import Self
 
 from mrobosub_lib import Node
 from mrobosub_msgs.msg import Detection, Detections, Dvl, ImuINS, ImuPIMU, MotorState
@@ -58,7 +56,7 @@ class SensorData:
 
         dvl = Dvl()
         dvl.header = header
-        dvl.velocity = Vector3(x=vals[1], y=vals[2], z=vals[3])
+        dvl.velocity = np.array(vals[1:4])
 
         imu_ins = ImuINS()
         imu_ins.header.stamp = node.get_clock().now().to_msg()
@@ -152,7 +150,7 @@ class MLTargetData:
 
 @dataclass
 class MLTargetsData:
-    targets: List[MLTargetData]
+    targets: list[MLTargetData]
     width: float
     height: float
 
@@ -212,15 +210,15 @@ class ZedOnData:
         return MessageKind.ZED_ON
 
 
-MessageReceiveData = Union[SensorData, ZedImage, BotcamImage, MLTargetData]
-MessageSendData = Union[MotorData, BotcamOnData, ZedOnData]
-MessageData = Union[MessageReceiveData, MessageSendData]
+MessageReceiveData = SensorData | ZedImage | BotcamImage | MLTargetData
+MessageSendData = MotorData | BotcamOnData | ZedOnData
+MessageData = MessageReceiveData | MessageSendData
 
 
 class SimDepth:
     def __init__(self, hal: "SimHal") -> None:
         self.hal = hal
-        self.depth_pub = self.hal.create_publisher(Float32, "/depth/raw_depth", 1)
+        self.depth_pub = self.hal.create_publisher(Float32, "/depth/raw_depth", qos_profile=1)
 
     def handle_sensors(self, data: SensorData):
         self.depth_pub.publish(data.depth)
@@ -229,7 +227,7 @@ class SimDepth:
 class SimDvl:
     def __init__(self, hal: "SimHal") -> None:
         self.hal = hal
-        self.dvl_pub = self.hal.create_publisher(Dvl, "/dvl/raw_dvl", 1)
+        self.dvl_pub = self.hal.create_publisher(Dvl, "/dvl/raw_dvl", qos_profile=1)
 
     def handle_sensors(self, data: SensorData):
         self.dvl_pub.publish(data.dvl)
@@ -238,8 +236,8 @@ class SimDvl:
 class SimImu:
     def __init__(self, hal: "SimHal") -> None:
         self.hal = hal
-        self.imu_ins_pub = self.hal.create_publisher(ImuINS, "/imu_INS", 1)
-        self.imu_pimu_pub = self.hal.create_publisher(ImuPIMU, "/imu_PIMU", 1)
+        self.imu_ins_pub = self.hal.create_publisher(ImuINS, "/imu_INS", qos_profile=1)
+        self.imu_pimu_pub = self.hal.create_publisher(ImuPIMU, "/imu_PIMU", qos_profile=1)
 
     def handle_sensors(self, data: SensorData):
         self.imu_ins_pub.publish(data.imu_ins)
@@ -249,7 +247,7 @@ class SimImu:
 class SimBotcam:
     def __init__(self, hal: "SimHal") -> None:
         self.hal = hal
-        self.botcam_pub = self.hal.create_publisher(Image, "/rectified_image", 1)
+        self.botcam_pub = self.hal.create_publisher(Image, "/rectified_image", qos_profile=1)
         self.br = CvBridge()
         self.last_image_time = 0
         self.botcam_on_srv = self.hal.create_service(
@@ -274,9 +272,9 @@ class SimBotcam:
 class SimZed:
     def __init__(self, hal: "SimHal") -> None:
         self.hal = hal
-        self.zed_raw_pub = self.hal.create_publisher(Image, "/zed/raw", 1)
+        self.zed_raw_pub = self.hal.create_publisher(Image, "/zed/raw", qos_profile=1)
         self.zed_crop_pub = self.hal.create_publisher(
-            Image, "/zed2/zed_node/rgb/image_rect_color", 1
+            Image, "/zed2/zed_node/rgb/image_rect_color", qos_profile=1
         )
         self.br = CvBridge()
         self.last_image_time = 0
@@ -323,7 +321,7 @@ class SimThrusterController:
     def __init__(self, hal: "SimHal") -> None:
         self.hal = hal
         self.motor_state_sub = self.hal.create_subscription(
-            MotorState, "/motor_output", self.callback, 1
+            MotorState, "/motor_output", self.callback, qos_profile=1
         )
 
     def callback(self, data: MotorState):
@@ -333,7 +331,7 @@ class SimThrusterController:
 class SimML:
     def __init__(self, hal: "SimHal") -> None:
         self.hal = hal
-        self.detections_pub = self.hal.create_publisher(Detections, "/ml/detections", 1)
+        self.detections_pub = self.hal.create_publisher(Detections, "/ml/detections", qos_profile=1)
 
     def handle_targets(self, data: MLTargetsData):
         message = Detections(
@@ -381,7 +379,7 @@ class SimHal(Node):
 
     def __init__(self, incoming_port: int, outgoing_port: int):
         super().__init__("sim_hal")
-        self.net_clients: List[SimHal.Client] = []
+        self.net_clients: list[SimHal.Client] = []
         self.outgoing_server = net.Server(
             "0.0.0.0", outgoing_port, self.outgoing_callback
         )

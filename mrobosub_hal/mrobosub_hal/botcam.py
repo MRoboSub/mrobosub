@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import rclpy
 from sensor_msgs.msg import Image
 import cv2

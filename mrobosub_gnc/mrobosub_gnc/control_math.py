@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 def clamp(x: float, min: float = -1, max: float = 1) -> float:
     """
     Restricts x to the range min, max. If x leaves the range then the closer extreme is returned. If min > max, then they are swapped.
