@@ -20,14 +20,14 @@ RUN apt-get update && \
                         python3-serial \
                         pipx
 
-RUN pipx install mypy && \
-    pipx ensurepath
-
 RUN echo "ALL ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 SHELL ["/bin/bash", "-c"] 
 
 USER 1000:1000
+
+RUN pipx install mypy && \
+    pipx ensurepath
 
 RUN mkdir -p /home/ubuntu/jlb_pid_ws/src && \
     cd /home/ubuntu/jlb_pid_ws/src && \
