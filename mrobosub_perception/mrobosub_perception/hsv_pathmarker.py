@@ -23,20 +23,20 @@ class PathmarkerHsv(Node):
         self.declare_parameters(
             namespace='',
             parameters=[
-                ('hsv_params.ros__parameters.hue_lo',rclpy.Parameter.Type.INTEGER),
-                ('hsv_params.ros__parameters.hue_hi',rclpy.Parameter.Type.INTEGER),
-                ('hsv_params.ros__parameters.sat_lo',rclpy.Parameter.Type.INTEGER),
-                ('hsv_params.ros__parameters.sat_hi',rclpy.Parameter.Type.INTEGER),
-                ('hsv_params.ros__parameters.val_lo',rclpy.Parameter.Type.INTEGER),
-                ('hsv_params.ros__parameters.val_hi',rclpy.Parameter.Type.INTEGER),
-                ('hsv_params.ros__parameters.wb_shift',rclpy.Parameter.Type.INTEGER),
-                ('hsv_params.ros__parameters.wb_scale',rclpy.Parameter.Type.INTEGER),
+                ('hsv_params.ros__parameters.hue_lo',rclpy.Parameter.Type.DOUBLE),
+                ('hsv_params.ros__parameters.hue_hi',rclpy.Parameter.Type.DOUBLE),
+                ('hsv_params.ros__parameters.sat_lo',rclpy.Parameter.Type.DOUBLE),
+                ('hsv_params.ros__parameters.sat_hi',rclpy.Parameter.Type.DOUBLE),
+                ('hsv_params.ros__parameters.val_lo',rclpy.Parameter.Type.DOUBLE),
+                ('hsv_params.ros__parameters.val_hi',rclpy.Parameter.Type.DOUBLE),
+                ('hsv_params.ros__parameters.wb_shift',rclpy.Parameter.Type.DOUBLE),
+                ('hsv_params.ros__parameters.wb_scale',rclpy.Parameter.Type.DOUBLE),
                 ('hsv_params.ros__parameters.white_balance',rclpy.Parameter.Type.BOOL),
                 ('hsv_params.ros__parameters.histogram_equalization',rclpy.Parameter.Type.BOOL),
-                ('hsv_params.ros__parameters.erode_radius',rclpy.Parameter.Type.INTEGER),
-                ('hsv_params.ros__parameters.dilate_radius',rclpy.Parameter.Type.INTEGER),
-                ('hsv_params.ros__parameters.median_radius',rclpy.Parameter.Type.INTEGER),
-                ('hsv_params.ros__parameters.gaussian_radius',rclpy.Parameter.Type.INTEGER),
+                ('hsv_params.ros__parameters.erode_radius',rclpy.Parameter.Type.DOUBLE),
+                ('hsv_params.ros__parameters.dilate_radius',rclpy.Parameter.Type.DOUBLE),
+                ('hsv_params.ros__parameters.median_radius',rclpy.Parameter.Type.DOUBLE),
+                ('hsv_params.ros__parameters.gaussian_radius',rclpy.Parameter.Type.DOUBLE),
                 ('hsv_params.ros__parameters.timing_threshold',rclpy.Parameter.Type.DOUBLE)
             ])
         self.br = CvBridge()
