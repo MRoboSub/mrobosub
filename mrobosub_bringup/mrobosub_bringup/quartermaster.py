@@ -158,7 +158,7 @@ class Quartermaster(Node):
         request = Trigger.Request()
         self.zero_state_future = self.zero_state_srv.call_async(request)
     
-        def callback(self, future):
+        def callback(future):
             try: 
                 response = future.result()
                 if response is not None:
