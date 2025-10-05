@@ -10,7 +10,6 @@ RUN apt-get update && \
                         screen \
                         python3-tk \
                         libudev-dev \
-                        mypy \
                         tmux \
                         less \
                         ros-jazzy-ros2-control \
@@ -18,7 +17,11 @@ RUN apt-get update && \
                         python3-typing-extensions \
                         python3-scipy \
                         python3-transforms3d \
-                        python3-serial
+                        python3-serial \
+                        pipx
+
+RUN pipx install mypy && \
+    pipx ensurepath
 
 RUN echo "ALL ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers
 
