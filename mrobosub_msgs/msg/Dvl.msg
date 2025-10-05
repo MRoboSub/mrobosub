@@ -1,3 +1,2 @@
-float32 velocityA
-float32 velocityB
-float32 velocityC
+std_msgs/Header header
+float32[3] velocity

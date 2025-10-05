@@ -1,47 +1,71 @@
-FROM osrf/ros:noetic-desktop
+FROM docker.io/osrf/ros:jazzy-desktop
+# MacOS users with Apple Silicon should use the line below instead:
+# FROM --platform=linux/arm64 docker.io/osrf/ros:jazzy-desktop
 
-# turtlebot3 packages, vim, screen
 RUN apt-get update && \
-    apt-get install -y  python3-catkin-tools \
-                        python-is-python3 \
+    apt-get install -y  python-is-python3 \
                         python3-pip \
                         git \
                         vim \
                         screen \
                         python3-tk \
+                        libudev-dev \
+                        mypy \
                         tmux \
-                        typing_extensions
+                        less \
+                        ros-jazzy-ros2-control \
+                        ros-jazzy-ros2-controllers \
+                        python3-typing-extensions \
+                        python3-scipy \
+                        python3-transforms3d \
+                        python3-serial
 
-RUN pip install mypy -U
+RUN echo "ALL ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 SHELL ["/bin/bash", "-c"] 
 
+USER 1000:1000
+
+RUN mkdir -p /home/ubuntu/jlb_pid_ws/src && \
+    cd /home/ubuntu/jlb_pid_ws/src && \
+    git clone https://github.com/HenryLeC/ros2-pid.git && \
+    cd /home/ubuntu/jlb_pid_ws && \
+    source /opt/ros/jazzy/setup.bash && \
+    colcon build --symlink-install
+    
+RUN mkdir -p /home/ubuntu/inertial_sense_ws/src && \
+    cd /home/ubuntu/inertial_sense_ws/src && \
+    git clone https://github.com/inertialsense/inertial-sense-sdk.git && \
+    cd inertial-sense-sdk && \
+    git submodule update --init --recursive && \
+    cd .. && \
+    ln -s inertial-sense-sdk/ROS/ros2 && \
+    cd /home/ubuntu/inertial_sense_ws && \
+    source /opt/ros/jazzy/setup.bash && \
+    colcon build --symlink-install && \
+    source /home/ubuntu/inertial_sense_ws/install/setup.bash
+
 # Create workspace structure
-RUN mkdir -p /root/catkin_ws/src && \
-    cd /root/catkin_ws && \
-    source /opt/ros/noetic/setup.bash && \
-    catkin build
-
-# Unity simulation
-RUN cd /root/catkin_ws/src && \
-    git clone https://github.com/Unity-Technologies/ROS-TCP-Endpoint
-
-# Build new packages
-RUN cd /root/catkin_ws && \
-    source /root/catkin_ws/devel/setup.bash && \
-    catkin build
+RUN mkdir -p /home/ubuntu/ros2_ws/src && \
+    cd /home/ubuntu/ros2_ws && \
+    source /opt/ros/jazzy/setup.bash && \
+    colcon build --symlink-install && \
+    source /home/ubuntu/ros2_ws/install/setup.bash
+#    rosdep install --from-paths /home/ubuntu/ros2_ws/src -y --ignore-src
 
 # Copy dotfiles
 COPY .vimrc /root/
-COPY .screenrc /root/
 
-WORKDIR /root/catkin_ws
+WORKDIR /home/ubuntu/ros2_ws/src/
 
 EXPOSE 10000
 
-RUN echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc && \
-    echo "source /root/catkin_ws/devel/setup.bash" >> /root/.bashrc
+# Add coloring to ros messages
+RUN echo "export RCUTILS_COLORIZED_OUTPUT=1" >> /home/ubuntu/.bashrc
 
-RUN ln -s "/root/catkin_ws/src/mrobosub/.bash_aliases" "/root/.bash_aliases" && \
-    "/root/catkin_ws/src/mrobosub/.tmux.conf" "/root/.tmux.conf"
+RUN echo "source /opt/ros/jazzy/setup.bash" >> /home/ubuntu/.bashrc && \
+    echo "source /home/ubuntu/jlb_pid_ws/install/setup.bash" >> /home/ubuntu/.bashrc && \
+    echo "source /home/ubuntu/inertial_sense_ws/install/setup.bash" >> /home/ubuntu/.bashrc && \
+    echo "source /home/ubuntu/ros2_ws/install/setup.bash" >> /home/ubuntu/.bashrc && \
+    ln -s "/home/ubuntu/ros2_ws/src/.bash_aliases" "/home/ubuntu/.bash_aliases"
 

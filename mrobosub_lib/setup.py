@@ -1,10 +1,23 @@
-from distutils.core import setup
-from catkin_pkg.python_setup import generate_distutils_setup
+from setuptools import find_packages, setup
 
+package_name = "mrobosub_lib"
 
-d = generate_distutils_setup(
-    packages=['mrobosub_lib'],
-    package_dir={'': 'src'},
+setup(
+    name=package_name,
+    version="2.0.0",
+    packages=find_packages(exclude=["test"]),
+    data_files=[
+        ("share/ament_index/resource_index/packages", [f"resource/{package_name}"]),
+        (f"share/{package_name}", ["package.xml"]),
+    ],
+    install_requires=["setuptools"],
+    zip_safe=True,
+    maintainer="Michigan Robotic Submarine",
+    maintainer_email="michiganroboticsubmarine@gmail.com",
+    description="The mrobosub_lib package",
+    license="BSD-2.0",
+    tests_require=["pytest"],
+    entry_points={
+        "console_scripts": [],
+    },
 )
-
-setup(**d)

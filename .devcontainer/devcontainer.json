@@ -2,12 +2,13 @@
   "name": "Michigan RoboSub Main Software Project",
   "dockerComposeFile": "../docker-compose.yml",
   "service": "mrobosub",
-  "workspaceFolder": "/root/catkin_ws/src/mrobosub",
+  "workspaceFolder": "/home/ubuntu/ros2_ws/src",
   "shutdownAction": "stopCompose",
   "customizations": {
     "vscode": {
       "extensions": [
-        "ms-python.python"
+        "ms-python.python",
+        "ms-python.black-formatter"
       ]
     }
   }

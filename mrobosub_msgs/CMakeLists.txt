@@ -1,40 +1,42 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.8)
 project(mrobosub_msgs)
 
-find_package(catkin REQUIRED 
-    COMPONENTS std_msgs sensor_msgs message_generation)
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
 
 
-add_message_files(
-    DIRECTORY msg
-    FILES 
-    HydrophoneAngle.msg
-    HeadingRequest.msg
-    Dvl.msg
-    MotorState.msg
-    Imu_INS.msg
-    Imu_PIMU.msg
-    Detection.msg
-    Detections.msg
+
+# find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(sensor_msgs REQUIRED)
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+    "msg/Detection.msg"
+    "msg/Detections.msg"
+    "msg/Dvl.msg"
+    "msg/ImuINS.msg"
+    "msg/ImuPIMU.msg"
+    "msg/MotorState.msg"
+    "msg/Pose.msg"
+    "srv/BinCamPos.srv"
+    "srv/HsvFilterImage.srv"
+    "srv/ObjectPosition.srv"
+    "srv/PathmarkerAngle.srv"
+    DEPENDENCIES sensor_msgs
 )
 
-add_service_files(
-    DIRECTORY srv
-    FILES 
-    BinCamPos.srv
-    ObjectPosition.srv
-    PathmarkerAngle.srv
-    HsvFilterImage.srv
-)
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # comment the line when a copyright and license is added to all source files
+  set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # comment the line when this package is in a git repo and when
+  # a copyright and license is added to all source files
+  set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
 
-generate_messages(
-    DEPENDENCIES
-    sensor_msgs
-)
-
-
-catkin_package(
-    # LIBRARIES ${PROJECT_NAME}
-    CATKIN_DEPENDS std_msgs message_runtime
-)
-
+ament_package()

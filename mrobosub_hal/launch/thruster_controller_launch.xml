@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="mrobosub_hal" exec="thruster_controller" name="thruster_controller" output="screen">
+        <param from="$(find-pkg-share mrobosub_hal)/params/thruster_controller_params.yaml" />
+    </node>
+</launch>

@@ -1,0 +1,7 @@
+<launch>
+    <arg name="machine" default="standard" />
+    <arg name="state" default="common_states.Start" />
+    <node name="captain" pkg="mrobosub_planning" exec="captain" 
+        output="screen" args="$(var machine) $(var state)">
+    </node>
+</launch>
