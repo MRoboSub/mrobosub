@@ -3,13 +3,13 @@ from enum import Enum
 import time
 import os
 import multiprocessing
+from typing import Protocol
 
 import rclpy
 from rclpy.qos import QoSProfile
 from ament_index_python.packages import get_package_share_directory
-from std_msgs.msg import Bool, Float64
+from std_msgs.msg import Bool
 from std_srvs.srv import SetBool, Trigger
-from rclpy.executors import SingleThreadedExecutor
 
 from mrobosub_lib import Node
 from . import constants as const
@@ -39,6 +39,14 @@ class LedState:
     strange: bool
     charm: bool
     led_on: bool
+
+
+class MessageResponse(Protocol):
+    @property
+    def success(self) -> bool: ...
+
+    @property
+    def message(self) -> str: ...
 
 
 class Quartermaster(Node):
@@ -132,70 +140,37 @@ class Quartermaster(Node):
             self.get_logger().info("charm changed")
         self.hall_effect_last.charm = new_value.data
 
-    async def call_thruster_mixing_srv(self) -> None:
-        service_live = self.thruster_mixing_srv.wait_for_service(
+    async def _call_srv[Req, Res: MessageResponse](
+        self, client: rclpy.Client[Req, Res], request: Req
+    ) -> Res | None:
+        service_live = client.wait_for_service(
             timeout_sec=const.SERVICE_TIMEOUT_DURATION
         )
 
         if not service_live:
-            self.get_logger().error(f"Thruster mixing service server not available")
+            self.get_logger().error(f"{client.service_name} server not available")
             return
 
-        self.get_logger().info(f"Thruster mixing ready")
+        self.get_logger().info(f"service {client.service_name} ready")
 
-        request = SetBool.Request(data=True)
-        response = await self.thruster_mixing_srv.call_async(request)
+        response = await client.call_async(request)
 
         if response is None:
-            self.get_logger().error("Thruster mixing service call failed")
-            return
+            self.get_logger().error(f"service {client.service_name} call failed")
+        else:
+            self.get_logger().info(
+                f"service {client.service_name} response: success={response.success}, message='{response.message}'"
+            )
+        return response
 
-        self.get_logger().info(
-            f"Thruster mixing service response: success={response.success}, message='{response.message}'"
-        )
+    async def call_thruster_mixing_srv(self) -> None:
+        await self._call_srv(self.thruster_mixing_srv, SetBool.Request(data=True))
 
     async def call_zero_state_srv(self) -> None:
-        service_live = self.zero_state_srv.wait_for_service(
-            timeout_sec=const.SERVICE_TIMEOUT_DURATION
-        )
-
-        if not service_live:
-            self.get_logger().error(f"Zero state service server not available")
-            return
-
-        self.get_logger().info(f"Zero state service ready")
-
-        request = Trigger.Request()
-        response = await self.zero_state_srv.call_async(request)
-
-        if response is None:
-            self.get_logger().error("Zero state service call failed")
-            return
-
-        self.get_logger().info(
-            f"Service response: success={response.success}, message='{response.message}'"
-        )
+        await self._call_srv(self.zero_state_srv, Trigger.Request())
 
     async def call_soft_stop_srv(self) -> None:
-        service_live = self.soft_stop_srv.wait_for_service(
-            timeout_sec=const.SERVICE_TIMEOUT_DURATION
-        )
-        if not service_live:
-            self.get_logger().error(f"Soft stop service server not available")
-            return
-
-        self.get_logger().info(f"Soft stop ready")
-
-        request = Trigger.Request()
-        response = await self.soft_stop_srv.call_async(request)
-
-        if response is None:
-            self.get_logger().error("Soft stop service call failed")
-            return
-
-        self.get_logger().info(
-            f"Service response: success={response.success}, message='{response.message}'"
-        )
+        await self._call_srv(self.soft_stop_srv, Trigger.Request())
 
     def timer_callback(self) -> None:
         # In order to visually ensure quartermaster has started, turn on the LED
