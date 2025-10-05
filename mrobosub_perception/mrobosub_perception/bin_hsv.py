@@ -59,7 +59,7 @@ class BinHsv(Node):
             self.enhanced_pub.publish(self.br.cv2_to_imgmsg(enhanced_img, encoding='bgr8'))
             self.annotated_pub.publish(self.br.cv2_to_imgmsg(annotated_img, encoding='bgr8'))
             
-            response = ObjectPositionResponse()
+            response = ObjectPosition.Response()
             if detection is not None:
                 x_theta, y_theta = pixels_to_angles(bgr_img, detection.x, detection.y)
                 response.found = True

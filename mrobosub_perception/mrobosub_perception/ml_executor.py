@@ -8,7 +8,7 @@ import torch
 import rclpy
 import numpy as np
 from cv_bridge import CvBridge
-from mrobosub_lib.lib import Node
+from mrobosub_lib import Node
 
 from std_msgs.msg import Float64
 from sensor_msgs.msg import Image
