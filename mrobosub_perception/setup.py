@@ -23,6 +23,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'dummy_botcam_pub = mrobosub_perception.dummy_botcam_publisher:main',
             'bin_hsv = mrobosub_perception.bin_hsv:main',
             'pathmarker_hsv= mrobosub_perception.pathmarker_hsv:main',
             'ml_executor = mrobosub_perception.ml_executor:main',

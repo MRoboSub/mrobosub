@@ -62,7 +62,7 @@ def imgmsg_to_cv2(img_msg):
 counters = [0] * len(Targets)
 def handle_obj_request(idx, msg):
     global counters
-    obj_msg = ObjectPositionResponse()
+    obj_msg = ObjectPosition.Response()
     obj_msg.found = counters[idx] > 10 
     counters[idx] += 1
     return obj_msg

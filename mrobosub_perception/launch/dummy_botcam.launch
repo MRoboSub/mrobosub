@@ -1,0 +1,9 @@
+<launch>
+    <node 
+      name="dummy_botcam_publisher"
+      pkg="mrobosub_perception"
+      exec="dummy_botcam_pub"
+      output="screen"
+    >
+    </node> 
+</launch>

@@ -10,15 +10,12 @@ class DummyBotCam(Node):
     def __init__(self):
         super().__init__('dummy_botcam')
         self.br = CvBridge()
-        self.pub = self.create.publisher( Image, '/dummy_botcam', queue_size=1)
+        self.pub = self.create.publisher( Image, '/dummy_botcam', qos_profile=1)
+        self.declare_parameter("image_number", 1)
         self.srv = Server(dummy_botcam_paramsConfig, self.reconfigure_callback, 'dummy_botcam_config')
-        self.image_number = 1
+        self.image_number = self.get_parameter('image_number').get_parameter_value().int_value
         self.timer = self.create_timer(1, self.loop)
         
-
-    def reconfigure_callback(self, config, level):
-        self.image_number = config["image_number"]
-        return config
 
     def loop(self):
             img_path = f"../dummy_botcam_images/{self.image_number}.png"
@@ -32,7 +29,10 @@ class DummyBotCam(Node):
             except Exception as e:
                 self.get_logger().error(f"Failed to publish dummy botcam image {img_path}: {e}")
 
-if __name__ == "__main__":
+def main():
+    rclpy.init()
     node = DummyBotCam()
-    node.run()
+    rclpy.spin(node)
 
+if __name__ == "__main__":
+    main()
