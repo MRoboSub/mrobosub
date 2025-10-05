@@ -20,10 +20,10 @@ class LaunchManager:
     def __init__(self, launch_file_path: str) -> None:
         self.launch_file_path = launch_file_path
         self.process: Process | None = None
-        self.shutdown_queue: "Queue[bool]" = Queue()
+        self.shutdown_queue: Queue[bool] = Queue()
 
     def run_launch_in_process(
-        self, launch_file_path: str, shutdown_queue: "Queue[bool]"
+        self, launch_file_path: str, shutdown_queue: Queue[bool]
     ) -> None:
         launch_service = LaunchService()
         launch_description = LaunchDescription(
