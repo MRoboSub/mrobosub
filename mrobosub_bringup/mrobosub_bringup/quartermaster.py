@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 from enum import Enum
-import time
 import os
 import multiprocessing
-from typing import Protocol, TYPE_CHECKING
+from typing import Protocol
 
 import rclpy
 from rclpy.client import Client
@@ -12,11 +11,7 @@ from ament_index_python.packages import get_package_share_directory
 from std_msgs.msg import Bool
 from std_srvs.srv import SetBool, Trigger
 
-if TYPE_CHECKING:
-    from mrobosub_lib.mrobosub_lib import Node
-else:
-    from mrobosub_lib import Node
-
+from mrobosub_lib import Node
 from . import constants as const
 from .launch_manager import LaunchManager
 
