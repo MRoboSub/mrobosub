@@ -3,8 +3,7 @@ from enum import Enum
 import time
 import os
 import multiprocessing
-from typing import Protocol
-from typing import reveal_type
+from typing import Protocol, TYPE_CHECKING
 
 import rclpy
 from rclpy.client import Client
@@ -13,7 +12,11 @@ from ament_index_python.packages import get_package_share_directory
 from std_msgs.msg import Bool
 from std_srvs.srv import SetBool, Trigger
 
-from mrobosub_lib import Node
+if TYPE_CHECKING:
+    from mrobosub_lib.mrobosub_lib import Node
+else:
+    from mrobosub_lib import Node
+
 from . import constants as const
 from .launch_manager import LaunchManager
 
@@ -73,8 +76,7 @@ class Quartermaster(Node):
             Bool, "/buttons/charm", self.handle_charm_change, 1
         )
 
-        executor = rclpy.get_global_executor()
-        complete_future = executor.create_task(lambda: None)
+        complete_future = self.get_executor().create_task(lambda: None)
         self.thruster_mixing_srv = self.create_client(
             SetBool, "/thruster_mixing/enable"
         )
@@ -218,12 +220,12 @@ class Quartermaster(Node):
             self.get_logger().info("reached state machine")
             # Needed to ensure the service isn't called before the future is returned
             if self.thruster_mixing_future.done():
-                self.thruster_mixing_future = self.executor.create_task(
+                self.thruster_mixing_future = self.get_executor().create_task(
                     self.call_thruster_mixing_srv()
                 )
 
             if self.zero_state_future.done():
-                self.zero_state_future = self.executor.create_task(
+                self.zero_state_future = self.get_executor().create_task(
                     self.call_zero_state_srv()
                 )
 
@@ -237,7 +239,7 @@ class Quartermaster(Node):
         elif self.current_state == RobotState.RUNNING:
             self.get_logger().info("soft stopping state machine")
             if self.soft_stop_future.done():
-                self.soft_stop_future = self.executor.create_task(
+                self.soft_stop_future = self.get_executor().create_task(
                     self.call_soft_stop_srv()
                 )
 
@@ -246,11 +248,16 @@ class Quartermaster(Node):
             self.captain_launcher.stop()
 
             if self.thruster_mixing_future.done():
-                self.thruster_mixing_future = self.executor.create_task(
+                self.thruster_mixing_future = self.get_executor().create_task(
                     self.call_thruster_mixing_srv()
                 )
 
             self.current_state = RobotState.AMBIENT
+
+    def get_executor(self) -> rclpy.Executor:
+        if self.executor is None:
+            return rclpy.get_global_executor()
+        return self.executor
 
 
 def main() -> None:
