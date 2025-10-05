@@ -4,8 +4,10 @@ import time
 import os
 import multiprocessing
 from typing import Protocol
+from typing import reveal_type
 
 import rclpy
+from rclpy.client import Client
 from rclpy.qos import QoSProfile
 from ament_index_python.packages import get_package_share_directory
 from std_msgs.msg import Bool
@@ -140,9 +142,7 @@ class Quartermaster(Node):
             self.get_logger().info("charm changed")
         self.hall_effect_last.charm = new_value.data
 
-    async def _call_srv[Req, Res: MessageResponse](
-        self, client: rclpy.Client[Req, Res], request: Req
-    ) -> Res | None:
+    async def _call_srv(self, client: Client, request: object) -> None:
         service_live = client.wait_for_service(
             timeout_sec=const.SERVICE_TIMEOUT_DURATION
         )
@@ -153,7 +153,7 @@ class Quartermaster(Node):
 
         self.get_logger().info(f"service {client.service_name} ready")
 
-        response = await client.call_async(request)
+        response: MessageResponse | None = await client.call_async(request)
 
         if response is None:
             self.get_logger().error(f"service {client.service_name} call failed")
@@ -161,7 +161,8 @@ class Quartermaster(Node):
             self.get_logger().info(
                 f"service {client.service_name} response: success={response.success}, message='{response.message}'"
             )
-        return response
+
+        return None
 
     async def call_thruster_mixing_srv(self) -> None:
         await self._call_srv(self.thruster_mixing_srv, SetBool.Request(data=True))
