@@ -149,7 +149,7 @@ class Quartermaster(Node):
 
         if not service_live:
             self.get_logger().error(f"{client.service_name} server not available")
-            return
+            return None
 
         self.get_logger().info(f"service {client.service_name} ready")
 
