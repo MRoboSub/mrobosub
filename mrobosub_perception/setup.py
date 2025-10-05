@@ -1,4 +1,5 @@
 from setuptools import find_packages, setup
+import glob
 
 package_name = 'mrobosub_perception'
 
@@ -10,6 +11,8 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        (f"share/{package_name}/launch", glob.glob("launch/*")),
+        (f"share/{package_name}/params", glob.glob("params/*")),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -20,6 +23,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'bin_hsv = mrobosub_perception.bin_hsv:main',
         ],
     },
 )

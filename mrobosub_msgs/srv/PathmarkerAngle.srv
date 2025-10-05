@@ -1,4 +1,5 @@
 ---
+bool valid              # necessary for TimedService calls to determine if the message is valid or not
 bool found
 float32 angle
 float32 centroid_x

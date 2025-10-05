@@ -1,8 +1,9 @@
-#!/usr/bin/env python
 import cv2
 import enum
 import torch
 import os
+
+## This file should be updated once we choose a new model and our targets change.
 
 class Targets(enum.Enum):
     ABYDOS = 0
@@ -25,7 +26,7 @@ def load_yolo():
     model_path = os.path.join(path, "models/model_2a.pt")
     model = torch.hub.load(yolo_path, 'custom', path=model_path, source='local')  # local repo
     model.conf = 0.25  # NMS confidence threshold
-    return model
+    return model.to(device)
 
 WIDTH = 672
 HEIGHT = 376

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #hsv_filter
 from typing import Tuple
 import cv2
@@ -8,31 +6,32 @@ import sys
 from cv_bridge import CvBridge
 import rclpy
 from rclpy import utilities
-from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse
-from timed_service import TimedService
+from rclpy.node import Node
+from mrobosub_msgs.srv import ObjectPosition
+from mrobosub_perception.timed_service import TimedService
 from sensor_msgs.msg import Image
-from mrobosub_lib.lib import Node
 
-from hsv_pipeline import HsvPipeline
-import utils
+from mrobosub_perception.hsv_pipeline import HsvPipeline
+import mrobosub_perception.utils as utils
 
 class BinHsv(Node):
-    timing_threshold: Param[float]
+    timing_threshold: float
 
-    def __init__(self):
+    def __init__(self, always_run: bool):
         super().__init__('bin_hsv')
 
         self.declare_params()
+        self.timing_threshold = self.get_parameter('timing_threshold').get_parameter_value().double_value
 
         self.br = CvBridge()
 
-        self.always_run = utilities.remove_ros_args(args=sys.argv)[1] != "0" #input 1 for always_run to not have to do service calls always_run:=1
+        self.always_run = always_run
 
-        self.sub = self.create_subcriber(Image, '/rectified_image', self.handle_frame, qos_profile=1)
-        self.serv = TimedService(ObjectPosition, '/bin_object_position', self.timing_threshold)
-        self.mask_pub = self.create_publisher(f'/bin_mask', Image, queue_size=1)
-        self.enhanced_pub = self.create_publisher(Image, "/bin_enhanced", qos_profile=1)
-        self.annotated_pub = self.create_publisher(Image, "/bin_annotated",  qos_profile=1)
+        self.sub = self.create_subscription(Image, '/rectified_image', self.handle_frame, qos_profile=1)
+        self.serv = TimedService(self, '/bin_object_position', ObjectPosition, self.timing_threshold)
+        self.mask_pub = self.create_publisher(Image, f'/bin_mask', qos_profile=1)
+        self.enhanced_pub = self.create_publisher(Image, f'/bin_enhanced', qos_profile=1)
+        self.annotated_pub = self.create_publisher(Image, f'/bin_annotated', qos_profile=1)
 
     def handle_frame(self, msg):
         if(self.serv.should_run() or self.always_run):
@@ -62,34 +61,16 @@ class BinHsv(Node):
             self.serv.set_result(response)
 
     def declare_params(self):
-        self.declare_parameters(
-            namespace='',
-            parameters=[
-                ('timing_threshold', rclpy.Parameter.Type.DOUBLE),
-                ('int_number', None),
-                ('float_number', None),
-                ('str_text', None),
-                ('bool_array', None),
-                ('int_array', None),
-                ('float_array', None),
-                ('str_array', None),
-                ('bytes_array', None),
-                ('nested_param.another_int', None)
-            ])
         self.declare_parameter(
-            "timing_threshold",
-            ,
+            "timing_threshold", 0.0
         )
-        self.declare_parameter(
-            "hsv_params.hue_lo", rclpy.Parameter.Type.INTEGER_ARRAY)
         
     
-
 def main():
-    rclpy.init(args=1)
-    node = BinHsv()
-    
-if __name__=='__main__' :
+    rclpy.init()
+    node = BinHsv(rclpy.utilities.remove_ros_args(sys.argv)[1] != "0")
+    rclpy.spin(node)
 
-    node = BinHsv()
-    rospy.spin()
+
+if __name__=='__main__' :
+    main()
