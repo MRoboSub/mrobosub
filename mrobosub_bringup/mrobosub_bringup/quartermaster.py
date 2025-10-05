@@ -6,6 +6,7 @@ from typing import Protocol
 
 import rclpy
 from rclpy.client import Client
+from rclpy.executors import Executor
 from rclpy.qos import QoSProfile
 from ament_index_python.packages import get_package_share_directory
 from std_msgs.msg import Bool
@@ -139,13 +140,17 @@ class Quartermaster(Node):
             self.get_logger().info("charm changed")
         self.hall_effect_last.charm = new_value.data
 
+    # update this header once we upgrade to ROS2 Kilted or later
+    # https://docs.ros.org/en/rolling/Releases/Release-Kilted-Kaiju.html#static-type-checking
     async def _call_srv(self, client: Client, request: object) -> None:
         service_live = client.wait_for_service(
             timeout_sec=const.SERVICE_TIMEOUT_DURATION
         )
 
         if not service_live:
-            self.get_logger().error(f"{client.service_name} server not available")
+            self.get_logger().error(
+                f"service {client.service_name} server not available"
+            )
             return None
 
         self.get_logger().info(f"service {client.service_name} ready")
@@ -249,7 +254,7 @@ class Quartermaster(Node):
 
             self.current_state = RobotState.AMBIENT
 
-    def get_executor(self) -> rclpy.Executor:
+    def get_executor(self) -> Executor:
         if self.executor is None:
             return rclpy.get_global_executor()
         return self.executor
