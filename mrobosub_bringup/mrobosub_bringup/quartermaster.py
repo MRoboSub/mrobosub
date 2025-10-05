@@ -133,79 +133,69 @@ class Quartermaster(Node):
         self.hall_effect_last.charm = new_value.data
 
     async def call_thruster_mixing_srv(self) -> None:
-        for retries in range(1, const.NUM_RETRIES + 1):
-            if self.thruster_mixing_srv.wait_for_service(
-                timeout_sec=const.SERVICE_TIMEOUT_DURATION
-            ):
-                self.get_logger().info(
-                    f"Thruster mixing ready. Took {retries} retr{'y' if retries == 1 else 'ies'}."
-                )
-                break
-        else:
-            self.get_logger().error(
-                f"Thruster mixing service server not available after {const.NUM_RETRIES} retries."
-            )
+        service_live = self.thruster_mixing_srv.wait_for_service(
+            timeout_sec=const.SERVICE_TIMEOUT_DURATION
+        )
+
+        if not service_live:
+            self.get_logger().error(f"Thruster mixing service server not available")
             return
 
-        request = SetBool.Request()
-        request.data = True
+        self.get_logger().info(f"Thruster mixing ready")
+
+        request = SetBool.Request(data=True)
         response = await self.thruster_mixing_srv.call_async(request)
-        if response is not None:
-            self.get_logger().info(
-                f"Thruster mixing service response: success={response.success}, message='{response.message}'"
-            )
-        else:
+
+        if response is None:
             self.get_logger().error("Thruster mixing service call failed")
+            return
+
+        self.get_logger().info(
+            f"Thruster mixing service response: success={response.success}, message='{response.message}'"
+        )
 
     async def call_zero_state_srv(self) -> None:
-        for retries in range(1, const.NUM_RETRIES + 1):
-            if self.zero_state_srv.wait_for_service(
-                timeout_sec=const.SERVICE_TIMEOUT_DURATION
-            ):
-                self.get_logger().info(
-                    f"Zero state service ready. Took {retries} retr{'y' if retries == 1 else 'ies'}."
-                )
-                break
-        else:
-            self.get_logger().error(
-                f"Zero state service server not available after {const.NUM_RETRIES} retries."
-            )
+        service_live = self.zero_state_srv.wait_for_service(
+            timeout_sec=const.SERVICE_TIMEOUT_DURATION
+        )
+
+        if not service_live:
+            self.get_logger().error(f"Zero state service server not available")
             return
+
+        self.get_logger().info(f"Zero state service ready")
 
         request = Trigger.Request()
         response = await self.zero_state_srv.call_async(request)
 
-        if response is not None:
-            self.get_logger().info(
-                f"Service response: success={response.success}, message='{response.message}'"
-            )
-        else:
+        if response is None:
             self.get_logger().error("Zero state service call failed")
+            return
+
+        self.get_logger().info(
+            f"Service response: success={response.success}, message='{response.message}'"
+        )
 
     async def call_soft_stop_srv(self) -> None:
-        for retries in range(1, const.NUM_RETRIES + 1):
-            if self.soft_stop_srv.wait_for_service(
-                timeout_sec=const.SERVICE_TIMEOUT_DURATION
-            ):
-                self.get_logger().info(
-                    f"Soft stop ready. Took {retries} retr{'y' if retries == 1 else 'ies'}."
-                )
-                break
-        else:
-            self.get_logger().error(
-                f"Soft stop service server not available after {const.NUM_RETRIES} retries."
-            )
+        service_live = self.soft_stop_srv.wait_for_service(
+            timeout_sec=const.SERVICE_TIMEOUT_DURATION
+        )
+        if not service_live:
+            self.get_logger().error(f"Soft stop service server not available")
             return
+
+        self.get_logger().info(f"Soft stop ready")
 
         request = Trigger.Request()
         response = await self.soft_stop_srv.call_async(request)
 
-        if response is not None:
-            self.get_logger().info(
-                f"Service response: success={response.success}, message='{response.message}'"
-            )
-        else:
-            self.get_logger().error("Soft stop mixing service call failed")
+        if response is None:
+            self.get_logger().error("Soft stop service call failed")
+            return
+
+        self.get_logger().info(
+            f"Service response: success={response.success}, message='{response.message}'"
+        )
 
     def timer_callback(self) -> None:
         # In order to visually ensure quartermaster has started, turn on the LED
