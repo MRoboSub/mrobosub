@@ -7,11 +7,11 @@ import sys
 
 from cv_bridge import CvBridge
 import rclpy.utilities
-from mrobosub_msgs.srv import PathmarkerAngle, PathmarkerAngleResponse
+from mrobosub_msgs.srv import PathmarkerAngle
 from timed_service import TimedService
 from sensor_msgs.msg import Image
-#from mrobosub_lib import Node
-from rclpy.node import Node
+from mrobosub_lib import Node
+#from rclpy.node import Node
 
 import numpy as np
 
@@ -23,21 +23,21 @@ class PathmarkerHsv(Node):
         self.declare_parameters(
             namespace='',
             parameters=[
-                ('hsv_params.ros__parameters.hue_lo', ),
-                ('hsv_params.ros__parameters.hue_hi', None),
-                ('hsv_params.ros__parameters.sat_lo', None),
-                ('hsv_params.ros__parameters.sat_hi', None),
-                ('hsv_params.ros__parameters.val_lo', None),
-                ('hsv_params.ros__parameters.val_hi', None),
-                ('hsv_params.ros__parameters.wb_shift', None),
-                ('hsv_params.ros__parameters.wb_scale', None),
-                ('hsv_params.ros__parameters.white_balance', None),
-                ('hsv_params.ros__parameters.histogram_equalization', None),
-                ('hsv_params.ros__parameters.erode_radius', None),
-                ('hsv_params.ros__parameters.dilate_radius', None),
-                ('hsv_params.ros__parameters.median_radius', None),
-                ('hsv_params.ros__parameters.gaussian_radius', None),
-                ('hsv_params.ros__parameters.timing_threshold', None)
+                ('hsv_params.ros__parameters.hue_lo',rclpy.Parameter.Type.INTEGER),
+                ('hsv_params.ros__parameters.hue_hi',rclpy.Parameter.Type.INTEGER),
+                ('hsv_params.ros__parameters.sat_lo',rclpy.Parameter.Type.INTEGER),
+                ('hsv_params.ros__parameters.sat_hi',rclpy.Parameter.Type.INTEGER),
+                ('hsv_params.ros__parameters.val_lo',rclpy.Parameter.Type.INTEGER),
+                ('hsv_params.ros__parameters.val_hi',rclpy.Parameter.Type.INTEGER),
+                ('hsv_params.ros__parameters.wb_shift',rclpy.Parameter.Type.INTEGER),
+                ('hsv_params.ros__parameters.wb_scale',rclpy.Parameter.Type.INTEGER),
+                ('hsv_params.ros__parameters.white_balance',rclpy.Parameter.Type.BOOL),
+                ('hsv_params.ros__parameters.histogram_equalization',rclpy.Parameter.Type.BOOL),
+                ('hsv_params.ros__parameters.erode_radius',rclpy.Parameter.Type.INTEGER),
+                ('hsv_params.ros__parameters.dilate_radius',rclpy.Parameter.Type.INTEGER),
+                ('hsv_params.ros__parameters.median_radius',rclpy.Parameter.Type.INTEGER),
+                ('hsv_params.ros__parameters.gaussian_radius',rclpy.Parameter.Type.INTEGER),
+                ('hsv_params.ros__parameters.timing_threshold',rclpy.Parameter.Type.DOUBLE)
             ])
         self.br = CvBridge()
 
@@ -45,8 +45,9 @@ class PathmarkerHsv(Node):
 
         #self.sub = rospy.Subscriber('/rectified_image', Image, self.handle_frame, queue_size=1)
         self.sub = self.create_subscription(Image, '/rectified_image', self.handle_frame, 1)
+        timing_threshold = self.get_parameter('hsv_params.ros__parameters.timing_threshold').get_parameter_value().double_value;
         
-        self.serv = TimedService(self, PathmarkerAngle, '/pathmarker_angle', self.get_parameter("hsv_params.ros__parameters.timing_threshold").value)
+        self.serv = TimedService(PathmarkerAngle,'/pathmarker_angle',timing_threshold)
 
         #self.mask_pub = rospy.Publisher(f'/pathmarker_mask', Image, queue_size=1)
         self.mask_pub = self.create_publisher({Image}, '/pathmarker_mask', qos_profile = 1)
@@ -58,7 +59,8 @@ class PathmarkerHsv(Node):
     def handle_frame(self, msg):
         if(self.serv.should_run() or self.always_run):
             bgr_img = self.br.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-            pipeline = HsvPipeline(**self.hsv_params, color_space=cv2.COLOR_RGB2HSV) 
+            #pipeline = HsvPipeline(**self.hsv_params, color_space=cv2.COLOR_RGB2HSV) 
+            pipeline = HsvPipeline(**self._parameters, color_space=cv2.COLOR_RGB2HSV) 
             mask = pipeline.filter_image(bgr_img) 
             detection = pipeline.find_pathmarker_object(mask)
 
@@ -76,7 +78,7 @@ class PathmarkerHsv(Node):
             self.mask_pub.publish(self.br.cv2_to_imgmsg(mask, encoding='mono8'))
             self.annotated_pub.publish(self.br.cv2_to_imgmsg(annotated_img, encoding='bgr8'))
             
-            response = PathmarkerAngleResponse()
+            response = PathmarkerAngle.Response()
             if detection is not None:
                 response.found = True
                 response.angle = detection.angle
