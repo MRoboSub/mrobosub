@@ -25,6 +25,9 @@ setup(
         "console_scripts": [
             "thruster_controller = mrobosub_hal.thruster_controller:main",
             "imu = mrobosub_hal.imu:main",
+            "dvl_publisher = mrobosub_hal.dvl_publisher:main",
+            "botcam = mrobosub_hal.botcam:main",
+            "zed = mrobosub_hal.zed:main",
         ],
     },
 )
