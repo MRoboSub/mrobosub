@@ -3,6 +3,8 @@ import enum
 import torch
 import os
 
+## This file should be updated once we choose a new model and our targets change.
+
 class Targets(enum.Enum):
     ABYDOS = 0
     EARTH = 1
