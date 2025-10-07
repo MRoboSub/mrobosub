@@ -20,6 +20,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     "msg/ImuPIMU.msg"
     "msg/MotorState.msg"
     "msg/Pose.msg"
+    "msg/Twist.msg"
     "srv/BinCamPos.srv"
     "srv/HsvFilterImage.srv"
     "srv/ObjectPosition.srv"
