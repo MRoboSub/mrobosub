@@ -8,7 +8,7 @@ from std_msgs.msg import Float64
 from std_srvs.srv import SetBool
 
 from mrobosub_lib import Node
-from mrobosub_msgs.msg import MotorState
+from mrobosub_msgs.msg import MotorState, Twist
 from dataclasses import dataclass
 
 
@@ -225,6 +225,7 @@ class ThrusterMixing(Node):
             )
             for dof in DOFS
         }
+        self.input_pub = self.create_publisher(Twist, "/motor_input", qos_profile=1)
         self.motor_pub = self.create_publisher(
             MotorState, "/motor_output", qos_profile=1
         )
@@ -363,6 +364,7 @@ class ThrusterMixing(Node):
         self.current_pub.publish(est_current)
         self.scale_pub.publish(Float64(data=scale))
         self.motor_pub.publish(outputs)
+        self.input_pub.publish(Twist(**self.wrench))
 
 
 def main():
