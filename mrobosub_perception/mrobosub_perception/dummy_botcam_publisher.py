@@ -1,5 +1,5 @@
 import rclpy
-from mrobosub_lib.lib import Node
+from mrobosub_lib import Node
 from dynamic_reconfigure.server import Server
 from sensor_msgs.msg import Image
 from mrobosub_perception.cfg import dummy_botcam_paramsConfig
