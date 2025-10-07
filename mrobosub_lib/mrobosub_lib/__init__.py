@@ -2,9 +2,8 @@
 mrobosub_lib: Currently this package doesn't do much other than print the node is starting.
 """
 
-import rclpy
+from typing import Any
 from rclpy.node import Node as RosNode
-from typing import Callable, Any
 
 
 class Node(RosNode):
