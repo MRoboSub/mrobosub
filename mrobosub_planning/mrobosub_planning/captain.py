@@ -4,7 +4,7 @@ from mrobosub_planning.umrsm import StateMachine, State, TransitionMap, Outcome
 import mrobosub_planning.common_states as common_states
 import mrobosub_planning.standard_run as standard_run
 
-from mrobosub_lib import Node  # type: ignore # idk why mypy can't reason about this, it works fine in container
+from mrobosub_lib import Node
 
 import rclpy
 from rclpy.executors import SingleThreadedExecutor
