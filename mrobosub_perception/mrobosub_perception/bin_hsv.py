@@ -1,4 +1,5 @@
 #hsv_filter
+
 from typing import Tuple
 import cv2
 import sys
@@ -12,7 +13,16 @@ from mrobosub_perception.timed_service import TimedService
 from sensor_msgs.msg import Image
 
 from mrobosub_perception.hsv_pipeline import HsvPipeline
-import mrobosub_perception.utils as utils
+from hsv_pipeline import HsvPipeline
+
+def pixels_to_angles(frame, x_pos: int, y_pos: int, fov_x=110, fov_y=70) -> Tuple[int, int]:
+    height, width = frame.shape[0:2]
+    d_x = x_pos - (width / 2)
+    d_y = y_pos - (height / 2)
+    theta_x = (d_x * fov_x) / width
+    theta_y = (d_y * fov_y) / height
+    return theta_x, theta_y
+
 
 class BinHsv(Node):
     timing_threshold: float
@@ -49,9 +59,9 @@ class BinHsv(Node):
             self.enhanced_pub.publish(self.br.cv2_to_imgmsg(enhanced_img, encoding='bgr8'))
             self.annotated_pub.publish(self.br.cv2_to_imgmsg(annotated_img, encoding='bgr8'))
             
-            response = ObjectPositionResponse()
+            response = ObjectPosition.Response()
             if detection is not None:
-                x_theta, y_theta = utils.pixels_to_angles(bgr_img, detection.x, detection.y)
+                x_theta, y_theta = pixels_to_angles(bgr_img, detection.x, detection.y)
                 response.found = True
                 response.x_position = detection.x / bgr_img.shape[1]
                 response.y_position = detection.y / bgr_img.shape[0]
