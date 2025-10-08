@@ -30,8 +30,8 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    auto pub_ins = node->create_publisher<mrobosub_msgs::msg::ImuINS>("/imu/data", 1);
-    auto pub_pimu = node->create_publisher<mrobosub_msgs::msg::ImuPIMU>("/imu/data", 1);
+    auto pub_ins = node->create_publisher<mrobosub_msgs::msg::ImuINS>("/imu_INS", 1);
+    auto pub_pimu = node->create_publisher<mrobosub_msgs::msg::ImuPIMU>("/imu_PIMU", 1);
     if (!pub_ins)
     {
         return -1;
