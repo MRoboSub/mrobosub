@@ -6,7 +6,8 @@ class TimedResponseType(Protocol):
     """
     For typing, ensures response has the valid field
     """
-    valid: bool
+    @property
+    def valid(self) -> bool:...
 
 TimedResponse = TypeVar("TimedResponse", bound=TimedResponseType)
 
