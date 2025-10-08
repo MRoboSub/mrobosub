@@ -37,8 +37,6 @@ class PathmarkerHsv(Node):
 
         #self.annotated_pub = rospy.Publisher(f'/pathmarker_annotated', Image, queue_size=1)
         self.annotated_pub = self.create_publisher(Image, '/pathmarker_annotated', qos_profile = 1)
-
-        self.get_logger().info(f"{self.timing_threshold=}")
         
     
     def handle_frame(self, msg):
