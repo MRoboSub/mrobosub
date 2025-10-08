@@ -27,22 +27,18 @@ class PathmarkerHsv(Node):
         args_ros = rclpy.utilities.remove_ros_args(sys.argv)
         self.always_run = args_ros[1] != "0" #input 1 for always_run to not have to do service calls always_run:=1
 
-        #self.sub = rospy.Subscriber('/rectified_image', Image, self.handle_frame, queue_size=1)
         self.sub = self.create_subscription(Image, '/rectified_image', self.handle_frame, 1)
         
         self.serv = TimedService(self,'/pathmarker_angle',PathmarkerAngle, self.timing_threshold)
 
-        #self.mask_pub = rospy.Publisher(f'/pathmarker_mask', Image, queue_size=1)
         self.mask_pub = self.create_publisher(Image, '/pathmarker_mask', qos_profile = 1)
 
-        #self.annotated_pub = rospy.Publisher(f'/pathmarker_annotated', Image, queue_size=1)
         self.annotated_pub = self.create_publisher(Image, '/pathmarker_annotated', qos_profile = 1)
         
     
     def handle_frame(self, msg):
         if(self.serv.should_run() or self.always_run):
             bgr_img = self.br.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-            #pipeline = HsvPipeline(**self.hsv_params, color_space=cv2.COLOR_RGB2HSV) 
             pipeline = HsvPipeline(**self._parameters, color_space=cv2.COLOR_RGB2HSV) 
             mask = pipeline.filter_image(bgr_img) 
             detection = pipeline.find_pathmarker_object(mask)
@@ -74,9 +70,9 @@ class PathmarkerHsv(Node):
         param_desc_float = ParameterDescriptor()
         param_desc_float.type = rclpy.Parameter.Type.DOUBLE
         param_desc_float.description = "A float parameter"
-        param_desc_bool = ParameterDescriptor()
-        param_desc_bool.type = rclpy.Parameter.Type.BOOL
-        param_desc_bool.description = "A bool parameter"
+        # param_desc_bool = ParameterDescriptor()
+        # param_desc_bool.type = rclpy.Parameter.Type.BOOL
+        # param_desc_bool.description = "A bool parameter"
 
         self.declare_parameters(
             namespace='',
