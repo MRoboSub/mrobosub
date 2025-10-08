@@ -99,7 +99,7 @@ class Captain(Node):
 def main() -> None:
     rclpy.init()
 
-    # Syntax `roslaunch mrobosub_planning captain.launch machine:=<machine> state:=<state|module.state>`
+    # Syntax `ros2 launch mrobosub_planning captain.launch machine:=<machine> state:=<state|module.state>`
     machine_name = sys.argv[1]
     full_state = sys.argv[2]
 
