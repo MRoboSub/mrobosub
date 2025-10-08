@@ -7,12 +7,12 @@ import rclpy
 import numpy as np
 import cv2
 from cv_bridge import CvBridge
-from mrobosub_lib.lib import Node
+from mrobosub_lib import Node
 
 from std_msgs.msg import Float64
 from sensor_msgs.msg import Image
 from mrobosub_msgs.msg import Detections
-from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse
+from mrobosub_msgs.srv import ObjectPosition
 
 
 CONFIDENCE = 0.9
@@ -25,7 +25,7 @@ class Targets(Enum):
 
 
 class MlSrvNode(Node):
-    recent_positions: List[Optional[ObjectPositionResponse]]
+    recent_positions: List[Optional[ObjectPosition.Response]]
     red_is_left: bool = True
 
     def __init__(self):
@@ -37,7 +37,7 @@ class MlSrvNode(Node):
         mk_service = lambda name, idx: self.create_service(
             ObjectPosition,
             f"object_position/{name}",
-            lambda msg, _: self.handle_obj_request(idx.value, msg),
+            lambda _, response: self.handle_obj_request(idx.value, response), # the _ is the request which is unused
         )
         self.gate_red_srv = mk_service("gate_red", Targets.GATE_RED)
         self.gate_blue_srv = mk_service("gate_blue", Targets.GATE_BLUE)
@@ -52,18 +52,18 @@ class MlSrvNode(Node):
             self.zed_callback,
             qos_profile=1,
         )
-        self.create_subscription(Detections, "/ml/detections", self.detections_callback)
+        self.create_subscription(Detections, "/ml/detections", self.detections_callback, qos_profile=1)
 
         self.run_until_pub = self.create_publisher(Float64, "/ml/run_until", qos_profile=1)
 
-        self.bbox_pub = self.create_publisher(Image, "/ml/annotated", queue_size=10)
+        self.bbox_pub = self.create_publisher(Image, "/ml/annotated", qos_profile=10)
         self.last_image = None
 
     def zed_callback(self, image: Image):
         self.last_image = self.bridge.imgmsg_to_cv2(image, desired_encoding="rgb8")
 
     def detections_callback(self, detections: Detections):
-        not_found = ObjectPositionResponse()
+        not_found = ObjectPosition.Response()
         not_found.found = False
         new_positions = [not_found] * len(Targets)
 
@@ -74,7 +74,7 @@ class MlSrvNode(Node):
 
         # We can assume that most recent detections come from the most recent image
         for d in detections.detections:
-            object_pos = ObjectPositionResponse()
+            object_pos = ObjectPosition.Response()
             object_pos.found = True
 
             fov_x = 110
@@ -138,7 +138,8 @@ class MlSrvNode(Node):
             new_positions[idx] = object_pos
             bboxs[idx] = box
 
-        self.recent_positions = new_positions
+        for i in range (len(Targets)):
+            self.recent_positions[i] = new_positions[i]
 
         if self.last_image is None:
             return
@@ -165,12 +166,23 @@ class MlSrvNode(Node):
         msg = self.bridge.cv2_to_imgmsg(image_ocv, encoding="rgb8")
         self.bbox_pub.publish(msg)
 
-    def handle_obj_request(self, idx, msg):
-        self.run_until_pub.publish(self.get_clock().now().nanoseconds / 1e9 + TIME_THRESHOLD)
-        rate = self.create_rate(1/0.005)
-        while self.recent_positions[idx] == None:
-            rate.sleep()
-        return self.recent_positions[idx]
+    def handle_obj_request(self, idx, response: ObjectPosition.Response):
+        # the expression (self.get_clock().now().nanoseconds / 1e9) gives current time in seconds
+        # this publisher tells ml_executor to run for next TIME_THRESHOLD seconds
+        self.run_until_pub.publish(Float64(data=self.get_clock().now().nanoseconds / 1e9 + TIME_THRESHOLD)) 
+
+        if self.recent_positions[idx] == None:
+            response.valid = False
+        else:
+            response.found = self.recent_positions[idx].found
+            response.x_position = self.recent_positions[idx].x_position
+            response.y_position = self.recent_positions[idx].y_position
+            response.x_theta = self.recent_positions[idx].x_theta
+            response.y_theta = self.recent_positions[idx].y_theta
+            response.confidence = self.recent_positions[idx].confidence
+            response.valid = True
+
+        return response
 
 def main():
     rclpy.init()

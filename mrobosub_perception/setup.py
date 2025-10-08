@@ -18,7 +18,7 @@ setup(
     zip_safe=True,
     maintainer='ubuntu',
     maintainer_email='muskaan@umich.edu',
-    description='TODO: Package description',
+    description='This is our fire code. It uses HSV and a YOLOV model. #mrobosub_perception',
     license='BSD-2.0',
     tests_require=['pytest'],
     entry_points={

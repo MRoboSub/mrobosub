@@ -36,10 +36,8 @@ class MlExecutor(Node):
         self.model = load_yolo()
         self.run_until_time = run_until_time
         self.bridge = CvBridge()
-        self.create_subscription(
-            Image, "/zed2/zed_node/rgb/image_rect_color", self.zed_callback
-        )
-        self.create_subscription(Float64, "/ml/run_until", self.run_until_callback)
+        self.create_subscription(Image, "/zed2/zed_node/rgb/image_rect_color", self.zed_callback, qos_profile = 1)
+        self.create_subscription(Float64, "/ml/run_until", self.run_until_callback, qos_profile=1)
         self.detection_pub = self.create_publisher(Detections, "/ml/detections", qos_profile=1)
 
     def zed_callback(self, image: Image):
