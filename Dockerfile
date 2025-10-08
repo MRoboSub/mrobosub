@@ -17,7 +17,6 @@ RUN apt-get update && \
                         python3-scipy \
                         python3-transforms3d \
                         python3-serial \
-                        pipx \
                         libusb-dev
 
 RUN echo "ALL ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers && \
