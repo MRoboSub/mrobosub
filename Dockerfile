@@ -20,9 +20,6 @@ RUN apt-get update && \
                         python3-transforms3d \
                         python3-serial
 
-# RUN pip install --no-cache-dir torch torchvision torchaudio --break-system-packages
-RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121 --break-system-packages
-
 RUN echo "ALL ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 SHELL ["/bin/bash", "-c"] 
