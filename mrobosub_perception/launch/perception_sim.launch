@@ -2,6 +2,6 @@
     <include file="$(find mrobosub_perception)/launch/ml_srv.launch" />
     <include file="$(find mrobosub_perception)/launch/pathmarker_hsv.launch" />
     <include file="$(find mrobosub_perception)/launch/buoy_hsv.launch" />
-    <include file="$(find mrobosub_perception)/launch/bin_hsv.launch" />
+    <include file="$(find mrobosub_perception)/launch/bin_hsv_launch.xml" />
 </launch>
 
