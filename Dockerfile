@@ -14,7 +14,6 @@ RUN apt-get update && \
                         less \
                         ros-humble-ros2-control \
                         ros-humble-ros2-controllers \
-                        python3-typing-extensions \
                         python3-scipy \
                         python3-transforms3d \
                         python3-serial \
@@ -29,8 +28,7 @@ SHELL ["/bin/bash", "-c"]
 
 USER 1000:1000
 
-RUN pipx install mypy && \
-    pipx ensurepath
+RUN sudo pip3 install --upgrade mypy typing-extensions
 
 RUN mkdir -p /home/ubuntu/jlb_pid_ws/src && \
     cd /home/ubuntu/jlb_pid_ws/src && \
