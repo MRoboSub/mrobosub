@@ -10,7 +10,7 @@ import rclpy
 from rclpy.executors import SingleThreadedExecutor
 import threading
 import sys
-from mrobosub_planning.periodic_io import Interface
+from mrobosub_planning.io_interface import Interface
 import traceback
 
 

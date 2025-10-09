@@ -1,5 +1,5 @@
 from mrobosub_planning.umrsm import State, Outcome
-from mrobosub_planning.periodic_io import Interface
+from mrobosub_planning.io_interface import Interface
 from mrobosub_planning.abstract_states import TimedState
 
 

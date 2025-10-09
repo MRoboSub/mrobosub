@@ -15,7 +15,7 @@ import rclpy
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
 
-from mrobosub_planning.periodic_io import Interface
+from mrobosub_planning.io_interface import Interface
 
 STATE_TOPIC = "captain/current_state"
 SOFT_STOP_SERVICE = "captain/soft_stop"
