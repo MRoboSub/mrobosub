@@ -1,4 +1,3 @@
-from typing import Dict, Type, Optional, Sequence
 from importlib import import_module
 from mrobosub_planning.umrsm import StateMachine, State, TransitionMap, Outcome
 import mrobosub_planning.common_states as common_states
@@ -15,13 +14,13 @@ import traceback
 
 
 # maybe change this to something hacky like getting .transitions from the machine name module?
-transition_maps: Dict[str, TransitionMap] = {
+transition_maps: dict[str, TransitionMap] = {
     "standard": standard_run.transitions,
     # "heave_test": heave_test.transitions,
 }
 
 
-def state_class_from_str(full_state: str, transitions: TransitionMap) -> Type[State]:
+def state_class_from_str(full_state: str, transitions: TransitionMap) -> type[State]:
     """
     Find the associated class object from a given state name.
 
@@ -33,10 +32,10 @@ def state_class_from_str(full_state: str, transitions: TransitionMap) -> Type[St
         The class object for the state or a ValueError if there is an error finding the state.
     """
 
-    def outcome_to_state_str(outcome: Type[Outcome]) -> str:
+    def outcome_to_state_str(outcome: type[Outcome]) -> str:
         return outcome.__qualname__.split(".")[0]
 
-    def outcome_to_state(outcome: Type[Outcome]) -> Type[State]:
+    def outcome_to_state(outcome: type[Outcome]) -> type[State]:
         module = import_module(outcome.__module__)
         return getattr(module, outcome_to_state_str(outcome))
 
@@ -88,7 +87,7 @@ class Captain(Node):
 
         try:
             machine.run()
-        except Exception as e:
+        except Exception:
             self.get_logger().info(f"{traceback.format_exc()}")
             rate = self.create_rate(50)
             for _ in range(20):
