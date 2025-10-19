@@ -5,7 +5,7 @@ import numpy as np
 from typing import Tuple
 
 from cv_bridge import CvBridge
-import rospy
+import rclpy
 from dynamic_reconfigure.server import Server
 from sensor_msgs.msg import Image
 from mrobosub_lib.lib import Node
@@ -85,16 +85,15 @@ def generate_rectify_maps(h: int, w: int, f: int) -> Tuple[np.ndarray, np.ndarra
 class RectifiedImage(Node):
     def __init__(self):
         super().__init__('rectified_image')
-        self.f = 280
+
+        self.declare_and_get_params()
 
         self.br = CvBridge()
         self.map_x, self.map_y = None, None
-        self.h, self.w = 640, 480
         self.shape = None
         
-        self.sub = rospy.Subscriber('/dummy_botcam', Image, self.handle_frame, queue_size=1)
-        self.rectified_pub = rospy.Publisher(f'/rectified_image', Image, queue_size=1)
-        self.srv = Server(rectify_paramsConfig, self.reconfigure_callback, 'rectify_params')
+        self.sub = self.create_subscriber(Image, '/dummy_botcam', self.handle_frame, qos_profile=1)
+        self.rectified_pub = self.create_publisher(Image, f'/rectified_image', qos_profile=1)
 
     def handle_frame(self, msg):
         bgr_img = self.br.imgmsg_to_cv2(msg, desired_encoding='bgr8')
@@ -108,14 +107,21 @@ class RectifiedImage(Node):
         #rectified_img = cv2.resize(rectified_img, (640, 480), interpolation=cv2.INTER_LINEAR)
         self.rectified_pub.publish(self.br.cv2_to_imgmsg(rectified_img, encoding='bgr8'))
 
-    def reconfigure_callback(self, config, level):
-        self.f = config["f"]
-        self.map_x, self.map_y = generate_rectify_maps(self.h, self.w, self.f)
-        return config
 
-    def run(self):
-        rospy.spin()
+    def declare_and_get_params(self):
+        self.declare_parameter("f", 280)
+        self.declare_parameter("h", 640)
+        self.declare_parameter("w", 480)
+        self.f = self.get_parameter('f').get_parameter_value().integer_value
+        self.h = self.get_parameter('h').get_parameter_value().integer_value
+        self.w = self.get_parameter('w').get_parameter_value().integer_value
+
+
+def main():
+    rclpy.init()
+    node = RectifiedImage()
+    rclpy.spin(node)
 
 if __name__== '__main__':
-    RectifiedImage().run()
+    main()
 
