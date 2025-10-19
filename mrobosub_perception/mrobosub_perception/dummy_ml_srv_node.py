@@ -66,8 +66,7 @@ def handle_obj_request(idx, msg):
     obj_msg.found = counters[idx] > 10 
     counters[idx] += 1
     return obj_msg
-
-if __name__ == '__main__':
+def main():
     rclpy.init()
     node = rclpy.create_node('ml_server')
     print(sys.version)
@@ -83,3 +82,7 @@ if __name__ == '__main__':
     cetus_srv = mk_service('cetus',Targets.CETUS)
 
     rclpy.spin(node) 
+
+if __name__ == '__main__':
+   main()
+
