@@ -6,8 +6,7 @@ import sys
 
 from cv_bridge import CvBridge
 import rclpy
-from rclpy import utilities
-from rclpy.node import Node
+from mrobosub_lib import Node
 from mrobosub_msgs.srv import ObjectPosition
 from mrobosub_perception.timed_service import TimedService
 from sensor_msgs.msg import Image
