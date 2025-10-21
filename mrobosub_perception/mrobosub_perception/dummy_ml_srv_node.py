@@ -4,7 +4,7 @@ from functools import partial
 
 import rclpy
 import rospkg
-from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse
+from mrobosub_msgs.srv import ObjectPosition
 import cv2
 import numpy as np
 import time
