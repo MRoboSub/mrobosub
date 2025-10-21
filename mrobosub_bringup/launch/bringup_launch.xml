@@ -2,6 +2,6 @@
     <include file="$(find-pkg-share mrobosub_gnc)/launch/gnc_launch.xml"/>
     <include file="$(find-pkg-share mrobosub_hal)/launch/hal_launch.xml"/>
     <include file="$(find-pkg-share mrobosub_localization)/launch/localization_launch.xml"/>
-    <!-- <include file="$(find-pkg-share mrobosub_perception)/launch/perception_launch.xml"/> -->
+    <include file="$(find-pkg-share mrobosub_perception)/launch/perception_launch.xml"/>
     <include file="$(find-pkg-share mrobosub_fcu)/launch/fcu_launch.xml"/>
 </launch>
