@@ -63,7 +63,7 @@ int main(int argc, char **argv)
 
     auto pub_ins = node->create_publisher<mrobosub_msgs::msg::ImuINS>("/imu_INS", 1);
     auto pub_pimu = node->create_publisher<mrobosub_msgs::msg::ImuPIMU>("/imu_PIMU", 1);
-    if (!pub_ins)
+    if (!pub_ins || !pub_pimu)
     {
         return -1;
     }
