@@ -11,8 +11,6 @@ class PngPub(Node):
         super().__init__("png_pub")
         # Node is publishing to the video_frames topic using the message type Image
         self.pub = self.create_publisher(Image, '/zed2/zed_node/rgb/image_rect_color', qos_profile=10)
-        # Create a VideoCapture object
-        # The argument '0' gets the default webcam.
 
         current_dir = os.path.dirname(os.path.realpath(__file__))
         img_path = os.path.join(current_dir, "bbox.png")
