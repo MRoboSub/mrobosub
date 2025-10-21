@@ -23,8 +23,6 @@ public:
     TimeManager(std::shared_ptr<rclcpp::Node> node) : got_first_message_(false), nh_(node) {}
     rclcpp::Time ros_time_from_start_time(const double time)
     {
-        rclcpp::Time rostime(0, 0);
-
         // Otherwise, estimate the IMX boot time and offset the messages
         if (!got_first_message_)
         {
@@ -37,7 +35,7 @@ public:
             INS_local_offset_ = 0.005 * y_offset + 0.995 * INS_local_offset_;
         }
         // Publish with ROS time
-        return rclcpp::Time(INS_local_offset_ + time);
+        return rclcpp::Time(static_cast<int64_t>((INS_local_offset_ + time) * 1e9));
     }
 
 private:
