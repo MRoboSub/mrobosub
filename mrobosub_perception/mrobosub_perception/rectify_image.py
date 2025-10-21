@@ -92,7 +92,7 @@ class RectifiedImage(Node):
         self.map_x, self.map_y = None, None
         self.shape = None
         
-        self.sub = self.create_subscriber(Image, '/dummy_botcam', self.handle_frame, qos_profile=1)
+        self.sub = self.create_subscription(Image, '/dummy_botcam', self.handle_frame, qos_profile=1)
         self.rectified_pub = self.create_publisher(Image, f'/rectified_image', qos_profile=1)
 
     def handle_frame(self, msg):
