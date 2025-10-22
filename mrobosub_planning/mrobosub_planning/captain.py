@@ -89,11 +89,15 @@ class Captain(Node):
             machine.run()
         except Exception:
             self.get_logger().info(f"{traceback.format_exc()}")
-            rate = self.create_rate(50)
-            for _ in range(20):
-                io.reset_target_twist()
-                rate.sleep()
+            self.tick = 0
+            self.timer = self.create_timer(0.1, self.reset_node)
+            while(self.tick < 20):
+                pass
+            self.timer.cancel()
 
+    def reset_node(self) -> None:
+        self.tick += 1
+        io.reset_target_twist()
 
 def main() -> None:
     rclpy.init()
