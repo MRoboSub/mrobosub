@@ -10,13 +10,6 @@
 #include <chrono>
 #include <thread>
 
-struct Defer
-{
-    std::function<void()> f;
-
-    Defer(std::function<void()> f) : f(std::move(f)) {}
-};
-
 class TimeManager
 {
 public:
@@ -48,8 +41,6 @@ int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
     std::shared_ptr<rclcpp::Node> node = rclcpp::Node::make_shared("imu_node");
-    Defer ros_shutdown(std::function<void()>([]()
-                                             { rclcpp::shutdown(); }));
 
     TimeManager timeManager(node);
 
