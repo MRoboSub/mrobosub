@@ -1,4 +1,4 @@
 std_msgs/Header header
-geometry_msgs/Vector3 dtheta 	# change in angle over time period (rodriguez vector)
-geometry_msgs/Vector3 dvel		# change in velocity over time period (m/s)
-float64 dt 						# length of time period (s)
+geometry_msgs/Vector3 angular_velocity
+geometry_msgs/Vector3 angular_acceleration
+float64 dt # Time difference since last measurement in seconds (Used to calculate velocity and accel from diffs)

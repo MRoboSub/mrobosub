@@ -65,16 +65,16 @@ int main(int argc, char **argv)
         const auto data = reinterpret_cast<const pimu_t*>(_data->ptr);
 
         mrobosub_msgs::msg::ImuPIMU msg;
-        // const auto div = 1.0f/data->dt; //! This is from the old code and is definitely wrong (not in any of the sdk code)
+        const auto div = 1.0f/data->dt;
 
         msg.header.stamp = timeManager.ros_time_from_start_time(data->time);
         msg.dt = data->dt;
-        msg.dtheta.x = data->theta[0];
-        msg.dtheta.y = data->theta[1];
-        msg.dtheta.z = data->theta[2];
-        msg.dvel.x = data->vel[0];
-        msg.dvel.y = data->vel[1];
-        msg.dvel.z = data->vel[2];
+        msg.angular_velocity.x = data->theta[0] * div;
+        msg.angular_velocity.y = data->theta[1] * div;
+        msg.angular_velocity.z = data->theta[2] * div;
+        msg.angular_acceleration.x = data->vel[0] * div;
+        msg.angular_acceleration.y = data->vel[1] * div;
+        msg.angular_acceleration.z = data->vel[2] * div;
         pub_pimu->publish(msg); });
     if (!pimu_registered)
     {
