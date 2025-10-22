@@ -2,9 +2,9 @@
 
 from functools import partial
 
-import rospy
+import rclpy
 import rospkg
-from mrobosub_msgs.srv import ObjectPosition, ObjectPositionResponse
+from mrobosub_msgs.srv import ObjectPosition
 import cv2
 import numpy as np
 import time
@@ -15,6 +15,7 @@ import pathlib
 #from get_depth import get_avg_depth
 import struct
 import os
+from mrobosub_lib import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 
@@ -34,6 +35,17 @@ bridge = CvBridge()
 CONFIDENCE = 0.9
 TIME_THRESHOLD = 10
 
+class MLServerNode(Node):
+     def __init__(self):
+        super().__init__('ml_server')
+        self.br = CvBridge()
+        mk_service = lambda name, idx: self.create_service(ObjectPosition, f'object_position/{name}',  lambda msg,_ : handle_obj_request(idx.value, msg))
+        abydos_srv = mk_service('abydos',Targets.ABYDOS)
+        earth_srv = mk_service('earth',Targets.EARTH)
+        taurus_srv = mk_service('taurus',Targets.TAURUS)
+        serpens_caput_srv = mk_service('serpens_caput',Targets.SERPENS_CAPUT)
+        auriga_srv = mk_service('auriga',Targets.AURIGA)
+        cetus_srv = mk_service('cetus',Targets.CETUS)
 
 class PeriodicIO():
     bbox_pub = None
@@ -62,24 +74,20 @@ def imgmsg_to_cv2(img_msg):
 counters = [0] * len(Targets)
 def handle_obj_request(idx, msg):
     global counters
-    obj_msg = ObjectPositionResponse()
+    obj_msg = ObjectPosition.Response()
     obj_msg.found = counters[idx] > 10 
     counters[idx] += 1
     return obj_msg
-
-if __name__ == '__main__':
-    print("made it to main")
-    rospy.init_node('ml_server', anonymous=False)
+def main():
+    rclpy.init()
+    node = MLServerNode()
     print(sys.version)
-    print("node initialized")
+    node.get_logger().info('Created node')
 
     # Intialize ros services for each of the objects
-    mk_service = lambda name, idx: rospy.Service(f'object_position/{name}', ObjectPosition, lambda msg : handle_obj_request(idx.value, msg))
-    abydos_srv = mk_service('abydos',Targets.ABYDOS)
-    earth_srv = mk_service('earth',Targets.EARTH)
-    taurus_srv = mk_service('taurus',Targets.TAURUS)
-    serpens_caput_srv = mk_service('serpens_caput',Targets.SERPENS_CAPUT)
-    auriga_srv = mk_service('auriga',Targets.AURIGA)
-    cetus_srv = mk_service('cetus',Targets.CETUS)
+    
+    rclpy.spin(node) 
 
-    rospy.spin()
+if __name__ == '__main__':
+   main()
+
