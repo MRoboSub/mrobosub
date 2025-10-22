@@ -6,10 +6,10 @@ from typing import Tuple
 
 from cv_bridge import CvBridge
 import rclpy
-from dynamic_reconfigure.server import Server
 from sensor_msgs.msg import Image
-from mrobosub_lib.lib import Node
-from mrobosub_perception.cfg import rectify_paramsConfig
+from mrobosub_lib import Node
+
+from rcl_interfaces.msg import ParameterDescriptor
 
 def crop_to_circle(image: np.ndarray, radius: int) -> np.ndarray:
     # Find the dimensions of the image
@@ -86,13 +86,14 @@ class RectifiedImage(Node):
     def __init__(self):
         super().__init__('rectified_image')
 
-        self.declare_and_get_params()
+        self.declare_params()
 
         self.br = CvBridge()
         self.map_x, self.map_y = None, None
         self.shape = None
         
         self.sub = self.create_subscription(Image, '/dummy_botcam', self.handle_frame, qos_profile=1)
+        self.sub2 = self.create_subscription(Image, f'/dummy_botcam{self.f}', self.handle_frame, qos_profile=1)
         self.rectified_pub = self.create_publisher(Image, f'/rectified_image', qos_profile=1)
 
     def handle_frame(self, msg):
@@ -108,10 +109,18 @@ class RectifiedImage(Node):
         self.rectified_pub.publish(self.br.cv2_to_imgmsg(rectified_img, encoding='bgr8'))
 
 
-    def declare_and_get_params(self):
-        self.declare_parameter("f", 280)
-        self.declare_parameter("h", 640)
-        self.declare_parameter("w", 480)
+    def declare_params(self):
+        param_desc_int = ParameterDescriptor()
+        param_desc_int.type = rclpy.Parameter.Type.INTEGER
+        param_desc_int.description = "An int parameter"
+        self.declare_parameters(
+            namespace='',
+            parameters = [
+                ("f", 280, param_desc_int),
+                ("h", 640, param_desc_int),
+                ("w", 480, param_desc_int),
+            ]
+        )
         self.f = self.get_parameter('f').get_parameter_value().integer_value
         self.h = self.get_parameter('h').get_parameter_value().integer_value
         self.w = self.get_parameter('w').get_parameter_value().integer_value
