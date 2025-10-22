@@ -72,9 +72,9 @@ int main(int argc, char **argv)
         msg.angular_velocity.x = data->theta[0] * div;
         msg.angular_velocity.y = data->theta[1] * div;
         msg.angular_velocity.z = data->theta[2] * div;
-        msg.angular_acceleration.x = data->vel[0] * div;
-        msg.angular_acceleration.y = data->vel[1] * div;
-        msg.angular_acceleration.z = data->vel[2] * div;
+        msg.linear_acceleration.x = data->vel[0] * div;
+        msg.linear_acceleration.y = data->vel[1] * div;
+        msg.linear_acceleration.z = data->vel[2] * div;
         pub_pimu->publish(msg); });
     if (!pimu_registered)
     {
