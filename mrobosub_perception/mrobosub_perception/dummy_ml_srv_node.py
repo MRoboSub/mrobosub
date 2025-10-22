@@ -15,6 +15,7 @@ import pathlib
 #from get_depth import get_avg_depth
 import struct
 import os
+from mrobosub_lib import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 
@@ -34,6 +35,17 @@ bridge = CvBridge()
 CONFIDENCE = 0.9
 TIME_THRESHOLD = 10
 
+class MLServerNode(Node):
+     def __init__(self):
+        super().__init__('ml_server')
+        self.br = CvBridge()
+        mk_service = lambda name, idx: self.create_service(ObjectPosition, f'object_position/{name}',  lambda msg,_ : handle_obj_request(idx.value, msg))
+        abydos_srv = mk_service('abydos',Targets.ABYDOS)
+        earth_srv = mk_service('earth',Targets.EARTH)
+        taurus_srv = mk_service('taurus',Targets.TAURUS)
+        serpens_caput_srv = mk_service('serpens_caput',Targets.SERPENS_CAPUT)
+        auriga_srv = mk_service('auriga',Targets.AURIGA)
+        cetus_srv = mk_service('cetus',Targets.CETUS)
 
 class PeriodicIO():
     bbox_pub = None
@@ -68,19 +80,12 @@ def handle_obj_request(idx, msg):
     return obj_msg
 def main():
     rclpy.init()
-    node = rclpy.create_node('ml_server')
+    node = MLServerNode()
     print(sys.version)
     node.get_logger().info('Created node')
 
     # Intialize ros services for each of the objects
-    mk_service = lambda name, idx: node.create_service(ObjectPosition, f'object_position/{name}',  lambda msg,_ : handle_obj_request(idx.value, msg))
-    abydos_srv = mk_service('abydos',Targets.ABYDOS)
-    earth_srv = mk_service('earth',Targets.EARTH)
-    taurus_srv = mk_service('taurus',Targets.TAURUS)
-    serpens_caput_srv = mk_service('serpens_caput',Targets.SERPENS_CAPUT)
-    auriga_srv = mk_service('auriga',Targets.AURIGA)
-    cetus_srv = mk_service('cetus',Targets.CETUS)
-
+    
     rclpy.spin(node) 
 
 if __name__ == '__main__':
