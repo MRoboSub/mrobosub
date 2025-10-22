@@ -97,7 +97,7 @@ class Captain(Node):
 
     def reset_node(self) -> None:
         self.tick += 1
-        io.reset_target_twist()
+        self.io.reset_target_twist()
 
 def main() -> None:
     rclpy.init()
