@@ -66,6 +66,9 @@ class PathmarkerHsv(Node):
 
             self.serv.set_result(response)
 
+    def set_params(self, _params = None):
+        self.timing_threshold = self.get_parameter('timing_threshold').get_parameter_value().double_value
+
     def declare_and_get_params(self):
         param_desc_float = ParameterDescriptor()
         param_desc_float.type = rclpy.Parameter.Type.DOUBLE
@@ -94,8 +97,10 @@ class PathmarkerHsv(Node):
                 # ('gaussian_radius',0.0, param_desc_float),
                 ('timing_threshold',0.0, param_desc_float)
             ])
+        self.set_params()
+        self.add_post_set_parameters_callback(self.set_params)
         
-        self.timing_threshold = self.get_parameter('timing_threshold').get_parameter_value().double_value
+       
     
 def main():
     rclpy.init()
