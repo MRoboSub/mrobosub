@@ -1,3 +1,4 @@
+
 export MYPYPATH=/opt/ros/jazzy/lib/python3.12/site-packages
 
 alias ronosde="ros2 node"
@@ -11,7 +12,6 @@ alias close_droppers="ros2 topic pub /left_servo/angle std_msgs/Int32 \"data: 90
 alias open_droppers="ros2 topic pub /left_servo/angle std_msgs/Int32 \"data: 60\" & ros2 topic pub /right_servo/angle std_msgs/Int32 \"data: 120\""
 alias stop="ros2 run mrobosub_planning stop.py"
 alias watch_pathmarker="watch -n 0.1 ros2 service call /pathmarker_angle std_msgs/Trigger"
-alias watch_buoy="watch -n 1 ros2 service call /buoy_object_position std_msgs/Trigger"
 alias watch_bin="watch -n 1 ros2 service call /bin_object_position std_msgs/Trigger"
 alias watch_gate_blue="watch -n 1 ros2 service call /object_position/gate_blue std_msgs/Trigger"
 alias watch_gate_red="watch -n 1 ros2 service call /object_position/gate_red std_msgs/Trigger"

@@ -1,0 +1,3 @@
+<launch>
+    <node name="png_pub" pkg="mrobosub_perception" exec="png_pub"/>
+</launch>
