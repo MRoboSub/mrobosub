@@ -1,0 +1,12 @@
+<launch>
+  <arg name="always_run" default="0" />
+  <node 
+    pkg="mrobosub_perception"
+    exec="pathmarker_hsv"
+    name="pathmarker_hsv"
+    output="screen"
+    args="$(var always_run)"
+  >
+    <param from="$(find-pkg-share mrobosub_perception)/params/pathmarker_hsv.yaml" />
+  </node> 
+</launch>

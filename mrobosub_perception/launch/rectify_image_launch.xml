@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="mrobosub_perception" exec="rectify_image" name="rectify_image" >
+    <param from="$(find-pkg-share mrobosub_perception)/params/rectify_image.yaml" />
+  </node>
+</launch>
