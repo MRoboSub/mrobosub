@@ -1,0 +1,3 @@
+dummy_botcam_publisher:
+  ros__parameters: 
+    image_number: 3

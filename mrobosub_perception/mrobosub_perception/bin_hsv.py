@@ -6,14 +6,12 @@ import sys
 
 from cv_bridge import CvBridge
 import rclpy
-from rclpy import utilities
-from rclpy.node import Node
+from mrobosub_lib import Node
 from mrobosub_msgs.srv import ObjectPosition
 from mrobosub_perception.timed_service import TimedService
 from sensor_msgs.msg import Image
 
 from mrobosub_perception.hsv_pipeline import HsvPipeline
-from hsv_pipeline import HsvPipeline
 
 def pixels_to_angles(frame, x_pos: int, y_pos: int, fov_x=110, fov_y=70) -> Tuple[int, int]:
     height, width = frame.shape[0:2]
