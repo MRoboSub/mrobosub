@@ -87,6 +87,7 @@ class RectifiedImage(Node):
         super().__init__('rectified_image')
 
         self.declare_params()
+        self.add_post_set_parameters_callback(self.set_params)
 
         self.br = CvBridge()
         self.map_x, self.map_y = None, None
@@ -94,6 +95,7 @@ class RectifiedImage(Node):
         
         self.sub = self.create_subscription(Image, '/dummy_botcam', self.handle_frame, qos_profile=1)
         self.rectified_pub = self.create_publisher(Image, f'/rectified_image', qos_profile=1)
+
 
     def handle_frame(self, msg):
         bgr_img = self.br.imgmsg_to_cv2(msg, desired_encoding='bgr8')
@@ -107,6 +109,10 @@ class RectifiedImage(Node):
         #rectified_img = cv2.resize(rectified_img, (640, 480), interpolation=cv2.INTER_LINEAR)
         self.rectified_pub.publish(self.br.cv2_to_imgmsg(rectified_img, encoding='bgr8'))
 
+    def set_params(self, _params = None):
+        self.f = self.get_parameter('f').get_parameter_value().integer_value
+        self.h = self.get_parameter('h').get_parameter_value().integer_value
+        self.w = self.get_parameter('w').get_parameter_value().integer_value
 
     def declare_params(self):
         param_desc_int = ParameterDescriptor()
@@ -120,9 +126,7 @@ class RectifiedImage(Node):
                 ("w", 0, param_desc_int),
             ]
         )
-        self.f = self.get_parameter('f').get_parameter_value().integer_value
-        self.h = self.get_parameter('h').get_parameter_value().integer_value
-        self.w = self.get_parameter('w').get_parameter_value().integer_value
+        self.set_params()
 
 
 def main():
