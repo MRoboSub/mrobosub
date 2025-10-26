@@ -1,0 +1,5 @@
+dummy_botcam_publisher:
+  ros__parameters: 
+    image_number: 3
+    h: 640
+    w: 480
