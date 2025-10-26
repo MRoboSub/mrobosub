@@ -93,7 +93,6 @@ class RectifiedImage(Node):
         self.shape = None
         
         self.sub = self.create_subscription(Image, '/dummy_botcam', self.handle_frame, qos_profile=1)
-        self.sub2 = self.create_subscription(Image, f'/dummy_botcam{self.f}', self.handle_frame, qos_profile=1)
         self.rectified_pub = self.create_publisher(Image, f'/rectified_image', qos_profile=1)
 
     def handle_frame(self, msg):
@@ -115,10 +114,10 @@ class RectifiedImage(Node):
         param_desc_int.description = "An int parameter"
         self.declare_parameters(
             namespace='',
-            parameters = [
-                ("f", 280, param_desc_int),
-                ("h", 640, param_desc_int),
-                ("w", 480, param_desc_int),
+            parameters = [  # uses the .yaml file for the actual values
+                ("f", 0, param_desc_int),
+                ("h", 0, param_desc_int),
+                ("w", 0, param_desc_int),
             ]
         )
         self.f = self.get_parameter('f').get_parameter_value().integer_value
