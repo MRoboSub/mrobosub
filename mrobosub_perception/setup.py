@@ -28,9 +28,9 @@ setup(
             'pathmarker_hsv= mrobosub_perception.pathmarker_hsv:main',
             'ml_executor = mrobosub_perception.ml_executor:main',
             'ml_srv = mrobosub_perception.ml_srv:main',
-            'dummy_ml_srv_node = mrobosub_perception.dummy_ml_srv_node:main'
-            'png_pub = mrobosub_perception.png_pub:main'
-
+            'rectify_image = mrobosub_perception.rectify_image:main',
+            'dummy_ml_srv_node = mrobosub_perception.dummy_ml_srv_node:main',
+            'png_pub = mrobosub_perception.png_pub:main',
         ],
     },
 )

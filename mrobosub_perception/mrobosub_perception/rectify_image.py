@@ -5,11 +5,11 @@ import numpy as np
 from typing import Tuple
 
 from cv_bridge import CvBridge
-import rospy
-from dynamic_reconfigure.server import Server
+import rclpy
 from sensor_msgs.msg import Image
-from mrobosub_lib.lib import Node
-from mrobosub_perception.cfg import rectify_paramsConfig
+from mrobosub_lib import Node
+
+from rcl_interfaces.msg import ParameterDescriptor
 
 def crop_to_circle(image: np.ndarray, radius: int) -> np.ndarray:
     # Find the dimensions of the image
@@ -85,16 +85,17 @@ def generate_rectify_maps(h: int, w: int, f: int) -> Tuple[np.ndarray, np.ndarra
 class RectifiedImage(Node):
     def __init__(self):
         super().__init__('rectified_image')
-        self.f = 280
+
+        self.declare_params()
+        self.add_post_set_parameters_callback(self.set_params)
 
         self.br = CvBridge()
         self.map_x, self.map_y = None, None
-        self.h, self.w = 640, 480
         self.shape = None
         
-        self.sub = rospy.Subscriber('/dummy_botcam', Image, self.handle_frame, queue_size=1)
-        self.rectified_pub = rospy.Publisher(f'/rectified_image', Image, queue_size=1)
-        self.srv = Server(rectify_paramsConfig, self.reconfigure_callback, 'rectify_params')
+        self.sub = self.create_subscription(Image, '/dummy_botcam', self.handle_frame, qos_profile=1)
+        self.rectified_pub = self.create_publisher(Image, f'/rectified_image', qos_profile=1)
+
 
     def handle_frame(self, msg):
         bgr_img = self.br.imgmsg_to_cv2(msg, desired_encoding='bgr8')
@@ -108,14 +109,31 @@ class RectifiedImage(Node):
         #rectified_img = cv2.resize(rectified_img, (640, 480), interpolation=cv2.INTER_LINEAR)
         self.rectified_pub.publish(self.br.cv2_to_imgmsg(rectified_img, encoding='bgr8'))
 
-    def reconfigure_callback(self, config, level):
-        self.f = config["f"]
-        self.map_x, self.map_y = generate_rectify_maps(self.h, self.w, self.f)
-        return config
+    def set_params(self, _params = None):
+        self.f = self.get_parameter('f').get_parameter_value().integer_value
+        self.h = self.get_parameter('h').get_parameter_value().integer_value
+        self.w = self.get_parameter('w').get_parameter_value().integer_value
 
-    def run(self):
-        rospy.spin()
+    def declare_params(self):
+        param_desc_int = ParameterDescriptor()
+        param_desc_int.type = rclpy.Parameter.Type.INTEGER
+        param_desc_int.description = "An int parameter"
+        self.declare_parameters(
+            namespace='',
+            parameters = [  # uses the .yaml file for the actual values
+                ("f", 0, param_desc_int),
+                ("h", 0, param_desc_int),
+                ("w", 0, param_desc_int),
+            ]
+        )
+        self.set_params()
+
+
+def main():
+    rclpy.init()
+    node = RectifiedImage()
+    rclpy.spin(node)
 
 if __name__== '__main__':
-    RectifiedImage().run()
+    main()
 

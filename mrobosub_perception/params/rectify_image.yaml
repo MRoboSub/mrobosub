@@ -1,0 +1,5 @@
+rectify_image:
+  ros__parameters:
+    w: 640
+    h: 480
+    f: 140
