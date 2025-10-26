@@ -29,7 +29,7 @@ class BinHsv(Node):
         super().__init__('bin_hsv')
 
         self.declare_params()
-        self.timing_threshold = self.get_parameter('timing_threshold').get_parameter_value().double_value
+        self.add_post_set_parameters_callback(self.set_params)
 
         self.br = CvBridge()
 
@@ -68,10 +68,14 @@ class BinHsv(Node):
 
             self.serv.set_result(response)
 
+    def set_params(self, _params = None):
+        self.timing_threshold = self.get_parameter('timing_threshold').get_parameter_value().double_value
+
     def declare_params(self):
         self.declare_parameter(
             "timing_threshold", 0.0
         )
+        self.set_params()
         
     
 def main():
