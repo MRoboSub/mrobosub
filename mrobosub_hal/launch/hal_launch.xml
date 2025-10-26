@@ -1,5 +1,4 @@
 <launch>
-  <include file="$(find-pkg-share mrobosub_hal)/launch/run_arduino_launch.xml"/>
   <include file="$(find-pkg-share mrobosub_hal)/launch/dvl_publisher_launch.xml"/>
   <include file="$(find-pkg-share mrobosub_hal)/launch/imu_launch.xml"/>
   <include file="$(find-pkg-share mrobosub_hal)/launch/thruster_controller_launch.xml"/>
