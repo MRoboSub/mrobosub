@@ -1,0 +1,16 @@
+<launch>
+  <!-- <node
+    pkg="mrobosub_perception"
+    exec="webcam_pub"
+    name="webcam_pub"
+    output="screen"
+  /> -->
+  <node
+    pkg="mrobosub_perception"
+    exec="hsv_tuner"
+    name="hsv_tuner"
+    output="screen"
+  >
+    <rosparam command="load" file="$(find mrobosub_perception)/params/pathmarker.yaml" />
+  </node>
+</launch>

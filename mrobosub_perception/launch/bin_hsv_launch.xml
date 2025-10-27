@@ -1,0 +1,12 @@
+<launch>
+    <arg name="always_run" default="0" />
+    <node 
+      name="bin_hsv"
+      pkg="mrobosub_perception"
+      exec="bin_hsv"
+      output="screen"
+      args="$(var always_run)"
+    >
+      <param from="$(find-pkg-share mrobosub_perception)/params/bin_hsv.yaml" />
+    </node> 
+</launch>
