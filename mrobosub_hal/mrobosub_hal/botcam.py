@@ -55,7 +55,7 @@ class Botcam(Node):
         # https://stackoverflow.com/a/66279297
         # cap.set(cv2.CAP_PROP_FPS,10)
         # cap.set(cv2.CAP_PROP_BUFFERSIZE,1)
-        self.cap.set(cv2.CAP_PROP_FOURCC, 0x47504A4D) # wtf
+        self.cap.set(cv2.CAP_PROP_FOURCC, 1296718151) # wtf
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
         self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
