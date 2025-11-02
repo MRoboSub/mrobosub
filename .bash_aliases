@@ -1,5 +1,5 @@
-
-export MYPYPATH=/opt/ros/jazzy/lib/python3.12/site-packages
+export PYTHON_VERSION="$(python --version 2>/dev/null | awk '{v=$2; split(v,a,"."); print "python" a[1]"."a[2]}')"
+export MYPYPATH="/opt/ros/$ROS_DISTRO/lib/$PYTHON_VERSION/site-packages:/opt/ros/$ROS_DISTRO/local/lib/$PYTHON_VERSION/dist-packages"
 
 alias ronosde="ros2 node"
 alias bot_cam="ros2 service call /bot_cam/on std_msgs/Trigger \"data: True\"; rosservice call /zed/on std_msgs/Trigger \"data: False\""
