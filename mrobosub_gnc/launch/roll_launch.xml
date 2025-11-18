@@ -2,7 +2,4 @@
   <node name="roll_control" pkg="mrobosub_gnc" exec="pid_dof_controller" args="roll">
     <param from="$(find-pkg-share mrobosub_gnc)/params/roll_control.yaml" />
   </node>
-  <node name="roll_pid" namespace="roll_pid" pkg="jlb_pid" exec="controller_node">
-    <param from="$(find-pkg-share mrobosub_gnc)/params/roll_pid.yaml" />
-  </node>
 </launch>

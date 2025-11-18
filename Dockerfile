@@ -28,13 +28,6 @@ USER 1000:1000
 
 RUN pipx install mypy && \
     pipx ensurepath
-
-RUN mkdir -p /home/ubuntu/jlb_pid_ws/src && \
-    cd /home/ubuntu/jlb_pid_ws/src && \
-    git clone https://github.com/HenryLeC/ros2-pid.git && \
-    cd /home/ubuntu/jlb_pid_ws && \
-    source /opt/ros/jazzy/setup.bash && \
-    colcon build --symlink-install
     
 RUN mkdir -p /home/ubuntu/inertial_sense_ws/src && \
     cd /home/ubuntu/inertial_sense_ws/src && \

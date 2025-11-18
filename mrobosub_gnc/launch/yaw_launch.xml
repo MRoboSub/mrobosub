@@ -2,7 +2,4 @@
   <node name="yaw_control" pkg="mrobosub_gnc" exec="pid_dof_controller" args="yaw">
     <param from="$(find-pkg-share mrobosub_gnc)/params/yaw_control.yaml" />
   </node>
-  <node name="yaw_pid" namespace="yaw_pid" pkg="jlb_pid" exec="controller_node">
-    <param from="$(find-pkg-share mrobosub_gnc)/params/yaw_pid.yaml" />
-  </node>
 </launch>

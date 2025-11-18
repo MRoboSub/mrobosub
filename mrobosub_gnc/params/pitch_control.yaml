@@ -1,5 +1,15 @@
 pitch_control:
   ros__parameters:
-    feed_forward: 0.0
-    clamp: false
-    max_output: 0.0
+
+
+/pitch_pid:
+  pitch_pid:
+    ros__parameters:
+      kp: 0.1
+      ki: 0.0
+      kd: 0.001
+      windup_limit: 999999.0
+
+      # TODO!: This is a big problem these arent implemented (need to switch PID implementation)
+      # angle_error: true
+      # angle_wrap: 360.0
