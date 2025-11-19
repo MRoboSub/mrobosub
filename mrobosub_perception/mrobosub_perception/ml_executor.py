@@ -15,6 +15,12 @@ from std_msgs.msg import Float64
 from sensor_msgs.msg import Image
 from mrobosub_msgs.msg import Detection, Detections
 
+def to_detection(det: np.ndarray) -> Detection:
+    msg = Detection()
+    msg.left, msg.top, msg.right, msg.bottom, msg.confidence = map(float, det[:5])
+    msg.classification = int(det[5])
+    return msg
+
 
 class MlExecutor(Node):
     def __init__(self, run_until_time: float):
@@ -37,14 +43,13 @@ class MlExecutor(Node):
         height, width, channels = image_ocv.shape
         outputs = self.model(image_ocv, imgsz=width)  # get raw detection data
 
-        detections = outputs[0].boxes.xyxy.cpu().numpy()
-        self.get_logger().info(f"{detections}")
+        detections = outputs[0].boxes.data.cpu().numpy()
 
         self.get_logger().info(f"TIME: {time.time() - start}")
         message = Detections(
-            detections=(Detection(*d) for d in detections),
-            width=width,
-            height=height,
+            detections=([to_detection(d) for d in detections]),
+            width=float(width),
+            height=float(height),
         )
         self.detection_pub.publish(message)
 
