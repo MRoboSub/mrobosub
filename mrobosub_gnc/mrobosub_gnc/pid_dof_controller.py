@@ -6,7 +6,7 @@ from mrobosub_lib import Node
 from rcl_interfaces.msg import ParameterDescriptor
 from std_msgs.msg import Float64
 
-INTEGRAL_DEADBAND = 1 # integral term only changes when pose within [setpoint - INTEGRAL_DEADBAND, setpoint + INTEGRAL_DEADBAND]
+INTEGRAL_DEADBAND = 15 # integral term only changes when pose within [setpoint - INTEGRAL_DEADBAND, setpoint + INTEGRAL_DEADBAND]
 # when outside this range, keep integral term constant
 
 class PidDofControlNode(Node):
@@ -62,8 +62,8 @@ class PidDofControlNode(Node):
         self.kp = self.get_parameter('kp').get_parameter_value().double_value
         self.kd = self.get_parameter('kd').get_parameter_value().double_value
         self.ki = self.get_parameter('ki').get_parameter_value().double_value
-        self.angular = self.get_parameter('angular').get_parameter_value().boolean_value
-        self.integral_windup_limit = 5 # absolute value of max integral accumulated
+        self.angular = self.get_parameter('angular').value
+        self.integral_windup_limit = self.get_parameter('integral_windup_limit').get_parameter_value().double_value # absolute value of max integral accumulated
         # integral term does not get updated if update will take it outside [ - self.integral_windup_limit, self.integral_windup_limit ]
 
     def declare_params(self):
@@ -93,15 +93,12 @@ class PidDofControlNode(Node):
         self.pose: float = pose.data
         error: float = self.target_pose - self.pose
 
-        if(self.angular):
+        if self.angular:
             # if input error % 360 will be in range [0, 360)
             # if input error % 360 is < 180 then output +ve value
             # if input error % 360 is >=180 then output -ve value
             error = self.convert_to_180_180_range(error)
             # now output error is in [-180, 180)
-
-        else:
-            pass
 
         if not self.previous_valid:
             self.previous_valid = True
@@ -111,25 +108,23 @@ class PidDofControlNode(Node):
         else:
             cur_time = self.get_clock().now()
             delta_time = self.elapsed_ms(self.prev_time, cur_time)
-            derivative_diff: float = (self.pose - self.previous_pose) # don't do modulo anything, this should be the absolute value with sign and everything
-            derivative_term: float = derivative_diff / delta_time
+            pose_diff: float = (self.pose - self.previous_pose) # don't do modulo anything, this should be the absolute value with sign and everything
+            derivative_term: float = pose_diff / delta_time
 
-            # add to the accumulated error
-            new_accumulated_error: float = self.accumulated_error + error * delta_time
-            if(abs(new_accumulated_error) <= abs(self.integral_windup_limit)):
-                self.accumulated_error = new_accumulated_error
-            # todo: include integral deadband here
+            # update self.accumulated error
+            if(abs(error) <= INTEGRAL_DEADBAND):
+                new_accumulated_error: float = self.accumulated_error + error * delta_time
+                if(abs(new_accumulated_error) <= abs(self.integral_windup_limit)):
+                    self.accumulated_error = new_accumulated_error
 
             effort: float = error * self.kp + derivative_term * self.kd + self.accumulated_error * self.ki
             self.pid_callback(effort)
 
         self.prev_time = self.get_clock().now() # setting this up for the next iteration     
 
-
     def target_twist(self, target_twist: Float64):
         self.pid_enabled = False
         self.previous_valid = False
-        self.accumulated_error = 0
         self.pub_output(target_twist.data)
 
     def pid_callback(self, effort: float): # wth is this function for
