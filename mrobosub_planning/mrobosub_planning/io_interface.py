@@ -228,30 +228,30 @@ class Interface:
 
     def activate_zed(self) -> bool:
         bot_cam_req = self._bot_cam_on_srv.Request(data=False)
-        bot_cam_res = self._bot_cam_on_srv.call(bot_cam_req, timeout=2.0)
+        bot_cam_res = self._bot_cam_on_srv.call(bot_cam_req)
 
         zed_req = self._zed_on_srv.Request(data=True)
-        zed_res = self._zed_on_srv.call(zed_req, timeout=2.0)
+        zed_res = self._zed_on_srv.call(zed_req)
 
         success = bot_cam_res.success and zed_res.success
         return success
 
     def activate_bot_cam(self) -> bool:
         zed_req = self._zed_on_srv.Request(data=False)
-        zed_res = self._zed_on_srv.call(zed_req, timeout=2.0)
+        zed_res = self._zed_on_srv.call(zed_req)
 
         bot_cam_req = self._bot_cam_on_srv.Request(data=True)
-        bot_cam_res = self._bot_cam_on_srv.call(bot_cam_req, timeout=2.0)
+        bot_cam_res = self._bot_cam_on_srv.call(bot_cam_req)
 
         success = bot_cam_res.success and zed_res.success
         return success
 
     def deactivate_cameras(self) -> bool:
         zed_req = self._zed_on_srv.Request(data=False)
-        zed_res = self._zed_on_srv.call(zed_req, timeout=2.0)
+        zed_res = self._zed_on_srv.call(zed_req)
 
         bot_cam_req = self._bot_cam_on_srv.Request(data=False)
-        bot_cam_res = self._bot_cam_on_srv.call(bot_cam_req, timeout=2.0)
+        bot_cam_res = self._bot_cam_on_srv.call(bot_cam_req)
 
         success = bot_cam_res.success and zed_res.success
         return success
