@@ -5,19 +5,17 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import (
     Any,
-    Dict,
-    Optional,
-    Type,
-    Tuple,
     TYPE_CHECKING,
 )
 import warnings
+from dataclasses import dataclass
+from typing_extensions import dataclass_transform, Self
+
 import rclpy
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
-from dataclasses import dataclass
-from typing_extensions import dataclass_transform, Self
-from mrobosub_planning.periodic_io import Captain
+
+from mrobosub_planning.io_interface import Interface
 
 STATE_TOPIC = "captain/current_state"
 SOFT_STOP_SERVICE = "captain/soft_stop"
@@ -61,7 +59,7 @@ class SoftStopTransition(Outcome):
 
 
 class StateMeta(type):
-    _outcomes: dict[str, Type[Outcome]]
+    _outcomes: dict[str, type[Outcome]]
 
     def __new__(cls, name: str, bases: tuple, dict_: dict) -> "StateMeta":
         state = super().__new__(cls, name, bases, dict_)
@@ -108,16 +106,12 @@ class State(metaclass=StateMeta):
 
     _num_unexpected_params = 0
 
-    def __init__(self, prev_outcome: Outcome, node: Captain):
-        """
-        node: The io_node which can be used via the Periodic_IO interface to access various publishers
-        and subscribers, and can be used to create new publishers/subscribers
-        """
+    def __init__(self, prev_outcome: Outcome, io: Interface):
         self.prev_outcome = prev_outcome
-        self.io_node = node
+        self.io = io
 
     @abstractmethod
-    def handle(self) -> Optional[Outcome]:
+    def handle(self) -> Outcome | None:
         """Contains the logic to be run for a particular state.
 
         Is called repeatedly for each iteration of the state, including the first one.
@@ -125,11 +119,11 @@ class State(metaclass=StateMeta):
         pass
 
     @classmethod
-    def is_valid_income_type(cls, outcome_type: Type[Outcome]) -> bool:
+    def is_valid_income_type(cls, outcome_type: type[Outcome]) -> bool:
         return True
 
     @classmethod
-    def with_params(cls, **kwargs: Any) -> Type[Self]:
+    def with_params(cls, **kwargs: Any) -> type[Self]:
         num_unexpected = 0
         for k in kwargs:
             if not hasattr(cls, k):
@@ -150,7 +144,7 @@ class State(metaclass=StateMeta):
         return f"<instance of {cls._rendered_repr()}>"
 
 
-TransitionMap = Dict[Type[Outcome], Type[State]]
+TransitionMap = dict[type[Outcome], type[State]]
 
 
 class StateMachine:
@@ -160,9 +154,9 @@ class StateMachine:
         self,
         name: str,
         transitions: TransitionMap,
-        StartState: Type[State],
-        StopState: Type[State],
-        captainNode: Captain
+        StartState: type[State],
+        StopState: type[State],
+        io: Interface,
     ):
         """Creates a new state machine.
 
@@ -180,25 +174,30 @@ class StateMachine:
         self.StartState = StartState
         self.transitions = transitions
         self.StopState = StopState
-        self.node = captainNode
+        self.node = io.node
+        self.io = io
 
-        self._soft_stop_srv = self.node.create_service(Trigger, SOFT_STOP_SERVICE, self.soft_stop)
+        self._soft_stop_srv = self.node.create_service(
+            Trigger, SOFT_STOP_SERVICE, self.soft_stop
+        )
         self.stop_signal_recvd = False
 
-    def soft_stop(self, req: Trigger.Request, res: Trigger.Response) -> Trigger.Response:
+    def soft_stop(
+        self, req: Trigger.Request, res: Trigger.Response
+    ) -> Trigger.Response:
         self.stop_signal_recvd = True
         res.success = True
         res.message = type(self.current_state).__qualname__
         return res
 
-    def run(self, hz: int = 50) -> Optional[Outcome]:
+    def run(self, hz: int = 50) -> Outcome | None:
         """Performs a run, beginning with the StartState and ending when it reaches StopState.
 
         Returns the Outcome from calling handle() on StopState.
         """
         rate = self.node.create_rate(hz)
         publisher = self.node.create_publisher(String, STATE_TOPIC, 1)
-        self.current_state = self.StartState(InitTransition(), self.node)
+        self.current_state = self.StartState(InitTransition(), self.io)
         while type(self.current_state) != self.StopState:
             self.run_once(publisher)
             rate.sleep()
@@ -219,7 +218,7 @@ class StateMachine:
                 outcome = SoftStopTransition()
             NextState = self.StopState
             outcome_name = "!! Abort !!"
-            self.node.get_logger().info(
+            self.io.logger.info(
                 f"Aborting from state {type(self.current_state).__qualname__} and moving to stop state"
             )
         else:
@@ -230,11 +229,11 @@ class StateMachine:
             NextState = self.transitions[outcome_type]
 
             if type(self.current_state) == NextState:
-                self.node.get_logger().warn(
+                self.io.logger.warn(
                     f"{type(self.current_state).__qualname__} contains a type which returns itself!"
                 )
 
-        self.node.get_logger().info(
+        self.io.logger.info(
             f"transition {type(self.current_state).__qualname__} --[{outcome_name}]--> {NextState.__qualname__}"
         )
-        self.current_state = NextState(outcome, self.node)
+        self.current_state = NextState(outcome, self.io)

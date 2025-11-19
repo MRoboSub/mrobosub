@@ -152,8 +152,8 @@ class StateEstimation(Node):
         self.roll_pub.publish(Float64(data=roll))
 
 
-def main(args=None):
-    rclpy.init(args=args)
+def main():
+    rclpy.init()
 
     node = StateEstimation()
 
