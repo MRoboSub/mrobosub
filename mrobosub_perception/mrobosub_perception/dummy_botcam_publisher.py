@@ -9,20 +9,27 @@ class DummyBotCam(Node):
     def __init__(self):
         super().__init__('dummy_botcam_publisher')
         self.br = CvBridge()
+        self.declare_params()
+        self.add_post_set_parameters_callback(self.set_params)
         self.pub = self.create_publisher( Image, '/dummy_botcam', qos_profile=1)
-        
-        self.declare_parameter("image_number", 1)
-        self.image_number = self.get_parameter('image_number').get_parameter_value().integer_value
         self.timer = self.create_timer(1, self.loop)
-        
+    
+    def set_params(self, _params = None):
+        self.image_number = self.get_parameter('image_number').get_parameter_value().integer_value
+        self.h = self.get_parameter('h').get_parameter_value().integer_value
+        self.w = self.get_parameter('w').get_parameter_value().integer_value
+
+    def declare_params(self):
+        self.declare_parameter("image_number", 1)
+        self.declare_parameter("h", 0)
+        self.declare_parameter("w", 0)
+        self.set_params()
 
     def loop(self):
             img_path = f"{Path(__file__).parent}/bbox.png"
 
             try:
                 cv_img = cv2.imread(img_path)
-                self.w = 480
-                self.h = 640
                 cv_img = cv2.resize(cv_img, (self.h, self.w), interpolation=cv2.INTER_CUBIC)
                 cv_img = cv2.rectangle(cv_img, (self.w // 2 - 200 - 7, self.h // 2 - 200 + 4), (self.w // 2 + 200 - 7, self.h // 2 + 200 + 4), (255, 255, 255, 3))
                 img_msg = self.br.cv2_to_imgmsg(cv_img, encoding='bgr8')

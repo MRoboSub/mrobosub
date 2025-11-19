@@ -1,4 +1,5 @@
-export MYPYPATH=/opt/ros/jazzy/lib/python3.12/site-packages
+export PYTHON_VERSION="$(python --version 2>/dev/null | awk '{v=$2; split(v,a,"."); print "python" a[1]"."a[2]}')"
+export MYPYPATH="/opt/ros/$ROS_DISTRO/lib/$PYTHON_VERSION/site-packages:/opt/ros/$ROS_DISTRO/local/lib/$PYTHON_VERSION/dist-packages"
 
 alias ronosde="ros2 node"
 alias bot_cam="ros2 service call /bot_cam/on std_msgs/Trigger \"data: True\"; rosservice call /zed/on std_msgs/Trigger \"data: False\""
@@ -11,7 +12,6 @@ alias close_droppers="ros2 topic pub /left_servo/angle std_msgs/Int32 \"data: 90
 alias open_droppers="ros2 topic pub /left_servo/angle std_msgs/Int32 \"data: 60\" & ros2 topic pub /right_servo/angle std_msgs/Int32 \"data: 120\""
 alias stop="ros2 run mrobosub_planning stop.py"
 alias watch_pathmarker="watch -n 0.1 ros2 service call /pathmarker_angle std_msgs/Trigger"
-alias watch_buoy="watch -n 1 ros2 service call /buoy_object_position std_msgs/Trigger"
 alias watch_bin="watch -n 1 ros2 service call /bin_object_position std_msgs/Trigger"
 alias watch_gate_blue="watch -n 1 ros2 service call /object_position/gate_blue std_msgs/Trigger"
 alias watch_gate_red="watch -n 1 ros2 service call /object_position/gate_red std_msgs/Trigger"
