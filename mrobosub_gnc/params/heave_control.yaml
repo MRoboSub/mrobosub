@@ -1,15 +1,8 @@
 heave_control:
   ros__parameters:
     feed_forward: 0.0
-
-
-    /*
-
-    /heave_pid:
-  heave_pid:
-    ros__parameters:
-      kp: 4.0
-      ki: 0.1
-      kd: 1.0
-      windup_limit: 1.0
-      */
+    kp: 4.0
+    ki: 0.1
+    kd: 1.0
+    integral_windup_limit: 10
+    angular: False
