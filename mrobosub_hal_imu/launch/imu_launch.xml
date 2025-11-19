@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="mrobosub_hal_imu" exec="imu_node" name="imu"/>
+</launch>

@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/opt/ros/noetic/include"
+                "/opt/ros/humble/include/**",
+                "${workspaceFolder}/../install/**/include/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
