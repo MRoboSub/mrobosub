@@ -4,6 +4,7 @@ import argparse
 
 from mrobosub_lib import Node
 from std_msgs.msg import Float64
+import math
 
 INTEGRAL_DEADBAND = 15 # integral term only changes when pose within [setpoint - INTEGRAL_DEADBAND, setpoint + INTEGRAL_DEADBAND]
 # when pose outside this range, keep integral term constant
@@ -61,7 +62,8 @@ class PidDofControlNode(Node):
         self.ki = self.get_parameter('ki').get_parameter_value().double_value
         self.angular = self.get_parameter('angular').value
         self.integral_windup_limit = self.get_parameter('integral_windup_limit').get_parameter_value().double_value # absolute value of max integral accumulated
-        # integral term does not go outside [ - self.integral_windup_limit, self.integral_windup_limit ]
+        # ideally the parameter being passed in should be positive, but if negative, we use abs() whenever we use self.integral_windup_limit so it's ok
+        # integral term does not go outside [ - self.integral_windup_limit, + self.integral_windup_limit ]
 
     def declare_params(self):
         self.declare_parameter("kp", 1.0)
@@ -111,10 +113,11 @@ class PidDofControlNode(Node):
 
             # update self.accumulated_error
             if abs(error) <= INTEGRAL_DEADBAND:
-                self.accumulated_error += error * delta_time
+                self.accumulated_error += error * delta_time # tentatively update self.accumulated error
 
-                if(abs(self.accumulated_error) > abs(self.integral_windup_limit) and self.accumulated_error != 0):
-                    self.accumulated_error = self.accumulated_error / abs(self.accumulated_error) * abs(self.integral_windup_limit)
+                # if tentative value of self.accumulated_error is more than our max accumulated error (windup_limit), then cap it at +/- windup_limit
+                if abs(self.accumulated_error) > abs(self.integral_windup_limit):
+                    self.accumulated_error = math.copysign(self.integral_windup_limit, self.accumulated_error)
 
             self.output = error * self.kp + derivative_term * self.kd + self.accumulated_error * self.ki
             self.output_pub.publish(Float64(data=self.output))
