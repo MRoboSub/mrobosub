@@ -73,33 +73,34 @@ class PidDofControlNode(Node):
         self.declare_parameter("integral_windup_limit", 1.0)
         self.set_params()
 
-    def target_pose_callback(self, target_pose: Float64):
-        self.pid_enabled = True
-        self.target_pose = target_pose.data
-
-    # returns the value in range [-180, 180)
-    def convert_to_180_180_range(self, val):
-        val = val % 360
+    # returns val wrapped to [-180, 180)
+    def wrap_to_180(self, val: float):
+        val = val % 360  # val is now in [0, 360)
         if(val > 180):
             val = val - 360
         return val
+
+    def target_pose_callback(self, target_pose: Float64):
+        self.pid_enabled = True
+        self.target_pose = target_pose.data
+        if self.angular:
+            self.target_pose = self.wrap_to_180(self.target_pose)
 
     def elapsed_ms(self, start, end):
         return (end - start).nanoseconds / 1e6
 
     def pose_callback(self, pose: Float64):
         self.pose: float = pose.data
+        if self.angular:
+            self.pose = self.wrap_to_180(self.pose)
+
         if not self.pid_enabled:
             return
 
         error: float = self.target_pose - self.pose
 
         if self.angular:
-            # (input error % 360) will be in range [0, 360)
-            # if (input error % 360) is < 180 then output +ve value
-            # if (input error % 360) is >=180 then output -ve value
-            error = self.convert_to_180_180_range(error)
-            # now error is in [-180, 180)
+            error = self.wrap_to_180(error) # now error is in [-180, 180)
 
         if not self.prev_valid:
             self.prev_valid = True
@@ -108,7 +109,12 @@ class PidDofControlNode(Node):
         else:
             cur_time = self.get_clock().now()
             delta_time = self.elapsed_ms(self.prev_time, cur_time)
-            pose_diff: float = (self.pose - self.prev_pose) # don't do modulo anything, this should be the absolute value with sign and everything
+            pose_diff: float = (self.pose - self.prev_pose)
+
+            if self.angular:
+                pose_diff = self.wrap_to_180(pose_diff)
+                # as long as we don't turn over 180 degrees in a single timestep (which should not happen), this will be accurate
+
             derivative_term: float = - pose_diff / delta_time
 
             # update self.accumulated_error
