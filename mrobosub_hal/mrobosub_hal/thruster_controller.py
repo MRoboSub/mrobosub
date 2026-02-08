@@ -138,8 +138,7 @@ class ThrusterController(Node):
     def motor_callback(self, msg: MotorState):
         if not self.emergency_stop:
             for i in range(NUM_MOTORS):
-                motor_name = f"motor{i}"
-                self.motor_outputs[i] = getattr(msg, motor_name)
+                self.motor_outputs[i] = msg.motors[i]
 
     def get_errors(self):
         # gets errors from thruster controller hardware (which automatically clears the errors too)
