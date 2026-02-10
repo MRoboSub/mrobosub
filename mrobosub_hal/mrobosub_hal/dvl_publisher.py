@@ -28,8 +28,8 @@ class DVLPublisher (Node):
         self.sock.bind((UDP_IP, UDP_PORT))
         self.timer = self.create_timer(1.0/50, self.loop)
 
-        # set the host address on the dvl
-        message = b"HOST-ADDRESS %b" % HOST_IP
+        # set the host address and port on the dvl
+        message = b"HOST-ADDRESS %b:%b" % (HOST_IP, str(UDP_PORT).encode('utf-8'))
         self.sock.sendto(message, (UDP_IP, UDP_PORT))
 
     def destroy_node(self):
