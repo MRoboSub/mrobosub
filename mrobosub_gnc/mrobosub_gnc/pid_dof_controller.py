@@ -6,9 +6,6 @@ from mrobosub_lib import Node
 from std_msgs.msg import Float64
 import math
 
-INTEGRAL_DEADBAND = 15 # integral term only changes when pose within [setpoint - INTEGRAL_DEADBAND, setpoint + INTEGRAL_DEADBAND]
-# when pose outside this range, keep integral term constant
-
 class PidDofControlNode(Node):
     """
     Subscribers
@@ -65,12 +62,17 @@ class PidDofControlNode(Node):
         # ideally the parameter being passed in should be positive, but if negative, we use abs() whenever we use self.integral_windup_limit so it's ok
         # integral term does not go outside [ - self.integral_windup_limit, + self.integral_windup_limit ]
 
+        self.integral_deadband = self.get_parameter('integral_deadband').get_parameter_value().double_value
+        # integral term only changes when pose within [setpoint - integral_deadband, setpoint + integral_deadband]
+        # when pose outside this range, integral term stays constant
+
     def declare_params(self):
         self.declare_parameter("kp", 1.0)
         self.declare_parameter("kd", 1.0)
         self.declare_parameter("ki", 1.0)
         self.declare_parameter("angular", False)
         self.declare_parameter("integral_windup_limit", 1.0)
+        self.declare_parameter("integral_deadband", 1.0)
         self.set_params()
 
     # returns val wrapped to [-180, 180)
@@ -118,7 +120,7 @@ class PidDofControlNode(Node):
             derivative_term: float = - pose_diff / delta_time
 
             # update self.accumulated_error
-            if abs(error) <= INTEGRAL_DEADBAND:
+            if abs(error) <= self.integral_deadband:
                 self.accumulated_error += error * delta_time # tentatively update self.accumulated error
 
                 # if tentative value of self.accumulated_error is more than our max accumulated error (windup_limit), then cap it at +/- windup_limit

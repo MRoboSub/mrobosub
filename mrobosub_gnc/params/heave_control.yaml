@@ -4,4 +4,5 @@ heave_control:
     ki: 0.1
     kd: 1.0
     integral_windup_limit: 10.0
+    integral_deadband: 15.0
     angular: False
