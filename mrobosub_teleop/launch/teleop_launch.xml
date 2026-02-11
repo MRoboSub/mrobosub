@@ -1,0 +1,6 @@
+<launch>
+  <node name="joystick_teleop" pkg="mrobosub_teleop" exec="joystick_teleop" output="screen">
+    <param from="$(find-pkg-share mrobosub_teleop)/params/joystick_controls_b2a.yaml"/>
+  </node>
+  <node name="joy_node" pkg="joy" exec="joy_node"/>
+</launch>

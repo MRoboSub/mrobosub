@@ -6,3 +6,7 @@ __pycache__
 .mypy_cache
 *.bag
 rosdep/
+*.DS_Store
+build/
+install/
+log/
