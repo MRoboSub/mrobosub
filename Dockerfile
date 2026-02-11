@@ -27,14 +27,10 @@ SHELL ["/bin/bash", "-c"]
 
 USER 1000:1000
 
-RUN sudo pip3 install --upgrade mypy typing-extensions
+RUN pipx install mypy && \
+    pipx ensurepath
 
-RUN mkdir -p /home/ubuntu/jlb_pid_ws/src && \
-    cd /home/ubuntu/jlb_pid_ws/src && \
-    git clone https://github.com/HenryLeC/ros2-pid.git && \
-    cd /home/ubuntu/jlb_pid_ws && \
-    source /opt/ros/humble/setup.bash && \
-    colcon build --symlink-install
+RUN sudo pip3 install --upgrade mypy typing-extensions
     
 # Create workspace structure
 RUN mkdir -p /home/ubuntu/ros2_ws/src && \
