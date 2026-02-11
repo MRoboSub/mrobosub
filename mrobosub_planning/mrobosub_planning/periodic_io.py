@@ -199,7 +199,6 @@ class Captain(Node):
         return success
 
 
-
     def activate_zed(self) -> bool:
         self.req = self._bot_cam_on_srv.Request()
         self.req.data = False
