@@ -5,6 +5,7 @@ import sys
 import time
 
 import torch
+from ultralytics import YOLO
 import rclpy
 import numpy as np
 from cv_bridge import CvBridge
@@ -14,29 +15,20 @@ from std_msgs.msg import Float64
 from sensor_msgs.msg import Image
 from mrobosub_msgs.msg import Detection, Detections
 
-
-def load_yolo():
-    # load model
-    path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    yolo_path = os.path.join(path, "yolov5")
-
-    model_path = os.path.join(path, "models/2025_best.pt")
-    print(yolo_path)
-    print(model_path)
-    model = torch.hub.load(
-        yolo_path, "custom", path=model_path, source="local"
-    )  # local repo
-    model.conf = 0.1  # NMS confidence threshold
-    return model
+def to_detection(det: np.ndarray) -> Detection:
+    msg = Detection()
+    msg.left, msg.top, msg.right, msg.bottom, msg.confidence = map(float, det[:5])
+    msg.classification = int(det[5])
+    return msg
 
 
 class MlExecutor(Node):
     def __init__(self, run_until_time: float):
         super().__init__("ml_executor")
-        self.model = load_yolo()
+        self.model = YOLO("yolo11n.pt")
         self.run_until_time = run_until_time
         self.bridge = CvBridge()
-        self.create_subscription(Image, "/zed2/zed_node/rgb/image_rect_color", self.zed_callback, qos_profile = 1)
+        self.create_subscription(Image, "/dummy_botcam", self.zed_callback, qos_profile = 1)
         self.create_subscription(Float64, "/ml/run_until", self.run_until_callback, qos_profile=1)
         self.detection_pub = self.create_publisher(Detections, "/ml/detections", qos_profile=1)
 
@@ -49,15 +41,15 @@ class MlExecutor(Node):
 
         # Find any objects in the image
         height, width, channels = image_ocv.shape
-        outputs = self.model(image_ocv, size=width)  # get raw detection data
+        outputs = self.model(image_ocv, imgsz=width)  # get raw detection data
 
-        detections = outputs.xyxy[0].cpu().numpy()
+        detections = outputs[0].boxes.data.cpu().numpy()
 
-        print(f"TIME: {time.time() - start}")
+        self.get_logger().info(f"TIME: {time.time() - start}")
         message = Detections(
-            detections=(Detection(*d) for d in detections),
-            width=width,
-            height=height,
+            detections=([to_detection(d) for d in detections]),
+            width=float(width),
+            height=float(height),
         )
         self.detection_pub.publish(message)
 
