@@ -10,7 +10,9 @@ alias arm="ros2 service call /thruster_mixing/enable std_msgs/Bool \"data: True\
 alias disarm="ros2 service call /thruster_mixing/enable std_msgs/Bool \"data: False\""
 alias close_droppers="ros2 topic pub /left_servo/angle std_msgs/Int32 \"data: 90\" & ros2 topic pub /right_servo/angle std_msgs/Int32 \"data: 90\""
 alias open_droppers="ros2 topic pub /left_servo/angle std_msgs/Int32 \"data: 60\" & ros2 topic pub /right_servo/angle std_msgs/Int32 \"data: 120\""
-alias stop="ros2 run mrobosub_planning stop.py"
+alias stop_motors="ros2 service call /emergency_stop_motors std_msgs/Bool \"data: True\""
+# ros2 service call /emergency_stop_motors std_srvs/srv/SetBool "{data: false}"
+
 alias watch_pathmarker="watch -n 0.1 ros2 service call /pathmarker_angle std_msgs/Trigger"
 alias watch_bin="watch -n 1 ros2 service call /bin_object_position std_msgs/Trigger"
 alias watch_gate_blue="watch -n 1 ros2 service call /object_position/gate_blue std_msgs/Trigger"
