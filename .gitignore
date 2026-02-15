@@ -6,3 +6,6 @@ __pycache__
 .mypy_cache
 *.bag
 rosdep/
+build*
+install*
+log*

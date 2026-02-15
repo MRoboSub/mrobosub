@@ -23,6 +23,7 @@ setup(
     entry_points={
         'console_scripts': [
             "motor_test = mrobosub_tests.motor_test:main",
+            "motor_test_all = mrobosub_tests.motor_test_all:main"
         ],
     },
 )

@@ -90,9 +90,12 @@ class ThrusterController(Node):
     def handle_emergency_stop(
         self, req: SetBool.Request, res: SetBool.Response
     ) -> SetBool.Response:
-        self.emergency_stop = True
-        self.get_errors()
-        self.write(bytearray([0xAA, 0x0C, 0x22]))
+        if req.data:
+            self.emergency_stop = True
+            self.get_errors()
+            self.write(bytearray([0xAA, 0x0C, 0x22]))
+        else:
+            self.emergency_stop = False
         res.success = True
         return res
 
@@ -153,8 +156,7 @@ class ThrusterController(Node):
 
     def loop(self):
         for i in range(NUM_MOTORS):
-            self.send_signal(i, self.motor_outputs[i])
-
+            self.send_signal(i, self.motor_outputs[i] if not self.emergency_stop else 0)
 
 def main():
     rclpy.init()
