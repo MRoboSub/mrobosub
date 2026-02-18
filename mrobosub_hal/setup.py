@@ -28,6 +28,7 @@ setup(
             "dvl_publisher = mrobosub_hal.dvl_publisher:main",
             "botcam = mrobosub_hal.botcam:main",
             "zed = mrobosub_hal.zed:main",
+            "arduino = mrobosub_hal.arduino:main"
         ],
     },
 )
