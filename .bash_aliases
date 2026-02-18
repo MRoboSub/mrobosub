@@ -20,7 +20,7 @@ alias stop_motors="ros2 service call /emergency_stop_motors std_srvs/srv/SetBool
 # Quickly start the (default) state machine
 alias captain="ros2 launch mrobosub_planning captain_launch.xml"
 
-# Close the droppers
+# Control the droppers
 alias close_droppers="ros2 topic pub /left_servo/angle std_msgs/Int32 \"data: 90\" & ros2 topic pub /right_servo/angle std_msgs/Int32 \"data: 90\""
 alias open_droppers="ros2 topic pub /left_servo/angle std_msgs/Int32 \"data: 60\" & ros2 topic pub /right_servo/angle std_msgs/Int32 \"data: 120\""
 
