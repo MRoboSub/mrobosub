@@ -10,9 +10,9 @@ FREQUENCY = 60 # times per second
 BAUD_RATE = 9600
 CONNECTION_NAME = "/dev/ttyACM0"
 
-class MockArduino(Node):
+class Arduino(Node):
     def __init__(self):
-        super().__init__("mock_arduino")
+        super().__init__("arduino")
 
         self.charm_pub = self.create_publisher(
             Bool, "/buttons/charm", qos_profile=1
@@ -69,7 +69,7 @@ class MockArduino(Node):
 
 def main():
     rclpy.init()
-    node = MockArduino()
+    node = Arduino()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
