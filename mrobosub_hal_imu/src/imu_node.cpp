@@ -48,14 +48,7 @@ int main(int argc, char **argv)
 
     // By default, ROS2 will pass in some ROS-specific arguments through the command line as well.
     // We only want to read our specific argument.
-
     std::vector<std::string> non_ros_args = rclcpp::remove_ros_arguments(argc, argv);
-
-    std::cout << "The size of non_ros_args was " << non_ros_args.size() << "\n";    
-    for (const auto& arg : non_ros_args) {
-        std::cout << arg << "\n";
-    }
-
     if (non_ros_args.size() != 2)
     {
         std::cout << "Usage: " << non_ros_args[0] << " <port>\n";
@@ -70,7 +63,7 @@ int main(int argc, char **argv)
     }
 
     InertialSense is;
-    is.Open(argv[1]);
+    is.Open(non_ros_args[1]);
 
     auto pimu_registered = is.BroadcastBinaryData(
         DID_PIMU, 
