@@ -1,5 +1,6 @@
 import rclpy
-from mrobosub_lib import Node
+from rclpy.parameter import Parameter
+from mrobosub_lib import Node, Param
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
@@ -8,21 +9,16 @@ class DummyBotCam(Node):
     def __init__(self):
         super().__init__('dummy_botcam_publisher')
         self.br = CvBridge()
-        self.declare_params()
-        self.add_post_set_parameters_callback(self.set_params)
+
+        params = [Param('image_number', Parameter.Type.INTEGER, "image number"), 
+                  Param('h', Parameter.Type.INTEGER, "image height"),
+                  Param('w', Parameter.Type.INTEGER, "image width")]
+
+        self.declare_params(params) # can now access param value using self.[param_name]
+
         self.pub = self.create_publisher( Image, '/dummy_botcam', qos_profile=1)
         self.timer = self.create_timer(1, self.loop)
-    
-    def set_params(self, _params = None):
-        self.image_number = self.get_parameter('image_number').get_parameter_value().integer_value
-        self.h = self.get_parameter('h').get_parameter_value().integer_value
-        self.w = self.get_parameter('w').get_parameter_value().integer_value
 
-    def declare_params(self):
-        self.declare_parameter("image_number", 1)
-        self.declare_parameter("h", 0)
-        self.declare_parameter("w", 0)
-        self.set_params()
 
     def loop(self):
             img_path = f"../dummy_botcam_images/{self.image_number}.png"

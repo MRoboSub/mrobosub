@@ -7,9 +7,9 @@ from typing import Tuple
 from cv_bridge import CvBridge
 import rclpy
 from sensor_msgs.msg import Image
-from mrobosub_lib import Node
+from mrobosub_lib import Node, Param
 
-from rcl_interfaces.msg import ParameterDescriptor
+from rclpy.parameter import Parameter
 
 def crop_to_circle(image: np.ndarray, radius: int) -> np.ndarray:
     # Find the dimensions of the image
@@ -86,8 +86,10 @@ class RectifiedImage(Node):
     def __init__(self):
         super().__init__('rectified_image')
 
-        self.declare_params()
-        self.add_post_set_parameters_callback(self.set_params)
+        params = [Param('f', Parameter.Type.INTEGER, "focal length"), # values in [1, 600] allowed. in another file, default was 280
+                  Param('h', Parameter.Type.INTEGER, "image height"),
+                  Param('w', Parameter.Type.INTEGER, "image width")]
+        self.declare_params(params) # can now access param value using self.[param_name]
 
         self.br = CvBridge()
         self.map_x, self.map_y = None, None
@@ -108,25 +110,6 @@ class RectifiedImage(Node):
         rectified_img = cv2.rectangle(rectified_img, (self.w // 2 - 100 - 7, self.h // 2 - 100 + 4), (self.w // 2 + 100 - 7, self.h // 2 + 100 + 4), (255, 255, 255, 3))
         #rectified_img = cv2.resize(rectified_img, (640, 480), interpolation=cv2.INTER_LINEAR)
         self.rectified_pub.publish(self.br.cv2_to_imgmsg(rectified_img, encoding='bgr8'))
-
-    def set_params(self, _params = None):
-        self.f = self.get_parameter('f').get_parameter_value().integer_value
-        self.h = self.get_parameter('h').get_parameter_value().integer_value
-        self.w = self.get_parameter('w').get_parameter_value().integer_value
-
-    def declare_params(self):
-        param_desc_int = ParameterDescriptor()
-        param_desc_int.type = rclpy.Parameter.Type.INTEGER
-        param_desc_int.description = "An int parameter"
-        self.declare_parameters(
-            namespace='',
-            parameters = [  # uses the .yaml file for the actual values
-                ("f", 0, param_desc_int),
-                ("h", 0, param_desc_int),
-                ("w", 0, param_desc_int),
-            ]
-        )
-        self.set_params()
 
 
 def main():

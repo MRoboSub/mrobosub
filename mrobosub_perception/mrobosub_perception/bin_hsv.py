@@ -6,7 +6,8 @@ import sys
 
 from cv_bridge import CvBridge
 import rclpy
-from mrobosub_lib import Node
+from rclpy.parameter import Parameter
+from mrobosub_lib import Node, Param
 from mrobosub_msgs.srv import ObjectPosition
 from mrobosub_perception.timed_service import TimedService
 from sensor_msgs.msg import Image
@@ -28,8 +29,8 @@ class BinHsv(Node):
     def __init__(self, always_run: bool):
         super().__init__('bin_hsv')
 
-        self.declare_params()
-        self.add_post_set_parameters_callback(self.set_params)
+        params = [Param('timing_threshold', Parameter.Type.DOUBLE, "timing threshold")]
+        self.declare_params(params) # can now access param value using self.[param_name]
 
         self.br = CvBridge()
 
@@ -67,15 +68,6 @@ class BinHsv(Node):
                 response.y_theta = y_theta
 
             self.serv.set_result(response)
-
-    def set_params(self, _params = None):
-        self.timing_threshold = self.get_parameter('timing_threshold').get_parameter_value().double_value
-
-    def declare_params(self):
-        self.declare_parameter(
-            "timing_threshold", 0.0
-        )
-        self.set_params()
         
     
 def main():

@@ -2,4 +2,4 @@ rectify_image:
   ros__parameters:
     w: 480
     h: 640
-    f: 140
+    f: 140 # somewhere else, this default value was 280. tbd determine correct value
