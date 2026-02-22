@@ -30,7 +30,7 @@ class BinHsv(Node):
         super().__init__('bin_hsv')
 
         params = [Param('timing_threshold', Parameter.Type.DOUBLE, "timing threshold")]
-        self.declare_params(params) # can now access param value using self.[param_name]
+        self.declare_params(params)
 
         self.br = CvBridge()
 

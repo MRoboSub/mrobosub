@@ -23,7 +23,7 @@ class PathmarkerHsv(Node):
         super().__init__('hsv_pathmarker')
 
         params = [Param('timing_threshold', Parameter.Type.DOUBLE, "A float parameter")]
-        self.declare_params(params) # can now access param value using self.[param_name]
+        self.declare_params(params)
         
         self.br = CvBridge()
         args_ros = rclpy.utilities.remove_ros_args(sys.argv)

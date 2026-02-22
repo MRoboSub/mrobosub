@@ -29,7 +29,7 @@ class ThrusterController(Node):
         params = [Param('thruster_reverse', Parameter.Type.BOOL_ARRAY, "List of booleans indicating whether each thruster is reversed"), 
                   Param('thruster_motor_id', Parameter.Type.INTEGER_ARRAY, "List of motor IDs for each thruster on the thruster controller")]
 
-        self.declare_params(params) # can now access param value using self.[param_name]
+        self.declare_params(params)
 
         self.connect()
         self.get_errors()  # clear errors at the start

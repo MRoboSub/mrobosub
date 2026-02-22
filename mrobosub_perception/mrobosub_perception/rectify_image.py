@@ -89,7 +89,7 @@ class RectifiedImage(Node):
         params = [Param('f', Parameter.Type.INTEGER, "focal length"), # values in [1, 600] allowed. in another file, default was 280
                   Param('h', Parameter.Type.INTEGER, "image height"),
                   Param('w', Parameter.Type.INTEGER, "image width")]
-        self.declare_params(params) # can now access param value using self.[param_name]
+        self.declare_params(params)
 
         self.br = CvBridge()
         self.map_x, self.map_y = None, None

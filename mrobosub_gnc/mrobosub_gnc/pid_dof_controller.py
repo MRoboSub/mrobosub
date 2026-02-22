@@ -35,7 +35,7 @@ class PidDofControlNode(Node):
                   # when pose outside this range, integral term stays constant
                   ]
 
-        self.declare_params(params) # can now access param value using self.[param_name]
+        self.declare_params(params)
 
         self.output = 0.0 # current output of PID algo
 

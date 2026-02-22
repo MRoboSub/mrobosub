@@ -14,7 +14,7 @@ class DummyBotCam(Node):
                   Param('h', Parameter.Type.INTEGER, "image height"),
                   Param('w', Parameter.Type.INTEGER, "image width")]
 
-        self.declare_params(params) # can now access param value using self.[param_name]
+        self.declare_params(params)
 
         self.pub = self.create_publisher( Image, '/dummy_botcam', qos_profile=1)
         self.timer = self.create_timer(1, self.loop)

@@ -10,9 +10,22 @@ from rcl_interfaces.msg import ParameterDescriptor
 
 class Param:
     """
-    Param: used to pass in list of params from individual nodes to the superclass Node to declare and set params
-    
-    Allowed parameter types in ROS2: bool, int64, float64, string, byte[], bool[], int64[], float64[] or string[]
+    Param: Used to pass a list of parameters from child nodes into the Node parent class
+        to be declared as ROS params and set as member variables
+
+    Allowed parameter types in ROS2:
+
+        ROS 2 IDL type	    rclpy type (actually used in code)
+
+        bool	            BOOL
+        int64	            INTEGER
+        float64	            DOUBLE
+        string	            STRING
+        byte[]	            BYTE_ARRAY
+        bool[]	            BOOL_ARRAY
+        int64[]	            INTEGER_ARRAY
+        float64[]	        DOUBLE_ARRAY
+        string[]	        STRING_ARRAY
     """
     name: str
     type: Parameter.Type
