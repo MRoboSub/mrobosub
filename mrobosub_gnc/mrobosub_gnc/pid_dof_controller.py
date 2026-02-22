@@ -2,7 +2,8 @@ import rclpy
 import sys
 import argparse
 
-from mrobosub_lib import Node
+from rclpy.parameter import Parameter
+from mrobosub_lib import Node, Param
 from std_msgs.msg import Float64
 import math
 
@@ -21,8 +22,20 @@ class PidDofControlNode(Node):
         super().__init__(f"{dof_name}_control")
         self.get_logger().info(f"Starting PID control node for: {dof_name}")
 
-        self.declare_params()
-        self.add_post_set_parameters_callback(self.set_params)
+        params = [Param('kp', Parameter.Type.DOUBLE, "PID coefficient Kp"), 
+                  Param('kd', Parameter.Type.DOUBLE, "PID coefficient Kd"),
+                  Param('ki', Parameter.Type.DOUBLE, "PID coefficient Ki"),
+                  Param('angular', Parameter.Type.BOOL, "whether this DOF is angular (i.e., wraps after 2pi radians)"),
+                  Param('integral_windup_limit', Parameter.Type.DOUBLE, "absolute value of max integral accumulated"),
+                  # ideally integral_windup_limit should be >=0 but we use abs() whenever we use it anyway
+                  # integral accumulated does not go outside [ - self.integral_windup_limit, + self.integral_windup_limit ]
+    
+                  Param('integral_deadband', Parameter.Type.DOUBLE, "+- range of pose values within which integral accumulated should be updated"),
+                  # integral term only changes when pose is in [setpoint - integral_deadband, setpoint + integral_deadband]
+                  # when pose outside this range, integral term stays constant
+                  ]
+
+        self.declare_params(params)
 
         self.output = 0.0 # current output of PID algo
 
@@ -52,28 +65,6 @@ class PidDofControlNode(Node):
         self.create_subscription(
             Float64, f"/target_twist/{dof_name}", self.target_twist, qos_profile=1
         )
-
-    def set_params(self, _params = None):    
-        self.kp = self.get_parameter('kp').get_parameter_value().double_value
-        self.kd = self.get_parameter('kd').get_parameter_value().double_value
-        self.ki = self.get_parameter('ki').get_parameter_value().double_value
-        self.angular = self.get_parameter('angular').value
-        self.integral_windup_limit = self.get_parameter('integral_windup_limit').get_parameter_value().double_value # absolute value of max integral accumulated
-        # ideally the parameter being passed in should be positive, but if negative, we use abs() whenever we use self.integral_windup_limit so it's ok
-        # integral term does not go outside [ - self.integral_windup_limit, + self.integral_windup_limit ]
-
-        self.integral_deadband = self.get_parameter('integral_deadband').get_parameter_value().double_value
-        # integral term only changes when pose within [setpoint - integral_deadband, setpoint + integral_deadband]
-        # when pose outside this range, integral term stays constant
-
-    def declare_params(self):
-        self.declare_parameter("kp", 1.0)
-        self.declare_parameter("kd", 1.0)
-        self.declare_parameter("ki", 1.0)
-        self.declare_parameter("angular", False)
-        self.declare_parameter("integral_windup_limit", 1.0)
-        self.declare_parameter("integral_deadband", 1.0)
-        self.set_params()
 
     # returns val wrapped to [-180, 180)
     def wrap_to_180(self, val: float):

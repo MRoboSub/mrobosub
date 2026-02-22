@@ -10,3 +10,4 @@ rosdep/
 build*
 install*
 log*
+.vscode/settings.json
