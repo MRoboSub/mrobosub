@@ -1,0 +1,7 @@
+<launch>
+  <!-- Requires: ros2 run joy joy_node (or joy_linux) -->
+  <node name="joystick_teleop" pkg="mrobosub_teleop" exec="joystick_teleop"
+        output="screen">
+    <param name="params_file" value="$(find-pkg-share mrobosub_teleop)/params/joystick_controls.yaml"/>
+  </node>
+</launch>

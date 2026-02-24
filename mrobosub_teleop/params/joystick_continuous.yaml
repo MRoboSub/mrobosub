@@ -1,0 +1,16 @@
+# Continuous joystick control: stick directly maps to velocity
+# Push stick = move, release = stop
+# Estop button zeros all outputs
+
+deadzone: 0.1
+estop_button: 4
+
+# Axis index and scale per DOF (axis value * scale = target_twist)
+# Use ros2 topic echo /joy to inspect your controller's axis indices
+# 0,1=left stick 2,3=right stick 4,5=triggers (adjust for your controller)
+surge: { axis: 1, scale: 0.5 }
+sway: { axis: 0, scale: 0.5 }
+heave: { axis: 4, scale: 0.5 }
+yaw: { axis: 3, scale: 0.5 }
+roll: { axis: 5, scale: 0.5 }
+pitch: { axis: 2, scale: 0.5 }

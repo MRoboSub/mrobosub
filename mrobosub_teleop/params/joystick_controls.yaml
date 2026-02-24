@@ -1,0 +1,43 @@
+# Button-driven joystick control config
+# Axes: each axis maps to a DOF; value used as scale when button triggers command
+# Buttons: trigger discrete commands on rising edge (press)
+#
+# Button commands: dof.increase, dof.decrease, dof.toggle, estop, switch
+
+axes:
+  "0":
+    use: sway
+    scale_t: 0.5
+    scale_p: 0.5
+  "1":
+    use: surge
+    scale_t: 0.5
+    scale_p: 0.5
+  "2":
+    use: heave
+    scale_t: 0.5
+    scale_p: 0.5
+  "3":
+    use: yaw
+    scale_t: 0.5
+    scale_p: 5.0
+  "4":
+    use: roll
+    scale_t: 0.5
+    scale_p: 5.0
+  "5":
+    use: pitch
+    scale_t: 0.5
+    scale_p: 5.0
+
+buttons:
+  "0": { use: surge.increase }
+  "1": { use: surge.decrease }
+  "2": { use: sway.increase }
+  "3": { use: sway.decrease }
+  "4": { use: estop }
+  "5": { use: heave.increase }
+  "6": { use: heave.decrease }
+  "7": { use: heave.toggle }
+  "8": { use: yaw.increase }
+  "9": { use: yaw.toggle }

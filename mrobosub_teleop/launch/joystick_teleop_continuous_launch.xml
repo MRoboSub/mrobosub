@@ -1,0 +1,8 @@
+<launch>
+  <!-- Continuous mode: push stick = move, release = stop -->
+  <!-- Requires: ros2 run joy joy_node (or joy_linux) -->
+  <node name="joystick_teleop_continuous" pkg="mrobosub_teleop" exec="joystick_teleop_continuous"
+        output="screen">
+    <param name="params_file" value="$(find-pkg-share mrobosub_teleop)/params/joystick_continuous.yaml"/>
+  </node>
+</launch>

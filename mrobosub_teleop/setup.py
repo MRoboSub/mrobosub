@@ -20,7 +20,11 @@ setup(
     description="manual sub control",
     license="BSD-2.0",
     tests_require=["pytest"],
-    entry_points={
-        "console_scripts": ["all_dof_teleop = mrobosub_teleop.all_dof_teleop:main"],
+        entry_points={
+        "console_scripts": [
+            "console_teleop = mrobosub_teleop.console_teleop:main",
+            "joystick_teleop = mrobosub_teleop.joystick_teleop:main",
+            "joystick_teleop_continuous = mrobosub_teleop.joystick_teleop_continuous:main",
+        ],
     },
 )

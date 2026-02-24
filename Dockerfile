@@ -1,6 +1,6 @@
-FROM docker.io/osrf/ros:humble-desktop
+# FROM docker.io/osrf/ros:humble-desktop
 # MacOS users with Apple Silicon should use the line below instead:
-# FROM --platform=linux/arm64 docker.io/osrf/ros:humble-desktop
+FROM --platform=linux/arm64 docker.io/osrf/ros:humble-desktop
 
 RUN apt-get update && \
     apt-get install -y  python-is-python3 \
