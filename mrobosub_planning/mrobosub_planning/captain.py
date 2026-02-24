@@ -1,6 +1,7 @@
 from tokenize import Single
 from typing import Dict, Type, Optional, Sequence
 from importlib import import_module
+from mrobosub_planning.mrobosub_planning import testing_run
 from mrobosub_planning.umrsm import StateMachine, State, TransitionMap, Outcome
 import mrobosub_planning.common_states as common_states
 import mrobosub_planning.standard_run as standard_run
@@ -18,6 +19,7 @@ import traceback
 # maybe change this to something hacky like getting .transitions from the machine name module?
 transition_maps: Dict[str, TransitionMap] = {
     "standard": standard_run.transitions,
+    "testing": testing_run.transitions,
     # "heave_test": heave_test.transitions,
 }
 

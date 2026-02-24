@@ -1,7 +1,7 @@
 from typing import Optional, Union
 from mrobosub_planning.umrsm import State, Outcome
 from mrobosub_planning.abstract_states import TimedState
-import rclpy
+from rclpy.node import Node as RosNode
 
 
 class Start(State):
@@ -43,7 +43,7 @@ class Stop(State):
     class Surfaced(Outcome):
         pass
 
-    def __init__(self, prev_outcome: Outcome, node: rclpy.node.Node):
+    def __init__(self, prev_outcome: Outcome, node: RosNode):
         super().__init__(prev_outcome, node)
         self.io_node.reset_target_twist()
         self.rate = self.io_node.create_rate(50)
