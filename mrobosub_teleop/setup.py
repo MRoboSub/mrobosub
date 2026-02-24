@@ -23,8 +23,7 @@ setup(
         entry_points={
         "console_scripts": [
             "console_teleop = mrobosub_teleop.console_teleop:main",
-            "joystick_teleop = mrobosub_teleop.joystick_teleop:main",
-            "joystick_teleop_continuous = mrobosub_teleop.joystick_teleop_continuous:main",
+            "joystick_teleop = mrobosub_teleop.joystick_teleop_continuous:main",
         ],
     },
 )

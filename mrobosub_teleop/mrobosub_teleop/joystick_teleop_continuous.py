@@ -1,12 +1,12 @@
 """
-Joystick teleop: continuous axis (direct stick) control.
+Joystick teleop: continuous axis (direct stick) control with button actions.
 
 Push stick = move, release = stop.
+Buttons trigger discrete actions (estop, etc.) while held.
 Subscribes to /joy (sensor_msgs/msg/Joy) from joy_node.
 """
 
 import os
-from typing import Dict
 
 import rclpy
 import yaml
@@ -15,6 +15,8 @@ from sensor_msgs.msg import Joy
 from std_msgs.msg import Float64
 
 from mrobosub_lib import Node
+
+from .joystick_button import Button
 
 
 def _default_params_path() -> str:
@@ -29,7 +31,6 @@ def _default_params_path() -> str:
 
 
 def _apply_deadzone(value: float, deadzone: float) -> float:
-    """Zero out small values within deadzone."""
     if abs(value) <= deadzone:
         return 0.0
     return value
@@ -38,6 +39,9 @@ def _apply_deadzone(value: float, deadzone: float) -> float:
 class JoystickTeleopContinuous(Node):
     """
     Continuous joystick teleop: axes map directly to target_twist.
+
+    Buttons trigger discrete actions on press (rising edge or held).
+    Supported button actions: estop (hold to zero all outputs). - can add more later
 
     Subscribes: /joy
     Publishes: /target_twist/{dof}
@@ -54,9 +58,8 @@ class JoystickTeleopContinuous(Node):
             params = yaml.safe_load(f)
 
         self._deadzone = float(params.get("deadzone", 0.1))
-        self._estop_button = int(params.get("estop_button", 4))
 
-        self._mappings: Dict[str, Dict[str, float]] = {}
+        self._mappings: dict[str, dict[str, float]] = {}
         for dof in ["surge", "sway", "heave", "yaw", "roll", "pitch"]:
             cfg = params.get(dof)
             if cfg:
@@ -65,25 +68,36 @@ class JoystickTeleopContinuous(Node):
                     "scale": float(cfg.get("scale", 0.5)),
                 }
 
+        # create map of publishers for twist values
         self._twist_pubs = {
             dof: self.create_publisher(Float64, f"/target_twist/{dof}", 1)
             for dof in self._mappings
         }
 
+        self._buttons: list[Button] = []
+        for btn_idx_str, cfg in params.get("buttons", {}).items():
+            self._buttons.append(Button(int(btn_idx_str), str(cfg["use"])))
+
         self.create_subscription(Joy, "/joy", self._joy_callback, 10)
 
     def _joy_callback(self, msg: Joy) -> None:
-        """Map axes to target_twist; estop zeros all."""
-        if len(msg.buttons) > self._estop_button and msg.buttons[self._estop_button]:
-            for dof in self._twist_pubs:
-                self._twist_pubs[dof].publish(Float64(data=0.0))
-            return
+        """Map axes to target_twist; dispatch button actions."""
+        for button in self._buttons:
+            is_pressed = len(msg.buttons) > button.idx and msg.buttons[button.idx] == 1
+            button.update(is_pressed)
+
+        # Estop is level-triggered: hold button to keep all outputs zeroed.
+        for button in self._buttons:
+            if button.name == "estop" and button.pressed:
+                self._reset_target_twist()
+                return
 
         for dof, mapping in self._mappings.items():
             axis_idx = mapping["axis"]
             scale = mapping["scale"]
             raw = msg.axes[axis_idx] if len(msg.axes) > axis_idx else 0.0
-            value = _apply_deadzone(raw, self._deadzone) * scale
+            deadzoned = _apply_deadzone(raw, self._deadzone)
+            value = deadzoned ** 3 * scale # cubic scale for better control
             self._twist_pubs[dof].publish(Float64(data=value))
 
     def _reset_target_twist(self) -> None:
