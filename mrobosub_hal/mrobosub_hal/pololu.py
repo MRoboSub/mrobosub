@@ -19,8 +19,8 @@ class Pololu(Node):
     """
 
     def __init__(self):
-        super().__init__("thruster_controller")
-        self.get_logger().info("Launched thruster_controller node")
+        super().__init__("pololu")
+        self.get_logger().info("Launched pololu node")
         self.port = "/dev/serial/by-id/usb-Pololu_Corporation_Pololu_Mini_Maestro_12-Channel_USB_Servo_Controller_00467345-if00"
         self.emergency_stop = False
         self.pololu_outputs = [0] * NUM_PINS
@@ -77,7 +77,7 @@ class Pololu(Node):
     def convert_pwm_signal(self, pwm_raw: float) -> Optional[int]:
         if pwm_raw < -1 or pwm_raw > 1:
             self.get_logger().info(
-                f"Thruster Controller [ERROR]: PWM value {pwm_raw} out of range (should be in [-1, 1])"
+                f"Pololu [ERROR]: PWM value {pwm_raw} out of range (should be in [-1, 1])"
             )
             return None
         return int((pwm_raw * 1600) + 6000)
@@ -109,14 +109,13 @@ class Pololu(Node):
                 self.pololu_outputs[i] = msg.pins[i]
 
     def get_errors(self):
-        # gets errors from thruster controller hardware (which automatically clears the errors too)
         self.write(bytearray([0xAA, 0x0C, 0x21]))
         error = self.read(2)
         if error is None:
             return
         error_code = int.from_bytes(error, "little")
         if error_code != 0:
-            self.get_logger().info(f"Thruster controller: error code = {error_code}")
+            self.get_logger().info(f"Pololu: error code = {error_code}")
             # eg: error_code 16 means 00010000 which is the 5th error bit set
 
     def loop(self):
@@ -126,7 +125,7 @@ class Pololu(Node):
 
 def main():
     rclpy.init()
-    node = ThrusterController()
+    node = Pololu()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:

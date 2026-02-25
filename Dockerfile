@@ -27,8 +27,8 @@ SHELL ["/bin/bash", "-c"]
 
 USER 1000:1000
 
-RUN pipx install mypy && \
-    pipx ensurepath
+# RUN pipx install mypy && \
+#     pipx ensurepath
 
 RUN sudo pip3 install --upgrade mypy typing-extensions
     

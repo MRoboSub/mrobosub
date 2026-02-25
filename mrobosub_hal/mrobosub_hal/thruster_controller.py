@@ -5,8 +5,11 @@ from mrobosub_lib import Node
 from serial import Serial
 from serial.serialutil import SerialException
 from mrobosub_msgs.msg import MotorState
+from mrobosub_msgs.msg import PololuCommands
 from std_srvs.srv import SetBool
 from typing import Optional
+
+import numpy as np
 
 
 NUM_MOTORS = 8
@@ -83,11 +86,6 @@ class ThrusterController(Node):
                 message_output[motor_pin] = 0
         else:
             for motor in range(NUM_MOTORS):
-                #This may not be needed but I don't know 
-                #If the message recieved is fully filled this can be deleted
-                if msg[motor] is None:
-                    continue
-
                 motor_pin = (self.get_parameter("thruster_motor_id")
                 .get_parameter_value()
                 .integer_array_value[motor])
@@ -95,12 +93,13 @@ class ThrusterController(Node):
                 message_valid[motor_pin] = True
 
                 if self.get_parameter("thruster_reverse").get_parameter_value().bool_array_value[motor]:  # type: ignore
-                    message_output[motor_pin] = -msg[motor]
-                else
-                    message_output[motor_pin] = msg[motor]
+                    message_output[motor_pin] = -msg.motors[motor]
+                else:
+                    message_output[motor_pin] = msg.motors[motor]
 
 
-        msg = PololuCommands
+        msg = PololuCommands()
+        message_output = np.array(message_output, dtype=np.float32)
         msg.pins = message_output
         msg.valid = message_valid
 
@@ -110,7 +109,7 @@ class ThrusterController(Node):
         return 0
 
     def motor_callback(self, msg: MotorState):
-        publish_motor_outputs(msg)
+        self.publish_motor_outputs(msg)
 
     #As far as I can tell there is no use for a loop
     #def loop(self):
