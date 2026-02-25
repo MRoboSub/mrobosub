@@ -53,12 +53,7 @@ class ThrusterController(Node):
             ),
         )
 
-        #As far as I can tell there is no use for a loop 
-        #self.timer = self.create_timer(1.0/50, self.loop)
 
-
-    # Not fully sure what this is doing
-    # Stripped out serial functionality and will just use emergency_stop
     def handle_emergency_stop(
         self, req: SetBool.Request, res: SetBool.Response
     ) -> SetBool.Response:
@@ -110,10 +105,6 @@ class ThrusterController(Node):
 
     def motor_callback(self, msg: MotorState):
         self.publish_motor_outputs(msg)
-
-    #As far as I can tell there is no use for a loop
-    #def loop(self):
-        #publish_motor_outputs()
 
 def main():
     rclpy.init()

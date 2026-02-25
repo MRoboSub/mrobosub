@@ -11,6 +11,7 @@ from typing import Optional
 
 
 NUM_PINS = 12
+FREQUENCY = 50
 
 
 class Pololu(Node):
@@ -28,14 +29,10 @@ class Pololu(Node):
         self.connect()
         self.get_errors()  # clear errors at the start
 
-        #I don't think it's necessary to handle emergency stop here?
-        #self.object_position_service = self.create_service(
-        #    SetBool, "emergency_stop_motors", self.handle_emergency_stop
-        #)
         self.pololu_sub = self.create_subscription(
             PololuCommands, "/pololu_commands", self.pololu_commands_callback, 1
         )
-        self.timer = self.create_timer(1.0/50, self.loop)
+        self.timer = self.create_timer(1.0/FREQUENCY, self.loop)
 
     def connect(self) -> bool:
         try:
@@ -99,7 +96,6 @@ class Pololu(Node):
 
         self.get_errors()
         self.write(bytearray([0xAA, 0x0C, 0x04, pin, LSBs, MSBs]))
-        # self.get_logger().info(f"Thruster controller: sent pwm value {pwm_val} to pin {pin}")
 
         return 0
 

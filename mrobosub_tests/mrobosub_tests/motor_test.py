@@ -12,46 +12,45 @@ class MotorTest(Node):
 
     def __init__(self):
         super().__init__("motor_test")
-        self.active_motor = 0
         qos_profile = QoSProfile(
             depth=10,
             history=HistoryPolicy.KEEP_LAST,
             reliability=ReliabilityPolicy.RELIABLE
         )
         self.pub = self.create_publisher(MotorState, "/motor_output", qos_profile)
-        self.timer = self.create_timer(self.MOTOR_TIME_S, self.loop)
+        self.rate = self.create_rate(1 / self.MOTOR_TIME_S)
     
-    def loop(self):
+    def run(self):
+        active_motor = 0
+
+        # Not using timer here because we only want to spin X times. I tested this code and it works as is.
+        while rclpy.ok() and active_motor < self.NUM_MOTORS:
+            rclpy.spin_once(self)
+            msg = MotorState()
+            for i in range(self.NUM_MOTORS):
+                if i==active_motor:
+                    msg.motors[i] = self.FORWARD_POWER
+                else:
+                    msg.motors[i] = self.STOP_POWER
+
+            self.get_logger().info(f"Running motor {active_motor} at {self.FORWARD_POWER}")
+            self.pub.publish(msg)
+            self.rate.sleep()
+
+            active_motor += 1
+    
+    def stop(self):
         msg = MotorState()
-
-        # run each motor sequentially, then stop all forever
         for i in range(self.NUM_MOTORS):
-            if i==self.active_motor:
-                msg.motors[i] = self.FORWARD_POWER
-            else:
-                msg.motors[i] = self.STOP_POWER
-
+            msg.motors[i] = self.STOP_POWER
         self.pub.publish(msg)
-
-        if self.active_motor < self.NUM_MOTORS:
-            self.get_logger().info(f"Running motor {self.active_motor} at {self.FORWARD_POWER}")
-            self.active_motor += 1
-        else:
-            self.get_logger().info("Motor test complete")
-
-            # kill the node
-            self.timer.cancel()
-            self.destroy_node()
-            rclpy.shutdown()
-
+        self.get_logger().info("Motor test complete")
 
 def main():
     rclpy.init()
     node = MotorTest()
-    try:
-        rclpy.spin(node)
-    except KeyboardInterrupt:
-        pass
+    node.run()
+    node.stop()
 
 if __name__ == "__main__":
     main()
