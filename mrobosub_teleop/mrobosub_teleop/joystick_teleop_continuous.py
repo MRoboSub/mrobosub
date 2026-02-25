@@ -90,7 +90,9 @@ class JoystickTeleopContinuous(Node):
             is_pressed = len(msg.buttons) > button.idx and msg.buttons[button.idx] == 1
             button.update(is_pressed)
 
-        for button in self._buttons and button.just_pressed:
+        for button in self._buttons:
+            if not button.just_pressed:
+                continue
             match button.name:
                 case "estop":
                     self._reset_target_twist()
