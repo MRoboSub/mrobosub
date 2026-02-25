@@ -8,6 +8,7 @@ from mrobosub_lib.lib import Node
 # todo: parameterize this in the launch file
 UDP_IP = "0.0.0.0"
 # UDP_IP = "192.168.2.9"
+HOST_IP = b"192.168.2.3"
 UDP_PORT = 27000
 
 
@@ -26,6 +27,10 @@ class DVLPublisher (Node):
         self.sock.settimeout(0.2)
         self.sock.bind((UDP_IP, UDP_PORT))
         self.timer = self.create_timer(1.0/50, self.loop)
+
+        # set the host address and port on the dvl
+        message = b"HOST-ADDRESS %b:%b" % (HOST_IP, str(UDP_PORT).encode('utf-8'))
+        self.sock.sendto(message, (UDP_IP, UDP_PORT))
 
     def destroy_node(self):
         self.sock.close()

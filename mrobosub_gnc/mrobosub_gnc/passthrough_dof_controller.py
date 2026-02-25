@@ -1,7 +1,7 @@
 import argparse
 import sys
 import rclpy
-from std_msgs.msg import Float64, Bool
+from std_msgs.msg import Float64
 from mrobosub_lib import Node
 
 
@@ -27,10 +27,7 @@ class PassthroughDofController(Node):
         )
 
     def target_twist_callback(self, target_twist: Float64):
-        self.pub_output_dof(target_twist.data)
-
-    def pub_output_dof(self, output: float):
-        self.output_pub.publish(Float64(data=output))
+        self.output_pub.publish(target_twist)
 
     def destroy_node(self):
         self.output_pub.publish(Float64(data=0))

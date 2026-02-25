@@ -1,4 +1,4 @@
 thruster_controller:
   ros__parameters:
     thruster_reverse: [true, true, true, true, false, false, true, true]
-    thruster_motor_id: [6, 3, 5, 0, 7, 1, 4, 2]
+    thruster_motor_id: [0, 1, 2, 3, 4, 5, 8, 10]

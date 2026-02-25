@@ -1,3 +1,5 @@
 <launch>
-    <node pkg="mrobosub_hal_imu" exec="imu_node" name="imu"/>
+    <arg name="imu_port" default="/dev/ttyACM1" />
+    <node pkg="mrobosub_hal_imu" exec="imu_node" name="imu"
+          args="$(var imu_port)"/>
 </launch>

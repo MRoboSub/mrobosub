@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="mrobosub_tests" exec="motor_test_all" name="motor_test_all" output="screen">
+    </node>
+</launch>

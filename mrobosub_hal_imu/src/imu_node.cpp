@@ -1,5 +1,7 @@
 #include <cstdio>
 #include <iostream>
+#include <vector>
+#include <string>
 #include "../inertial-sense-sdk/src/InertialSense.h"
 #include "../inertial-sense-sdk/src/data_sets.h"
 
@@ -44,9 +46,12 @@ int main(int argc, char **argv)
 
     TimeManager timeManager(node);
 
-    if (argc != 2)
+    // By default, ROS2 will pass in some ROS-specific arguments through the command line as well.
+    // We only want to read our specific argument.
+    std::vector<std::string> non_ros_args = rclcpp::remove_ros_arguments(argc, argv);
+    if (non_ros_args.size() != 2)
     {
-        std::printf("Usage: %s <port>\n", argv[0]);
+        std::cout << "Usage: " << non_ros_args[0] << " <port>\n";
         return 1;
     }
 
@@ -58,40 +63,52 @@ int main(int argc, char **argv)
     }
 
     InertialSense is;
-    is.Open(argv[1]);
+    is.Open(non_ros_args[1]);
 
-    auto pimu_registered = is.BroadcastBinaryData(DID_PIMU, 1, [&](InertialSense *is, p_data_t *_data, int pHandle)
-                                                  {
-        const auto data = reinterpret_cast<const pimu_t*>(_data->ptr);
+    auto pimu_registered = is.BroadcastBinaryData(
+        DID_PIMU, 
+        1, 
+        [&](InertialSense *is, p_data_t *_data, int pHandle)
+        {
+            const auto data = reinterpret_cast<const pimu_t*>(_data->ptr);
 
-        mrobosub_msgs::msg::ImuPIMU msg;
-        const auto div = 1.0f/data->dt;
+            mrobosub_msgs::msg::ImuPIMU msg;
+            const auto div = 1.0f/data->dt;
 
-        msg.header.stamp = timeManager.ros_time_from_start_time(data->time);
-        msg.dt = data->dt;
-        msg.angular_velocity.x = data->theta[0] * div;
-        msg.angular_velocity.y = data->theta[1] * div;
-        msg.angular_velocity.z = data->theta[2] * div;
-        msg.linear_acceleration.x = data->vel[0] * div;
-        msg.linear_acceleration.y = data->vel[1] * div;
-        msg.linear_acceleration.z = data->vel[2] * div;
-        pub_pimu->publish(msg); });
+            msg.header.stamp = timeManager.ros_time_from_start_time(data->time);
+            msg.dt = data->dt;
+            msg.angular_velocity.x = data->theta[0] * div;
+            msg.angular_velocity.y = data->theta[1] * div;
+            msg.angular_velocity.z = data->theta[2] * div;
+            msg.linear_acceleration.x = data->vel[0] * div;
+            msg.linear_acceleration.y = data->vel[1] * div;
+            msg.linear_acceleration.z = data->vel[2] * div;
+            pub_pimu->publish(msg); 
+        }
+    );
+
     if (!pimu_registered)
     {
         return 1;
     }
 
-    auto ins_registered = is.BroadcastBinaryData(DID_INS_1, 1, [&](InertialSense *is, p_data_t *_data, int pHandle)
-                                                 {
-        const auto data = reinterpret_cast<const ins_1_t*>(_data->ptr); 
+    auto ins_registered = is.BroadcastBinaryData(
+        DID_INS_1, 
+        1, 
+        [&](InertialSense *is, p_data_t *_data, int pHandle)
+        {
+            const auto data = reinterpret_cast<const ins_1_t*>(_data->ptr); 
 
-        mrobosub_msgs::msg::ImuINS msg;
+            mrobosub_msgs::msg::ImuINS msg;
 
-        msg.header.stamp = timeManager.ros_time_from_start_time(data->timeOfWeek);
-        msg.theta.x = data->theta[0];
-        msg.theta.y = data->theta[1];
-        msg.theta.z = data->theta[2];
-        pub_ins->publish(msg); });
+            msg.header.stamp = timeManager.ros_time_from_start_time(data->timeOfWeek);
+            msg.theta.x = data->theta[0];
+            msg.theta.y = data->theta[1];
+            msg.theta.z = data->theta[2];
+            pub_ins->publish(msg); 
+        }
+    );
+
     if (!ins_registered)
     {
         return 1;

@@ -7,10 +7,11 @@ import sys
 
 from cv_bridge import CvBridge
 import rclpy.utilities
+from rclpy.parameter import Parameter
 from mrobosub_msgs.srv import PathmarkerAngle
 from mrobosub_perception.timed_service import TimedService
 from sensor_msgs.msg import Image
-from mrobosub_lib import Node
+from mrobosub_lib import Node, Param
 from rcl_interfaces.msg import ParameterDescriptor
 
 import numpy as np
@@ -21,7 +22,8 @@ class PathmarkerHsv(Node):
     def __init__(self):
         super().__init__('hsv_pathmarker')
 
-        self.declare_and_get_params()
+        params = [Param('timing_threshold', Parameter.Type.DOUBLE, "A float parameter")]
+        self.declare_params(params)
         
         self.br = CvBridge()
         args_ros = rclpy.utilities.remove_ros_args(sys.argv)
@@ -65,46 +67,12 @@ class PathmarkerHsv(Node):
                 response.centroid_y = detection.y / bgr_img.shape[0]
 
             self.serv.set_result(response)
-
-    def set_params(self, _params = None):
-        self.timing_threshold = self.get_parameter('timing_threshold').get_parameter_value().double_value
-
-    def declare_and_get_params(self):
-        param_desc_float = ParameterDescriptor()
-        param_desc_float.type = rclpy.Parameter.Type.DOUBLE
-        param_desc_float.description = "A float parameter"
-        # param_desc_bool = ParameterDescriptor()
-        # param_desc_bool.type = rclpy.Parameter.Type.BOOL
-        # param_desc_bool.description = "A bool parameter"
-
-        self.declare_parameters(
-            namespace='',
-            parameters=[
-                # Dont need these for now but is prob needed somewhere else and i wana copy paste this and not have to rewrite
-                # ('hue_lo',0.0, param_desc_float),
-                # ('hue_hi',0.0, param_desc_float),
-                # ('sat_lo',0.0, param_desc_float),
-                # ('sat_hi',0.0, param_desc_float),
-                # ('val_lo',0.0, param_desc_float),
-                # ('val_hi',0.0, param_desc_float),
-                # ('wb_shift',0.0, param_desc_float),
-                # ('wb_scale',0.0, param_desc_float),
-                # ('white_balance',False, param_desc_bool),
-                # ('histogram_equalization',False, param_desc_bool),
-                # ('erode_radius',0.0, param_desc_float),
-                # ('dilate_radius',0.0, param_desc_float),
-                # ('median_radius',0.0, param_desc_float),
-                # ('gaussian_radius',0.0, param_desc_float),
-                ('timing_threshold',0.0, param_desc_float)
-            ])
-        self.set_params()
-        self.add_post_set_parameters_callback(self.set_params)
-        
        
     
 def main():
     rclpy.init()
     node = PathmarkerHsv()
     rclpy.spin(node)
+
 if __name__=='__main__' :
     main()

@@ -1,7 +1,7 @@
 import rclpy
-from rcl_interfaces.msg import ParameterDescriptor
+from rclpy.parameter import Parameter
 
-from mrobosub_lib import Node
+from mrobosub_lib import Node, Param
 from serial import Serial
 from serial.serialutil import SerialException
 from mrobosub_msgs.msg import MotorState
@@ -25,6 +25,12 @@ class ThrusterController(Node):
         self.emergency_stop = False
         self.motor_outputs = [0] * NUM_MOTORS
         self.serial: Serial | None = None
+
+        params = [Param('thruster_reverse', Parameter.Type.BOOL_ARRAY, "List of booleans indicating whether each thruster is reversed"), 
+                  Param('thruster_motor_id', Parameter.Type.INTEGER_ARRAY, "List of motor IDs for each thruster on the thruster controller")]
+
+        self.declare_params(params)
+
         self.connect()
         self.get_errors()  # clear errors at the start
 
@@ -33,21 +39,6 @@ class ThrusterController(Node):
         )
         self.motor_sub = self.create_subscription(
             MotorState, "/motor_output", self.motor_callback, 1
-        )
-
-        self.declare_parameter(
-            "thruster_reverse",
-            rclpy.Parameter.Type.BOOL_ARRAY,
-            descriptor=ParameterDescriptor(
-                description="List of booleans indicating whether each thruster is reversed"
-            ),
-        )
-        self.declare_parameter(
-            "thruster_motor_id",
-            rclpy.Parameter.Type.INTEGER_ARRAY,
-            descriptor=ParameterDescriptor(
-                description="List of motor IDs for each thruster on the thruster controller"
-            ),
         )
 
         self.timer = self.create_timer(1.0/50, self.loop)
@@ -90,9 +81,12 @@ class ThrusterController(Node):
     def handle_emergency_stop(
         self, req: SetBool.Request, res: SetBool.Response
     ) -> SetBool.Response:
-        self.emergency_stop = True
-        self.get_errors()
-        self.write(bytearray([0xAA, 0x0C, 0x22]))
+        if req.data:
+            self.emergency_stop = True
+            self.get_errors()
+            self.write(bytearray([0xAA, 0x0C, 0x22]))
+        else:
+            self.emergency_stop = False
         res.success = True
         return res
 
@@ -108,7 +102,7 @@ class ThrusterController(Node):
 
     # in case of invalid PWM or motor number parameters, does not send any updated signal to the motor controller
     def send_signal(self, motor: int, pwm_raw: float) -> int:
-        if self.get_parameter("thruster_reverse").get_parameter_value().bool_array_value[motor]:  # type: ignore
+        if self.thruster_reverse[motor]:  # type: ignore
             pwm_raw *= -1
         pwm_val = self.convert_pwm_signal(pwm_raw)
         if pwm_val is None:
@@ -120,11 +114,7 @@ class ThrusterController(Node):
             )
             return -1
 
-        motor = (
-            self.get_parameter("thruster_motor_id")
-            .get_parameter_value()
-            .integer_array_value[motor]
-        )
+        motor = self.thruster_motor_id[motor]
 
         LSBs = pwm_val % (2**7)
         MSBs = int(pwm_val / (2**7))
@@ -138,8 +128,7 @@ class ThrusterController(Node):
     def motor_callback(self, msg: MotorState):
         if not self.emergency_stop:
             for i in range(NUM_MOTORS):
-                motor_name = f"motor{i}"
-                self.motor_outputs[i] = getattr(msg, motor_name)
+                self.motor_outputs[i] = msg.motors[i]
 
     def get_errors(self):
         # gets errors from thruster controller hardware (which automatically clears the errors too)
@@ -154,8 +143,7 @@ class ThrusterController(Node):
 
     def loop(self):
         for i in range(NUM_MOTORS):
-            self.send_signal(i, self.motor_outputs[i])
-
+            self.send_signal(i, self.motor_outputs[i] if not self.emergency_stop else 0)
 
 def main():
     rclpy.init()

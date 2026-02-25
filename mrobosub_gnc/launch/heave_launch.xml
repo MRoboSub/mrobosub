@@ -2,7 +2,4 @@
   <node name="heave_control" pkg="mrobosub_gnc" exec="pid_dof_controller" args="heave">
     <param from="$(find-pkg-share mrobosub_gnc)/params/heave_control.yaml" />
   </node>
-  <node name="heave_pid" namespace="heave_pid" pkg="jlb_pid" exec="controller_node">
-    <param from="$(find-pkg-share mrobosub_gnc)/params/heave_pid.yaml" />
-  </node>
 </launch>
