@@ -9,7 +9,7 @@ class Forward5Seconds(ForwardAndWait):
     class Unreached(Outcome):
         pass
 
-    target_heave: float      = 1.
+    target_heave: float      = 0.5
     target_surge_time: float = 5.
     wait_time: float         = 5.
     surge_speed: float       = 0.1

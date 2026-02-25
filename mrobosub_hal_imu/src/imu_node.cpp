@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     }
 
     InertialSense is;
-    is.Open(non_ros_args[1]);
+    is.Open(non_ros_args[1].c_str());
 
     auto pimu_registered = is.BroadcastBinaryData(
         DID_PIMU, 

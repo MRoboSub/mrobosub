@@ -4,7 +4,7 @@ from sensor_msgs.msg import Image
 import rclpy
 import sys
 
-from mrobosub_lib.lib import Node
+from mrobosub_lib import Node
 
 from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
 import subprocess
