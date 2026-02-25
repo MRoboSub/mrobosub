@@ -22,7 +22,6 @@ setup(
     tests_require=["pytest"],
         entry_points={
         "console_scripts": [
-            "console_teleop = mrobosub_teleop.console_teleop:main",
             "joystick_teleop = mrobosub_teleop.joystick_teleop_continuous:main",
         ],
     },

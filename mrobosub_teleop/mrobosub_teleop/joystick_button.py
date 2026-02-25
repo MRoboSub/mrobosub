@@ -5,7 +5,7 @@ Provides Button (rising-edge detection and press tracking) used by
 joystick_teleop_continuous for discrete button actions.
 """
 
-KNOWN_ACTIONS = {"estop", "switch"}
+KNOWN_ACTIONS = {"estop", "zero_state"}
 
 
 class Button:
@@ -17,11 +17,14 @@ class Button:
         self.idx = idx
         self.name = action
         self._is_pressed = False
+        self._was_pressed = False
 
     def update(self, is_pressed: bool) -> None:
-        """Update pressed state."""
+        """Update pressed state, preserving previous state for edge detection."""
+        self._was_pressed = self._is_pressed
         self._is_pressed = is_pressed
 
     @property
-    def pressed(self) -> bool:
-        return self._is_pressed
+    def just_pressed(self) -> bool:
+        """True only on the rising edge (not-pressed -> pressed transition)."""
+        return self._is_pressed and not self._was_pressed

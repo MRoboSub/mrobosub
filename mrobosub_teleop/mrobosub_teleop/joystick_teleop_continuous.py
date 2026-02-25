@@ -13,6 +13,7 @@ import yaml
 from ament_index_python.packages import get_package_share_directory
 from sensor_msgs.msg import Joy
 from std_msgs.msg import Float64
+from std_srvs.srv import Trigger
 
 from mrobosub_lib import Node
 
@@ -40,8 +41,8 @@ class JoystickTeleopContinuous(Node):
     """
     Continuous joystick teleop: axes map directly to target_twist.
 
-    Buttons trigger discrete actions on press (rising edge or held).
-    Supported button actions: estop (hold to zero all outputs). - can add more later
+    Buttons trigger discrete actions on rising edge only (press, not hold).
+    Supported button actions: estop (zeros all outputs on press).
 
     Subscribes: /joy
     Publishes: /target_twist/{dof}
@@ -78,6 +79,9 @@ class JoystickTeleopContinuous(Node):
         for btn_idx_str, cfg in params.get("buttons", {}).items():
             self._buttons.append(Button(int(btn_idx_str), str(cfg["use"])))
 
+        # needed for zeroing state
+        self._zero_imu_client = self.create_client(Trigger, "localization/zero_state")
+
         self.create_subscription(Joy, "/joy", self._joy_callback, 10)
 
     def _joy_callback(self, msg: Joy) -> None:
@@ -86,12 +90,18 @@ class JoystickTeleopContinuous(Node):
             is_pressed = len(msg.buttons) > button.idx and msg.buttons[button.idx] == 1
             button.update(is_pressed)
 
-        # Estop is level-triggered: hold button to keep all outputs zeroed.
-        for button in self._buttons:
-            if button.name == "estop" and button.pressed:
-                self._reset_target_twist()
-                return
+        for button in self._buttons and button.just_pressed:
+            match button.name:
+                case "estop":
+                    self._reset_target_twist()
+                    return
+                case "zero_state":
+                    self._zero_imu_pose()
+                    return
+                case _:
+                    continue
 
+        # publish twist values for everthing
         for dof, mapping in self._mappings.items():
             axis_idx = mapping["axis"]
             scale = mapping["scale"]
@@ -104,6 +114,14 @@ class JoystickTeleopContinuous(Node):
         """Publish zero to all target_twist topics."""
         for pub in self._twist_pubs.values():
             pub.publish(Float64(data=0.0))
+
+    def _zero_imu_pose(self) -> None:
+        """Call localization/zero_state to reset IMU pose offsets."""
+        if not self._zero_imu_client.service_is_ready():
+            self.get_logger().warn("localization/zero_state service not available")
+            return
+        self._zero_imu_client.call_async(Trigger.Request())
+
 
 
 def main() -> None:

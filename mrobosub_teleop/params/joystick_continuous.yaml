@@ -2,15 +2,17 @@
 
 deadzone: 0.1
 
+# all /joy inputs are normalized from -1 to 1; so whatever we write in scale will be multiplied by this value
 # 0,1=left stick 2,3=right stick 4,5=triggers - i think; not too sure about these
-surge: { axis: 1, scale: 0.5 }
-sway: { axis: 0, scale: 0.5 }
-heave: { axis: 4, scale: 0.5 }
-yaw: { axis: 3, scale: 0.5 }
-roll: { axis: 5, scale: 0.5 }
-pitch: { axis: 2, scale: 0.5 }
+surge: { axis: 1, scale: 1.0 }
+sway: { axis: 0, scale: 1.0 }
+heave: { axis: 3, scale: 1.0 }
+yaw: { axis: 2, scale: 1.0 }
+roll: { axis: 6, scale: 0.4 }
+pitch: { axis: 7, scale: 0.4 }
 
-# Button actions (button index -> action)
 # Supported actions: estop (hold to zero all outputs)
 buttons:
-  "4": { use: estop }
+  "0": { use: estop }
+  "1": { use: zero_state}
+
