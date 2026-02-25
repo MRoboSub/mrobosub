@@ -1,15 +1,12 @@
 """
-Button helpers for joystick teleop.
-
-Provides Button (rising-edge detection and press tracking) used by
-joystick_teleop_continuous for discrete button actions.
+Button class just wraps button state logic
 """
 
 KNOWN_ACTIONS = {"estop", "zero_state"}
 
 
 class Button:
-    """Tracks press state for a single joystick button."""
+    # keep track of button state
 
     def __init__(self, idx: int, action: str) -> None:
         if action not in KNOWN_ACTIONS:
@@ -26,5 +23,5 @@ class Button:
 
     @property
     def just_pressed(self) -> bool:
-        """True only on the rising edge (not-pressed -> pressed transition)."""
+        # used to check for rising edge
         return self._is_pressed and not self._was_pressed

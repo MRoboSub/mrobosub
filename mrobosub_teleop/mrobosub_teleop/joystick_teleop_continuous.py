@@ -1,9 +1,6 @@
 """
 Joystick teleop: continuous axis (direct stick) control with button actions.
-
-Push stick = move, release = stop.
-Buttons trigger discrete actions (estop, etc.) while held.
-Subscribes to /joy (sensor_msgs/msg/Joy) from joy_node.
+Buttons trigger on rising edge of press (right when pressed down)
 """
 
 import os
@@ -21,7 +18,7 @@ from .joystick_button import Button
 
 
 def _default_params_path() -> str:
-    """Default path to joystick_continuous.yaml."""
+    # read yaml for params
     try:
         pkg_share = get_package_share_directory("mrobosub_teleop")
         return os.path.join(pkg_share, "params", "joystick_continuous.yaml")
@@ -31,6 +28,7 @@ def _default_params_path() -> str:
         )
 
 
+# simple deadzone
 def _apply_deadzone(value: float, deadzone: float) -> float:
     if abs(value) <= deadzone:
         return 0.0
@@ -39,13 +37,10 @@ def _apply_deadzone(value: float, deadzone: float) -> float:
 
 class JoystickTeleopContinuous(Node):
     """
-    Continuous joystick teleop: axes map directly to target_twist.
-
-    Buttons trigger discrete actions on rising edge only (press, not hold).
-    Supported button actions: estop (zeros all outputs on press).
-
     Subscribes: /joy
     Publishes: /target_twist/{dof}
+
+    Trigger buttons; map axes to twist
     """
 
     def __init__(self) -> None:
@@ -59,6 +54,7 @@ class JoystickTeleopContinuous(Node):
             params = yaml.safe_load(f)
 
         self._deadzone = float(params.get("deadzone", 0.1))
+
 
         self._mappings: dict[str, dict[str, float]] = {}
         for dof in ["surge", "sway", "heave", "yaw", "roll", "pitch"]:
@@ -85,11 +81,11 @@ class JoystickTeleopContinuous(Node):
         self.create_subscription(Joy, "/joy", self._joy_callback, 10)
 
     def _joy_callback(self, msg: Joy) -> None:
-        """Map axes to target_twist; dispatch button actions."""
         for button in self._buttons:
             is_pressed = len(msg.buttons) > button.idx and msg.buttons[button.idx] == 1
             button.update(is_pressed)
 
+        # might move this to a function map if it needs to scale better
         for button in self._buttons:
             if not button.just_pressed:
                 continue
@@ -113,12 +109,10 @@ class JoystickTeleopContinuous(Node):
             self._twist_pubs[dof].publish(Float64(data=value))
 
     def _reset_target_twist(self) -> None:
-        """Publish zero to all target_twist topics."""
         for pub in self._twist_pubs.values():
             pub.publish(Float64(data=0.0))
 
     def _zero_imu_pose(self) -> None:
-        """Call localization/zero_state to reset IMU pose offsets."""
         if not self._zero_imu_client.service_is_ready():
             self.get_logger().warn("localization/zero_state service not available")
             return
