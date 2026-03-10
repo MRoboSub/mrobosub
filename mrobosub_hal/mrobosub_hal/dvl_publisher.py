@@ -2,7 +2,7 @@ import socket
 import rclpy
 from mrobosub_msgs.msg import Dvl
 import numpy as np
-from mrobosub_lib.lib import Node
+from mrobosub_lib import Node
 
 
 # todo: parameterize this in the launch file
@@ -46,7 +46,8 @@ class DVLPublisher (Node):
 
             # parse according to spec here https://docs.ceruleansonar.com/c/dvl-50/communicating-with-the-tracker-650/outgoing-message-formats-tracker-650-to-host/usddvkfc-kalman-filter-raw-data-support-message
             data_list = data_str.split(",")
-            self.pub.publish(Dvl(*map(float, data_list[10 : 24 + 1 : 7])))
+            map_list = [*map(float, data_list[10 : 24 + 1 : 7])]
+            self.pub.publish(Dvl(velocity=map_list))
 
         except socket.timeout:
             self.get_logger().info("DVL UDP connection timing out, no data recieved from DVL")
