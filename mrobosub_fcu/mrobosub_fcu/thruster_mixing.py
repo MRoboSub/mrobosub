@@ -316,7 +316,7 @@ class ThrusterMixing(Node):
             and np.max(current_draws) < THRUSTER_MAX_CURRENT_DRAW
             and np.sum(current_draws) < SUB_MAX_CURRENT_DRAW
         ):
-            return MotorState(motors=outputs)
+            return MotorState(motors=outputs.astype('float32'))
         return None
 
     def calculate_scaled_outputs(

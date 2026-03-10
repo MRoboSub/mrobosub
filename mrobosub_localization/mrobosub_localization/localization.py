@@ -132,6 +132,7 @@ class StateEstimation(Node):
         #     orientation.w
         # ]
         # euler = euler_from_quaternion(quaternion)
+
         euler = msg.theta
 
         if (
@@ -154,13 +155,11 @@ class StateEstimation(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-
     node = StateEstimation()
-
-    rclpy.spin(node)
-
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except:
+        pass
 
 
 if __name__ == "__main__":

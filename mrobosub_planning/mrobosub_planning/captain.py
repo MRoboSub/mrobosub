@@ -1,6 +1,7 @@
 from tokenize import Single
 from typing import Dict, Type, Optional, Sequence
 from importlib import import_module
+from mrobosub_planning import testing_run
 from mrobosub_planning.umrsm import StateMachine, State, TransitionMap, Outcome
 import mrobosub_planning.common_states as common_states
 import mrobosub_planning.standard_run as standard_run
@@ -17,7 +18,7 @@ import traceback
 
 # maybe change this to something hacky like getting .transitions from the machine name module?
 transition_maps: Dict[str, TransitionMap] = {
-    "standard": standard_run.transitions,
+    "standard": standard_run.transitions
     # "heave_test": heave_test.transitions,
 }
 
@@ -67,7 +68,7 @@ def main(args: Optional[Sequence[str]]=None) -> None:
     t.start()
     captain_node.get_logger().info("Captain Node Spinning")
 
-    # Syntax `roslaunch mrobosub_planning captain.launch machine:=<machine> state:=<state|module.state>`
+    # Syntax `ros2 launch mrobosub_planning captain_launch.xml machine:=<machine> state:=<state|module.state>`
     machine_name = sys.argv[1]
     full_state = sys.argv[2]
 
