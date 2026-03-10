@@ -73,14 +73,14 @@ class Captain(Node):
         # TODO: Add services for perception topics when those are created.
         
         # self._zed_on_srv = self.create_client(SetBool, "/zed/on")
-        attempt_counter = 0
+        # attempt_counter = 0
         # while not self._zed_on_srv.wait_for_service(timeout_sec=1.0) and attempt_counter < 5:
         #     self.get_logger().info('\"/zed/on\" service not available, waiting again...')
         #     attempt_counter += 1
         # if attempt_counter == 5:
         #     self.get_logger().error('Failed to connect to \"/zed/on\" service')
 
-        attempt_counter = 0
+        # attempt_counter = 0
         # self._bot_cam_on_srv = self.create_client(SetBool, "/bot_cam/on")
         # while not self._bot_cam_on_srv.wait_for_service(timeout_sec=1.0) and attempt_counter < 5:
         #     self.get_logger().info('\"/bot_cam/on\" service not available, waiting again...')

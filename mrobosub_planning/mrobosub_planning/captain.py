@@ -18,8 +18,7 @@ import traceback
 
 # maybe change this to something hacky like getting .transitions from the machine name module?
 transition_maps: Dict[str, TransitionMap] = {
-    "standard": standard_run.transitions,
-    "testing": testing_run.transitions,
+    "standard": standard_run.transitions
     # "heave_test": heave_test.transitions,
 }
 
