@@ -23,7 +23,6 @@ class Pololu(Node):
         super().__init__("pololu")
         self.get_logger().info("Launched pololu node")
         self.port = "/dev/serial/by-id/usb-Pololu_Corporation_Pololu_Mini_Maestro_12-Channel_USB_Servo_Controller_00467345-if00"
-        self.emergency_stop = False
         self.pololu_outputs = [0] * NUM_PINS
         self.serial: Serial | None = None
         self.connect()

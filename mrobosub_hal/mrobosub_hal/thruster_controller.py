@@ -37,21 +37,6 @@ class ThrusterController(Node):
             PololuCommands, "/pololu_commands", qos_profile=1
         )
 
-        self.declare_parameter(
-            "thruster_reverse",
-            rclpy.Parameter.Type.BOOL_ARRAY,
-            descriptor=ParameterDescriptor(
-                description="List of booleans indicating whether each thruster is reversed"
-            ),
-        )
-
-        self.declare_parameter(
-            "thruster_motor_id",
-            rclpy.Parameter.Type.INTEGER_ARRAY,
-            descriptor=ParameterDescriptor(
-                description="List of motor IDs for each thruster on the thruster controller"
-            ),
-        )
         params = [Param('thruster_reverse', rclpy.Parameter.Type.BOOL_ARRAY, "List of booleans indicating whether each thruster is reversed"), 
                   Param('thruster_motor_id', rclpy.Parameter.Type.INTEGER_ARRAY, "List of motor IDs for each thruster on the thruster controller")
                   ]
@@ -100,7 +85,6 @@ class ThrusterController(Node):
         msg.valid = message_valid
 
         self.pololu_pub.publish(msg)
-        # self.get_logger().info(f"Thruster controller: sent pwm value {pwm_val} to motor {motor}")
 
         return 0
 
