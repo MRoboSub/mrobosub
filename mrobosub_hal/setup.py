@@ -29,6 +29,7 @@ setup(
             "botcam = mrobosub_hal.botcam:main",
             "zed = mrobosub_hal.zed:main",
             "pololu = mrobosub_hal.pololu:main",
+            "arduino = mrobosub_hal.arduino:main"
         ],
     },
 )

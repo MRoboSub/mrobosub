@@ -1,7 +1,7 @@
 import rclpy
-from rcl_interfaces.msg import ParameterDescriptor
+from rclpy.parameter import Parameter
 
-from mrobosub_lib import Node
+from mrobosub_lib import Node, Param
 from serial import Serial
 from serial.serialutil import SerialException
 from mrobosub_msgs.msg import MotorState
@@ -52,6 +52,11 @@ class ThrusterController(Node):
                 description="List of motor IDs for each thruster on the thruster controller"
             ),
         )
+        params = [Param('thruster_reverse', rclpy.Parameter.Type.BOOL_ARRAY, "List of booleans indicating whether each thruster is reversed"), 
+                  Param('thruster_motor_id', rclpy.Parameter.Type.INTEGER_ARRAY, "List of motor IDs for each thruster on the thruster controller")
+                  ]
+        
+        self.declare_params(params)
 
 
     def handle_emergency_stop(
@@ -73,21 +78,17 @@ class ThrusterController(Node):
         if self.emergency_stop:
             for motor in range(NUM_MOTORS):
 
-                motor_pin = (self.get_parameter("thruster_motor_id")
-                .get_parameter_value()
-                .integer_array_value[motor])
+                motor_pin = (self.thruster_motor_id[motor])
 
                 message_valid[motor_pin] = True
                 message_output[motor_pin] = 0
         else:
             for motor in range(NUM_MOTORS):
-                motor_pin = (self.get_parameter("thruster_motor_id")
-                .get_parameter_value()
-                .integer_array_value[motor])
+                motor_pin = (self.thruster_motor_id[motor])
 
                 message_valid[motor_pin] = True
 
-                if self.get_parameter("thruster_reverse").get_parameter_value().bool_array_value[motor]:  # type: ignore
+                if self.thruster_reverse[motor]:  # type: ignore
                     message_output[motor_pin] = -msg.motors[motor]
                 else:
                     message_output[motor_pin] = msg.motors[motor]
