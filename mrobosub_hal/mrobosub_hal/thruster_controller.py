@@ -27,7 +27,7 @@ class ThrusterController(Node):
         self.emergency_stop = False
         self.motor_outputs = [0] * NUM_MOTORS
 
-        self.object_position_service = self.create_service(
+        self.emergency_stop_service = self.create_service(
             SetBool, "emergency_stop_motors", self.handle_emergency_stop
         )
         self.motor_sub = self.create_subscription(
