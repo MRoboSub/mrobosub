@@ -1,4 +1,3 @@
 <launch>
-    <arg name="device_path" default="/dev/zed2" />
-    <node name="zed" pkg="mrobosub_hal" exec="zed" args="$(arg device_path)" />
+    <node name="zed" pkg="mrobosub_hal" exec="zed"/>
 </launch>

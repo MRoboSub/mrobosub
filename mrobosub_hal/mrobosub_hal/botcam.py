@@ -5,13 +5,9 @@ from cv_bridge import CvBridge
 import subprocess
 import sys
 import numpy as np
-from dynamic_reconfigure.server import Server
-
 from mrobosub_lib import Node
 
-from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
-
-from mrobosub_hal.cfg import rectify_paramsConfig
+from std_srvs.srv import SetBool
 
 class Botcam(Node):
     """
@@ -21,7 +17,7 @@ class Botcam(Node):
     def __init__(self) -> None:
         super().__init__("bot_cam")
         self.iteration_rate = 60
-        self.device_path = sys.argv[1]
+        self.device_path = "/dev/botcam"
         self.on = False
         self.br = CvBridge()
         self.create_service(SetBool, "/bot_cam/on", self.handle_on_service)
@@ -33,29 +29,32 @@ class Botcam(Node):
         self.w = 1920
         self.h = 1080
         self.map_x, self.map_y = self.generate_undistort_maps(self.f, self.w, self.h) # TODO: Should this be dynamic?
-        self.srv = Server(rectify_paramsConfig, self.reconfigure_callback, 'rectify_params')
+        # self.srv = Server(rectify_paramsConfig, self.reconfigure_callback, 'rectify_params')
+        # TODO REPLACE THE ABOVE SERVER AND UNCOMMENT RECONFIGURE_CALLBACK
         self.output_w = int(1920 / 2)
         self.output_h = int(1080 / 2)
         self.timer = self.create_timer(1.0/self.iteration_rate, self.loop)
 
 
-    def handle_on_service(self, req: SetBoolRequest):
+    def handle_on_service(self, req, res):
+        res.success = True
         if req.data == self.on:
-            return SetBoolResponse(success=True)
+            return res
 
         if req.data:
             self.open_capture()
         else:
             self.close_capture()
         self.on = req.data
-        return SetBoolResponse(success=True)
+        return res
 
     def open_capture(self):
         self.cap = cv2.VideoCapture(self.device_path)
         # https://stackoverflow.com/a/66279297
         # cap.set(cv2.CAP_PROP_FPS,10)
         # cap.set(cv2.CAP_PROP_BUFFERSIZE,1)
-        self.cap.set(6, 1296718151) # wtf
+        # self.cap.set(6, 1296718151) # wtf
+        self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
         self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
@@ -87,10 +86,10 @@ class Botcam(Node):
         # rectified_img = cv2.resize(rectified_img, (640, 480), interpolation=cv2.INTER_LINEAR)
         return rectified_img
 
-    def reconfigure_callback(self, config, level):
-        self.f = config["f"]
-        self.map_x, self.map_y = self.generate_undistort_maps(self.f, self.w, self.h)
-        return config
+    # def reconfigure_callback(self, config, level):
+    #     self.f = config["f"]
+    #     self.map_x, self.map_y = self.generate_undistort_maps(self.f, self.w, self.h)
+    #     return config
 
     def generate_undistort_maps(self, f, w, h):
         # The theory behind this function is that the image is distorted by a fisheye lens which produces
