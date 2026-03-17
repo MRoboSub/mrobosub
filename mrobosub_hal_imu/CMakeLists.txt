@@ -1,13 +1,15 @@
 cmake_minimum_required(VERSION 3.8)
 project(mrobosub_hal_imu)
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
+
 add_subdirectory(inertial-sense-sdk)
 
 include_directories(
   inertial-sense-sdk/src
-  inertial-sense-sdk/src/libusb/libusb
-  inertial-sense-sdk/src/libusb/linux
   inertial-sense-sdk/src/yaml-cpp
+  ${LIBUSB_INCLUDE_DIRS}
 )
 
 # find dependencies
@@ -20,7 +22,7 @@ find_package(mrobosub_msgs REQUIRED)
 
 add_executable(imu_node src/imu_node.cpp)
 ament_target_dependencies(imu_node rclcpp mrobosub_msgs)
-target_link_libraries(imu_node InertialSenseSDK)
+target_link_libraries(imu_node InertialSenseSDK ${LIBUSB_LIBRARIES})
 
 install(TARGETS
   imu_node
