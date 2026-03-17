@@ -3,7 +3,8 @@ mrobosub_lib: this package prints that the node is starting
 and parses params + takes care of updating the member variable values at runtime whenever any of the param values are changed
 """
 
-from typing import Any, List
+from typing import Any, List, Callable
+from .parameter_utilities import PARAMETER_TYPE_TO_NATIVE
 from rclpy.node import Node as RosNode
 from rclpy.parameter import Parameter
 from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult
@@ -30,11 +31,17 @@ class Param:
     name: str
     type: Parameter.Type
     description: ParameterDescriptor
+    # callback: None | Callable[]
 
-    def __init__(self, name: str, type: Parameter.Type, description: str):
+    def __init__(self, name: str, type: Parameter.Type, description: str, callback = None):
         self.name = name
         self.type = type
         self.description = ParameterDescriptor(description=description)
+        self.callback = callback
+
+    @property
+    def python_type(self):
+        return PARAMETER_TYPE_TO_NATIVE.get(self.type, object)
 
 class Node(RosNode):
     def __init__(self, node_name: str, *args: Any, **kawrgs: Any) -> None:
@@ -45,12 +52,16 @@ class Node(RosNode):
     def set_params_callback(self, params):
         for param in params:
             setattr(self, param.name, param.value)
+            callback = getattr(self, f"_{param.name}_callback")
+            if callback:
+                callback(param.value)
             # self.get_logger().info(f"updated param {param.name} to {param.value}")
         return SetParametersResult(successful=True)
 
     def set_initial_params(self, _params = None):
         for param in self.param_list:
             setattr(self, param.name, self.get_parameter(param.name).value)
+            setattr(self, f"_{param.name}_callback", param.callback)
 
     def declare_params(self, param_list: List[Param]):
         self.param_list = param_list
