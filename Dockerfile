@@ -17,7 +17,8 @@ RUN apt-get update && \
                         python3-scipy \
                         python3-transforms3d \
                         python3-serial \
-                        libusb-dev
+                        libusb-dev \
+                        pipx
 
 RUN echo "ALL ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers && \
     useradd -m -s /bin/bash -G sudo ubuntu && \
