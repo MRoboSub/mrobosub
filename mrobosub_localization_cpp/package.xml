@@ -2,9 +2,9 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>mrobosub_localization_cpp</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="zayn.baig@gmail.com">ubuntu</maintainer>
+  <version>1.0.0</version>
+  <description>Factor graph localization using DVL+IMU+Barometer</description>
+  <maintainer email="michiganroboticsubmarine@gmail.com">Michigan Robotic Submarine</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
