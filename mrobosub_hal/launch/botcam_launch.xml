@@ -1,4 +1,5 @@
 <launch>
-    <!-- <arg name="device_path" default="/dev/botcam" /> -->
-    <node pkg="mrobosub_hal" exec="botcam" name="botcam"/>
+    <node pkg="mrobosub_hal" exec="botcam" name="botcam" output="screen">
+        <param from="$(find-pkg-share mrobosub_hal)/params/botcam_params.yaml" />
+    </node>
 </launch>

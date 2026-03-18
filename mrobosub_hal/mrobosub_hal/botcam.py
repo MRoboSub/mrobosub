@@ -3,7 +3,6 @@ from sensor_msgs.msg import Image
 import cv2
 from cv_bridge import CvBridge
 import subprocess
-import sys
 import numpy as np
 
 from mrobosub_lib import Node, Param
@@ -24,12 +23,16 @@ class Botcam(Node):
     def __init__(self) -> None:
         super().__init__("bot_cam")
 
+        # Set up focal length as a parameter that can be dynamically changed and updated.
+        params = [Param('f', Parameter.Type.INTEGER, "Focal length of the camera.", self.f_callback)]
+        self.declare_params(params)
+
         # Camera settings
         self.device_path = "/dev/botcam"
-        self.w = 1920
-        self.h = 1080
-        self.output_w = int(1920 / 2)
-        self.output_h = int(1080 / 2)
+        self.w = 960
+        self.h = 540
+        self.output_w = int(self.w / 2)
+        self.output_h = int(self.h / 2)
 
         # Create service to turn on the Camera.
         self.on = False
@@ -40,15 +43,10 @@ class Botcam(Node):
         self.rectified_pub = self.create_publisher(Image, "/rectified_image", qos_profile=1)
 
         # Create OpenCV Objects
-        self.f = 800 # focal length
         self.br = CvBridge()
 
         # Apply undistortion for fish eye lens 
         self.map_x, self.map_y = self.generate_undistort_maps(self.f, self.w, self.h)
-
-        # Set up focal length as a parameter that can be dynamically changed and updated.
-        params = [Param('f', Parameter.Type.INTEGER, "Focal length of the camera.", self.f_callback)]
-        self.declare_params(params)
 
         # Run loop
         self.iteration_rate = 60
@@ -74,8 +72,8 @@ class Botcam(Node):
         # cap.set(cv2.CAP_PROP_BUFFERSIZE,1)
         # self.cap.set(6, 1296718151) # wtf
         self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.w)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.h)
         self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
         self.cap.set(cv2.CAP_PROP_EXPOSURE, 1000)
         subprocess.call(
