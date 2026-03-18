@@ -39,6 +39,49 @@ I also found it fit to change the variable names and organize the code a little 
 
 I also had the header files only define all of the functions, not actually implement them. They had a healthy mix of some getters/setters being implemented in the header file, but I prefer consistency, so all function implementations will be in the source files.
 
+### [03/18] Loading the GTSAM library onto this Docker container
+The easiest way that I have seen to load GTSAM in for a ROS environment is installing the package via apt.
+
+```bash
+sudo apt install ros-humble-gtsam
+```
+
+I was considering adding the GTSAM Github as a submodule, but this would drastically increase compilation times which is really not worth it given how frequently we build.
+
+This line was added to the Dockerfile.
+
+Additionally, you also need to reflect this dependency in the `package.xml` with the line `<depend>gtsam</depend>`.
+
+Also, you need to reflect these changes in the CMakeLists.txt.
+
+#### 1. Find the package
+
+We first need to have CMake find the package
+```
+find_package(GTSAM required)
+```
+
+#### 2. Link with the library
+```
+target_link_libraries(localization
+    gtsam
+)
+```
+
+#### 3. (Optional) Expose GTSAM to other modules
+
+If you need other packages in the workspace need to use this package (`mrobosub_localization_cpp`), they will need GTSAM too. We can expose this to them using ament.
+```
+ament_export_dependencies(gtsam)
+```
+
+
+After adding GTSAM, I rebuilt the container, which successfully worked.
+
+Additionally, I had to add a couple of VSCode extensions for C++ and CMake add better linting and intellisense. With this, I caught some small typos with my code.
+
+
+
 ## Citation
 
 ### Acknowledgements

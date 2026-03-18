@@ -1,11 +1,16 @@
-#ifndef  __POSEGRAPH_H__
-#define  __POSEGRAPH_H__
+#ifndef  __POSEGRAPH_NODE_H__
+#define  __POSEGRAPH_NODE_H__
+
+#include <memory>
+#include <mutex>
+#include <condition_variable>
 
 #include "Posegraph.h"
 #include "Parameters.h"
 #include "PreintegratedVelocityHelpers.h"
 #include "DvlOnlyFactor.h"
 #include "BluerovBarometerFactor.h"
+
 
 namespace localization {
 class PosegraphNode {
@@ -88,7 +93,7 @@ private: // Members
 private: // methods
     /* TODO: What is save trajectory?? */
     // bool save_trajectory(turtlmap::save_trajectory::Request &req, turtlmap::save_trajectory::Response &res);
-}
+};
 } // namespace localization
 
 #endif //__POSEGRAPH_H__

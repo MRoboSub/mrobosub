@@ -70,9 +70,9 @@ private: // Members
 
 public: // Methods
     // Ctors + Dtors
-    AUVPoseGraph();
-    AUVPoseGraph(std::string &config_file)
-    ~AUVPoseGraph();
+    Posegraph();
+    Posegraph(std::string &config_file);
+    Posegraph();
 
     // Depth factors
     void add_depth_factor();   
@@ -124,12 +124,12 @@ public: // Methods
     
     // Setters 
     void set_depth_measurement(double W_measurement_z);
-    void set_accelerometer_measurement(/*gtsam::Vector3*/ B_accelerometer_S);
-    void set_gyroscope_measurement(/*gtsam::Vector3*/ B_gyroscope_S);
-    void set_velocity_measurement(/*gtsam::Vector3*/ B_velocity_D);
-    void set_position_measurement(/*gtsam::Vector3*/ W_position_C);
+    void set_accelerometer_measurement(int /*gtsam::Vector3*/ B_accelerometer_S);
+    void set_gyroscope_measurement(int /*gtsam::Vector3*/ B_gyroscope_S);
+    void set_velocity_measurement(int /*gtsam::Vector3*/ B_velocity_D);
+    void set_position_measurement(int /*gtsam::Vector3*/ W_position_C);
     void set_visual_gap_time(double visualGapTime);
-}
+};
 } // namespace localization
 
 #endif //__POSEGRAPH_H__

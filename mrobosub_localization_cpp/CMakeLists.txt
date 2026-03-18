@@ -7,18 +7,41 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(GTSAM REQUIRED)
 
-add_executable(localization src/localization.cpp)
+# Add source files to executable
+add_executable(localization 
+  src/localization.cpp
+)
+
+# Ament automates a lot of the CMake process. 
+# We can use ament to include+link rclcpp in one line
+ament_target_dependencies(localization
+  rclcpp  
+)
+
+# Expose the /include directory
 target_include_directories(localization PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-target_compile_features(localization PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+  $<INSTALL_INTERFACE:include>
+)
 
-install(TARGETS localization
-  DESTINATION lib/${PROJECT_NAME})
+# Require C99 and C++17
+target_compile_features(localization PUBLIC 
+  c_std_99 cxx_std_17
+)
+
+# Manually link with gtsam
+target_link_libraries(localization
+  gtsam
+)
+
+# Copy to the `install/` folder.
+install(
+  TARGETS localization
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -32,4 +55,6 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+# If other packages in the workspace need mrobosub_localization_cpp
+# ament_export_dependencies(gtsam)
 ament_package()

@@ -14,6 +14,7 @@ RUN apt-get update && \
                         less \
                         ros-humble-ros2-control \
                         ros-humble-ros2-controllers \
+                        ros-humble-gtsam \
                         python3-scipy \
                         python3-transforms3d \
                         python3-serial \
@@ -32,7 +33,9 @@ RUN pipx install mypy && \
     pipx ensurepath
 
 RUN sudo pip3 install --upgrade mypy typing-extensions
-    
+
+RUN ln -s '/usr/install/libusb-1.0/libusb.h /usr/install/libusb.h'
+
 # Create workspace structure
 RUN mkdir -p /home/ubuntu/ros2_ws/src && \
     cd /home/ubuntu/ros2_ws && \

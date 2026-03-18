@@ -1,6 +1,12 @@
 #ifndef  __PREINTEGRATED_VELOCITY_HELPERS_H__
 #define  __PREINTEGRATED_VELOCITY_HELPERS_H__
 
+#include <string>
+#include <vector>
+
+#include <boost/serialization/access.hpp>
+#include <gtsam/base/types.h>
+
 namespace localization {
 class PreintegratedVelocityParameters {
 public: // Members
@@ -10,7 +16,7 @@ public: // Members
 public: //  Methods
     PreintegratedVelocityParameters();
     PreintegratedVelocityParameters(
-        const int /* gtsam::Matrix3 */ &bias_velocity_covariance
+        const int /* gtsam::Matrix3 */ &bias_velocity_covariance,
         const int /* gtsam::Matrix3 */ &bias_initial
     );
     PreintegratedVelocityParameters(
@@ -26,12 +32,17 @@ public: //  Methods
 
 private: // Methods
     // TODO: What is this?
+    // Allows boost serialization to access private members.
     friend class boost::serialization::access;
+
+    // Needed to save data and load data
     template<class ARCHIVE>
-    void serialize(ARCHIVE &ar const unsigned int version);
+    void serialize(ARCHIVE &ar, const unsigned int version);
 
 public:
-    // TODO: What is this??
+    // GTSAM uses advanced math with Eigen
+    // This is to ensure that the Matrices and other stuff
+    // is aligned how GTSAM wants it to be.
     GTSAM_MAKE_ALIGNED_OPERATOR_NEW
 };
 
@@ -58,17 +69,17 @@ public: // Methods
     ~PreintegratedVelocityMeasurementsDvlOnly();
 
     void reset_integration();
-    void reset_integration_and_bias(const int /*gtsam::imuBias::ConstantBias*/ &bias)
+    void reset_integration_and_bias(const int /*gtsam::imuBias::ConstantBias*/ &bias);
     void integrateMeasurements(
-        const/*gtsam::Vector3*/ &linear_velocity,
-        const/*gtsam::Rot3*/ &interpolated_rotation,
+        const int /*gtsam::Vector3*/ &linear_velocity,
+        const int /*gtsam::Rot3*/ &interpolated_rotation,
         double &dt // TODO: Is this an out param? Why is this passed by ref?
     );
     
     void integrateMeasurementsNoise(
-        const/*gtsam::Vector3*/ &linear_velocity,
-        const/*gtsam::Rot3*/ &interpolated_rotation,
-        double &dt // TODO: Is this an out param? Why is this passed by ref?
+        const int /*gtsam::Vector3*/ &linear_velocity,
+        const int /*gtsam::Rot3*/ &interpolated_rotation,
+        double &dt, // TODO: Is this an out param? Why is this passed by ref?
         const double &fom
     );
 
