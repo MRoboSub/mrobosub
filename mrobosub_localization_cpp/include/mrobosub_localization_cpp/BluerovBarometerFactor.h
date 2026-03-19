@@ -16,11 +16,11 @@ private:
 public:
     BluerovBarometerFactor();
     virtual ~BluerovBarometerFactor();
-    BluerovBarometerFactor(int gtsam::Key key, double measured, const int gtsam::SharedNoiseModel &model);
+    BluerovBarometerFactor(gtsam::Key key, double measured, const gtsam::SharedNoiseModel &model);
   
     int gtsam::Vector evaluate_error(
-        const int gtsam::Pose3 &pose, 
-        int boost::optional<gtsam::Matrix &> H
+        const gtsam::Pose3 &pose, 
+        boost::optional<gtsam::Matrix &> H
     ) const;
 };
 } // namespace localization
