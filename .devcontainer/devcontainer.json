@@ -8,7 +8,9 @@
     "vscode": {
       "extensions": [
         "ms-python.python",
-        "ms-python.black-formatter"
+        "ms-python.black-formatter",
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools"
       ]
     }
   }
