@@ -8,7 +8,11 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(GTSAM REQUIRED)
+find_package(BOOST REQUIRED 
+  COMPONENTS thread
+)
 
 # Add source files to executable
 add_executable(localization 
@@ -19,6 +23,10 @@ add_executable(localization
 # We can use ament to include+link rclcpp in one line
 ament_target_dependencies(localization
   rclcpp  
+)
+
+target_include_directories(localization PRIVATE
+  ${EIGEN3_INCLUDE_DIRS}
 )
 
 # Expose the /include directory
@@ -34,8 +42,11 @@ target_compile_features(localization PUBLIC
 
 # Manually link with gtsam
 target_link_libraries(localization
+  Eigen3::Eigen
   gtsam
+  ${Boost_LIBRARIES}
 )
+
 
 # Copy to the `install/` folder.
 install(
