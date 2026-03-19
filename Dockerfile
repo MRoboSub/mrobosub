@@ -34,7 +34,7 @@ RUN pipx install mypy && \
 
 RUN sudo pip3 install --upgrade mypy typing-extensions
 
-RUN ln -s '/usr/install/libusb-1.0/libusb.h /usr/install/libusb.h'
+# RUN sudo ln -s '/usr/install/libusb-1.0/libusb.h /usr/install/libusb.h'
 
 # Create workspace structure
 RUN mkdir -p /home/ubuntu/ros2_ws/src && \
