@@ -4,7 +4,7 @@
 #include "PreintegratedVelocityHelpers.h"
 
 #include <gtsam/base/Vector.h>               // Vector
-#include <gtsam/base/Matrix.h>
+#include <gtsam/base/Matrix.h>               // Matrix
 #include <gtsam/geometry/Pose3.h>            // Pose3
 #include <gtsam/inference/Key.h>             // Key
 #include <gtsam/navigation/ImuBias.h>        // imuBias::ConstantBias
@@ -12,10 +12,11 @@
 
 #include <boost/optional.hpp>
 
+namespace localization {
 class DvlOnlyFactor : public gtsam::NoiseModelFactorN<gtsam::Pose3, gtsam::Pose3, gtsam::imuBias::ConstantBias> {
 public: // Methods
     DvlOnlyFactor();
-    DVLOnlyFactor(gtsam::Key pose_i, gtsam::Key pose_j, gtsam::Key vbias_i,
+    DvlOnlyFactor(gtsam::Key pose_i, gtsam::Key pose_j, gtsam::Key vbias_i,
                   const PreintegratedVelocityMeasurementsDvlOnly &pvm);
     virtual ~DvlOnlyFactor();
 
@@ -31,5 +32,6 @@ public: // Methods
 private: // Members
     PreintegratedVelocityMeasurementsDvlOnly _pvm;
 };
+} // namespace localization
 
 #endif //__DVL_ONLY_FACTOR_H__

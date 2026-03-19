@@ -7,13 +7,13 @@
 #include <gtsam/base/Matrix.h>                     // Matrix44
 #include <gtsam/base/Vector.h>                     // Vector
 #include <gtsam/geometry/Pose3.h>                  // Pose3
-#include <gtsam/geometry/Rot3.h>                  // Pose3
+#include <gtsam/geometry/Rot3.h>                   // Rot3
 #include <gtsam/navigation/NavState.h>             // NavState
 #include <gtsam/navigation/CombinedImuFactor.h>    // PreintegratedCombinedMeasurements
 #include <gtsam/navigation/ImuBias.h>              // imuBias::ConstantFactor
 #include <gtsam/nonlinear/ISAM2.h>                 // ISAM2Params
-#include <gtsam/nonlinear/BatchFixedLabSmoother.h> // BatchFixedLabSmoother
-#include <gtsam/nonlinear/FixedLabSmoother.h>      // FixedLagSmoother::KeyTimestampMap
+#include <gtsam_unstable/nonlinear/BatchFixedLagSmoother.h> // BatchFixedLabSmoother
+#include <gtsam_unstable/nonlinear/FixedLagSmoother.h>      // FixedLagSmoother::KeyTimestampMap
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>  // NonlinearFactorGraph
 #include <gtsam/nonlinear/Values.h>                // Values
 

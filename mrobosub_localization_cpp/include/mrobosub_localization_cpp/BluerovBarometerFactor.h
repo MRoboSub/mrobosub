@@ -9,7 +9,7 @@
 #include <gtsam/linear/NoiseModel.h> // gtsam::SharedNoiseModel
 
 namespace localization {
-class BluerovBarometerFactor : public NoiseModelFactor1<Pose3> {
+class BluerovBarometerFactor : public gtsam::NoiseModelFactor1<gtsam::Pose3> {
 private: 
     double _measured;
 
@@ -18,7 +18,7 @@ public:
     virtual ~BluerovBarometerFactor();
     BluerovBarometerFactor(gtsam::Key key, double measured, const gtsam::SharedNoiseModel &model);
   
-    int gtsam::Vector evaluate_error(
+    gtsam::Vector evaluate_error(
         const gtsam::Pose3 &pose, 
         boost::optional<gtsam::Matrix &> H
     ) const;

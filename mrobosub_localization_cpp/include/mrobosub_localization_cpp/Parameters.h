@@ -1,7 +1,7 @@
 #ifndef  __PARAMETERS_H__
 #define  __PARAMETERS_H__
 
-#include <Eigen/Core>
+#include <Eigen/Core> // Matrix4d
 
 #include <string>
 #include <vector>
@@ -84,9 +84,7 @@ public:
     double _keyframe_gap_time;
     double _dvl_fom_threshold;
     bool _using_pseudo_dvl;
-}
-
-
+};
 } // namespace localization
 
 #endif //__PARAMETERS_H__

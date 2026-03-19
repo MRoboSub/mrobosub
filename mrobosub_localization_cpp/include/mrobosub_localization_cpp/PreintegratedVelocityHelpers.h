@@ -97,7 +97,7 @@ public: // Methods
     gtsam::Matrix get_delpij_delbias_omega() const;
     gtsam::Matrix get_delpij_delbias_dvl() const;
 
-    gtsam::Point3 predict(const gtsam::Point3 &bias, int gtsam::Matrix3 &H_bias) const;
+    gtsam::Point3 predict(const gtsam::Point3 &bias, gtsam::Matrix3 &H_bias) const;
 };
 
 } // namespace localization
