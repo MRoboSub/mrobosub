@@ -1,16 +1,21 @@
 #ifndef  __POSEGRAPH_NODE_H__
 #define  __POSEGRAPH_NODE_H__
 
-#include <memory>
-#include <mutex>
-#include <condition_variable>
-
 #include "Posegraph.h"
 #include "Parameters.h"
 #include "PreintegratedVelocityHelpers.h"
 #include "DvlOnlyFactor.h"
 #include "BluerovBarometerFactor.h"
 
+#include <gtsam/base/Vector.h>                   // Vector
+#include <gtsam/geometry/Pose3.h>                // Pose3
+#include <gtsam/geometry/Rot3.h>                 // Rot3
+#include <gtsam/navigation/CombinedImuFactor.h>  // PreintegratedCombinedMeasurements
+#include <gtsam/navigation/NavState.h>           // NavState
+
+#include <boost/thread/mutex.hpp>                // boost::mutex
+#include <boost/thread/condition_variable.hpp>   // boost::condition_variable
+#include <boost/shared_ptr.hpp>                  // boost::shared_ptr
 
 namespace localization {
 class PosegraphNode {
@@ -52,12 +57,12 @@ private: // Members
     double _first_depth = 0.0;
 
     // DVL state
-    int /* gtsam::PreintegratedCombinedMeasurements */ *_preintegrated_measurements_dvl;
+    gtsam::PreintegratedCombinedMeasurements *_preintegrated_measurements_dvl;
     double _prev_dvl_time = 0.0;
     double _prev_dvl_local_time = 0.0;
-    int /* gtsam::Pose3 */   _prev_dvl_local_pose;
-    int /* gtsam::Rot3 */    _dvl_prev_rot;
-    int /* gtsam::Vector3 */ _first_dvl_vel;
+    gtsam::Pose3   _prev_dvl_local_pose;
+    gtsam::Rot3    _dvl_prev_rot;
+    gtsam::Vector3 _first_dvl_vel;
 
     // Keyframe states
     double _first_keyframe_time;
@@ -65,20 +70,20 @@ private: // Members
     double _current_keyframe_time = 0.0;
     bool _is_new_keyframe = false; // Used to be new_kf_flag
     double _keyfram_gap_time;
-    int /* gtsam::Pose3 */ _latest_keyframe_pose;
-    int /* gtsam::Pose3 */ _latest_publish_pose; // what does this mean
+    gtsam::Pose3 _latest_keyframe_pose;
+    gtsam::Pose3 _latest_publish_pose; // what does this mean
     
     // ??? State 
-    int /* gtsam::Pose3 */ _T_w_wd; // what does this mean
+    gtsam::Pose3 _T_w_wd; // what does this mean
    
     // IMU State
-    int /* gtsam::Rot3 */ _imu_latest_rot;
-    int /* gtsam::NavState*/ _latest_imu_prop_state;
+    gtsam::Rot3 _imu_latest_rot;
+    gtsam::NavState _latest_imu_prop_state;
     int _imu_init_count = 0; // Can this be unsigned?
     int _imu_count = 0; // Can this be unsigned?
 
-    std::mutex _mtx;
-    std::condition_variable _keyframe_cv; 
+    boost::mutex _mtx;
+    boost::condition_variable _keyframe_cv; 
 
     // Get from config file.
     bool _is_using_dvl_v2_factor = true;
@@ -88,7 +93,7 @@ private: // Members
     // ros::ServiceServer _save_trajectory_service;
     std::vector<double> _keyframe_timestamps;
     std::vector<double> _trajectory_timestamps;
-    std::vector<int /*gtsam::Pose3*/> _trajectory_poses;
+    std::vector<gtsam::Pose3> _trajectory_poses;
 
 private: // methods
     /* TODO: What is save trajectory?? */

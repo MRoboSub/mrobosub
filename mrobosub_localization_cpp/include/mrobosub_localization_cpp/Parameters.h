@@ -1,6 +1,11 @@
 #ifndef  __PARAMETERS_H__
 #define  __PARAMETERS_H__
 
+#include <Eigen/Core>
+
+#include <string>
+#include <vector>
+
 namespace localization {
 struct SensorList {
     bool is_dvl_used;
@@ -35,11 +40,11 @@ struct SensorTopics {
 };
 
 struct Extrinsics {
-    int /*Eigen::Matrix4d */ T_SD;   // dvl to imu
-    int /*Eigen::Matrix4d */ T_SSo;  // sonar to imu
-    int /*Eigen::Matrix4d */ T_BS;   // imu to body
-    int /*Eigen::Matrix4d */ T_SBa;  // barometer to imu
-    int /*Eigen::Matrix4d */ T_W_WD; // world to dvl world
+    Eigen::Matrix4d T_SD;   // dvl to imu
+    Eigen::Matrix4d T_SSo;  // sonar to imu
+    Eigen::Matrix4d T_BS;   // imu to body
+    Eigen::Matrix4d T_SBa;  // barometer to imu
+    Eigen::Matrix4d T_W_WD; // world to dvl world
 };
 
 struct OptimizationParameters {
@@ -60,12 +65,12 @@ public:
     Parameters();
     ~Parameters();
 
-    ImuParameters           _imu_params;
-    Extrinsics              _extrinsics;
-    SensorList              _sensor_list;
-    SensorTopics            _sensor_topics;
-    OptimizationParameters  _optimization_params;
-    ImuPreintegrationParams _imu_preintegration_params;
+    ImuParameters               _imu_params;
+    Extrinsics                  _extrinsics;
+    SensorList                  _sensor_list;
+    SensorTopics                _sensor_topics;
+    OptimizationParameters      _optimization_params;
+    ImuPreintegrationParameters _imu_preintegration_params;
 
     std::vector<std::string> _rosbag_topics;
 

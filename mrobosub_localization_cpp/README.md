@@ -75,12 +75,32 @@ If you need other packages in the workspace need to use this package (`mrobosub_
 ament_export_dependencies(gtsam)
 ```
 
-
 After adding GTSAM, I rebuilt the container, which successfully worked.
 
 Additionally, I had to add a couple of VSCode extensions for C++ and CMake add better linting and intellisense. With this, I caught some small typos with my code.
 
+### [03/18] Fixing the variables to use the GTSAM library.
 
+Before, I was not using the `gtsam::` variables because I had not included `gtsam` into the project until after I finished all of the header files. I wanted to get a good bit of coding done, just as a productivity boost, before I get bogged down with downloading and debugging install GTSAM.
+
+After downloading the library, as I document above, I fully converted all of the commented out gtsam objects into the actual (uncommented out) versions.
+
+In the existing GTSAM code, there is a mix of smart pointers (e.g. `std::shared_ptr` or `std::unique_ptr`) between both the standard library `std` and the `boost` library. However, GTSAM heavily relies on the `boost` library. As such, for consistency sake, I will consistently use `boost`.
+
+In order to do so, I have to add `Boost` to the CMakeLists.txt in 2 ways:
+
+#### 1. Add the package
+```
+find_package(Boost REQUIRED COMPONENTS thread)
+```
+
+#### 2. Link the libraries
+```
+target_link_libraries(localization PRIVATE
+${BOOST_LIBRARIES}
+...
+)
+```
 
 ## Citation
 

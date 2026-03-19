@@ -3,20 +3,29 @@
 
 #include "PreintegratedVelocityHelpers.h"
 
-class DvlOnlyFactor /* : public gtsam::NoiseModelFactorN<gtsam::Pose3, gtsam::Pose3, gtsam::imuBias::ConstantBias>*/ {
+#include <gtsam/base/Vector.h>               // Vector
+#include <gtsam/base/Matrix.h>
+#include <gtsam/geometry/Pose3.h>            // Pose3
+#include <gtsam/inference/Key.h>             // Key
+#include <gtsam/navigation/ImuBias.h>        // imuBias::ConstantBias
+#include <gtsam/nonlinear/NonlinearFactor.h> // NoiseModelFactorN
+
+#include <boost/optional.hpp>
+
+class DvlOnlyFactor : public gtsam::NoiseModelFactorN<gtsam::Pose3, gtsam::Pose3, gtsam::imuBias::ConstantBias> {
 public: // Methods
     DvlOnlyFactor();
-    DVLOnlyFactor(int /*gtsam::Key*/ pose_i, int /*gtsam::Key*/ pose_j, int /*gtsam::Key*/ vbias_i,
+    DVLOnlyFactor(gtsam::Key pose_i, gtsam::Key pose_j, gtsam::Key vbias_i,
                   const PreintegratedVelocityMeasurementsDvlOnly &pvm);
     virtual ~DvlOnlyFactor();
 
-    int /*gtsam::Vector*/ evaluate_error(
-        const int /*gtsam::Pose3*/ &pose_i,
-        const int /*gtsam::Pose3*/ &pose_j,
-        const int /*gtsam::imuBias::ConstantBias*/ &vbias_i,
-        int /*boost::optional<gtsam::Matrix &>*/ H1,
-        int /*boost::optional<gtsam::Matrix &>*/ H2,
-        int /*boost::optional<gtsam::Matrix &>*/ H3
+    gtsam::Vector evaluate_error(
+        const gtsam::Pose3 &pose_i,
+        const gtsam::Pose3 &pose_j,
+        const gtsam::imuBias::ConstantBias &vbias_i,
+        boost::optional<gtsam::Matrix &> H1,
+        boost::optional<gtsam::Matrix &> H2,
+        boost::optional<gtsam::Matrix &> H3
     ) const;
 
 private: // Members
