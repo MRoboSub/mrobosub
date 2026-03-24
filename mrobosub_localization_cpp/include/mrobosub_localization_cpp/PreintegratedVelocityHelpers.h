@@ -37,8 +37,8 @@ public: //  Methods
     void print(const std::string &s = "") const;
     bool equals(const PreintegratedVelocityParameters &expected, double tolerance = 1e-9) const;
     
-    void set_bias_velocity_covariance();
-    void set_bias_initial();            
+    void set_bias_velocity_covariance(const gtsam::Matrix3 &covariance);
+    void set_bias_initial(const gtsam::Matrix3 &covariance);            
 
 private: // Methods
     // Allows boost serialization to access private members.
@@ -79,13 +79,13 @@ public: // Methods
 
     void reset_integration();
     void reset_integration_and_bias(const gtsam::imuBias::ConstantBias &bias);
-    void integrateMeasurements(
+    void integrate_measurements(
         const gtsam::Vector3 &linear_velocity,
         const gtsam::Rot3 &interpolated_rotation,
         double &dt // TODO: Is this an out param? Why is this passed by ref?
     );
     
-    void integrateMeasurementsNoise(
+    void integrate_measurements_noise(
         const gtsam::Vector3 &linear_velocity,
         const gtsam::Rot3 &interpolated_rotation,
         double &dt, // TODO: Is this an out param? Why is this passed by ref?
@@ -96,6 +96,7 @@ public: // Methods
     gtsam::Point3 get_accumulated_positions() const;
     gtsam::Matrix get_delpij_delbias_omega() const;
     gtsam::Matrix get_delpij_delbias_dvl() const;
+    gtsam::Matrix get_preintegrated_measured_covariance() const;
 
     gtsam::Point3 predict(const gtsam::Point3 &bias, gtsam::Matrix3 &H_bias) const;
 };
