@@ -102,6 +102,40 @@ ${BOOST_LIBRARIES}
 )
 ```
 
+### [03/18] Migrating the Source Files
+Before I get to ironing out the specific differences between ROS1 and ROS2 between the two C++ codebases, I want to migrate over all of the ROS-agnostic source code. 
+
+So far, I have migrated `BluerovBarometerFactor`.
+
+### [03/24] Continuing to Migrate Source Files
+I have worked through migrating `DvlOnlyFactor`, `PreintegratedVelocityHelpers`, and started `Posegraph`.
+
+As I began to work through `Posegraph`, one big thing I encountered was the loading of parameters. The existing solution used by the TURTLMap authors is to use YAML files loaded in by an external YAML C++ library. ROS2 has pretty robust parameter loading (not sure about ROS1 which may have motivated the authors to use the external YAML package). As such, I worked to convert the existing method of loading parameters to the ROS2 method.
+
+#### About Parameters
+While refactoring the parameter code, I returned back to the ROS2 Parameter documentation. Here are the relevant pages.
+- [Parameter Documentation](https://docs.ros.org/en/kilted/p/rclcpp/generated/classrclcpp_1_1Parameter.html)
+- [Using Parameters in a C++ Class](https://docs.ros.org/en/kilted/Tutorials/Beginner-Client-Libraries/Using-Parameters-In-A-Class-CPP.html)
+- [Understanding ROS2 Parameters](https://docs.ros.org/en/foxy/Tutorials/Beginner-CLI-Tools/Understanding-ROS2-Parameters/Understanding-ROS2-Parameters.html)
+- [Using ROS2 Launch For Large Projects](https://docs.ros.org/en/kilted/Tutorials/Intermediate/Launch/Using-ROS2-Launch-For-Large-Projects.html#loadingparametersfromyamlfile)
+
+Here is the general format of a ROS2 parameter file:
+```yaml
+<node name here>:
+  ros__parameters:
+    param_one:
+    parent_one:
+      child_one:
+    # ...
+```
+
+What I didn't understand until just recently is that in order to access _nested_ parameters, you can use `.` syntax. E.g. to access `child_one`, you would access it via `parent_one.child_one`.
+
+In order to access a node's parameters, you have to have a pointer to the node in question. For me, I wanted to separate the initial parameter loading logic into its own class (see `Parameter.h` and `Parameter.cpp`). Thus, in order to accomplish this, you need to pass a pointer to the node into the `Parameter` class. 
+
+If you want to access a shared_ptr to `this` you can use `this->shared_from_this`. However, you can't pass a `shared_ptr` of a class into any other class or for any other use-case (as it does not exist!!!) until **AFTER THE CONSTRUCTOR RUNS**. I did not know this! As such, you must have a separate `initialize_parameters` method that you will run to populate the parameters after 
+
+
 ## Citation
 
 ### Acknowledgements

@@ -3,6 +3,7 @@
 
 #include "PreintegratedVelocityHelpers.h"
 #include "Parameters.h"
+#include "PosegraphNode.h"
 
 #include <gtsam/base/Matrix.h>                     // Matrix44
 #include <gtsam/base/Vector.h>                     // Vector
@@ -20,6 +21,7 @@
 #include <string>
 #include <vector>
 #include <random>
+#include <memory> // std::unique_ptr
 
 namespace localization {
 class Posegraph {
@@ -33,21 +35,22 @@ public: // Members
     gtsam::FixedLagSmoother::KeyTimestampMap _smoother_timestamps;
 
     // GTSAM
-    gtsam::NonlinearFactorGraph *_graph;
-    gtsam::Values *_initial;
-    gtsam::Values *_result;
-    gtsam::PreintegratedCombinedMeasurements *_preintegrated_measurements; // used to be pim
-    PreintegratedVelocityMeasurementsDvlOnly *_preintegrated_velocity_measurements; // used to be pvm
-    gtsam::PreintegratedCombinedMeasurements::Params *_preintergrated_measurement_params; // used to be pim_params
-    Parameters *_pose_graph_params; // use to be params
+    // TODO: Use boost::unique_ptr?
+    boost::shared_ptr<gtsam::NonlinearFactorGraph> _graph;
+    boost::shared_ptr<gtsam::Values> _initial;
+    boost::shared_ptr<gtsam::Values> _result;
+    boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements> _preintegrated_measurements; // used to be pim
+    boost::shared_ptr<PreintegratedVelocityMeasurementsDvlOnly> _preintegrated_velocity_measurements; // used to be pvm
+    boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> _preintergrated_measurement_params; // used to be pim_params
+    std::unique_ptr<Parameters> _pose_graph_params; // use to be params
 
     // Prior imuBias
     gtsam::imuBias::ConstantBias _prior_imu_bias;
-    gtsam::imuBias::ConstantBias _prior_dvl_bias; // TODO: = gtsam::imuBias::ConstantBias(gtsam::Vector3(0.01, 0.01, 0.01), gtsam::Vector3(0, 0, 0));
+    gtsam::imuBias::ConstantBias _prior_dvl_bias; 
 
     // Transforms
     gtsam::Matrix44 _T_SD;   // sensor (IMU) to DVL affine transform
-    gtsam::Matrix44 _T_SB;   // sensor (IMU)to robot center affine transform
+    gtsam::Matrix44 _T_SB;   // sensor (IMU) to robot center affine transform
     gtsam::Matrix44 _T_W_WD; // world to DVL world transform
 
     // Previous
@@ -82,13 +85,15 @@ private: // Members
     gtsam::Vector3 _B_accelerometer_S;
     gtsam::Vector3 _B_gyroscope_S;
     gtsam::Vector3 _B_velocity_D;
-    gtsam::Vector3 _B_position_C;
+    gtsam::Vector3 _W_position_C;
 
 public: // Methods
     // Ctors + Dtors
     Posegraph();
-    Posegraph(std::string &config_file);
-    Posegraph();
+    ~Posegraph();
+
+    // Initialize parameters
+    void initialize_parameters(std::shared_ptr<PosegraphNode> node);
 
     // Depth factors
     void add_depth_factor();   
@@ -130,13 +135,13 @@ public: // Methods
     void add_edges_to_graph(const std::vector<std::vector<double>> &edges);
     
     // Getters
-    double get_depth_measurement();
-    gtsam::Vector3 get_accelerometer_measurement();
-    gtsam::Vector3 get_gyroscope_measurement();
-    gtsam::Vector3 get_velocity_measurement();
-    gtsam::Vector3 get_position_measurement();
-    double get_visual_gap_time();
-    gtsam::Rot3 find_current_pose_for_dvl_vel(double time_stamp);
+    double get_depth_measurement() const;
+    gtsam::Vector3 get_accelerometer_measurement() const;
+    gtsam::Vector3 get_gyroscope_measurement() const;
+    gtsam::Vector3 get_velocity_measurement() const;
+    gtsam::Vector3 get_position_measurement() const;
+    double get_visual_gap_time() const;
+    gtsam::Rot3 find_current_pose_for_dvl_vel(double time_stamp) const;
     
     // Setters 
     void set_depth_measurement(double W_measurement_z);
@@ -144,7 +149,7 @@ public: // Methods
     void set_gyroscope_measurement(gtsam::Vector3 B_gyroscope_S);
     void set_velocity_measurement(gtsam::Vector3 B_velocity_D);
     void set_position_measurement(gtsam::Vector3 W_position_C);
-    void set_visual_gap_time(double visualGapTime);
+    void set_visual_gap_time(double visual_gap_time);
 };
 } // namespace localization
 
