@@ -18,7 +18,7 @@ def load_yolo():
     path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
     yolo_path = os.path.join(path, "yolov5")
 
-    model_path = os.path.join(path, "models/2025_best.pt")
+    model_path = os.path.join(path, "models/mar2026_best.pt")
     print(yolo_path)
     print(model_path)
     model = torch.hub.load(
