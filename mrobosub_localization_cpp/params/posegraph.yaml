@@ -1,0 +1,113 @@
+posegraph:
+  ros__parameters:
+    # IMX-5 TODO: Read the datasheet
+    imu_parameters:
+      g: 0.0
+      acc_max: 0.0
+      acc_noise_density: 0.0 #
+      acc_bias_prior: 0.0
+      acc_random_walk: 0.0 # [m/s^2/sqrt(Hz)]
+      gyro_max: 0.0
+      gyro_noise_density: 0.0 # [rad/s/sqrt(Hz)]
+      gyro_bias_prior: 0.0 #[rad/s]
+      gyro_random_walk: 0.0 # [rad/s^2/sqrt(Hz)]
+      integration_covarience: 0.0001
+      imu_rate: 250.0 #[Hz?] Verify from the datasheet
+      T_BS:
+        [
+          1.0000, 0.0000, 0.0000, 0.0000,
+          0.0000, 1.0000, 0.0000, 0.0000,
+          0.0000, 0.0000, 1.0000, 0.0000,
+          0.0000, 0.0000, 0.0000, 1.0000,
+        ]
+    imu_preintegration_parameters:
+      gap_time: 1.0
+    # What is the sonar?
+    sonar_parameters: 
+      T_SSo: # What is this parameter?
+        [
+          1.0000, 0.0000, 0.0000, 0.0000,
+          0.0000, 1.0000, 0.0000, 0.0000,
+          0.0000, 0.0000, 1.0000, 0.0000,
+          0.0000, 0.0000, 0.0000, 1.0000,
+        ]
+    dvl_parameters:
+      T_SD: # What is this parameter?
+        [
+          1.0000, 0.0000, 0.0000, 0.0000,
+          0.0000, 1.0000, 0.0000, 0.0000,
+          0.0000, 0.0000, 1.0000, 0.0000,
+          0.0000, 0.0000, 0.0000, 1.0000,
+        ]
+      T_W_WD: # What is this parameter?
+        [
+          1.0000, 0.0000, 0.0000, 0.0000,
+          0.0000, 1.0000, 0.0000, 0.0000,
+          0.0000, 0.0000, 1.0000, 0.0000,
+          0.0000, 0.0000, 0.0000, 1.0000,
+        ]
+      prior_bias: 0.0
+      fom_threshold: 0.01
+    barometer_parameters:
+      T_SBa: # What is this parameter?
+        [
+          1.0000, 0.0000, 0.0000, 0.0000,
+          0.0000, 1.0000, 0.0000, 0.0000,
+          0.0000, 0.0000, 1.0000, 0.0000,
+          0.0000, 0.0000, 0.0000, 1.0000,
+        ]
+      atmospheric_pressure: 993.3999633789062
+    optimization_parameters:
+      lambda_upper_bound: 1e10
+      lambda_lower_bound: 1e-10
+      lambda_initial: 1e-5
+      max_iterations: 500
+      relative_error_tolerance: 1e-4
+      absolute_error_tolerance: 1e-4
+    sensor_topics:
+      imu_topic: "/todo"
+      dvl_topic: "/todo"
+      dvl_local_position_topic: "/todo"
+      barometer_topic: "/todo"
+      sonar_topic: "/unused"
+      # left_cam_topic:
+      # right_cam_topic:
+    sensor_usage:
+      is_dvl_used: true
+      is_imu_used: true
+      is_barometer_used: true
+      is_sonar_used: false
+      are_cams_used: false
+    use_orb_slam: false
+    num_iters: 1000
+    using_smoother: true
+    kf_gap_time: 1.0
+    using_pseudo_dvl: true
+
+# [3/24]: As of right now, I have no plans on using the cameras.
+    # left_cam_params:
+    #   T_SC:
+    #   image_dimension:
+    #   distortion_coefficients:
+    #   distortion_type:
+    #   focal_length:
+    #   principal_point:
+    # right_cam_params:
+    #   T_SC:
+    #   image_dimension:
+    #   distortion_coefficients:
+    #   distortion_type:
+    #   focal_length:
+    #   principal_point:
+    # camera_parameters:
+    #   camera_rate: 30
+    #   sigma_absolute_translation: 0.0
+    #   sigma_absolute_orientation:
+    #   sigma_c_relative_translation:
+    #   sigma_c_relative_orientation:
+
+
+
+
+
+
