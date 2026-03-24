@@ -6,7 +6,9 @@
                 "${workspaceFolder}/**",
                 "/opt/ros/humble/include/**",
                 "${workspaceFolder}/../install/**/include/**",
-                "/usr/include/eigen3"
+                "/usr/include/eigen3",
+                "${workspaceFolder}/mrobosub_localization_cpp/include/mrobosub_localization_cpp",
+                "/opt/ros/humble/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
