@@ -5,7 +5,7 @@ from mrobosub_lib import Node, Param
 from serial import Serial
 from serial.serialutil import SerialException
 from mrobosub_msgs.msg import MotorState
-from mrobosub_msgs.msg import PololuCommands
+from mrobosub_msgs.msg import ThrusterCommands
 from std_srvs.srv import SetBool
 from typing import Optional
 
@@ -33,8 +33,8 @@ class ThrusterController(Node):
         self.motor_sub = self.create_subscription(
             MotorState, "/motor_output", self.motor_callback, 1
         )
-        self.pololu_pub = self.create_publisher(
-            PololuCommands, "/pololu_commands", qos_profile=1
+        self.esp32_thruster_pub = self.create_publisher(
+            ThrusterCommands, "/esp32/thruster_commands", qos_profile=1
         )
 
         params = [Param('thruster_reverse', rclpy.Parameter.Type.BOOL_ARRAY, "List of booleans indicating whether each thruster is reversed"), 
@@ -57,8 +57,8 @@ class ThrusterController(Node):
 
     # in case of invalid PWM or motor number parameters, does not send any updated signal to the motor controller
     def publish_motor_outputs(self, msg: MotorState) -> int:
-        message_valid = [False]*12
-        message_output = [0.0]*12
+        message_valid = [False]*NUM_MOTORS
+        message_output = [0.0]*NUM_MOTORS
         
         if self.emergency_stop:
             for motor in range(NUM_MOTORS):
@@ -79,12 +79,12 @@ class ThrusterController(Node):
                     message_output[motor_pin] = msg.motors[motor]
 
 
-        msg = PololuCommands()
+        msg = ThrusterCommands()
         message_output = np.array(message_output, dtype=np.float32)
         msg.pins = message_output
         msg.valid = message_valid
 
-        self.pololu_pub.publish(msg)
+        self.esp32_thruster_pub.publish(msg)
 
         return 0
 
