@@ -1,26 +1,24 @@
 #!/usr/bin/env python
 
 import os
-import sys
 import time
 
 import torch
 import rclpy
-import numpy as np
 from cv_bridge import CvBridge
-from mrobosub_lib import Node
+from rclpy.parameter import Parameter
+from mrobosub_lib import Node, Param
 
 from std_msgs.msg import Float64
 from sensor_msgs.msg import Image
 from mrobosub_msgs.msg import Detection, Detections
 
-
 def load_yolo():
     # load model
-    path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
     yolo_path = os.path.join(path, "yolov5")
 
-    model_path = os.path.join(path, "models/2025_best.pt")
+    model_path = os.path.join(path, "models/mar2026_best.pt")
     print(yolo_path)
     print(model_path)
     model = torch.hub.load(
@@ -31,10 +29,14 @@ def load_yolo():
 
 
 class MlExecutor(Node):
-    def __init__(self, run_until_time: float):
+    def __init__(self):
         super().__init__("ml_executor")
+
+        params = [Param('run_forever', Parameter.Type.BOOL, "should ml_executor always run or only until /ml/run_until")]
+        self.declare_params(params)
+
         self.model = load_yolo()
-        self.run_until_time = run_until_time
+        self.run_until_time = float("inf") if self.run_forever else 0
         self.bridge = CvBridge()
         self.create_subscription(Image, "/zed2/zed_node/rgb/image_rect_color", self.zed_callback, qos_profile = 1)
         self.create_subscription(Float64, "/ml/run_until", self.run_until_callback, qos_profile=1)
@@ -67,9 +69,7 @@ class MlExecutor(Node):
 
 def main():
     rclpy.init()
-    node = MlExecutor(
-        float("inf") if rclpy.utilities.remove_ros_args(sys.argv)[1] != "0" else 0,
-    )
+    node = MlExecutor()
     rclpy.spin(node)
  
        
