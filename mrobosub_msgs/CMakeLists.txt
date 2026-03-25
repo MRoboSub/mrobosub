@@ -19,7 +19,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     "msg/ImuINS.msg"
     "msg/ImuPIMU.msg"
     "msg/MotorState.msg"
-    "msg/PololuCommands.msg"
+    "msg/ThrusterCommands.msg"
     "msg/Pose.msg"
     "msg/Twist.msg"
     "srv/BinCamPos.srv"

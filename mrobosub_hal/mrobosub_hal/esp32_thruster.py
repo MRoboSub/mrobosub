@@ -74,19 +74,19 @@ class ESP32_Thruster(Node):
     def send_power(self, pin: int, percent_raw: float) -> int:
         percent_val = self.convert_percent(percent_raw)
         if percent_val is None:
-            return -1
+            return False
 
         if pin < 0 or pin >= NUM_PINS:
             self.get_logger().info(
                 f"ERROR: pin number {pin} out of range (should be in [0, {NUM_PINS-1}])"
             )
-            return -1
+            return False
 
         msg = "POWER:" + str(pin) + "," + str(percent_val)
 
         self.write(msg)
 
-        return 0
+        return True
 
 
     def send_enable_disable(self, pin: int, enable: bool) -> int:
@@ -99,9 +99,10 @@ class ESP32_Thruster(Node):
             self.get_logger().info(
                 f"ERROR: pin number {pin} out of range (should be in [0, {NUM_PINS-1}])"
             )
-            return -1
+            return False
 
         self.write(msg)
+        return True
 
     def enable_all(self):
         for i in range(NUM_PINS):
