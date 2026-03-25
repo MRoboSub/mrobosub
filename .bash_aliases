@@ -21,8 +21,21 @@ alias stop_motors="ros2 service call /emergency_stop_motors std_srvs/srv/SetBool
 alias captain="ros2 launch mrobosub_planning captain_launch.xml"
 
 # Control the droppers
-alias close_droppers="ros2 topic pub /left_servo/angle std_msgs/Int32 \"data: 90\" & ros2 topic pub /right_servo/angle std_msgs/Int32 \"data: 90\""
-alias open_droppers="ros2 topic pub /left_servo/angle std_msgs/Int32 \"data: 60\" & ros2 topic pub /right_servo/angle std_msgs/Int32 \"data: 120\""
+alias close_droppers="ros2 topic pub /left_servo/angle std_msgs/msg/Int32 \"data: 90\" & ros2 topic pub /right_servo/angle std_msgs/Int32 \"data: 90\""
+alias open_droppers="ros2 topic pub /left_servo/angle std_msgs/msg/Int32 \"data: 60\" & ros2 topic pub /right_servo/angle std_msgs/Int32 \"data: 120\""
 
 # Not sure what this does.
 alias temps="watch -n 2 sensors"
+
+# to publish to output wrench directly (i.e., bypass PID):
+# ros2 topic pub /output_wrench/heave std_msgs/msg/Float64 "{data: 0.4}"
+
+# to set a param
+# ros2 param set <node_name> <param_name> <value>
+
+# bringup (first command to bring up all imp nodes on the sub)
+alias bringup="ros2 launch mrobosub_bringup bringup_launch.xml"
+
+# to run motor tests
+alias motor_test="ros2 launch mrobosub_tests motor_test_launch.xml"
+alias motor_test_all="ros2 launch mrobosub_tests motor_test_all_launch.xml"

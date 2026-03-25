@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="mrobosub_hal" exec="arduino" name="arduino">
+    </node>
+</launch>

@@ -7,7 +7,7 @@ import sys
 import numpy as np
 from dynamic_reconfigure.server import Server
 
-from mrobosub_lib.lib import Node
+from mrobosub_lib import Node
 
 from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
 
