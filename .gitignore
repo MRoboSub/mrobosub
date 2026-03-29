@@ -1,7 +1,6 @@
 *.swp
 *.swo
 *.pyc
-*.pt
 *.onnx
 __pycache__
 .mypy_cache
@@ -11,3 +10,4 @@ build*
 install*
 log*
 .vscode/settings.json
+*.DS_Store

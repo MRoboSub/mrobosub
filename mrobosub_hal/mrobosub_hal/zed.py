@@ -6,7 +6,7 @@ import sys
 
 from mrobosub_lib import Node
 
-from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
+from std_srvs.srv import SetBool
 import subprocess
 
 
@@ -26,16 +26,19 @@ class Zed(Node):
         self.pub = self.create_publisher(Image, "/zed2/zed_node/rgb/image_rect_color", qos_profile=1)
         self.timer = self.create_timer(1.0/self.iteration_rate, self.loop)
 
-    def handle_on_service(self, req: SetBoolRequest):
+    def handle_on_service(self, req, res):
+        res.success = True
         if req.data == self.on:
-            return SetBoolResponse(success=True)
+            # nothing to be done, camera is already in the desired state
+            return res
 
         if req.data:
             self.open_capture()
         else:
             self.close_capture()
         self.on = req.data
-        return SetBoolResponse(success=True)
+
+        return res
 
     def open_capture(self):
         self.cap = cv2.VideoCapture(self.device_path)

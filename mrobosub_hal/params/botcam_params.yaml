@@ -1,0 +1,3 @@
+botcam:
+  ros__parameters:
+    f: 800
