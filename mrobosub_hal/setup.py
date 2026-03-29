@@ -28,7 +28,7 @@ setup(
             "dvl_publisher = mrobosub_hal.dvl_publisher:main",
             "botcam = mrobosub_hal.botcam:main",
             "zed = mrobosub_hal.zed:main",
-            "pololu = mrobosub_hal.pololu:main",
+            "esp32_thruster = mrobosub_hal.esp32_controller:main",
             "arduino = mrobosub_hal.arduino:main"
         ],
     },
