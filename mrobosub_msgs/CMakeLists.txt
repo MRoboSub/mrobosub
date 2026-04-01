@@ -16,6 +16,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     "msg/Detection.msg"
     "msg/Detections.msg"
     "msg/Dvl.msg"
+    "msg/Imu.msg"
     "msg/ImuINS.msg"
     "msg/ImuPIMU.msg"
     "msg/MotorState.msg"
