@@ -38,12 +38,12 @@ class TwistCollector(Node):
             self.create_subscription(
                 Float64,
                 f"/target_twist/{dof}",
-                lambda msg, d=dof: self._callback(msg, d),
+                lambda msg, d=dof: self.on_twist(msg, d),
                 10,
             )
             self.values[dof] = None
 
-    def _callback(self, msg: Float64, dof: str):
+    def on_twist(self, msg: Float64, dof: str):
         self.values[dof] = msg.data
 
 
@@ -64,14 +64,14 @@ def test_joystick_teleop_continuous_surge_output():
         executor.add_node(publisher)
         executor.add_node(collector)
 
-        # Axis 1 (surge) = 0.6, scale 0.5 -> 0.6^3 * 0.5 = 0.108
+        # Axis 1 (surge) = 0.6, scale 1.0 per joystick_continuous.yaml -> 0.6^3 * 1.0
         axes = [0.0, 0.6, 0.0, 0.0, 0.0, 0.0]
         for _ in range(30):
             publisher.publish_joy(axes)
             executor.spin_once(timeout_sec=0.02)
 
         assert collector.values["surge"] is not None
-        assert abs(collector.values["surge"] - 0.108) < 0.01
+        assert abs(collector.values["surge"] - 0.216) < 0.01
 
     finally:
         for node in (teleop, publisher, collector):
@@ -134,8 +134,8 @@ def test_joystick_teleop_continuous_estop():
             publisher.publish_joy(axes)
             executor.spin_once(timeout_sec=0.02)
 
-        # Then: estop (button 4, configured in joystick_continuous.yaml)
-        estop_buttons = [0, 0, 0, 0, 1, 0, 0, 0]
+        # Then: estop (button 0, configured in joystick_continuous.yaml)
+        estop_buttons = [1, 0, 0, 0, 0, 0, 0, 0]
         max_spins = 50
         for _ in range(max_spins):
             publisher.publish_joy(axes, buttons=estop_buttons)
