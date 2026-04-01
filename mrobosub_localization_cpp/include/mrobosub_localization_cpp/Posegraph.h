@@ -7,16 +7,20 @@
 
 #include <gtsam/base/Matrix.h>                     // Matrix44
 #include <gtsam/base/Vector.h>                     // Vector
+#include <gtsam/inference/Symbol.h>                // Symbol
+#include <gtsam/inference/Key.h>                   // Key
 #include <gtsam/geometry/Pose3.h>                  // Pose3
 #include <gtsam/geometry/Rot3.h>                   // Rot3
 #include <gtsam/navigation/NavState.h>             // NavState
 #include <gtsam/navigation/CombinedImuFactor.h>    // PreintegratedCombinedMeasurements
 #include <gtsam/navigation/ImuBias.h>              // imuBias::ConstantFactor
 #include <gtsam/nonlinear/ISAM2.h>                 // ISAM2Params
-#include <gtsam_unstable/nonlinear/BatchFixedLagSmoother.h> // BatchFixedLabSmoother
-#include <gtsam_unstable/nonlinear/FixedLagSmoother.h>      // FixedLagSmoother::KeyTimestampMap
+#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h> // LevenbergMarquardtParams, LevenbergMarquardtOptimizer
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>  // NonlinearFactorGraph
 #include <gtsam/nonlinear/Values.h>                // Values
+#include <gtsam_unstable/nonlinear/BatchFixedLagSmoother.h> // BatchFixedLabSmoother
+#include <gtsam_unstable/nonlinear/FixedLagSmoother.h>      // FixedLagSmoother::KeyTimestampMap
+#include <gtsam/slam/BetweenFactor.h>              // BetweenFactor 
 
 #include <string>
 #include <vector>
@@ -35,13 +39,12 @@ public: // Members
     gtsam::FixedLagSmoother::KeyTimestampMap _smoother_timestamps;
 
     // GTSAM
-    // TODO: Use boost::unique_ptr?
     boost::shared_ptr<gtsam::NonlinearFactorGraph> _graph;
     boost::shared_ptr<gtsam::Values> _initial;
     boost::shared_ptr<gtsam::Values> _result;
     boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements> _preintegrated_measurements; // used to be pim
     boost::shared_ptr<PreintegratedVelocityMeasurementsDvlOnly> _preintegrated_velocity_measurements; // used to be pvm
-    boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> _preintergrated_measurement_params; // used to be pim_params
+    boost::shared_ptr<gtsam::PreintegratedCombinedMeasurements::Params> _preintegrated_measurement_params; // used to be pim_params
     std::unique_ptr<Parameters> _pose_graph_params; // use to be params
 
     // Prior imuBias
@@ -58,23 +61,25 @@ public: // Members
     gtsam::Vector3 _prev_vel;
     gtsam::NavState _prev_state;
     double _prev_keyframe_time; // OLD TODO: used for saving the previous keyframe time
+    double _prev_dvl_odometry_time;
+    gtsam::Rot3 _prev_dvl_odometry_rot;
 
     // Current
-    gtsam::Pose3 _current_pose;
-    gtsam::Vector3 _current_vel;
-    gtsam::NavState _current_state;
-    gtsam::imuBias::ConstantBias _current_imu_bias;
-    double _current_time;
+    gtsam::Pose3 _curr_pose;
+    gtsam::Vector3 _curr_vel;
+    gtsam::NavState _curr_state;
+    gtsam::imuBias::ConstantBias _curr_imu_bias;
+    double _curr_time;
 
-    std::vector<gtsam::Vector3> _current_dvl_vels;
-    std::vector<gtsam::Pose3> _current_dvl_poses;
-    std::vector<gtsam::Rot3> _current_dvl_rotations;
-    std::vector<double> _current_dvl_foms; // TODO: What does FOM mean?
+    std::vector<gtsam::Vector3> _curr_dvl_vels;
+    std::vector<gtsam::Pose3> _curr_dvl_poses;
+    std::vector<gtsam::Rot3> _curr_dvl_rotations;
+    std::vector<double> _curr_dvl_foms; // TODO: What does FOM mean?
     std::vector<gtsam::Rot3> _imu_rot_list;
     gtsam::Rot3 _imu_prev_rot;
 
-    std::vector<double> _current_dvl_timestamps;
-    std::vector<double> _current_dvl_local_timestamps;
+    std::vector<double> _curr_dvl_timestamps;
+    std::vector<double> _curr_dvl_local_timestamps;
 
 private: // Members
     std::mt19937 _rng;
@@ -92,15 +97,12 @@ public: // Methods
     Posegraph();
     ~Posegraph();
 
-    // Initialize parameters
-    void initialize_parameters(std::shared_ptr<PosegraphNode> node);
 
-    // Depth factors
-    void add_depth_factor();   
+    // Barometer factors
+    void add_barometric_factor(double W_measurement_z, double measurement_noise, int baro_id);   
 
     // IMU factors
     void add_imu_factor();     
-    void set_imu_params();
 
     // DVL Factors
     void add_velocity_factor();
@@ -116,8 +118,7 @@ public: // Methods
 
     // Other factors
     void add_visual_constraint_factor(gtsam::Pose3 between_pose, double weight, int prev_idx, int curr_idx);
-    void add_sonar_factor();
-    void add_prior_factor(gtsam::Pose3 initial_pose, gtsam::Vector initial_vec, double pose_noise);
+    void add_prior_factor(gtsam::Pose3 initial_pose, gtsam::Vector initial_vel, double pose_noise);
    
     // Creating transforms
     void define_transforms();
@@ -132,7 +133,9 @@ public: // Methods
     void initialize_pose_graph_from_imu(gtsam::Rot3 initial_rotation);
     void optimize_pose_graph();
     void optimize_pose_graph_smoother();
-    void add_edges_to_graph(const std::vector<std::vector<double>> &edges);
+
+    // Properties
+    gtsam::Rot3 find_current_pose_for_dvl_vel(double time_stamp) const;
     
     // Getters
     double get_depth_measurement() const;
@@ -141,7 +144,6 @@ public: // Methods
     gtsam::Vector3 get_velocity_measurement() const;
     gtsam::Vector3 get_position_measurement() const;
     double get_visual_gap_time() const;
-    gtsam::Rot3 find_current_pose_for_dvl_vel(double time_stamp) const;
     
     // Setters 
     void set_depth_measurement(double W_measurement_z);
@@ -150,6 +152,18 @@ public: // Methods
     void set_velocity_measurement(gtsam::Vector3 B_velocity_D);
     void set_position_measurement(gtsam::Vector3 W_position_C);
     void set_visual_gap_time(double visual_gap_time);
+
+private: // Methods
+    void initialize_parameters(std::shared_ptr<PosegraphNode> node);
+    void set_imu_parameters();
+    void set_smoother_parameters();
+
+    // Helper methods used for creating the dvl factors
+    void calculate_interpolated_rotations(bool is_using_slerp, std::vector<gtsam::Rot3> &interpolated_rotations);
+    void calculate_integrated_pose_rotation(gtsam::Rot3 &integrated_pose_rotation);
+    void reset_dvl_odometry();
+    void reset_imu_rotation();
+    void clear_dvl_timestamp_pose_vel();
 };
 } // namespace localization
 

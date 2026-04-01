@@ -15,7 +15,7 @@ private:
 
 public:
     BluerovBarometerFactor();
-    virtual ~BluerovBarometerFactor();
+    ~BluerovBarometerFactor();
     BluerovBarometerFactor(gtsam::Key key, double measured, const gtsam::SharedNoiseModel &model);
   
     gtsam::Vector evaluate_error(

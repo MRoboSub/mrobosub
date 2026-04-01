@@ -12,16 +12,12 @@ gtsam::Vector BluerovBarometerFactor::evaluate_error(
     const gtsam::Pose3 &pose,
     boost::optional<gtsam::Matrix &> H
 ) const {
-    gtsam::Matrix tH;
-    gtsam::Vector ret = 
-        (gtsam::Vector(1) << (pose.translation(tH).z() - _measured)).finished();
-
     if (H) {
-        *H = tH.block<1, 6>(2, 0);
+        gtsam::Matrix36 Jt;
+        pose.translation(Jt);
+        *H = Jt.row(2);
     }
 
-    double error = (pose.z() - _measured);
-
-    return (gtsam::Vector() << error).finished();
+    return (gtsam::Vector(1) << pose.z() - _measured).finished();
 }
 } // namespace localization
