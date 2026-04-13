@@ -6,8 +6,6 @@
 #include "../inertial-sense-sdk/src/data_sets.h"
 
 #include <rclcpp/rclcpp.hpp>
-#include <mrobosub_msgs/msg/imu_ins.hpp>
-#include <mrobosub_msgs/msg/imu_pimu.hpp>
 #include <mrobosub_msgs/msg/imu.hpp>
 
 #include <chrono>
@@ -48,11 +46,10 @@ struct PimuStorage {
 
 PimuStorage pimu_storage;
 
-void global_message_callback(void *ctx, p_data_t *data, port_handle_t port) {
-    auto node = static_cast<rclcpp::Node *>(ctx);
-}
-
-
+/** 
+ * Publishes:
+ *   /imu    Imu
+ */
 int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
@@ -75,7 +72,7 @@ int main(int argc, char **argv)
     }
 
     // We need to attach a global callback to all DID messages returned by the 
-    // sensor so that we can sync the INS (rotation) and PIMU (linear acc and angular vel) measurements
+    // sensor so that we can sync the INS (orientation) and PIMU (linear acc and angular vel) measurements
     InertialSense is([&](InertialSense *is_ptr, p_data_t *data, int port_handle) {
         switch(data->hdr.id) {
             case DID_GPS1_POS: {
@@ -89,11 +86,10 @@ int main(int argc, char **argv)
                 pimu_storage.has_pimu = true;
                 break;
             }
+            case DID_INS_2: {
+                if (!pimu_storage.has_pimu) return; // We want to sync the DID_PIMU and DID_INS_2 messages.
 
-            case DID_INS_1: {
-                if (pimu_storage.has_pimu) return; // We want to sync the DID_PIMU and DID_INS_1 messages.
-
-                auto ins = reinterpret_cast<ins_1_t*>(data->ptr);
+                auto ins = reinterpret_cast<ins_2_t*>(data->ptr);
 
                 double pimu_time_to_tow = pimu_storage.pimu.time + pimu_storage.tow_offset;
 
@@ -104,15 +100,16 @@ int main(int argc, char **argv)
                     mrobosub_msgs::msg::Imu msg;
                     msg.header.stamp = time_stamp;
                     msg.dt = data->dt;
-                    msg.angular_velocity.x = data->theta[0] * div;
-                    msg.angular_velocity.y = data->theta[1] * div;
-                    msg.angular_velocity.z = data->theta[2] * div;
-                    msg.linear_acceleration.x = data->vel[0] * div;
-                    msg.linear_acceleration.y = data->vel[1] * div;
-                    msg.linear_acceleration.z = data->vel[2] * div;
-                    msg.theta.x = data->theta[0];
-                    msg.theta.y = data->theta[1];
-                    msg.theta.z = data->theta[2];
+                    msg.angular_velocity.x = pimu_storage.pimu.theta[0] * div;
+                    msg.angular_velocity.y = pimu_storage.pimu.theta[1] * div;
+                    msg.angular_velocity.z = pimu_storage.pimu.theta[2] * div;
+                    msg.linear_acceleration.x = pimu_storage.pimu.vel[0] * div;
+                    msg.linear_acceleration.y = pimu_storage.pimu.vel[1] * div;
+                    msg.linear_acceleration.z = pimu_storage.pimu.vel[2] * div;
+                    msg.theta.w = data->theta[0];
+                    msg.theta.x = data->theta[1];
+                    msg.theta.y = data->theta[2];
+                    msg.theta.z = data->theta[3];
                     imu_pub->publish(msg);
                 }
                 pimu_storage.has_pimu = false;
@@ -130,7 +127,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    auto ins_registered = is.BroadcastBinaryData(DID_INS_1, 1);
+    auto ins_registered = is.BroadcastBinaryData(DID_INS_2, 1);
     if (!ins_registered)
     {
         return 1;
