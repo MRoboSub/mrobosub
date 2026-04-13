@@ -11,6 +11,9 @@
 
   <depend>eigen</depend>
   <depend>gtsam</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>tf2_ros</depend>
   <build_depend>gtsam</build_depend>
   <build_depend>libeigen3-dev</build_depend>
   <test_depend>ament_lint_auto</test_depend>

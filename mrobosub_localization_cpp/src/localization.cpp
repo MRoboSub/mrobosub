@@ -1,10 +1,16 @@
 #include <cstdio>
+#include "PosegraphNode.h"
 
 int main(int argc, char ** argv)
 {
-  (void) argc;
-  (void) argv;
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<localization::PosegraphNode>();
 
-  printf("hello world mrobosub_localization_cpp package\n");
+  rclcpp::executors::MultiThreadedExecutor executor;
+  executor.add_node(node);
+
+  executor.spin();
+
+  rclcpp::shutdown();
   return 0;
 }

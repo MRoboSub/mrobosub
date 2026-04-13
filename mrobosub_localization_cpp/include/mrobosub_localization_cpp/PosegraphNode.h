@@ -17,58 +17,62 @@
 #include <boost/thread/condition_variable.hpp>   // boost::condition_variable
 #include <boost/shared_ptr.hpp>                  // boost::shared_ptr
 
+#include "rclcpp/rclcpp.hpp"
+#include <std_msgs/msg/string.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <nav_msgs/msg/path.hpp>
+
 namespace localization {
-class PosegraphNode {
+class PosegraphNode : public rclcpp::Node {
 public:
     PosegraphNode();
-    PosegraphNode(std::string config_file);
-    ~PosegraphNode();
 
 private: // Members
-    Posegraph *_posegraph;
+    std::unique_ptr<Posegraph> _posegraph;
 
     // Define subscribers
-    int /*ros::Subscriber*/ _imu_sub;
-    int /*ros::Subscriber*/ _dvl_sub;
-    int /*ros::Subscriber*/ _baro_sub;
-    int /*ros::Subscriber*/ _dvl_local_sub;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _imu_sub;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _dvl_sub;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _baro_sub;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _dvl_local_sub;
 
     // Define publishers
-    int /*ros::Publisher*/ _pose_pub;
-    int /*ros::Publisher*/ _dvl_local_pose_pub;
-    int /*ros::Publisher*/ _path_pub;
-    int /*nav_msgs::Path*/ _path_msg;
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr _pose_pub;
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr _dvl_local_pose_pub;
+    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr _path_pub;
 
-    // TODO: I think these might have to do with the MultiLevelExecutors and stuff like that.
-    std::unique_ptr<int /*ros::AsyncSpinner*/> _imu_async_spinner;
-    std::unique_ptr<int /*ros::AsyncSpinner*/> _async_spinner;
+    // Define callback groups
+    rclcpp::CallbackGroupType::MutuallyExclusive::SharedPtr _imu_callback_group;
+    rclcpp::CallbackGroupType::MutuallyExclusive::SharedPtr _low_freq_sensor_callback_group;
+    rclcpp::CallbackGroupType::MutuallyExclusive::SharedPtr _posegraph_callback_group;
+    rclcpp::CallbackGroupType::MutuallyExclusive::SharedPtr _keyframe_callback_group;
 
-    int /* ros::CallbackQueue */ _imu_queue;
+    rclcpp::TimerBase::SharedPtr _posegraph_timer;
+    rclcpp::TimerBase::SharedPtr _keyframe_timer;
 
-    // TODO: Can this be unsigned?
-    int64_t _frame_count;
-
-    // Node Handles
-    // TODO: I don't think these exist for ROS2
-    int /* ros::NodeHandle */ _nh;
-    int /* ros::NodeHandle */ _nh_private;
+    uint64_t _frame_count;
 
     // Barometer state variables
-    double _first_depth = 0.0;
+    double _first_depth;
 
     // DVL state
-    gtsam::PreintegratedCombinedMeasurements *_preintegrated_measurements_dvl;
-    double _prev_dvl_time = 0.0;
-    double _prev_dvl_local_time = 0.0;
-    gtsam::Pose3   _prev_dvl_local_pose;
-    gtsam::Rot3    _dvl_prev_rot;
+    std::unique_ptr<gtsam::PreintegratedCombinedMeasurements> _preintegrated_measurements_dvl;
+    // First 
     gtsam::Vector3 _first_dvl_vel;
+    // Previous
+    double _prev_dvl_time;
+    double _prev_dvl_local_time;
+    gtsam::Pose3   _prev_dvl_local_pose;
+    gtsam::Rot3    _prev_dvl_rot;
+    // Latest
+    gtsam::Vector3 _latest_dvl_vel;
+    gtsam::Pose3   _latest_dvl_pose;
 
     // Keyframe states
     double _first_keyframe_time;
-    double _prev_keyframe_time = 0.0;
-    double _current_keyframe_time = 0.0;
-    bool _is_new_keyframe = false; // Used to be new_kf_flag
+    double _prev_keyframe_time;
+    double _current_keyframe_time;
+    bool _is_new_keyframe; // Used to be new_kf_flag
     double _keyfram_gap_time;
     gtsam::Pose3 _latest_keyframe_pose;
     gtsam::Pose3 _latest_publish_pose; // what does this mean
@@ -79,15 +83,20 @@ private: // Members
     // IMU State
     gtsam::Rot3 _imu_latest_rot;
     gtsam::NavState _latest_imu_prop_state;
-    int _imu_init_count = 0; // Can this be unsigned?
-    int _imu_count = 0; // Can this be unsigned?
+    uint32_t _imu_init_count; 
+    uint32_t _imu_count; 
+    std::vector<gtsam::Vector3> _imu_init_acc;
+    std::vector<gtsam::Vector3> _imu_init_rot;
 
-    boost::mutex _mtx;
-    boost::condition_variable _keyframe_cv; 
+    // Transforms
+    std::unique_ptr<tf2_ros::TransformBroadcaster> _tf_broadcaster;
+
+    std::mutex _mtx;
+    std::condition_variable _cond_var;
 
     // Get from config file.
-    bool _is_using_dvl_v2_factor = true;
-    bool _is_rot_initialized = false;
+    bool _is_using_dvl_v2_factor;
+    bool _is_rot_initialized;
 
     /* TODO: What is save trajectory?? */
     // ros::ServiceServer _save_trajectory_service;
@@ -98,6 +107,16 @@ private: // Members
 private: // methods
     /* TODO: What is save trajectory?? */
     // bool save_trajectory(turtlmap::save_trajectory::Request &req, turtlmap::save_trajectory::Response &res);
+
+    void imu_callback(const mrobosub_msgs::msg::Imu::SharedPtr msg);
+    void dvl_callback(const mrobosub_msgs::msg::Dvl::SharedPtr msg);
+    void baro_callback(const std_msgs::msg::Float64::SharedPtr msg);
+    void dvl_local_callback(const mrobosub_msgs::msg::Dvl::SharedPtr msg);
+
+    void main_loop();
+    void kf_loop();
+
+    void broadcast_imu_transform();
 };
 } // namespace localization
 
