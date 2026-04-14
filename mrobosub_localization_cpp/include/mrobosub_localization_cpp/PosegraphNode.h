@@ -22,6 +22,15 @@
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <nav_msgs/msg/path.hpp>
 
+// Subscribers
+#include <sensor_msgs/msg/fluid_pressure.hpp>
+#include <sensor_msgs/msg/imu.hpp>
+#include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
+#include <mrobosub_msgs/msg/Dvl.hpp>
+
+// TF
+#include <tf2_ros/transform_broadcaster.h>
+
 namespace localization {
 class PosegraphNode : public rclcpp::Node {
 public:
@@ -31,10 +40,10 @@ private: // Members
     std::unique_ptr<Posegraph> _posegraph;
 
     // Define subscribers
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _imu_sub;
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _dvl_sub;
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _baro_sub;
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr _dvl_local_sub;
+    rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr _imu_sub;
+    rclcpp::Subscription<geometry_msgs::msg::TwistWithCovarianceStamped>::SharedPtr _dvl_sub;
+    rclcpp::Subscription<sensor_msgs::msg::FluidPressure>::SharedPtr _baro_sub;
+    rclcpp::Subscription<mrobosub_msgs::msg::Dvl>::SharedPtr _dvl_local_sub;
 
     // Define publishers
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr _pose_pub;
@@ -42,13 +51,12 @@ private: // Members
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr _path_pub;
 
     // Define callback groups
-    rclcpp::CallbackGroupType::MutuallyExclusive::SharedPtr _imu_callback_group;
-    rclcpp::CallbackGroupType::MutuallyExclusive::SharedPtr _low_freq_sensor_callback_group;
-    rclcpp::CallbackGroupType::MutuallyExclusive::SharedPtr _posegraph_callback_group;
-    rclcpp::CallbackGroupType::MutuallyExclusive::SharedPtr _keyframe_callback_group;
+    rclcpp::CallbackGroup::SharedPtr _imu_callback_group;
+    rclcpp::CallbackGroup::SharedPtr _low_freq_sensor_callback_group;
+    rclcpp::CallbackGroup::SharedPtr _posegraph_callback_group;
 
+    // Define timers
     rclcpp::TimerBase::SharedPtr _posegraph_timer;
-    rclcpp::TimerBase::SharedPtr _keyframe_timer;
 
     uint64_t _frame_count;
 
@@ -107,14 +115,12 @@ private: // Members
 private: // methods
     /* TODO: What is save trajectory?? */
     // bool save_trajectory(turtlmap::save_trajectory::Request &req, turtlmap::save_trajectory::Response &res);
-
-    void imu_callback(const mrobosub_msgs::msg::Imu::SharedPtr msg);
-    void dvl_callback(const mrobosub_msgs::msg::Dvl::SharedPtr msg);
-    void baro_callback(const std_msgs::msg::Float64::SharedPtr msg);
+    void imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg);
+    void dvl_callback(const geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr msg);
+    void baro_callback(const sensor_msgs::msg::FluidPressure::SharedPtr msg);
     void dvl_local_callback(const mrobosub_msgs::msg::Dvl::SharedPtr msg);
 
     void main_loop();
-    void kf_loop();
 
     void broadcast_imu_transform();
 };

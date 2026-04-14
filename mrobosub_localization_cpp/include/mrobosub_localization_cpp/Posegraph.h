@@ -28,9 +28,11 @@
 #include <memory> // std::unique_ptr
 
 namespace localization {
+class PosegraphNode; // forward decl.
 class Posegraph {
 public: // Members
     int _index;
+    std::mutex &_mtx;
 
     // Smoother
     gtsam::ISAM2Params _smoother_parameters;
@@ -94,7 +96,7 @@ private: // Members
 
 public: // Methods
     // Ctors + Dtors
-    Posegraph();
+    Posegraph(std::mutex &mtx);
     ~Posegraph();
 
 

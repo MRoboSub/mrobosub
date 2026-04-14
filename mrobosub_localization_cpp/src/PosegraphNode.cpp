@@ -44,21 +44,21 @@ PosegraphNode::PosegraphNode()
     imu_options.callback_group = _imu_callback_group;
 
     auto low_freq_options = rclcpp::SubscriptionOptions();
-    low_freq_options.callback_group = _low_freq_callback_group;
+    low_freq_options.callback_group = _low_freq_sensor_callback_group;
 
-    _imu_sub = this->create_subscription<mrobosub_msgs::msg::Imu>(
+    _imu_sub = this->create_subscription<sensor_msgs::msg::Imu>(
         "/imu", 10,
         std::bind(&PosegraphNode::imu_callback, this, std::placeholders::_1),
         imu_options
     );
 
-    _dvl_sub = this->create_subscription<mrobosub_msgs::msg::Dvl>(
-        "/dvl", 10,
+    _dvl_sub = this->create_subscription<geometry_msgs::msg::TwistWithCovarianceStamped>(
+        "/dvl/twist", 10,
         std::bind(&PosegraphNode::dvl_callback, this, std::placeholders::_1),
         low_freq_options
     );
 
-    _baro_sub = this->create_subscription<std_msgs::msg::Float64>(
+    _baro_sub = this->create_subscription<sensor_msgs::msg::FluidPressure>(
         "/depth", 10,
         std::bind(&PosegraphNode::baro_callback, this, std::placeholders::_1),
         low_freq_options
@@ -190,7 +190,7 @@ void PosegraphNode::kf_loop() {
     _is_new_keyframe = false;
 }
 
-void PosegraphNode::imu_callback(const mrobosub_msgs::msg::Imu::SharedPtr msg) {
+void PosegraphNode::imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg) {
     // This function is guaranteed to be mutually exclusive to all other 
     // functions since it is on a separate timer.
 
@@ -338,7 +338,7 @@ void PosegraphNode::dvl_callback(const mrobosub_msgs::msg::Dvl::SharedPtr msg) {
     _prev_dvl_rot = _imu_latest_rot;
 }
 
-void PosegraphNode::baro_callback() {
+void PosegraphNode::baro_callback(const sensor_msgs::msg::FluidPressure::SharedPtr msg) {
     std::unique_lock<std::mutex> lock(_mtx);
     if (!_is_rot_initialized) {
         _cond_var.wait(lock, [_imu_init_rot] { return _imu_init_rot.size() < 5; });

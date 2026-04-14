@@ -9,24 +9,25 @@
 
 namespace localization {
 // Ctor + Dtor
-Posegraph::Posegraph() 
+Posegraph::Posegraph(std::mutex &mtx) 
     : _index(0)
+    , _mtx(mtx)
     , _graph(new gtsam::NonlinearFactorGraph())
     , _initial(new gtsam::Values())
     , _result(new gtsam::Values())
     , _preintegrated_velocity_measurements(new PreintegratedVelocityMeasurementsDvlOnly())
     , _prior_imu_bias(gtsam::imuBias::ConstantBias(gtsam::Vector3(0.01, 0.01, 0.01), gtsam::Vector3(0, 0, 0)))
     , _prev_dvl_odometry_time(0.0)
-    , _prev_dvl_odometry_rot(gtsam::Rot3()) {
-    // Set other parameters
-    set_smoother_parameters();
-    set_imu_parameters();
-}
+    , _prev_dvl_odometry_rot(gtsam::Rot3())
+  {}
 
 Posegraph::~Posegraph() {}
 
 void Posegraph::initialize_parameters(std::shared_ptr<PosegraphNode> node) {
     _pose_graph_params = std::make_unique<Parameters>(node);
+    set_smoother_parameters();
+    set_imu_parameters();
+    define_transforms();
 }
 
 void Posegraph::set_smoother_parameters() {
@@ -37,7 +38,7 @@ void Posegraph::set_smoother_parameters() {
 
 void Posegraph::set_imu_parameters() {
     _preintegrated_measurement_params = boost::make_shared<gtsam::PreintegratedCombinedMeasurements::Params>(
-        gtsam::Vector3(0, 0, _pose_graph_params->_imu_params.g)
+        gtsam::Vector3(0, 0, -_pose_graph_params->_imu_params.g) // Z-UP!
     );
     _preintegrated_measurement_params->setAccelerometerCovariance(
         gtsam::I_3x3 * std::pow(_pose_graph_params->_imu_params.acc_noise_density, 2)
@@ -46,7 +47,7 @@ void Posegraph::set_imu_parameters() {
         gtsam::I_3x3 * std::pow(_pose_graph_params->_imu_params.gyro_noise_density, 2)
     );
     _preintegrated_measurement_params->setIntegrationCovariance(
-        gtsam::I_3x3 * 1e-8
+        gtsam::I_3x3 * _pose_graph_params->_imu_params.integration_covariance
     );
     _preintegrated_measurement_params->setBiasAccCovariance(
         gtsam::I_3x3 * std::pow(_pose_graph_params->_imu_params.acc_random_walk, 2)
@@ -91,6 +92,9 @@ void Posegraph::add_imu_factor() {
         gtsam::Symbol('b', _index),
         _preintegrated_measurement_params.get()
     );
+
+    // Must reset integration for next interval
+    _preintegrated_measurements->resetIntegrationAndSetBias(_curr_imu_bias);
 }
 
 void Posegraph::add_velocity_factor_with_rotation_interpolation(bool using_slerp) {
@@ -211,7 +215,7 @@ void Posegraph::add_dvl_factor_imu_rotation() {
     int dvl_size = _curr_dvl_timestamps.size();
     assert(_curr_dvl_vels.size() == _imu_rot_list.size());
 
-    double dt_dvl;
+    double dt_dvl = -1;
     gtsam::Point3 integrated_pose_translation = gtsam::Point3(0.0, 0.0, 0.0);
     gtsam::Matrix3 integrated_rot_matrix = gtsam::Matrix3::Identity();
 
@@ -233,7 +237,7 @@ void Posegraph::add_dvl_factor_imu_rotation() {
 
     if (_index > 0) {
         _initial->insert(gtsam::Symbol('x', _index), _prev_pose * integrated_pose);
-        if (_index < 10000) {
+        if (_index < 10000) { // TODO REMOVE
             _graph->emplace_shared<DvlOnlyFactor>(
                 gtsam::Symbol('x', _index - 1),
                 gtsam::Symbol('x', _index),
@@ -551,66 +555,31 @@ gtsam::Rot3 Posegraph::find_current_pose_for_dvl_vel(double time_stamp) const {
 }
 
 void Posegraph::calculate_interpolated_rotations(bool is_using_slerp, std::vector<gtsam::Rot3> &interpolated_rotations) {
-    // Interpolate the rotations
-    gtsam::Rot3 prev_rotation = gtsam::Rot3();
+    if (_curr_dvl_poses.empty() || _curr_dvl_timestamps.empty()) return;
+   
+    gtsam::Rot3 prev_rotation = _prev_dvl_odometry_rot; 
+    
     gtsam::Rot3 curr_rotation = _curr_dvl_poses[0].rotation();
     double last_local_time = _prev_dvl_odometry_time;
-    double curr_local_time = _curr_dvl_local_timestamps[0];
+    
     int next_local_idx = 0;
-    double dt, dt_interpolated;
 
-    // For each dvl timestamp need to interpolate the current rotation 
-    // based off of how far between last_local_time and curr_local_time
-    // the curr_dvl_timestamp is
-    for (const double &curr_dvl_timestamp : _curr_dvl_timestamps) {
-        // If the current dvl timestamp is greater than the current local time
-        // move to the next current local time and next rotation captured
-        if (curr_dvl_timestamp > curr_local_time) {
+    for (const double &ts : _curr_dvl_timestamps) {
+        while (ts > _curr_dvl_local_timestamps[next_local_idx] && 
+               next_local_idx < _curr_dvl_local_timestamps.size() - 1) {
+            
             next_local_idx++;
-            prev_rotation = curr_rotation; // TODO: This was commented out???
+            prev_rotation = curr_rotation;
             curr_rotation = _curr_dvl_poses[next_local_idx].rotation();
-            last_local_time = curr_local_time;
-            curr_local_time = _curr_dvl_local_timestamps[next_local_idx];
+            last_local_time = _curr_dvl_local_timestamps[next_local_idx - 1];
         }
 
-        // Find how far ahead of the last local timestamp this dvl timestamp is
-        dt = curr_dvl_timestamp - last_local_time;
-        dt_interpolated = dt / (curr_local_time - last_local_time);
-
-        // The dt_interp needs to be between [0, 1]
-        // I suppose this could happen if curr_dvl_timestamp is _still_
-        // greater than the curr_local_time. 
-        if (dt_interpolated < 0 || dt_interpolated > 1) {
-            std::cout << "[calculate_interpolated_rotations] interpolated dt outside of [0, 1]\n";
-            std::cout << "[calculate_interpolated_rotations] dt: " << dt << "\n";
-            std::cout << "[calculate_interpolated_rotations] curr_dvl_timestamp: " << curr_dvl_timestamp << "\n";
-            std::cout << "[calculate_interpolated_rotations] last_local_time: " << last_local_time << "\n";
-            std::cout << "[calculate_interpolated_rotations] curr_local_time: " << curr_local_time << "\n";
-            std::cout << "[calculate_interpolated_rotations] curr_rotation: " << curr_rotation << "\n";
-            std::cout << "[calculate_interpolated_rotations] prev_rotation (NOT SET): " << prev_rotation << "\n";
-            assert(false);
-        }
-
-        gtsam::Rot3 interpolated_rotation;
-        if (is_using_slerp) {
-            interpolated_rotation = prev_rotation.slerp(dt_interpolated, curr_rotation);
-            std::cout << "[calculate_interpolated_rotations] interpolated_rotation: " << interpolated_rotation << "\n";
-            std::cout << "[calculate_interpolated_rotations] curr_rotation: " << curr_rotation << "\n";
-            std::cout << "[calculate_interpolated_rotations] prev_rotation (NOT SET): " << prev_rotation << "\n";
-            std::cout << "-------------------------------------------------\n";
-        } else {
-            assert(false);
-        }
-
-        interpolated_rotations.push_back(interpolated_rotation);
-    }
-
-    // Check to see that we have an interpolated rotation for each dvl timestamp
-    if (_curr_dvl_timestamps.size() != interpolated_rotations.size()) {
-        std::cout << "[add_velocity_factor_with_rotation_interpolation] dvl_size and interpolated_rotations.size() mismatch\n";
-        std::cout << "[add_velocity_factor_with_rotation_interpolation] dvl_size: " << _curr_dvl_timestamps.size() << "\n";
-        std::cout << "[add_velocity_factor_with_rotation_interpolation] interpolated_rotations.size(): " << interpolated_rotations.size() << "\n";
-        assert(false);
+        double denom = _curr_dvl_local_timestamps[next_local_idx] - last_local_time;
+        double dt_interp = (denom > 1e-6) ? (ts - last_local_time) / denom : 0.0;
+        
+        // Clamp to [0, 1] for safety
+        dt_interp = std::max(0.0, std::min(1.0, dt_interp));
+        interpolated_rotations.push_back(prev_rotation.slerp(dt_interp, curr_rotation));
     }
 }
 
