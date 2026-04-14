@@ -16,7 +16,7 @@ struct SensorUsage {
     bool is_sonar_used;
     bool are_cams_used;
 
-    SensorUsage(std::shared_ptr<rclcpp::Node> node);
+    SensorUsage(const std::shared_ptr<rclcpp::Node> &node);
 };
 
 struct SensorTopics {
@@ -26,7 +26,7 @@ struct SensorTopics {
     std::string barometer_topic;
     std::string sonar_topic;
     
-    SensorTopics(std::shared_ptr<rclcpp::Node> node);
+    SensorTopics(const std::shared_ptr<rclcpp::Node> &node);
 };
 
 struct ImuParameters {
@@ -43,26 +43,26 @@ struct ImuParameters {
     double g;
     double dt_imu;
     
-    ImuParameters(std::shared_ptr<rclcpp::Node>);
+    ImuParameters(const std::shared_ptr<rclcpp::Node> &node);
 };
 
 struct ImuPreintegrationParameters {
     double gap_time;
 
-    ImuPreintegrationParameters(std::shared_ptr<rclcpp::Node> node);
+    ImuPreintegrationParameters(const std::shared_ptr<rclcpp::Node> &node);
 };
 
 struct DvlParameters {
     double prior_bias;
     double fom_threshold;
 
-    DvlParameters(std::shared_ptr<rclcpp::Node> node);
+    DvlParameters(const std::shared_ptr<rclcpp::Node> &node);
 };
 
 struct BarometerParameters {
     double atmospheric_pressure;
     
-    BarometerParameters(std::shared_ptr<rclcpp::Node> node);
+    BarometerParameters(const std::shared_ptr<rclcpp::Node> &node);
 };
 
 struct OptimizationParameters {
@@ -73,7 +73,7 @@ struct OptimizationParameters {
     double relative_error_tolerance;
     double absolute_error_tolerance;
     
-    OptimizationParameters(std::shared_ptr<rclcpp::Node> node);
+    OptimizationParameters(const std::shared_ptr<rclcpp::Node> &node);
 };
 
 struct Extrinsics {
@@ -83,12 +83,12 @@ struct Extrinsics {
     Eigen::Matrix4d T_SBa;  // barometer to imu
     Eigen::Matrix4d T_W_WD; // world to dvl world
     
-    Extrinsics(std::shared_ptr<rclcpp::Node> node);
+    Extrinsics(const std::shared_ptr<rclcpp::Node> &node);
 };
 
 class Parameters {
 public:
-    Parameters(std::shared_ptr<rclcpp::Node> node);
+    Parameters(const std::shared_ptr<rclcpp::Node> &node);
     ~Parameters();
 
     // About the sensors
