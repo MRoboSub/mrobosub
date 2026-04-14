@@ -2,17 +2,20 @@ posegraph:
   ros__parameters:
     # IMX-5 TODO: Read the datasheet
     imu_parameters:
-      g: 0.0
-      acc_max: 0.0
-      acc_noise_density: 0.0 #
-      acc_bias_prior: 0.0
-      acc_random_walk: 0.0 # [m/s^2/sqrt(Hz)]
-      gyro_max: 0.0
-      gyro_noise_density: 0.0 # [rad/s/sqrt(Hz)]
-      gyro_bias_prior: 0.0 #[rad/s]
-      gyro_random_walk: 0.0 # [rad/s^2/sqrt(Hz)]
-      integration_covarience: 0.0001
-      imu_rate: 250.0 #[Hz?] Verify from the datasheet
+      g: 9.80665
+
+      acc_max: 156.9                       # 16g = 16 * 9.80665
+      acc_noise_density: 5.88e-4           # 60 ug/sqrt(hz) = 60e-6 * 9.80665 = [m/s^2/sqrt(Hz)]
+      acc_bias_prior: 1e-4                 # from "in-run bias stability": < 1.5 deg/hr (is an upper bound)
+      acc_random_walk: 2.67e-3             # 0.16/60 =  [m/s^2/sqrt(Hz)]
+
+      gyro_max: 69.81                      # 4000 deg/sec * pi/180 = 
+      gyro_noise_density: 8.73e-5          # 0.005 deg/s/sqrt(Hz) * pi/180 = [rad/s/sqrt(Hz)]
+      gyro_bias_prior: 1e-5                # [rad/s]
+      gyro_random_walk: 4.65e-5            # 0.002667 * pi/180 [rad/s^2/sqrt(Hz)]
+
+      integration_covariance: 0.0001
+      imu_rate: 1000.0
       T_BS:
         [
           1.0000, 0.0000, 0.0000, 0.0000,
@@ -32,14 +35,14 @@ posegraph:
           0.0000, 0.0000, 0.0000, 1.0000,
         ]
     dvl_parameters:
-      T_SD: # What is this parameter?
+      T_SD: # Transformation from Sensor to Drone/Body (measure this!!!)
         [
           1.0000, 0.0000, 0.0000, 0.0000,
           0.0000, 1.0000, 0.0000, 0.0000,
           0.0000, 0.0000, 1.0000, 0.0000,
           0.0000, 0.0000, 0.0000, 1.0000,
         ]
-      T_W_WD: # What is this parameter?
+      T_W_WD: # Transformation from Water-Frame to World/Map (can be kept as I)
         [
           1.0000, 0.0000, 0.0000, 0.0000,
           0.0000, 1.0000, 0.0000, 0.0000,
@@ -47,16 +50,16 @@ posegraph:
           0.0000, 0.0000, 0.0000, 1.0000,
         ]
       prior_bias: 0.0
-      fom_threshold: 0.01
+      fom_threshold: 0.05
     barometer_parameters:
-      T_SBa: # What is this parameter?
+      T_SBa: # Transformation from Sensor to Barometer. Z translation is important here.
         [
           1.0000, 0.0000, 0.0000, 0.0000,
           0.0000, 1.0000, 0.0000, 0.0000,
           0.0000, 0.0000, 1.0000, 0.0000,
           0.0000, 0.0000, 0.0000, 1.0000,
         ]
-      atmospheric_pressure: 993.3999633789062
+      atmospheric_pressure: 993.3999633789062 # fine.
     optimization_parameters:
       lambda_upper_bound: 1e10
       lambda_lower_bound: 1e-10
@@ -65,10 +68,10 @@ posegraph:
       relative_error_tolerance: 1e-4
       absolute_error_tolerance: 1e-4
     sensor_topics:
-      imu_topic: "/todo"
-      dvl_topic: "/todo"
-      dvl_local_position_topic: "/todo"
-      barometer_topic: "/todo"
+      imu_topic: "/imu"
+      dvl_topic: "/dvl/twist"
+      dvl_local_position_topic: "/dvl/local"
+      barometer_topic: "/depth"
       sonar_topic: "/unused"
       # left_cam_topic:
       # right_cam_topic:
@@ -78,10 +81,10 @@ posegraph:
       is_barometer_used: true
       is_sonar_used: false
       are_cams_used: false
-    use_orb_slam: false
+    using_orbslam: false
     num_iters: 1000
     using_smoother: true
-    kf_gap_time: 1.0
+    keyframe_gap_time: 1.0
     using_pseudo_dvl: true
 
 # [3/24]: As of right now, I have no plans on using the cameras.
