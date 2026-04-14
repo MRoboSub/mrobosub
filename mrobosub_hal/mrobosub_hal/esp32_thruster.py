@@ -38,20 +38,22 @@ class ESP32_Thruster(Node):
 
     def connect(self) -> bool:
         try:
-            self.serial = Serial(self.port, timeout=0.5, write_timeout=0.5)
-            enable_all()
+            self.serial = Serial(self.port, timeout=0, write_timeout=0.5)
+            self.enable_all()
         except SerialException as e:
             self.get_logger().info(f"Could not connect to esp32_thruster: {e}")
             return False
         return True
 
     def write(self, data: str) -> bool:
+        data = data + "\n"
         if self.serial is None:
             success = self.connect()
             if not success or self.serial is None:
+                self.get_logger().error("Serial is not connected. AHHHH!")
                 return False
         try:
-            self.serial.write(data)
+            self.serial.write(data.encode())
             return True
         except SerialException as e:
             self.get_logger().info(f"write error: {e}")
@@ -90,7 +92,7 @@ class ESP32_Thruster(Node):
 
 
     def send_enable_disable(self, pin: int, enable: bool) -> int:
-        if(enable == true):
+        if(enable):
             msg = "ENABLE:TRUE"
         else:
             msg = "ENABLE:FALSE"
@@ -106,7 +108,7 @@ class ESP32_Thruster(Node):
 
     def enable_all(self):
         for i in range(NUM_PINS):
-            send_enable_disable(i, true)
+            self.send_enable_disable(i, True)
 
 
     def send_estop(self):
@@ -118,7 +120,7 @@ class ESP32_Thruster(Node):
         self, req: SetBool.Request, res: SetBool.Response
     ) -> SetBool.Response:
         if req.data:
-            send_estop
+            self.send_estop()
         res.success = True
         return res
 
@@ -130,6 +132,11 @@ class ESP32_Thruster(Node):
     def loop(self):
         for i in range(NUM_PINS):
             self.send_power(i, self.thruster_outputs[i])
+
+        if self.serial is not None:
+            data = self.serial.read_all()
+            if data is not None:
+                self.get_logger().info(f"data read from esp32: {str(data)}")
 
 
 def main():
