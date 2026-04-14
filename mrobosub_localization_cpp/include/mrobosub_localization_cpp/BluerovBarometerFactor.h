@@ -18,7 +18,7 @@ public:
     ~BluerovBarometerFactor();
     BluerovBarometerFactor(gtsam::Key key, double measured, const gtsam::SharedNoiseModel &model);
   
-    gtsam::Vector evaluate_error(
+    gtsam::Vector evaluateError(
         const gtsam::Pose3 &pose, 
         boost::optional<gtsam::Matrix &> H
     ) const;

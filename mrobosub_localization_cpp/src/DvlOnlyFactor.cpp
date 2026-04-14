@@ -10,7 +10,7 @@ DvlOnlyFactor::DvlOnlyFactor(
     const PreintegratedVelocityMeasurementsDvlOnly &pvm)   
     : gtsam::NoiseModelFactorN<gtsam::Pose3, gtsam::Pose3, gtsam::imuBias::ConstantBias>(
         gtsam::noiseModel::Gaussian::Covariance(
-            _pvm._preintegrated_measured_covariance
+            pvm._preintegrated_measured_covariance
         ),
         pose_i,
         pose_j,
@@ -20,7 +20,7 @@ DvlOnlyFactor::DvlOnlyFactor(
 
 DvlOnlyFactor::~DvlOnlyFactor() {}
 
-gtsam::Vector DvlOnlyFactor::evaluate_error(
+gtsam::Vector DvlOnlyFactor::evaluateError(
     const gtsam::Pose3 &pose_i,
     const gtsam::Pose3 &pose_j,
     const gtsam::imuBias::ConstantBias &vbias_i,
@@ -38,26 +38,24 @@ gtsam::Vector DvlOnlyFactor::evaluate_error(
     gtsam::Point3 vbias = vbias_i.accelerometer();
     gtsam::Point3 accumulated_translation = _pvm.predict(vbias, H_vbias);
 
-    // Compute the inverse of R_i and save as a Rot3
-    gtsam::Vector3 residual = gtsam::Rot3(R_i
-        .matrix()
-        .transpose()
-    ).rotate(p_j - p_i);
-    residual -= accumulated_translation;
+
+    // residual = R_i^T * (delta_p_world) - integrated_dvl_body
+    gtsam::Matrix3 RiT = R_i.transpose().matrix();
+    gtsam::Vector3 residual = RiT * (p_j - p_i) - accumulated_translation;
 
     if (H1) {
         H1->resize(3, 6);
-        H1->block<3, 3>(0, 0) = -gtsam::Matrix3::Identity();
-        H1->block<3, 3>(0, 3) = gtsam::Matrix3::Zero();
+        H1->block<3, 3>(0, 0) = gtsam::Matrix3::Zero();
+        H1->block<3, 3>(0, 3) = -RiT; // deriv w.r.t. p_i
     }
     if (H2) {
         H2->resize(3, 6);
-        H2->block<3, 3>(0, 0) = R_i.transpose().matrix() * R_j.matrix();
-        H2->block<3, 3>(0, 3) = gtsam::Matrix3::Zero();
+        H2->block<3, 3>(0, 0) = gtsam::Matrix3::Zero();
+        H2->block<3, 3>(0, 3) = RiT; // deriv w.r.t. p_j
     }
     if (H3) {
         H3->resize(3, 6);
-        H3->block<3, 3>(0, 0) = H_vbias;
+        H3->block<3, 3>(0, 0) = -H_vbias; // acceleration bias affects prediction negatively
         H3->block<3, 3>(0, 3) = gtsam::Matrix3::Zero();
     }
     return residual;

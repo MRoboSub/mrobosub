@@ -46,7 +46,10 @@ private: // Methods
 
     // Needed to save data and load data
     template<class ARCHIVE>
-    void serialize(ARCHIVE &ar, const unsigned int version);
+    void PreintegratedVelocityParameters::serialize(ARCHIVE &ar, const unsigned int version) {
+        ar &BOOST_SERIALIZATION_NVP(_bias_velocity_covariance);
+        ar &BOOST_SERIALIZATION_NVP(_bias_initial);
+    }
 
 public:
     // GTSAM uses advanced math with Eigen
@@ -97,6 +100,8 @@ public: // Methods
     gtsam::Matrix get_delpij_delbias_omega() const;
     gtsam::Matrix get_delpij_delbias_dvl() const;
     gtsam::Matrix get_preintegrated_measured_covariance() const;
+
+    void update_accumulated_stats(const gtsam::imuBias::ConstantBias &bias); 
 
     gtsam::Point3 predict(const gtsam::Point3 &bias, gtsam::Matrix3 &H_bias) const;
 };

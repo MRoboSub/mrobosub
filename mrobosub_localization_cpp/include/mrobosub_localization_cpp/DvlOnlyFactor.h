@@ -20,7 +20,7 @@ public: // Methods
                   const PreintegratedVelocityMeasurementsDvlOnly &pvm);
     virtual ~DvlOnlyFactor();
 
-    gtsam::Vector evaluate_error(
+    gtsam::Vector evaluateError(
         const gtsam::Pose3 &pose_i,
         const gtsam::Pose3 &pose_j,
         const gtsam::imuBias::ConstantBias &vbias_i,

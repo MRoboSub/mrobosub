@@ -8,14 +8,16 @@ BluerovBarometerFactor::BluerovBarometerFactor(gtsam::Key key, double measured, 
 
 BluerovBarometerFactor::~BluerovBarometerFactor() {}
 
-gtsam::Vector BluerovBarometerFactor::evaluate_error(
+// Expected by the parent class to be evaluateError
+gtsam::Vector BluerovBarometerFactor::evaluateError(
     const gtsam::Pose3 &pose,
     boost::optional<gtsam::Matrix &> H
 ) const {
+    // If the H is requested, get the Jacobian of the Z-translation
     if (H) {
-        gtsam::Matrix36 Jt;
-        pose.translation(Jt);
-        *H = Jt.row(2);
+        gtsam::Matrix16 H_z;
+        double z = pose.z(H_z);
+        *H = H_z;
     }
 
     return (gtsam::Vector(1) << pose.z() - _measured).finished();

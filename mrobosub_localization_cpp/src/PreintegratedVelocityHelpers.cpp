@@ -29,14 +29,9 @@ namespace localization {
         _bias_initial = covariance;
     }            
 
-    template<class ARCHIVE>
-    void PreintegratedVelocityParameters::serialize(ARCHIVE &ar, const unsigned int version) {
-        ar &BOOST_SERIALIZATION_NVP(_bias_velocity_covariance);
-        ar &BOOST_SERIALIZATION_NVP(_bias_initial);
-    }
 
     PreintegratedVelocityMeasurementsDvlOnly::PreintegratedVelocityMeasurementsDvlOnly() 
-        : _preintegrated_measured_covariance(gtsam::Matrix::Zero()) {}
+        : _preintegrated_measured_covariance(gtsam::Matrix3::Zero()) {}
 
     PreintegratedVelocityMeasurementsDvlOnly::~PreintegratedVelocityMeasurementsDvlOnly() {}
 
@@ -83,7 +78,7 @@ namespace localization {
 
         // TODO: Investigate this.
         gtsam::Matrix3 B = interpolated_rotation.matrix() * dt;
-        gtsam::Matrix3 dvl_covariance = fom * gtsam::I_3x3;
+        gtsam::Matrix3 dvl_covariance = fom * fom * gtsam::I_3x3; // Figure of Merit should be SQUARED
         _preintegrated_measured_covariance += B * dvl_covariance * B.transpose();
 
         _velocity_list.push_back(linear_velocity);
@@ -127,4 +122,11 @@ namespace localization {
     gtsam::Matrix PreintegratedVelocityMeasurementsDvlOnly::get_preintegrated_measured_covariance() const {
         return _preintegrated_measured_covariance;
     }
+
+    void PreintegratedVelocityMeasurementsDvlOnly::update_accumulated_stats(const gtsam::imuBias::ConstantBias &bias) {
+        gtsam::Matrix3 H;
+        _accumulated_positions = predict(bias.accelerometer(), H);
+        _delp_delbias_dvl = H; 
+    }
+
 } // namespace localization
