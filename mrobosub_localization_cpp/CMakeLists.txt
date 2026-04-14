@@ -33,6 +33,7 @@ ament_target_dependencies(localization
   rclcpp  
   tf2_ros
   geometry_msgs
+  sensor_msgs
   nav_msgs
 )
 

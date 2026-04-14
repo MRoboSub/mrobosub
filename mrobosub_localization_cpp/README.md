@@ -135,6 +135,33 @@ In order to access a node's parameters, you have to have a pointer to the node i
 
 If you want to access a shared_ptr to `this` you can use `this->shared_from_this`. However, you can't pass a `shared_ptr` of a class into any other class or for any other use-case (as it does not exist!!!) until **AFTER THE CONSTRUCTOR RUNS**. I did not know this! As such, you must have a separate `initialize_parameters` method that you will run to populate the parameters after 
 
+### [4/13] Determining Parameter Values
+To determine the various parameter values, I started off with the datasheets for each of the sensors. 
+
+#### Inertial Sense IMX-5
+The Inertial Sense IMX-5 (IMU)'s datasheet is [here](https://docs.inertialsense.com/datasheets/IMX-5_IMU_AHRS_GNSS-INS_Datasheet.pdf). From the datasheet, I was able to get the arr/gyro maximum values, noise density, and random walk values. 
+
+According to the datasheet, apparently I am able to get readings at a rate of 1kHz which is really good (4x the rate that the TURTLMap IMU was able to get).
+
+Since I am having this node run in it's own package, I might be able to bump up the ROS publishing rate. Right now I am having the node sleep for 5ms before continuing --> this maxes out my maximum rate to 200kHz.
+
+I also changed the message type from our custom type to the `sensor_msgs::msg::Imu` type to be more in line with the traditional ROS2 sensor types.
+
+### Tracker 650 DVL
+I primarily just need the extrinsic transformations from the CAD. Will ask Mechanical for those numbers ASAP.
+
+I needed to change the data published by the DVL because according to the datasheet [here](https://docs.ceruleansonar.com/c/tracker-650/communicating-with-the-tracker-650/outgoing-message-formats-tracker-650-to-host/usddvkfc-kalman-filter-raw-data-support-message) the DVL actually publishes it's confidence in each of it's axes. This can be used to provide a covariance value.
+
+Apparently the typical ROS method for publishing messages parsed from a DVL is the `TwistWithCovarianceStamped` (which makes sense since the DVL provides the sub an estimate of it's twist).
+
+Right now, we were extracting the raw beam velocities in the DVL publisher node as opposed to publishing the vx, vy, vz. I had to use a transformation matrix to turn beam velocities into robot frame velocities.
+
+The sensor is mounted via a NED format. Using right hand rule, point your index finger away from the data cable, your middle finger towards the right, and your thumb pointed down. 
+
+See the following reference image.
+![image](https://docs.ceruleansonar.com/c/~gitbook/image?url=https%3A%2F%2F977450193-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FldEroQctKFErSiZvuhJk%252Fuploads%252FxuL7u4W2BE68qUs2ovN7%252Fimage.png%3Falt%3Dmedia%26token%3D669440b3-49cd-4d2f-a5d5-f8bcedde80e0&width=768&dpr=3&quality=100&sign=d4de0e74&sv=2)
+
+Note that because of the beam orientations, the A beam is aligned with the x direction. 
 
 ## Citation
 

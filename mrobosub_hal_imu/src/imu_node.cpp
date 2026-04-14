@@ -6,7 +6,8 @@
 #include "../inertial-sense-sdk/src/data_sets.h"
 
 #include <rclcpp/rclcpp.hpp>
-#include <mrobosub_msgs/msg/imu.hpp>
+// #include <mrobosub_msgs/msg/imu.hpp>
+#include <sensor_msgs/msg/imu.h>
 
 #include <chrono>
 #include <thread>
@@ -66,7 +67,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    auto imu_pub = node->create_publisher<mrobosub_msgs::msg::Imu>("/imu", 1);
+    auto imu_pub = node->create_publisher<sensor_msgs::msg::Imu>("/imu", 1);
     if (!imu_pub) {
         return -1;
     }
@@ -97,19 +98,34 @@ int main(int argc, char **argv)
                     auto time_stamp = timeManager.ros_time_from_start_time(ins->timeOfWeek);
                     const auto div = 1.0f/data->dt;
 
-                    mrobosub_msgs::msg::Imu msg;
-                    msg.header.stamp = time_stamp;
-                    msg.dt = data->dt;
+                    sensor_msgs::msg::Imu msg;
+                    msg.header.stamp    = time_stamp;
+                    msg.header.frame_id = "imu_link"; 
+
+                    msg.orientation.w = data->qn2b[0];
+                    msg.orientation.x = data->qn2b[1];
+                    msg.orientation.y = data->qn2b[2];
+                    msg.orientation.z = data->qn2b[3];
+                    
                     msg.angular_velocity.x = pimu_storage.pimu.theta[0] * div;
                     msg.angular_velocity.y = pimu_storage.pimu.theta[1] * div;
                     msg.angular_velocity.z = pimu_storage.pimu.theta[2] * div;
+
                     msg.linear_acceleration.x = pimu_storage.pimu.vel[0] * div;
                     msg.linear_acceleration.y = pimu_storage.pimu.vel[1] * div;
                     msg.linear_acceleration.z = pimu_storage.pimu.vel[2] * div;
-                    msg.theta.w = data->theta[0];
-                    msg.theta.x = data->theta[1];
-                    msg.theta.y = data->theta[2];
-                    msg.theta.z = data->theta[3];
+
+                    double acc_var = 3.45e-7; // Acc noise density is 0.000588 -> var is noise^2
+                    double gyro_var = 7.61e-9; // Gyro noise density is 8.72e-5 -> var is noise^2
+
+                    msg.linear_acceleration_covariance[0] = acc_var;
+                    msg.linear_acceleration_covariance[4] = acc_var;
+                    msg.linear_acceleration_covariance[8] = acc_var;
+                    
+                    msg.angular_acceleration_covariance[0] = gyro_var;
+                    msg.angular_acceleration_covariance[4] = gyro_var;
+                    msg.angular_acceleration_covariance[8] = gyro_var;
+
                     imu_pub->publish(msg);
                 }
                 pimu_storage.has_pimu = false;
@@ -148,6 +164,8 @@ int main(int argc, char **argv)
             return 1;
         }
         rclcpp::spin_some(node);
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        
+        // Try to get the publishing rate closer to the rate ascertained by the datasheet
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }
