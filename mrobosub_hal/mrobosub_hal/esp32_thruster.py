@@ -10,7 +10,7 @@ from std_srvs.srv import SetBool
 from typing import Optional
 
 
-NUM_PINS = 12
+NUM_PINS = 8
 FREQUENCY = 50
 
 
@@ -22,7 +22,7 @@ class ESP32_Thruster(Node):
     def __init__(self):
         super().__init__("esp32_thruster")
         self.get_logger().info("Launched esp32_thruster node")
-        self.port = "/dev/thruster_esp" #IMPORTANT: DETERMINE ACTUAL PORT
+        self.port = "/dev/ttyACM2" #IMPORTANT: DETERMINE ACTUAL PORT
         self.thruster_outputs = [0] * NUM_PINS
         self.serial: Serial | None = None
         self.connect()
@@ -92,6 +92,7 @@ class ESP32_Thruster(Node):
 
 
     def send_enable_disable(self, pin: int, enable: bool) -> int:
+        self.get_logger().info(f"Send enable {enable} to pin {pin}")
         if(enable):
             msg = "ENABLE:TRUE"
         else:
@@ -128,6 +129,8 @@ class ESP32_Thruster(Node):
         for i in range(NUM_PINS):
             if msg.valid[i]:
                 self.thruster_outputs[i] = msg.pins[i]
+            if msg.pins[i] != 0:
+                self.get_logger().info(f"The motor at index {i} is running at value {msg.pins[i]}")
 
     def loop(self):
         for i in range(NUM_PINS):
@@ -136,7 +139,8 @@ class ESP32_Thruster(Node):
         if self.serial is not None:
             data = self.serial.read_all()
             if data is not None:
-                self.get_logger().info(f"data read from esp32: {str(data)}")
+                pass
+                # self.get_logger().info(f"data read from esp32: {str(data)}")
 
 
 def main():

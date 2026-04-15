@@ -8,7 +8,7 @@ from mrobosub_lib import Node
 
 FREQUENCY = 60 # times per second
 BAUD_RATE = 9600
-CONNECTION_NAME = "/dev/ttyACM0"
+CONNECTION_NAME = "/dev/ttyACM1"
 
 class Arduino(Node):
     def __init__(self):
