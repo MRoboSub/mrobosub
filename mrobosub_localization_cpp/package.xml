@@ -1,20 +1,24 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>mrobosub_hal_imu</name>
-  <version>2.0.0</version>
-  <description>HAL for IMU using inertial-sense-sdk</description>
+  <name>mrobosub_localization_cpp</name>
+  <version>1.0.0</version>
+  <description>Factor graph localization using DVL+IMU+Barometer</description>
   <maintainer email="michiganroboticsubmarine@gmail.com">Michigan Robotic Submarine</maintainer>
-  <license>BSD-2.0</license>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <depend>eigen</depend>
+  <depend>gtsam</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>tf2_ros</depend>
+  <build_depend>gtsam</build_depend>
+  <build_depend>libeigen3-dev</build_depend>
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
-
-  <depend>rclcpp</depend>
-  <depend>mrobosub_msgs</depend>
-  <depend>sensor_msgs</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
