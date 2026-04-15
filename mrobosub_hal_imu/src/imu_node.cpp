@@ -6,8 +6,7 @@
 #include "../inertial-sense-sdk/src/data_sets.h"
 
 #include <rclcpp/rclcpp.hpp>
-// #include <mrobosub_msgs/msg/imu.hpp>
-#include <sensor_msgs/msg/imu.h>
+#include <sensor_msgs/msg/imu.hpp>
 
 #include <chrono>
 #include <thread>
@@ -47,6 +46,8 @@ struct PimuStorage {
 
 PimuStorage pimu_storage;
 
+#define TIME_EPSILON 0.01
+
 /** 
  * Publishes:
  *   /imu    Imu
@@ -78,12 +79,12 @@ int main(int argc, char **argv)
         switch(data->hdr.id) {
             case DID_GPS1_POS: {
                 auto gps = reinterpret_cast<gps_pos_t*>(data->ptr);
-                pimu.tow_offset = gps->towOffset;
+                pimu_storage.tow_offset = gps->towOffset;
                 break;
             }
 
             case DID_PIMU: {
-                pimu_storage.pimu = reinterpret_cast<pimu_t*>(data->ptr);
+                pimu_storage.pimu = *reinterpret_cast<pimu_t*>(data->ptr);
                 pimu_storage.has_pimu = true;
                 break;
             }
@@ -96,16 +97,16 @@ int main(int argc, char **argv)
 
                 if (std::abs(pimu_time_to_tow - ins->timeOfWeek) < TIME_EPSILON) {
                     auto time_stamp = timeManager.ros_time_from_start_time(ins->timeOfWeek);
-                    const auto div = 1.0f/data->dt;
+                    const auto div = 1.0f/pimu_storage.pimu.dt;
 
                     sensor_msgs::msg::Imu msg;
                     msg.header.stamp    = time_stamp;
                     msg.header.frame_id = "imu_link"; 
 
-                    msg.orientation.w = data->qn2b[0];
-                    msg.orientation.x = data->qn2b[1];
-                    msg.orientation.y = data->qn2b[2];
-                    msg.orientation.z = data->qn2b[3];
+                    msg.orientation.w = ins->qn2b[0];
+                    msg.orientation.x = ins->qn2b[1];
+                    msg.orientation.y = ins->qn2b[2];
+                    msg.orientation.z = ins->qn2b[3];
                     
                     msg.angular_velocity.x = pimu_storage.pimu.theta[0] * div;
                     msg.angular_velocity.y = pimu_storage.pimu.theta[1] * div;
@@ -122,9 +123,9 @@ int main(int argc, char **argv)
                     msg.linear_acceleration_covariance[4] = acc_var;
                     msg.linear_acceleration_covariance[8] = acc_var;
                     
-                    msg.angular_acceleration_covariance[0] = gyro_var;
-                    msg.angular_acceleration_covariance[4] = gyro_var;
-                    msg.angular_acceleration_covariance[8] = gyro_var;
+                    msg.angular_velocity_covariance[0] = gyro_var;
+                    msg.angular_velocity_covariance[4] = gyro_var;
+                    msg.angular_velocity_covariance[8] = gyro_var;
 
                     imu_pub->publish(msg);
                 }
