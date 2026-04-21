@@ -1,11 +1,11 @@
 import socket
 import rclpy
 import numpy as np
-from mrobosub_lib.mrobosub_lib import Node
+from mrobosub_lib import Node
 from geometry_msgs.msg import TwistWithCovarianceStamped
 from mrobosub_msgs.msg import Dvl
 
-UDP_IP =  b"192.168.2.9"
+UDP_IP =  "0.0.0.0"
 HOST_IP = b"192.168.2.3"
 UDP_PORT = 27000
 POS_UP = True
@@ -44,12 +44,10 @@ class DVLPublisher (Node):
             data, addr = self.sock.recvfrom(1024)
             data_str = data.decode()
 
-            if not data_str.startswith("$DVKFC"):
+            if data_str.startswith("$DVKFC"):
                 self.publish_twist(data)         
-            elif not data_str.startswith("$DVKFC"):
+            elif data_str.startswith("$DVPDL"):
                 self.publish_local_pose(data)         
-            
-            self.publish_twist(data)         
 
         except socket.timeout:
             self.get_logger().info("DVL UDP connection timing out, no data recieved from DVL")
@@ -137,11 +135,13 @@ class DVLPublisher (Node):
         s_a = np.sin(alpha)
         c_a = np.cos(alpha)
 
-        self.T_beam_xyz = np.array([
+        T_beam_xyz = np.array([
             [(2/3)/s_a,         (-1/3)/s_a,          (-1/3)/s_a], # Vx (Forward)
             [        0, (1/np.sqrt(3))/s_a, (-1/np.sqrt(3))/s_a], # Vy (Left)
             [(1/3)/c_a,          (1/3)/c_a,           (1/3)/c_a], # Vz (Down-positive)
         ])
+
+        return T_beam_xyz
 
 def main():
     rclpy.init()
