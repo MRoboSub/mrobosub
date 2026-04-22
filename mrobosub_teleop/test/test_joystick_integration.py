@@ -49,7 +49,7 @@ class TwistCollector(Node):
 
 def test_joystick_teleop_continuous_surge_output():
     """Verify surge axis maps directly to target_twist/surge (continuous mode)."""
-    from mrobosub_teleop.joystick_teleop_continuous import JoystickTeleopContinuous
+    from mrobosub_teleop.mrobosub_teleop.joystick_teleop import JoystickTeleopContinuous
 
     if not rclpy.ok():
         rclpy.init()
@@ -81,7 +81,7 @@ def test_joystick_teleop_continuous_surge_output():
 
 def test_joystick_teleop_continuous_deadzone():
     """Verify small joystick input below deadzone produces zero."""
-    from mrobosub_teleop.joystick_teleop_continuous import JoystickTeleopContinuous
+    from mrobosub_teleop.mrobosub_teleop.joystick_teleop import JoystickTeleopContinuous
 
     if not rclpy.ok():
         rclpy.init()
@@ -113,7 +113,7 @@ def test_joystick_teleop_continuous_deadzone():
 
 def test_joystick_teleop_continuous_estop():
     """Verify estop button zeros all outputs in continuous mode."""
-    from mrobosub_teleop.joystick_teleop_continuous import JoystickTeleopContinuous
+    from mrobosub_teleop.mrobosub_teleop.joystick_teleop import JoystickTeleopContinuous
 
     if not rclpy.ok():
         rclpy.init()
