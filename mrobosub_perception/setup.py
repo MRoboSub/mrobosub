@@ -1,7 +1,19 @@
 from setuptools import find_packages, setup
 import glob
+import os
 
 package_name = 'mrobosub_perception'
+
+def get_data_files(src_dir, dest_prefix):
+    result = []
+    for dirpath, dirnames, filenames in os.walk(src_dir):
+        dirnames[:] = [d for d in dirnames if d != '__pycache__']
+        if not filenames:
+            continue
+        files = [os.path.join(dirpath, f) for f in filenames if not f.endswith('.pyc')]
+        dest = os.path.join(dest_prefix, dirpath)
+        result.append((dest, files))
+    return result
 
 setup(
     name=package_name,
@@ -13,6 +25,7 @@ setup(
         ('share/' + package_name, ['package.xml']),
         (f"share/{package_name}/launch", glob.glob("launch/*")),
         (f"share/{package_name}/params", glob.glob("params/*")),
+        *get_data_files('yolov5', 'share/' + package_name),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
