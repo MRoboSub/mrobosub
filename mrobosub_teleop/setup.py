@@ -19,8 +19,10 @@ setup(
     maintainer_email="michiganroboticsubmarine@gmail.com",
     description="manual sub control",
     license="BSD-2.0",
-    tests_require=["pytest"],
+    tests_require=['pytest'],
     entry_points={
-        "console_scripts": ["all_dof_teleop = mrobosub_teleop.all_dof_teleop:main"],
+        "console_scripts": [
+            "joystick_teleop = mrobosub_teleop.joystick_teleop:main",
+        ],
     },
 )
