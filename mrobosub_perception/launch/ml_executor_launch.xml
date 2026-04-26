@@ -1,4 +1,5 @@
 <launch>
-    <node name="ml_executor" pkg="mrobosub_perception" exec="ml_executor"/>
-    <param from="$(find-pkg-share mrobosub_perception)/params/ml_executor_params.yaml" />
+    <node name="ml_executor" pkg="mrobosub_perception" exec="ml_executor">
+        <param from="$(find-pkg-share mrobosub_perception)/params/ml_executor.yaml" />
+    </node>
 </launch>

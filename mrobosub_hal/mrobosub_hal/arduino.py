@@ -1,14 +1,15 @@
 import rclpy
 from serial import Serial
 from std_msgs.msg import Float32, Bool
+from sensor_msgs.msg import FluidPressure
 import time
 import struct
 
-from mrobosub_lib import Node
+from mrobosub_lib.mrobosub_lib import Node
 
 FREQUENCY = 60 # times per second
 BAUD_RATE = 9600
-CONNECTION_NAME = "/dev/ttyACM0"
+CONNECTION_NAME = "/dev/ttyACM1"
 
 class Arduino(Node):
     def __init__(self):
@@ -21,7 +22,7 @@ class Arduino(Node):
             Bool, "/buttons/strange", qos_profile=1
         )
         self.depth_pub = self.create_publisher(
-            Float32, "/depth", qos_profile=1
+            FluidPressure, "/depth", qos_profile=1
         )
 
         #self.write_timer = self.create_timer(1/FREQUENCY, self.writer)
@@ -64,7 +65,7 @@ class Arduino(Node):
 
                 self.charm_pub.publish(Bool(data=(self.charm == b'\x01')))
                 self.strange_pub.publish(Bool(data=(self.strange == b'\x01')))
-                self.depth_pub.publish(Float32(data=self.depth))
+                self.depth_pub.publish(FluidPressure(fluid_pressure=self.depth))
 
 
 def main():

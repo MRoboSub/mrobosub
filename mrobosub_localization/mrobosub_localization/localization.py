@@ -1,20 +1,33 @@
+from dataclasses import dataclass
 import math
 import numpy as np
 import rclpy
 from std_msgs.msg import Float64, Float32
 
-from mrobosub_lib import Node
+from mrobosub_lib.mrobosub_lib import Node
 
 from typing import Optional, Final
 
 from std_srvs.srv import Trigger
-from geometry_msgs.msg import Quaternion
-from mrobosub_msgs.msg import ImuINS
+from mrobosub_msgs.msg import Imu
+from geometry_msgs.msg import Quaternion as ROSQuaternion
 
 from math import degrees
 
+@dataclass
+class Quaternion:
+    x: float
+    y: float
+    z: float
+    w: float
 
-def euler_from_quaternion(quaternion):
+@dataclass
+class Euler:
+    roll: float
+    pitch: float
+    yaw: float
+
+def euler_from_quaternion(quaternion: Quaternion) -> Euler:
     """
     Converts quaternion (w in last place) to euler roll, pitch, yaw
     quaternion = [w, x, y, z]
@@ -36,10 +49,10 @@ def euler_from_quaternion(quaternion):
     cosy_cosp = 1 - 2 * (y * y + z * z)
     yaw = np.arctan2(siny_cosp, cosy_cosp)
 
-    return roll, pitch, yaw
+    return Euler(roll, pitch, yaw)
 
 
-def quaternion_from_euler(roll, pitch, yaw):
+def quaternion_from_euler(roll: float, pitch: float, yaw: float) -> Quaternion:
     """
     Converts euler roll, pitch, yaw to quaternion (w in last place)
     quat = [x, y, z, w]
@@ -52,11 +65,11 @@ def quaternion_from_euler(roll, pitch, yaw):
     cr = math.cos(roll * 0.5)
     sr = math.sin(roll * 0.5)
 
-    q = [0.0] * 4
-    q[0] = cy * cp * cr + sy * sp * sr
-    q[1] = cy * cp * sr - sy * sp * cr
-    q[2] = sy * cp * sr + cy * sp * cr
-    q[3] = sy * cp * cr - cy * sp * sr
+    q = Quaternion(0.0, 0.0, 0.0, 0.0)
+    q.x = cy * cp * cr + sy * sp * sr
+    q.y = cy * cp * sr - sy * sp * cr
+    q.z = sy * cp * sr + cy * sp * cr
+    q.w = sy * cp * cr - cy * sp * sr
 
     return q
 
@@ -65,7 +78,7 @@ class StateEstimation(Node):
     """
     Subscribers
     - /depth/raw_depth
-    - /imu_INS
+    - /imu
     """
 
     """
@@ -93,7 +106,7 @@ class StateEstimation(Node):
         self.create_subscription(
             Float32, "/depth/raw_depth", self.raw_depth_callback, qos_profile=1
         )
-        self.create_subscription(ImuINS, "/imu_INS", self.imu_callback, qos_profile=1)
+        self.create_subscription(Imu, "/imu", self.imu_callback, qos_profile=1)
         self.create_service(Trigger, "localization/zero_state", self.handle_reset)
 
     def handle_reset(
@@ -121,32 +134,28 @@ class StateEstimation(Node):
             self.heave_offset = raw_depth.data
         self.heave_pub.publish(Float64(data=raw_depth.data - self.heave_offset))
 
-    def imu_callback(self, msg: ImuINS):
-
-        # orientation = msg.orientation
-        #
-        # quaternion = [
-        #     orientation.x,
-        #     orientation.y,
-        #     orientation.z,
-        #     orientation.w
-        # ]
-        # euler = euler_from_quaternion(quaternion)
-
-        euler = msg.theta
+    def imu_callback(self, msg: Imu):
+        orientation = msg.orientation
+        quaternion = Quaternion(
+            orientation.x,
+            orientation.y,
+            orientation.z,
+            orientation.w
+        )
+        euler = euler_from_quaternion(quaternion)
 
         if (
             self.yaw_offset is None
             or self.pitch_offset is None
             or self.roll_offset is None
         ):
-            self.yaw_offset = degrees(-euler.z)
-            self.pitch_offset = degrees(-euler.y)
-            self.roll_offset = degrees(euler.x)
+            self.yaw_offset = degrees(-euler.yaw)
+            self.pitch_offset = degrees(-euler.pitch)
+            self.roll_offset = degrees(euler.roll)
 
-        yaw = degrees(-euler.z) - self.yaw_offset
-        pitch = degrees(-euler.y) - self.pitch_offset
-        roll = degrees(euler.x) - self.roll_offset
+        yaw = degrees(-euler.yaw) - self.yaw_offset
+        pitch = degrees(-euler.pitch) - self.pitch_offset
+        roll = degrees(euler.roll) - self.roll_offset
 
         self.yaw_pub.publish(Float64(data=yaw))
         self.pitch_pub.publish(Float64(data=pitch))
