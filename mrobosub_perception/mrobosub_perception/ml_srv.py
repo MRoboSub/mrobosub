@@ -40,7 +40,7 @@ class MlSrvNode(Node):
             name = target.name.lower()
             setattr(self, f"{name}_srv",
                     self.create_service(ObjectPosition, f"object_position/{name}",
-                                        lambda _, response: self.handle_obj_request(idx, response), # the _ is the request which is unused
+                                        lambda _, response, i=idx: self.handle_obj_request(i, response),
                                         ))
             # eg: will define self.gate_red_srv = a service "object_position/gate_red" whose handler is handle_obj_request(0, resp)
             # where 0 is the index of GATE_RED in Targets
@@ -96,11 +96,11 @@ class MlSrvNode(Node):
             d_y = y_pos - (height / 2)
 
             object_pos.found = True
-            object_pos.x_position = x_pos
-            object_pos.y_position = y_pos
-            object_pos.x_theta = (d_x * fov_x) / width
-            object_pos.y_theta = (d_y * fov_y) / height
-            object_pos.confidence = d.confidence
+            object_pos.x_position = float(x_pos)
+            object_pos.y_position = float(y_pos)
+            object_pos.x_theta = float((d_x * fov_x)) / width
+            object_pos.y_theta = float((d_y * fov_y)) / height
+            object_pos.confidence = float(d.confidence)
 
             idx: int = d.classification
 

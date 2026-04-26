@@ -15,10 +15,10 @@ from mrobosub_msgs.msg import Detection, Detections
 
 def load_yolo():
     # load model
-    path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-    yolo_path = os.path.join(path, "yolov5")
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
+    yolo_path = os.path.join(path, "src/mrobosub_perception/yolov5")
 
-    model_path = os.path.join(path, "models/mar2026_best.pt")
+    model_path = os.path.expanduser('~/ros2_ws/src/mrobosub_perception/models/mar2026_best.pt')
     print(yolo_path)
     print(model_path)
     model = torch.hub.load(
@@ -27,6 +27,15 @@ def load_yolo():
     model.conf = 0.1  # NMS confidence threshold
     return model
 
+def make_detection(d) -> Detection:
+    det = Detection()
+    det.left       = float(d[0])
+    det.top        = float(d[1])
+    det.right      = float(d[2])
+    det.bottom     = float(d[3])
+    det.confidence = float(d[4])
+    det.classification = int(d[5])
+    return det
 
 class MlExecutor(Node):
     def __init__(self):
@@ -57,9 +66,9 @@ class MlExecutor(Node):
 
         print(f"TIME: {time.time() - start}")
         message = Detections(
-            detections=(Detection(*d) for d in detections),
-            width=width,
-            height=height,
+            detections=[make_detection(d) for d in detections],
+            width=float(width),
+            height=float(height),
         )
         self.detection_pub.publish(message)
 
