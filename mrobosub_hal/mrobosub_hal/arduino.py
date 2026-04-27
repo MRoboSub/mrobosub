@@ -5,7 +5,8 @@ from sensor_msgs.msg import FluidPressure
 import time
 import struct
 
-from mrobosub_lib.mrobosub_lib import Node
+from mrobosub_lib import Node
+from std_srvs.srv import SetBool
 
 FREQUENCY = 60 # times per second
 BAUD_RATE = 9600
@@ -24,6 +25,9 @@ class Arduino(Node):
         self.depth_pub = self.create_publisher(
             FluidPressure, "/depth", qos_profile=1
         )
+        self.zero_srv = self.create_service(
+            SetBool, "/depth/zero", self.zero_srv_callback
+        )
 
         #self.write_timer = self.create_timer(1/FREQUENCY, self.writer)
         self.read_timer = self.create_timer(1/FREQUENCY, self.serialConnection)
@@ -36,8 +40,11 @@ class Arduino(Node):
         self.charm = 0
         self.strange = 0
         self.depth = 0.0
+        self.offset = 0.0
         self.dataBytes = []
 
+        self.zero = False
+        
     
     def serialConnection(self):
         if self.serial.in_waiting < 1:
@@ -65,8 +72,15 @@ class Arduino(Node):
 
                 self.charm_pub.publish(Bool(data=(self.charm == b'\x01')))
                 self.strange_pub.publish(Bool(data=(self.strange == b'\x01')))
-                self.depth_pub.publish(FluidPressure(fluid_pressure=self.depth))
+                
+                offsetted_pressure = self.depth - self.offset
+                self.depth_pub.publish(FluidPressure(fluid_pressure=offsetted_pressure))
 
+    def zero_srv_callback(self, req, res):
+        self.zero = req.data
+        self.offset = self.depth 
+        res.success = True       
+        return res
 
 def main():
     rclpy.init()

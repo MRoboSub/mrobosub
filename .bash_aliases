@@ -17,6 +17,8 @@ alias arm="ros2 service call /thruster_mixing/enable std_srvs/srv/SetBool \"{dat
 alias disarm="ros2 service call /thruster_mixing/enable std_srvs/srv/SetBool \"{data: false}\""
 alias stop_motors="ros2 service call /emergency_stop_motors std_srvs/srv/SetBool \"{data: true}\""
 
+alias zero_depth="ros2 service call /depth/zero std_srvs/srv/SetBool \"{data: true}\""
+
 # Quickly start the (default) state machine
 alias captain="ros2 launch mrobosub_planning captain_launch.xml"
 

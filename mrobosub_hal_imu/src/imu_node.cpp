@@ -77,58 +77,52 @@ int main(int argc, char **argv)
     // sensor so that we can sync the INS (orientation) and PIMU (linear acc and angular vel) measurements
     InertialSense is([&](InertialSense *is_ptr, p_data_t *data, int port_handle) {
         switch(data->hdr.id) {
-            case DID_GPS1_POS: {
-                auto gps = reinterpret_cast<gps_pos_t*>(data->ptr);
-                pimu_storage.tow_offset = gps->towOffset;
-                break;
-            }
-
             case DID_PIMU: {
+                RCLCPP_INFO(node->get_logger(), "DID_PIMU");
                 pimu_storage.pimu = *reinterpret_cast<pimu_t*>(data->ptr);
                 pimu_storage.has_pimu = true;
                 break;
             }
             case DID_INS_2: {
                 if (!pimu_storage.has_pimu) return; // We want to sync the DID_PIMU and DID_INS_2 messages.
+                RCLCPP_INFO(node->get_logger(), "DID_INS_2");
 
                 auto ins = reinterpret_cast<ins_2_t*>(data->ptr);
 
                 double pimu_time_to_tow = pimu_storage.pimu.time + pimu_storage.tow_offset;
 
-                if (std::abs(pimu_time_to_tow - ins->timeOfWeek) < TIME_EPSILON) {
-                    auto time_stamp = timeManager.ros_time_from_start_time(ins->timeOfWeek);
-                    const auto div = 1.0f/pimu_storage.pimu.dt;
+                auto time_stamp = timeManager.ros_time_from_start_time(ins->timeOfWeek);
+                const auto div = 1.0f/pimu_storage.pimu.dt;
 
-                    sensor_msgs::msg::Imu msg;
-                    msg.header.stamp    = time_stamp;
-                    msg.header.frame_id = "imu_link"; 
+                sensor_msgs::msg::Imu msg;
+                msg.header.stamp    = time_stamp;
+                msg.header.frame_id = "imu_link"; 
 
-                    msg.orientation.w = ins->qn2b[0];
-                    msg.orientation.x = ins->qn2b[1];
-                    msg.orientation.y = ins->qn2b[2];
-                    msg.orientation.z = ins->qn2b[3];
-                    
-                    msg.angular_velocity.x = pimu_storage.pimu.theta[0] * div;
-                    msg.angular_velocity.y = pimu_storage.pimu.theta[1] * div;
-                    msg.angular_velocity.z = pimu_storage.pimu.theta[2] * div;
+                msg.orientation.w = ins->qn2b[0];
+                msg.orientation.x = ins->qn2b[1];
+                msg.orientation.y = ins->qn2b[2];
+                msg.orientation.z = ins->qn2b[3];
+                
+                msg.angular_velocity.x = pimu_storage.pimu.theta[0] * div;
+                msg.angular_velocity.y = pimu_storage.pimu.theta[1] * div;
+                msg.angular_velocity.z = pimu_storage.pimu.theta[2] * div;
 
-                    msg.linear_acceleration.x = pimu_storage.pimu.vel[0] * div;
-                    msg.linear_acceleration.y = pimu_storage.pimu.vel[1] * div;
-                    msg.linear_acceleration.z = pimu_storage.pimu.vel[2] * div;
+                msg.linear_acceleration.x = pimu_storage.pimu.vel[0] * div;
+                msg.linear_acceleration.y = pimu_storage.pimu.vel[1] * div;
+                msg.linear_acceleration.z = pimu_storage.pimu.vel[2] * div;
 
-                    double acc_var = 3.45e-7; // Acc noise density is 0.000588 -> var is noise^2
-                    double gyro_var = 7.61e-9; // Gyro noise density is 8.72e-5 -> var is noise^2
+                double acc_var = 3.45e-7; // Acc noise density is 0.000588 -> var is noise^2
+                double gyro_var = 7.61e-9; // Gyro noise density is 8.72e-5 -> var is noise^2
 
-                    msg.linear_acceleration_covariance[0] = acc_var;
-                    msg.linear_acceleration_covariance[4] = acc_var;
-                    msg.linear_acceleration_covariance[8] = acc_var;
-                    
-                    msg.angular_velocity_covariance[0] = gyro_var;
-                    msg.angular_velocity_covariance[4] = gyro_var;
-                    msg.angular_velocity_covariance[8] = gyro_var;
+                msg.linear_acceleration_covariance[0] = acc_var;
+                msg.linear_acceleration_covariance[4] = acc_var;
+                msg.linear_acceleration_covariance[8] = acc_var;
+                
+                msg.angular_velocity_covariance[0] = gyro_var;
+                msg.angular_velocity_covariance[4] = gyro_var;
+                msg.angular_velocity_covariance[8] = gyro_var;
 
-                    imu_pub->publish(msg);
-                }
+                imu_pub->publish(msg);
                 pimu_storage.has_pimu = false;
                 break;
             }
@@ -167,6 +161,6 @@ int main(int argc, char **argv)
         rclcpp::spin_some(node);
         
         // Try to get the publishing rate closer to the rate ascertained by the datasheet
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
 }
