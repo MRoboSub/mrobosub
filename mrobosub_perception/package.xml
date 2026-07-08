@@ -8,9 +8,11 @@
   <license>BSD-2.0</license>
 
   <depend>mrobosub_msgs</depend>
+  <depend>geometry_msgs</depend>
   <depend>rclpy</depend>
   <depend>python-numpy</depend>
   <depend>python3-opencv</depend>
+  <!-- <depend>cv_bridge</depend> -->
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

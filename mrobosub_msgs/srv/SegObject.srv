@@ -1,0 +1,8 @@
+---
+bool valid              # necessary for TimedService calls to determine if the message is valid or not
+bool found
+float32 x_position       # mask centroid, in pixels from left
+float32 y_position       # mask centroid, in pixels from top
+float32 size             # mask area as a percentage of total image area
+float32 direction        # degrees, -90 (left) to +90 (right); orientation of the mask's long axis
+float32 confidence       # model confidence value of detected object
