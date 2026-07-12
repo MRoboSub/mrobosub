@@ -18,14 +18,17 @@ CONFIDENCE = 0.5
 TIME_THRESHOLD = 10
 
 class Targets(Enum):
-    SHARK = 0
-    SAWFISH = 1
-    BIN_SHARK = 2
-    BIN_SAWFISH = 3
-    GATE_BACK = 4
-    RED_POLE = 5
-    OCTAGON = 6
-    BIN_FAR = 7
+    GATE_SURVEY = 0
+    GATE_REPAIR = 1
+    GATE_SEARCH = 2
+    GATE_RESCUE = 3
+    BIN_SURVEY_REPAIR = 4
+    BIN_SEARCH_RESCUE = 5
+    GATE_BACK = 6
+    RED_POLE = 7
+    WHITE_POLE = 8
+    OCTAGON = 9
+    BIN_FAR = 10
 
 class MlSrvNode(Node):
     def __init__(self):
