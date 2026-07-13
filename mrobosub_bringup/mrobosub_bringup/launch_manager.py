@@ -21,7 +21,8 @@ class LaunchManager:
         self.launch_file_path = launch_file_path
         self.process: Process | None = None
         self.shutdown_queue: Queue[bool] = Queue()
-
+    
+    @staticmethod
     def run_launch_in_process(
         self, launch_file_path: str, shutdown_queue: Queue[bool]
     ) -> None:
@@ -47,7 +48,7 @@ class LaunchManager:
             return
 
         self.process = Process(
-            target=self.run_launch_in_process,
+            target=LaunchManager.run_launch_in_process,
             args=(self.launch_file_path, self.shutdown_queue),
         )
 
