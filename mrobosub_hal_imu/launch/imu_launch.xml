@@ -1,5 +1,5 @@
 <launch>
-    <arg name="imu_port" default="/dev/serial/by-id/DEVICE" />
+    <arg name="imu_port" default="/dev/serial/by-id/usb-STMicroelectronics_STM32_Virtual_ComPort_204B3944534B-if00" />
     <node pkg="mrobosub_hal_imu" exec="imu_node" name="imu"
           args="$(var imu_port)"/>
 </launch>

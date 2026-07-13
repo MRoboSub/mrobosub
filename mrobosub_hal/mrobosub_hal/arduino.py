@@ -7,14 +7,17 @@ import struct
 
 from mrobosub_lib import Node
 from std_srvs.srv import SetBool
+import sys
 
-FREQUENCY = 60 # times per second
+FREQUENCY = 120 # times per second
 BAUD_RATE = 9600
-CONNECTION_NAME = "/dev/ttyACM0"
 
 class Arduino(Node):
     def __init__(self):
         super().__init__("arduino")
+
+        if len(sys.argv) < 2:
+            raise ValueError("Must provide port")
 
         self.charm_pub = self.create_publisher(
             Bool, "/buttons/charm", qos_profile=1
@@ -23,19 +26,22 @@ class Arduino(Node):
             Bool, "/buttons/strange", qos_profile=1
         )
         self.depth_pub = self.create_publisher(
-            FluidPressure, "/depth", qos_profile=1
+            Float32, "/depth", qos_profile=1
         )
         self.zero_srv = self.create_service(
             SetBool, "/depth/zero", self.zero_srv_callback
         )
-
-        #self.write_timer = self.create_timer(1/FREQUENCY, self.writer)
-        self.read_timer = self.create_timer(1/FREQUENCY, self.serialConnection)
-        
-        self.serial = Serial(CONNECTION_NAME, BAUD_RATE, timeout=1)
+   
+        # Create serial connection
+        self.serial = Serial(sys.argv[1], BAUD_RATE, timeout=1)
 
         time.sleep(2) # Give some time for the serial connection to be made.
 
+        if self.serial is None:
+            exit()
+
+
+        # Init values
         self.numHeaderBytes = 0
         self.charm = 0
         self.strange = 0
@@ -44,6 +50,9 @@ class Arduino(Node):
         self.dataBytes = []
 
         self.zero = False
+
+        # start timer
+        self.read_timer = self.create_timer(1/FREQUENCY, self.serialConnection)
         
     
     def serialConnection(self):
@@ -51,6 +60,7 @@ class Arduino(Node):
             return None
         
         bytes_recd = self.serial.read(1)
+        # self.get_logger().info(f"bytes recv{bytes_recd}")
 
         if self.numHeaderBytes < 4:
             if bytes_recd == b'\xff':
@@ -74,7 +84,7 @@ class Arduino(Node):
                 self.strange_pub.publish(Bool(data=(self.strange == b'\x01')))
                 
                 offsetted_pressure = self.depth - self.offset
-                self.depth_pub.publish(FluidPressure(fluid_pressure=offsetted_pressure))
+                self.depth_pub.publish(Float32(data=offsetted_pressure))
 
     def zero_srv_callback(self, req, res):
         self.zero = req.data

@@ -24,7 +24,7 @@ class LaunchManager:
     
     @staticmethod
     def run_launch_in_process(
-        self, launch_file_path: str, shutdown_queue: Queue[bool]
+        self, launch_file_path: str, shutdown_queue
     ) -> None:
         launch_service = LaunchService()
         launch_description = LaunchDescription(
@@ -41,6 +41,7 @@ class LaunchManager:
 
         launch_service.run()
         shutdown_checker.join()
+        pass
 
     def start(self) -> None:
         # Don't "start" already running thread.
@@ -53,8 +54,10 @@ class LaunchManager:
         )
 
         self.process.start()
+        
 
     def stop(self) -> None:
         if self.process is not None and self.process.is_alive():
             self.shutdown_queue.put(True)
             self.process.join()
+        

@@ -13,8 +13,8 @@ from std_msgs.msg import Bool
 from std_srvs.srv import SetBool, Trigger
 
 from mrobosub_lib import Node
-from . import constants as const
-from .launch_manager import LaunchManager
+from mrobosub_bringup import constants as const
+from mrobosub_bringup.launch_manager import LaunchManager
 
 
 class RobotState(Enum):
