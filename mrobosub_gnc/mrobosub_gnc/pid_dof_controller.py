@@ -91,6 +91,7 @@ class PidDofControlNode(Node):
             return
 
         error: float = self.target_pose - self.pose
+        cur_time = self.get_clock().now()
 
         if self.angular:
             error = self.wrap_to_180(error) # now error is in [-180, 180)
@@ -100,7 +101,6 @@ class PidDofControlNode(Node):
             self.accumulated_error = 0
 
         else:
-            cur_time = self.get_clock().now()
             delta_time = self.elapsed_ms(self.prev_time, cur_time)
             pose_diff: float = (self.pose - self.prev_pose)
 
@@ -122,7 +122,7 @@ class PidDofControlNode(Node):
             self.output_pub.publish(Float64(data=self.output))
 
         # setting up values for the next iteration
-        self.prev_time = self.get_clock().now() 
+        self.prev_time = cur_time
         self.prev_pose = self.pose  
 
     def target_twist(self, target_twist: Float64):
