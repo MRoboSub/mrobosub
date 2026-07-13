@@ -1,0 +1,8 @@
+<launch>
+    <arg name="device_path" default="/dev/serial/by-id/DEVICE" />
+    <node 
+        pkg="mrobosub_hal" exec="esp32" name="esp32" output="screen"
+        args="($var device_path)"
+    >
+    </node>
+</launch>

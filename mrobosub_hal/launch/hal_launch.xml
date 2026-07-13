@@ -1,7 +1,12 @@
 <launch>
-  <include file="$(find-pkg-share mrobosub_hal)/launch/dvl_publisher_launch.xml"/>
+  <!-- Keep the DVL turned off -->
+  <!-- <include file="$(find-pkg-share mrobosub_hal)/launch/dvl_publisher_launch.xml"/> -->
+
   <include file="$(find-pkg-share mrobosub_hal)/launch/thruster_controller_launch.xml"/>
   <include file="$(find-pkg-share mrobosub_hal)/launch/arduino_launch.xml"/>
+  <include file="$(find-pkg-share mrobosub_hal)/launch/esp32_launch.xml"/>
+
+  <!-- Turn these on. Test triggering the service. -->
   <!-- <include file="$(find-pkg-share mrobosub_hal)/launch/botcam_launch.xml"/> -->
   <!-- <include file="$(find-pkg-share mrobosub_hal)/launch/zed_launch.xml"/> -->
 </launch>

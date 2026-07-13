@@ -10,7 +10,7 @@ from std_srvs.srv import SetBool
 
 FREQUENCY = 60 # times per second
 BAUD_RATE = 9600
-CONNECTION_NAME = "/dev/ttyACM1"
+CONNECTION_NAME = "/dev/ttyACM0"
 
 class Arduino(Node):
     def __init__(self):
