@@ -20,6 +20,24 @@ class Forward5Seconds(ForwardAndWait):
     def handle_unreached(self) -> Outcome:
         return self.Unreached()
     
+class Forward10Seconds(ForwardAndWait):
+    class Reached(Outcome):
+        pass
+
+    class Unreached(Outcome):
+        pass
+
+    target_heave: float      = 0.5
+    target_surge_time: float = 10.
+    wait_time: float         = 10.
+    surge_speed: float       = 0.1
+
+    def handle_reached(self) -> Outcome:
+        return self.Reached()
+    
+    def handle_unreached(self) -> Outcome:
+        return self.Unreached()
+    
 
 
 class ComeToSurface(TimedState):
