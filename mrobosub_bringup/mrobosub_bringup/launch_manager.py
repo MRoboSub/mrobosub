@@ -17,7 +17,7 @@ class LaunchManager:
         launch_file_path (str): The path to the launch file to run.
     """
 
-    def __init__(self, launch_file_path: str) -> None:
+    def __init__(self, launch_file_path: str, logger) -> None:
         self.launch_file_path = launch_file_path
         self.process: Process | None = None
         self.shutdown_queue: Queue = Queue()
@@ -26,6 +26,7 @@ class LaunchManager:
     def run_launch_in_process(
         launch_file_path: str, shutdown_queue: Queue
     ) -> None:
+        self.logger.info("launch the service")
         launch_service = LaunchService()
         launch_description = LaunchDescription(
             [IncludeLaunchDescription(AnyLaunchDescriptionSource(launch_file_path))]
@@ -39,11 +40,13 @@ class LaunchManager:
         shutdown_checker = threading.Thread(target=check_for_shutdown, daemon=True)
         shutdown_checker.start()
 
+        self.logger.info("launch service run")
         launch_service.run()
         # shutdown_checker.join()
 
     def start(self) -> None:
         # Don't "start" already running thread.
+        self.logger.info("IN START")
         if self.process is not None and self.process.is_alive():
             return
 
@@ -52,9 +55,13 @@ class LaunchManager:
             args=(self.launch_file_path, self.shutdown_queue),
         )
 
+        self.logger.info("IN START: STARTING!!")
         self.process.start()
+        
 
     def stop(self) -> None:
+        self.logger.info("IN STOP")
         if self.process is not None and self.process.is_alive():
             self.shutdown_queue.put(True)
             self.process.join()
+        

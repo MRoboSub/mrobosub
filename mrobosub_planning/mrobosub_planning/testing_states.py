@@ -1,6 +1,6 @@
-from mrobosub_planning.abstract_states import ForwardAndWait, TimedState
+from mrobosub_planning.abstract_states import ForwardAndWait, TimedState, TurnToYaw
 from mrobosub_planning.umrsm import Outcome
-
+import rclpy
 
 class Forward5Seconds(ForwardAndWait):
     class Reached(Outcome):
@@ -12,14 +12,14 @@ class Forward5Seconds(ForwardAndWait):
     target_heave: float      = 0.5
     target_surge_time: float = 5.
     wait_time: float         = 5.
-    surge_speed: float       = 0.1
+    surge_speed: float       = 0.2
 
     def handle_reached(self) -> Outcome:
         return self.Reached()
     
     def handle_unreached(self) -> Outcome:
         return self.Unreached()
-    
+
 class Forward10Seconds(ForwardAndWait):
     class Reached(Outcome):
         pass
@@ -29,16 +29,34 @@ class Forward10Seconds(ForwardAndWait):
 
     target_heave: float      = 0.5
     target_surge_time: float = 10.
-    wait_time: float         = 10.
-    surge_speed: float       = 0.1
+    wait_time: float         = 5.
+    surge_speed: float       = 0.2
 
     def handle_reached(self) -> Outcome:
         return self.Reached()
     
     def handle_unreached(self) -> Outcome:
         return self.Unreached()
-    
 
+
+class Turn180(TurnToYaw):
+    class Reached(Outcome):
+        pass
+
+    class TimedOut(Outcome):
+        pass
+
+    target_yaw: float = 180.0
+    yaw_threshold: float = 3.0
+    settle_time: float = 5.0
+    timeout: float = 10.0
+
+    def handle_reached(self) -> Outcome:
+        return self.Reached()
+    
+    def handle_unreached(self) -> Outcome:
+        return self.TimedOut()
+    
 
 class ComeToSurface(TimedState):
     class Surfaced(Outcome):
@@ -65,6 +83,3 @@ class ComeToSurface(TimedState):
     
     def handle_once_timedout(self) -> Failed:
         return self.Failed()
-        
-
-    

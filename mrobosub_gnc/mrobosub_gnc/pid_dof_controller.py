@@ -95,6 +95,7 @@ class PidDofControlNode(Node):
 
         if self.angular:
             error = self.wrap_to_180(error) # now error is in [-180, 180)
+            self.get_logger().info(f"error: {error}")
 
         if not self.prev_valid:
             self.prev_valid = True

@@ -13,8 +13,8 @@ from std_msgs.msg import Bool
 from std_srvs.srv import SetBool, Trigger
 
 from mrobosub_lib import Node
-from . import constants as const
-from .launch_manager import LaunchManager
+from mrobosub_bringup import constants as const
+from mrobosub_bringup.launch_manager import LaunchManager
 
 
 class RobotState(Enum):
@@ -87,7 +87,8 @@ class Quartermaster(Node):
             planning_pkg_path, "launch", "captain_launch.xml"
         )
 
-        self.captain_launcher = LaunchManager(captain_file_path)
+        self.get_logger().info(f"Captain file path: {captain_file_path}")
+        self.captain_launcher = LaunchManager(captain_file_path, self.get_logger())
 
         # Seed initial values.
         self.pub_strange_led(False)
@@ -232,8 +233,11 @@ class Quartermaster(Node):
             self.current_state = RobotState.READY
 
         elif self.current_state == RobotState.READY:
-            self.get_logger().info("starting state machine")
+            self.get_logger().info("READY starting state machine")
+            self.get_logger().info("READY starting state machine")
+            self.get_logger().info("READY starting state machine")
             self.captain_launcher.start()
+            self.get_logger().info("After CAPTAIN LAUNCHER START")
             self.current_state = RobotState.RUNNING
 
         elif self.current_state == RobotState.RUNNING:

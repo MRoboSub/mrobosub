@@ -1,8 +1,8 @@
 <launch>
   <include file="$(find-pkg-share mrobosub_gnc)/launch/heave_launch.xml"/>
-  <include file="$(find-pkg-share mrobosub_gnc)/launch/roll_launch.xml"/>
-  <include file="$(find-pkg-share mrobosub_gnc)/launch/pitch_launch.xml"/>
+  <!-- <include file="$(find-pkg-share mrobosub_gnc)/launch/roll_launch.xml"/> -->
+  <!-- <include file="$(find-pkg-share mrobosub_gnc)/launch/pitch_launch.xml"/> -->
   <include file="$(find-pkg-share mrobosub_gnc)/launch/yaw_launch.xml"/>
   <include file="$(find-pkg-share mrobosub_gnc)/launch/surge_launch.xml"/>
-  <include file="$(find-pkg-share mrobosub_gnc)/launch/sway_launch.xml"/>
+  <!-- <include file="$(find-pkg-share mrobosub_gnc)/launch/sway_launch.xml"/> -->
 </launch>

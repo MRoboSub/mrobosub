@@ -1,4 +1,6 @@
 <launch>
-    <node pkg="mrobosub_hal" exec="arduino" name="arduino">
+    <arg name="device_path" default="/dev/serial/by-id/usb-Arduino__www.arduino.cc__0042_43439343134351605160-if00" />
+    <node pkg="mrobosub_hal" exec="arduino" name="arduino"
+    args="$(var device_path)" output="screen">
     </node>
 </launch>

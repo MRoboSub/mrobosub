@@ -19,7 +19,7 @@ class Submerge(TimedState):
     class TimedOut(Outcome):
         pass
 
-    target_heave: float = 0.75
+    target_heave: float = 0.5
     heave_threshold: float = 0.1
     timeout: float = 15.0
     yaw_threshold: float = 2.
