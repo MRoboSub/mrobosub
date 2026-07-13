@@ -1,6 +1,6 @@
 from mrobosub_planning.common_states import Start, Submerge, Surface, Stop
-from mrobosub_planning.testing_states import ComeToSurface, Forward5Seconds, Forward10Seconds, 
-from mrobosub_planning.abstract_states import TurnToYaw, 
+from mrobosub_planning.testing_states import ComeToSurface, Forward5Seconds, Forward10Seconds
+from mrobosub_planning.abstract_states import TurnToYaw
 from mrobosub_planning.umrsm import TransitionMap
 
 Forward10SecondsBack = Forward10Seconds.with_params(target_heave=0.5, target_surge_time=10., wait_time=10., surge_speed=0.1)

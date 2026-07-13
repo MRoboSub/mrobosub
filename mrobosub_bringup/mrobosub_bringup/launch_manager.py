@@ -20,11 +20,11 @@ class LaunchManager:
     def __init__(self, launch_file_path: str) -> None:
         self.launch_file_path = launch_file_path
         self.process: Process | None = None
-        self.shutdown_queue: Queue[bool] = Queue()
+        self.shutdown_queue: Queue = Queue()
     
     @staticmethod
     def run_launch_in_process(
-        self, launch_file_path: str, shutdown_queue: Queue[bool]
+        launch_file_path: str, shutdown_queue: Queue
     ) -> None:
         launch_service = LaunchService()
         launch_description = LaunchDescription(
@@ -36,11 +36,11 @@ class LaunchManager:
             shutdown_queue.get()
             launch_service.shutdown()
 
-        shutdown_checker = threading.Thread(target=check_for_shutdown)
+        shutdown_checker = threading.Thread(target=check_for_shutdown, daemon=True)
         shutdown_checker.start()
 
         launch_service.run()
-        shutdown_checker.join()
+        # shutdown_checker.join()
 
     def start(self) -> None:
         # Don't "start" already running thread.

@@ -149,19 +149,19 @@ class Quartermaster(Node):
 
         if not service_live:
             self.get_logger().error(
-                f"service {client.service_name} server not available"
+                f"service {client.srv_name} server not available"
             )
             return None
 
-        self.get_logger().info(f"service {client.service_name} ready")
+        self.get_logger().info(f"service {client.srv_name} ready")
 
         response: MessageResponse | None = await client.call_async(request)
 
         if response is None:
-            self.get_logger().error(f"service {client.service_name} call failed")
+            self.get_logger().error(f"service {client.srv_name} call failed")
         else:
             self.get_logger().info(
-                f"service {client.service_name} response: success={response.success}, message='{response.message}'"
+                f"service {client.srv_name} response: success={response.success}, message='{response.message}'"
             )
 
         return None
