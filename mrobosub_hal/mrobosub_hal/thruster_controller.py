@@ -70,6 +70,7 @@ class ThrusterController(Node):
 
                 message_valid[motor_pin] = True
                 message_output[motor_pin] = 0
+
         else:
             for motor in range(NUM_MOTORS):
                 motor_pin = (self.thruster_motor_id[motor])
@@ -80,6 +81,9 @@ class ThrusterController(Node):
                     message_output[motor_pin] = -msg.motors[motor]
                 else:
                     message_output[motor_pin] = msg.motors[motor]
+
+                if(motor == 1):
+                    message_output[motor_pin] = 0
 
 
         msg = ThrusterCommands()
