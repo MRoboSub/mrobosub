@@ -38,8 +38,8 @@ class Arduino(Node):
         time.sleep(2) # Give some time for the serial connection to be made.
 
         if self.serial is None:
+            self.get_logger().error("Serial is none")
             exit()
-
 
         # Init values
         self.numHeaderBytes = 0
@@ -60,7 +60,6 @@ class Arduino(Node):
             return None
         
         bytes_recd = self.serial.read(1)
-        # self.get_logger().info(f"bytes recv{bytes_recd}")
 
         if self.numHeaderBytes < 4:
             if bytes_recd == b'\xff':

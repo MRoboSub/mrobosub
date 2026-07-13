@@ -1,6 +1,6 @@
 yaw_control:
   ros__parameters:
-    kp: 0.03
+    kp: -0.003
     ki: 0.0
     kd: 0.0
     integral_windup_limit: 10.0
