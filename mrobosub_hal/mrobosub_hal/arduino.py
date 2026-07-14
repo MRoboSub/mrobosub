@@ -9,7 +9,7 @@ from mrobosub_lib import Node
 from std_srvs.srv import SetBool
 import sys
 
-FREQUENCY = 400 # times per second
+FREQUENCY = 120 # times per second
 BAUD_RATE = 9600
 
 class Arduino(Node):
@@ -41,6 +41,9 @@ class Arduino(Node):
             self.get_logger().error("Serial is none")
             exit()
 
+        # In case there is data pending in the Serial buffer that is OLD, clear this out.
+        self.serial.reset_input_buffer()
+
         # Init values
         self.numHeaderBytes = 0
         self.charm = 0
@@ -56,10 +59,11 @@ class Arduino(Node):
         
     
     def serialConnection(self):
+        # printing here may be useful
         if self.serial.in_waiting < 1:
-            self.get_logger().error("HII")
             return None
-        self.get_logger().info("has data to read!!!")
+
+        # printing in the if statement should be paired with one out of the if statement.
         
         bytes_recd = self.serial.read(1)
 

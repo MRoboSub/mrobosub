@@ -221,7 +221,8 @@ class ThrusterMixing(Node):
 
         # Runtime-configurable set of dead/disabled thruster ids, e.g. via
         # `ros2 run ... --ros-args -p disabled_thruster_ids:=[0]`
-        self.disabled_thruster_ids = {1}  # front-right thruster dead
+        # self.disabled_thruster_ids = {1}  # front-right thruster dead
+        self.disabled_thruster_ids = {}  # front-right thruster dead
         for tid in self.disabled_thruster_ids:
             if tid < 0 or tid >= NUM_MOTORS:
                 raise ValueError(
