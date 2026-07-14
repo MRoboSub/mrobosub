@@ -117,6 +117,10 @@ THRUSTERS_ROTATIONS = np.array(
 THRUSTERS_TRANSLATION = np.array(
     [[thruster.surge, thruster.sway, thruster.heave] for thruster in THRUSTERS]
 )
+# THRUSTERS is sorted by id and ids run 0..NUM_MOTORS-1 contiguously, so
+# THRUSTERS_ROTATIONS[i] / THRUSTERS_TRANSLATION[i] correspond to thruster id == i.
+# This is relied on below when indexing by id - if that ever stops being true
+# (e.g. non-contiguous ids), the indexing logic here must change too.
 
 
 # this order must match with the order of dofs in TAM
@@ -214,7 +218,25 @@ NEG_POWER_FIT_CONSTANTS = np.array(
 class ThrusterMixing(Node):
     def __init__(self) -> None:
         super().__init__("thruster_mixing")
+
+        # Runtime-configurable set of dead/disabled thruster ids, e.g. via
+        # `ros2 run ... --ros-args -p disabled_thruster_ids:=[0]`
+        self.disabled_thruster_ids = {1}  # front-right thruster dead
+        for tid in self.disabled_thruster_ids:
+            if tid < 0 or tid >= NUM_MOTORS:
+                raise ValueError(
+                    f"disabled_thruster_ids contains invalid thruster id {tid}; "
+                    f"valid ids are 0..{NUM_MOTORS - 1}"
+                )
+        if self.disabled_thruster_ids:
+            self.get_logger().warn(
+                f"Thruster mixing starting with thrusters "
+                f"{sorted(self.disabled_thruster_ids)} DISABLED"
+            )
+
+        # self.active_thruster_ids / self.active_idx are set inside calculate_TAM
         self.calculate_TAM()
+
         self.wrench = {dof: 0.0 for dof in DOFS}
         self.wrench_subs = {
             dof: self.create_subscription(
@@ -262,10 +284,29 @@ class ThrusterMixing(Node):
         self.thruster_max_force = abs(
             np.dot(self.fit_matrix(-1.0, self.voltage), POS_POWER_FIT_CONSTANTS)
         )
+
+        # ids of thrusters that are still active, in ascending order. Since
+        # THRUSTERS is sorted by id 0..NUM_MOTORS-1, id == index into
+        # THRUSTERS_ROTATIONS / THRUSTERS_TRANSLATION.
+        self.active_thruster_ids = [
+            tid for tid in range(NUM_MOTORS) if tid not in self.disabled_thruster_ids
+        ]
+        self.active_idx = np.array(self.active_thruster_ids, dtype=int)
+        self.num_active_motors = len(self.active_thruster_ids)
+
+        if self.num_active_motors == 0:
+            raise ValueError("All thrusters are disabled; nothing to control")
+
+        active_rotations = THRUSTERS_ROTATIONS[self.active_idx]
+        active_translations = THRUSTERS_TRANSLATION[self.active_idx]
+
         thrusters_force = (
-            THRUSTERS_ROTATIONS @ np.array([1.0, 0.0, 0.0])[None, :, None]
-        ).squeeze()
-        thrusters_torque = np.cross(THRUSTERS_TRANSLATION, thrusters_force)
+            active_rotations @ np.array([1.0, 0.0, 0.0])[None, :, None]
+        ).squeeze(axis=-1)
+        # squeeze(axis=-1) instead of bare squeeze(): with only 1 active
+        # thruster the array would be shape (1,3,1) and a bare squeeze would
+        # collapse it to shape (3,) instead of the required (1,3).
+        thrusters_torque = np.cross(active_translations, thrusters_force)
         self.thruster_allocation_matrix = np.hstack((thrusters_force, thrusters_torque))
         self.inv_tam = np.linalg.pinv(self.thruster_allocation_matrix).T
 
@@ -307,7 +348,7 @@ class ThrusterMixing(Node):
                 current_draws.append(max(current_draw, 0.0))
         return np.array(current_draws)
 
-    def validate_outputs(self, demanded_forces: "npt.NDArray") -> MotorState | None:
+    def validate_outputs(self, demanded_forces: "npt.NDArray") -> "npt.NDArray | None":
         outputs = self.calculate_outputs(demanded_forces)
         current_draws = self.expected_current_draw(outputs)
         if (
@@ -316,17 +357,21 @@ class ThrusterMixing(Node):
             and np.max(current_draws) < THRUSTER_MAX_CURRENT_DRAW
             and np.sum(current_draws) < SUB_MAX_CURRENT_DRAW
         ):
-            return MotorState(motors=outputs.astype('float32'))
+            return outputs.astype("float32")
         return None
 
     def calculate_scaled_outputs(
         self, demanded_forces: "npt.NDArray"
-    ) -> tuple[MotorState, float]:
+    ) -> tuple["npt.NDArray", float]:
+        # NOTE: this now returns a raw active-length ndarray, not a MotorState,
+        # since the active motor count varies with which thrusters are
+        # disabled. update() is responsible for scattering it into a full
+        # NUM_MOTORS-length MotorState before publishing.
         outputs = self.validate_outputs(demanded_forces)
         if outputs is not None:
             return (outputs, 1.0)
 
-        lb_outputs = MotorState(motors=[0.0] * NUM_MOTORS)
+        lb_outputs = np.zeros(self.num_active_motors, dtype="float32")
         lower_bound = 0.0
         upper_bound = 1.0
         NUM_ITERS = 5
@@ -345,7 +390,7 @@ class ThrusterMixing(Node):
         if not self.enabled:
             return
         wrench = np.array(list(self.wrench.values()))
-        forces = self.inv_tam @ wrench
+        forces = self.inv_tam @ wrench  # length == num_active_motors
 
         scale = 1.0
         max_demand = np.max(forces)
@@ -353,12 +398,19 @@ class ThrusterMixing(Node):
             scale /= max_demand / self.thruster_max_force
             forces *= scale
 
-        outputs, scale_factor = self.calculate_scaled_outputs(forces)
+        active_outputs, scale_factor = self.calculate_scaled_outputs(forces)
         if scale_factor != 1.0:
             print("Scale: ", scale_factor)
         scale *= scale_factor
+
+        # Scatter active-motor outputs back into full-length, id-indexed
+        # arrays. Disabled thruster ids are left at 0.0 explicitly.
+        full_motors = np.zeros(NUM_MOTORS, dtype="float32")
+        full_motors[self.active_idx] = active_outputs
+        outputs = MotorState(motors=full_motors)
+
         est_current = Float64(
-            data=np.sum(self.expected_current_draw(np.array(outputs.motors)))
+            data=float(np.sum(self.expected_current_draw(active_outputs)))
         )
 
         self.current_pub.publish(est_current)

@@ -9,7 +9,7 @@ from mrobosub_lib import Node
 from std_srvs.srv import SetBool
 import sys
 
-FREQUENCY = 120 # times per second
+FREQUENCY = 400 # times per second
 BAUD_RATE = 9600
 
 class Arduino(Node):
@@ -33,7 +33,7 @@ class Arduino(Node):
         )
    
         # Create serial connection
-        self.serial = Serial(sys.argv[1], BAUD_RATE, timeout=1)
+        self.serial = Serial(sys.argv[1], BAUD_RATE, timeout=0)
 
         time.sleep(2) # Give some time for the serial connection to be made.
 
@@ -57,7 +57,9 @@ class Arduino(Node):
     
     def serialConnection(self):
         if self.serial.in_waiting < 1:
+            self.get_logger().error("HII")
             return None
+        self.get_logger().info("has data to read!!!")
         
         bytes_recd = self.serial.read(1)
 

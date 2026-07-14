@@ -21,12 +21,12 @@ class Submerge(TimedState):
 
     target_heave: float = 0.5
     heave_threshold: float = 0.1
-    timeout: float = 15.0
+    timeout: float = 2.5
     yaw_threshold: float = 2.
     target_yaw: float = 0.
 
     def handle_if_not_timedout(self) -> Union[Submerged, None]:
-        self.io_node.set_target_pose_heave(self.target_heave)
+        self.io_node.set_target_twist_heave(self.target_heave)
         self.io_node.set_target_pose_yaw(self.target_yaw)
 
         if self.io_node.is_heave_within_threshold(
@@ -37,7 +37,117 @@ class Submerge(TimedState):
 
     def handle_once_timedout(self) -> TimedOut:
         return self.TimedOut()
+    
 
+class Forward10(TimedState):
+    class ReachedGate(Outcome):
+        pass
+
+    class TimedOut(Outcome):
+        pass
+
+    target_heave: float = 0.5
+    heave_threshold: float = 0.1
+    timeout: float = 12
+    yaw_threshold: float = 2.
+    target_yaw: float = 0.
+
+    def handle_if_not_timedout(self) -> Union[ReachedGate, None]:
+        self.io_node.set_target_twist_heave(0.4)
+        self.io_node.set_target_twist_surge(2)
+        return None
+
+    def handle_once_timedout(self) -> TimedOut:
+        return self.TimedOut()
+    
+
+class Turn180_2(TimedState):
+    class ReachedGate(Outcome):
+        pass
+
+    class TimedOut(Outcome):
+        pass
+
+    target_heave: float = 0.5
+    heave_threshold: float = 0.1
+    timeout: float = 10
+    yaw_threshold: float = 2.
+    target_yaw: float = 0.
+
+    def handle_if_not_timedout(self) -> Union[ReachedGate, None]:
+        self.io_node.set_target_twist_heave(0.4)
+        self.io_node.set_target_twist_surge(0)
+        self.io_node.set_target_pose_yaw(270)
+        return None
+
+    def handle_once_timedout(self) -> TimedOut:
+        return self.TimedOut()
+
+
+class ReturnHome(TimedState):
+    class ReachedGate(Outcome):
+        pass
+
+    class TimedOut(Outcome):
+        pass
+
+    target_heave: float = 0.5
+    heave_threshold: float = 0.1
+    timeout: float = 10
+    yaw_threshold: float = 2.
+    target_yaw: float = 0.
+
+    def handle_if_not_timedout(self) -> Union[ReachedGate, None]:
+        self.io_node.set_target_twist_heave(0.4)
+        self.io_node.set_target_twist_surge(1.5)
+        return None
+
+    def handle_once_timedout(self) -> TimedOut:
+        return self.TimedOut()
+    
+
+class ComeUp(TimedState):
+    class ReachedGate(Outcome):
+        pass
+
+    class TimedOut(Outcome):
+        pass
+
+    target_heave: float = 0.5
+    heave_threshold: float = 0.1
+    timeout: float = 5
+    yaw_threshold: float = 2.
+    target_yaw: float = 0.
+
+    def handle_if_not_timedout(self) -> Union[ReachedGate, None]:
+        self.io_node.set_target_twist_heave(0)
+        self.io_node.set_target_twist_surge(0)
+        return None
+
+    def handle_once_timedout(self) -> TimedOut:
+        return self.TimedOut()
+    
+
+class TimeoutFor30(TimedState):
+    class ReachedGate(Outcome):
+        pass
+
+    class TimedOut(Outcome):
+        pass
+
+    target_heave: float = 0.5
+    heave_threshold: float = 0.1
+    timeout: float = 30
+    yaw_threshold: float = 2.
+    target_yaw: float = 0.
+
+    def handle_if_not_timedout(self) -> Union[ReachedGate, None]:
+        self.io_node.set_target_twist_heave(0)
+        self.io_node.set_target_twist_surge(0)
+        return None
+
+    def handle_once_timedout(self) -> TimedOut:
+        return self.TimedOut()
 
 class Stop(State):
     class Surfaced(Outcome):
