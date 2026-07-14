@@ -1,5 +1,4 @@
 import cv2
-from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 import rclpy
 import sys
@@ -8,6 +7,8 @@ from mrobosub_lib import Node
 
 from std_srvs.srv import SetBool
 import subprocess
+
+from mrobosub_hal.cv_bridge_converter_hal import cv2_to_imgmsg, imgmsg_to_cv2
 
 
 class Zed(Node):
@@ -20,7 +21,6 @@ class Zed(Node):
         self.iteration_rate = 60
         self.device_path = sys.argv[1]
         self.on = False
-        self.br = CvBridge()
         self.raw_pub = self.create_publisher(Image, "/zed/raw", qos_profile=1)
         self.create_service(SetBool, "/zed/on", self.handle_on_service)
         self.pub = self.create_publisher(Image, "/zed2/zed_node/rgb/image_rect_color", qos_profile=1)
@@ -70,10 +70,10 @@ class Zed(Node):
         success, frame = self.cap.read()
 
         if success:
-            self.raw_pub.publish(self.br.cv2_to_imgmsg(frame, encoding="bgr8"))
+            self.raw_pub.publish(cv2_to_imgmsg(frame, encoding="bgr8"))
             frame_chopped = self.chop(frame)
             frame_cropped = self.crop(frame_chopped)
-            img = self.br.cv2_to_imgmsg(frame_cropped, encoding="bgr8")
+            img = cv2_to_imgmsg(frame_cropped, encoding="bgr8")
             self.pub.publish(img)
 
 

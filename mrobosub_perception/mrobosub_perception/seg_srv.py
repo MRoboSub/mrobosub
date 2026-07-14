@@ -6,13 +6,14 @@ from enum import Enum
 import rclpy
 import numpy as np
 import cv2
-from cv_bridge import CvBridge
 from mrobosub_lib import Node
 
 from std_msgs.msg import Float64
 from sensor_msgs.msg import Image
 from mrobosub_msgs.msg import SegDetections
 from mrobosub_msgs.srv import SegObject
+
+from mrobosub_perception.cv_bridge_converter import cv2_to_imgmsg, imgmsg_to_cv2
 
 CONFIDENCE = 0.5
 TIME_THRESHOLD = 10
@@ -33,7 +34,6 @@ class SegSrvNode(Node):
     def __init__(self):
         super().__init__("seg_srv")
 
-        self.bridge = CvBridge()
         self.recent_positions: List[Optional[SegObject.Response]] = [None] * len(Targets)
         self.last_image = None
 
@@ -63,7 +63,7 @@ class SegSrvNode(Node):
         self.mask_pub = self.create_publisher(Image, "/seg/annotated", qos_profile=10)
 
     def image_callback(self, image: Image):
-        self.last_image = self.bridge.imgmsg_to_cv2(image, desired_encoding="bgr8")
+        self.last_image = imgmsg_to_cv2(image, desired_encoding="bgr8")
 
     def detections_callback(self, detections: SegDetections):
         not_found = SegObject.Response()
@@ -150,7 +150,7 @@ class SegSrvNode(Node):
                 (255, 255, 255),
             )
 
-        msg = self.bridge.cv2_to_imgmsg(image_ocv, encoding="bgr8")
+        msg = cv2_to_imgmsg(image_ocv, encoding="bgr8")
         self.mask_pub.publish(msg)
 
     def handle_object_request(self, idx, response: SegObject.Response):
