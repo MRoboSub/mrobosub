@@ -63,7 +63,7 @@ class Arduino(Node):
     
     def serialLoop(self):
         self.handleRead()
-        self.handleWrite()
+        # self.handleWrite()
 
     
     def handleRead(self):
@@ -99,10 +99,10 @@ class Arduino(Node):
                 self.depth_pub.publish(Float32(data=offsetted_pressure))
 
 
-    def handleWrite(self):
-        self.serial.write(b'\xFF')
-        self.serial.write(b'\x01' if self.charm_state else '\x00')
-        self.serial.write(b'\x01' if self.strange_state else '\x00')
+    # def handleWrite(self):
+    #     self.serial.write(b'\xFF')
+    #     self.serial.write(b'\x01' if self.charm_state else '\x00')
+    #     self.serial.write(b'\x01' if self.strange_state else '\x00')
 
     def led_state_callback(self, msg: LedState):
         self.charm_state = msg.charm_state

@@ -15,7 +15,7 @@ from std_srvs.srv import SetBool, Trigger
 from mrobosub_lib import Node
 from mrobosub_bringup import constants as const
 from mrobosub_bringup.launch_manager import LaunchManager
-from mrobosub_msg.msgs import LedState
+from mrobosub_msgs.msg import LedState
 
 import time
 
@@ -75,7 +75,7 @@ class Quartermaster(Node):
             Bool, "/buttons/charm", self.handle_charm_change, 1
         )
 
-        self.led_states_pub = self.create_publisher(LedState, "/leds", qos_profile)
+        # self.led_states_pub = self.create_publisher(LedState, "/leds", qos_profile)
 
         complete_future = self.get_executor().create_task(lambda: None)
         self.thruster_mixing_srv = self.create_client(
@@ -100,7 +100,7 @@ class Quartermaster(Node):
         self.pub_charm_led(False)
         self.pub_on_led(False)
 
-        self.timer = self.create_timer(1000, self.timer_callback)
+        self.timer = self.create_timer(0.01, self.timer_callback)
 
     def destroy_node(self) -> None:
         if self.captain_launcher:
@@ -190,6 +190,7 @@ class Quartermaster(Node):
         if (self.get_clock().now().nanoseconds / 1e9) < self.timeout_time:
             self.hall_effect_triggered.strange = False
             self.hall_effect_triggered.charm = False
+            # self.get_logger().info("debounce")
             return
 
         # We want the LED showing that we have triggered a specific hall effect sensor to turn off
@@ -205,7 +206,7 @@ class Quartermaster(Node):
             return
 
         # We would have only gotten here if it has been const.DEBOUNCE_DURATION seconds since last timeout
-        and one of the hall effects is on
+        # and one of the hall effects is on
         self.timeout_time = (
             self.get_clock().now().nanoseconds / 1e9
         ) + const.DEBOUNCE_DURATION
@@ -234,20 +235,22 @@ class Quartermaster(Node):
                     self.call_zero_state_srv()
                 )
 
-            led_state = LedState()
-            led_state.charm_state = True
-            led_state.strange_state = False
-            self.led_states_pub(led_state)
-
+            # led_state = LedState()
+            # led_state.charm_state = True
+            # led_state.strange_state = False
+            # self.led_states_pub(led_state)
+            self.get_logger().info("READY state")
             self.current_state = RobotState.READY
 
         elif self.current_state == RobotState.READY:
-            led_state = LedState()
-            led_state.charm_state = True
-            led_state.strange_state = True
-            self.led_states_pub(led_state)
+            # led_state = LedState()
+            # led_state.charm_state = True
+            # led_state.strange_state = True
+            # self.led_states_pub(led_state)
             
             self.captain_launcher.start()
+            self.get_logger().info("RUNNING state")
+            self.get_logger().info("CAPTAIN started")
             self.current_state = RobotState.RUNNING
 
         elif self.current_state == RobotState.RUNNING:
@@ -256,10 +259,10 @@ class Quartermaster(Node):
                     self.call_soft_stop_srv()
                 )
             
-            led_state = LedState()
-            led_state.charm_state = False
-            led_state.strange_state = False
-            self.led_states_pub(led_state)
+            # led_state = LedState()
+            # led_state.charm_state = False
+            # led_state.strange_state = False
+            # self.led_states_pub(led_state)
 
             # TODO: There should probably be some sort of `time.sleep()` here so there is enough time for the soft stop service to be completed.
             #       Or maybe that could be part of the callback for the future?
@@ -270,6 +273,7 @@ class Quartermaster(Node):
                     self.call_thruster_mixing_srv()
                 )
 
+            self.get_logger().info("return to AMBIENT state")
             self.current_state = RobotState.AMBIENT
 
     def get_executor(self) -> Executor:

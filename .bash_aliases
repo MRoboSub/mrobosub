@@ -55,4 +55,6 @@ alias thruster_mixing="ros2 launch mrobosub_fcu thruster_mixing_launch.xml"
 alias start_zed="ros2 launch mrobosub_hal zed_launch.xml"
 alias start_botcam="ros2 launch mrobosub_hal botcam_launch.xml"
 
+alias quartermaster="ros2 launch mrobosub_bringup quartermaster_launch.xml"
+
 # ros2 launch mrobosub_gnc heave_launch.xml
