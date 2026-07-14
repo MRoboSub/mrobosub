@@ -52,4 +52,7 @@ alias localize="ros2 launch mrobosub_localization localization_launch.xml"
 alias start_imu="ros2 launch mrobosub_hal_imu imu_launch.xml"
 alias thruster_mixing="ros2 launch mrobosub_fcu thruster_mixing_launch.xml"
 
+alias start_zed="ros2 launch mrobosub_hal zed_launch.xml"
+alias start_botcam="ros2 launch mrobosub_hal botcam_launch.xml"
+
 # ros2 launch mrobosub_gnc heave_launch.xml
