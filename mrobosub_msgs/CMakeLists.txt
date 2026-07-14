@@ -21,6 +21,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     "msg/ThrusterCommands.msg"
     "msg/Pose.msg"
     "msg/Twist.msg"
+    "msg/LedState.msg"
     "srv/BinCamPos.srv"
     "srv/HsvFilterImage.srv"
     "srv/ObjectPosition.srv"

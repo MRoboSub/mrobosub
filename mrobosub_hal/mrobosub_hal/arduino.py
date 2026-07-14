@@ -1,6 +1,7 @@
 import rclpy
 from serial import Serial
 from std_msgs.msg import Float32, Bool
+from mrobosub_msgs.msg import LedState
 from sensor_msgs.msg import FluidPressure
 import time
 import struct
@@ -31,6 +32,13 @@ class Arduino(Node):
         self.zero_srv = self.create_service(
             SetBool, "/depth/zero", self.zero_srv_callback
         )
+
+        self.charm_state_sub = self.create_subscription(
+            LedState,
+            f"/leds",
+            self.led_state_callback,
+            qos_profile=1,
+        )
    
         # Create serial connection
         self.serial = Serial(sys.argv[1], BAUD_RATE, timeout=0)
@@ -46,20 +54,19 @@ class Arduino(Node):
 
         # Init values
         self.numHeaderBytes = 0
-        self.charm = 0
-        self.strange = 0
-        self.depth = 0.0
         self.offset = 0.0
         self.dataBytes = []
 
-        self.zero = False
-
         # start timer
-        self.read_timer = self.create_timer(1/FREQUENCY, self.serialConnection)
+        self.read_timer = self.create_timer(1/FREQUENCY, self.serialLoop)
         
     
-    def serialConnection(self):
-        # printing here may be useful
+    def serialLoop(self):
+        self.handleRead()
+        self.handleWrite()
+
+    
+    def handleRead(self):
         if self.serial.in_waiting < 1:
             return None
 
@@ -78,21 +85,30 @@ class Arduino(Node):
                 ard_data = b''.join(self.dataBytes)
 
                 unpacked_data = struct.unpack('<cfc', ard_data)
-                self.strange = unpacked_data[0]
-                self.depth = unpacked_data[1]
-                self.charm = unpacked_data[2]
+                strange = unpacked_data[0]
+                depth = unpacked_data[1]
+                charm = unpacked_data[2]
 
                 self.numHeaderBytes = 0
                 self.dataBytes = []
 
-                self.charm_pub.publish(Bool(data=(self.charm == b'\x01')))
-                self.strange_pub.publish(Bool(data=(self.strange == b'\x01')))
+                self.charm_pub.publish(Bool(data=(charm == b'\x01')))
+                self.strange_pub.publish(Bool(data=(strange == b'\x01')))
                 
-                offsetted_pressure = self.depth - self.offset
+                offsetted_pressure = depth - self.offset
                 self.depth_pub.publish(Float32(data=offsetted_pressure))
 
+
+    def handleWrite(self):
+        self.serial.write(b'\xFF')
+        self.serial.write(b'\x01' if self.charm_state else '\x00')
+        self.serial.write(b'\x01' if self.strange_state else '\x00')
+
+    def led_state_callback(self, msg: LedState):
+        self.charm_state = msg.charm_state
+        self.strange_state = msg.strange_state
+
     def zero_srv_callback(self, req, res):
-        self.zero = req.data
         self.offset = self.depth 
         res.success = True       
         return res

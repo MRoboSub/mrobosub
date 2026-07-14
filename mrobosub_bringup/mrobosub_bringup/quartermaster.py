@@ -15,6 +15,7 @@ from std_srvs.srv import SetBool, Trigger
 from mrobosub_lib import Node
 from mrobosub_bringup import constants as const
 from mrobosub_bringup.launch_manager import LaunchManager
+from mrobosub_msg.msgs import LedState
 
 import time
 
@@ -73,6 +74,8 @@ class Quartermaster(Node):
         self.charm_sub = self.create_subscription(
             Bool, "/buttons/charm", self.handle_charm_change, 1
         )
+
+        self.led_states_pub = self.create_publisher(LedState, "/leds", qos_profile)
 
         complete_future = self.get_executor().create_task(lambda: None)
         self.thruster_mixing_srv = self.create_client(
@@ -180,88 +183,94 @@ class Quartermaster(Node):
 
     def timer_callback(self) -> None:
         # In order to visually ensure quartermaster has started, turn on the LED
-        # self.pub_on_led(True)
+        self.pub_on_led(True)
 
-        # # If less than const.DEBOUNCE_DURATION seconds has elapsed, zero the hall_effects. This is so that
-        # # we don't poll the hall_effects too quickly.
-        # if (self.get_clock().now().nanoseconds / 1e9) < self.timeout_time:
-        #     self.hall_effect_triggered.strange = False
-        #     self.hall_effect_triggered.charm = False
-        #     return
+        # If less than const.DEBOUNCE_DURATION seconds has elapsed, zero the hall_effects. This is so that
+        # we don't poll the hall_effects too quickly.
+        if (self.get_clock().now().nanoseconds / 1e9) < self.timeout_time:
+            self.hall_effect_triggered.strange = False
+            self.hall_effect_triggered.charm = False
+            return
 
-        # # We want the LED showing that we have triggered a specific hall effect sensor to turn off
-        # # after 5 seconds.
-        # if self.timeout_disabled_led is not None:
-        #     self.pub_led(self.timeout_disabled_led, False)
-        #     self.timeout_disabled_led = None
+        # We want the LED showing that we have triggered a specific hall effect sensor to turn off
+        # after 5 seconds.
+        if self.timeout_disabled_led is not None:
+            self.pub_led(self.timeout_disabled_led, False)
+            self.timeout_disabled_led = None
 
-        # # We don't want to advance the state machine if both are false. Only on the rising edge.
-        # if (self.hall_effect_triggered.strange is False) and (
-        #     self.hall_effect_triggered.charm is False
-        # ):
-        #     return
+        # We don't want to advance the state machine if both are false. Only on the rising edge.
+        if (self.hall_effect_triggered.strange is False) and (
+            self.hall_effect_triggered.charm is False
+        ):
+            return
 
-        # # We would have only gotten here if it has been const.DEBOUNCE_DURATION seconds since last timeout
-        # and one of the hall effects is on
-        # self.timeout_time = (
-        #     self.get_clock().now().nanoseconds / 1e9
-        # ) + const.DEBOUNCE_DURATION
+        # We would have only gotten here if it has been const.DEBOUNCE_DURATION seconds since last timeout
+        and one of the hall effects is on
+        self.timeout_time = (
+            self.get_clock().now().nanoseconds / 1e9
+        ) + const.DEBOUNCE_DURATION
 
-        # if self.hall_effect_triggered.strange:
-        #     self.pub_strange_led(True)
-        #     self.timeout_disabled_led = Led.STRANGE
-        # elif self.hall_effect_triggered.charm:
-        #     self.pub_charm_led(True)
-        #     self.timeout_disabled_led = Led.CHARM
+        if self.hall_effect_triggered.strange:
+            self.pub_strange_led(True)
+            self.timeout_disabled_led = Led.STRANGE
+        elif self.hall_effect_triggered.charm:
+            self.pub_charm_led(True)
+            self.timeout_disabled_led = Led.CHARM
 
-        # # Zero hall effects.
-        # self.hall_effect_triggered.strange = False
-        # self.hall_effect_triggered.charm = False
+        # Zero hall effects.
+        self.hall_effect_triggered.strange = False
+        self.hall_effect_triggered.charm = False
 
-        # # On each rising edge of the hall effect, the state machine advances a step.
-        # if self.current_state == RobotState.AMBIENT:
-        #     self.get_logger().info("reached state machine")
-        #     # Needed to ensure the service isn't called before the future is returned
-        #     if self.thruster_mixing_future.done():
-        #         self.thruster_mixing_future = self.get_executor().create_task(
-        #             self.call_thruster_mixing_srv()
-        #         )
+        # On each rising edge of the hall effect, the state machine advances a step.
+        if self.current_state == RobotState.AMBIENT:
+            # Needed to ensure the service isn't called before the future is returned
+            if self.thruster_mixing_future.done():
+                self.thruster_mixing_future = self.get_executor().create_task(
+                    self.call_thruster_mixing_srv()
+                )
 
-        #     if self.zero_state_future.done():
-        #         self.zero_state_future = self.get_executor().create_task(
-        #             self.call_zero_state_srv()
-        #         )
+            if self.zero_state_future.done():
+                self.zero_state_future = self.get_executor().create_task(
+                    self.call_zero_state_srv()
+                )
 
-        #     self.current_state = RobotState.READY
+            led_state = LedState()
+            led_state.charm_state = True
+            led_state.strange_state = False
+            self.led_states_pub(led_state)
 
-        # elif self.current_state == RobotState.READY:
-        #     self.get_logger().info("READY starting state machine")
-        #     self.get_logger().info("READY starting state machine")
-        #     self.get_logger().info("READY starting state machine")
+            self.current_state = RobotState.READY
 
-            time.sleep(30)
+        elif self.current_state == RobotState.READY:
+            led_state = LedState()
+            led_state.charm_state = True
+            led_state.strange_state = True
+            self.led_states_pub(led_state)
+            
             self.captain_launcher.start()
+            self.current_state = RobotState.RUNNING
 
-        #     self.get_logger().info("After CAPTAIN LAUNCHER START")
-        #     self.current_state = RobotState.RUNNING
+        elif self.current_state == RobotState.RUNNING:
+            if self.soft_stop_future.done():
+                self.soft_stop_future = self.get_executor().create_task(
+                    self.call_soft_stop_srv()
+                )
+            
+            led_state = LedState()
+            led_state.charm_state = False
+            led_state.strange_state = False
+            self.led_states_pub(led_state)
 
-        # elif self.current_state == RobotState.RUNNING:
-        #     self.get_logger().info("soft stopping state machine")
-        #     if self.soft_stop_future.done():
-        #         self.soft_stop_future = self.get_executor().create_task(
-        #             self.call_soft_stop_srv()
-        #         )
+            # TODO: There should probably be some sort of `time.sleep()` here so there is enough time for the soft stop service to be completed.
+            #       Or maybe that could be part of the callback for the future?
+            self.captain_launcher.stop()
 
-        #     # TODO: There should probably be some sort of `time.sleep()` here so there is enough time for the soft stop service to be completed.
-        #     #       Or maybe that could be part of the callback for the future?
-        #     self.captain_launcher.stop()
+            if self.thruster_mixing_future.done():
+                self.thruster_mixing_future = self.get_executor().create_task(
+                    self.call_thruster_mixing_srv()
+                )
 
-        #     if self.thruster_mixing_future.done():
-        #         self.thruster_mixing_future = self.get_executor().create_task(
-        #             self.call_thruster_mixing_srv()
-        #         )
-
-        #     self.current_state = RobotState.AMBIENT
+            self.current_state = RobotState.AMBIENT
 
     def get_executor(self) -> Executor:
         if self.executor is None:
