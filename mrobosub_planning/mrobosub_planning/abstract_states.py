@@ -1,3 +1,4 @@
+from mrobosub_planning.mrobosub_planning.periodic_io import SegImageTarget
 from mrobosub_planning.umrsm import State, Outcome
 import rclpy
 import rclpy.node
@@ -234,32 +235,35 @@ class AlignPathmarker(TimedState):
         if self.iter < 50:
             return None
         if self.iter < 100:
-            pm_resp = self.io_node.query_pathmarker()
+            pm_resp = self.io_node.query_seg_image(SegImageTarget.PATHMARKER)
             self.io_node.get_logger().info({f"{pm_resp=}"})
-            if pm_resp is not None:
-                self.measurements.append(pm_resp)
+            if pm_resp is not None and pm_resp.found and pm_resp.valid:
+                self.measurements.append(pm_resp.direction)
             return None
         if self.iter == 100:
             self.io_node.get_logger().info({"Calculating target"})
             if len(self.measurements) < 20:
+                self.io_node.deactivate_bot_cam()
                 return self.handle_no_measurements()
             self.target_angle = sum(self.measurements) / len(self.measurements)
             self.io_node.get_logger().info({f"{self.target_angle=}"})
             self.yaw_threshold_count = 0
         if self.iter >= 100:
-            self.io_node.set_target_pose_yaw(self.target_angle)
+            self.io_node.set_target_pose_yaw((- self.target_angle) % 360)
             if self.io_node.is_yaw_within_threshold(self.yaw_threshold):
                 self.yaw_threshold_count += 1
             else:
                 self.yaw_threshold_count = 0
             if self.yaw_threshold_count > 30:
+                self.io_node.deactivate_bot_cam()
                 return self.handle_aligned()
         return None
 
 
+
 class CenterOnPathmarker(TimedState):
     @abstractmethod
-    def handle_aligned(self) -> Outcome:
+    def handle_centered(self) -> Outcome:
         pass
 
     def __init__(self, prev_outcome: Outcome, node: rclpy.node.Node):
@@ -268,14 +272,15 @@ class CenterOnPathmarker(TimedState):
         self.centered_count = 0
 
     def handle_if_not_timedout(self) -> Optional[Outcome]:
-        pm_resp = self.io_node.query_pathmarker_full()
-        if pm_resp is None:
+        pm_resp = self.io_node.query_seg_image(SegImageTarget.PATHMARKER)
+        self.io_node.set_target_pose_yaw(0)
+        if pm_resp is None or not pm_resp.found or not pm_resp.valid:
             self.io_node.set_target_twist_surge(0.0)
             self.io_node.set_target_twist_sway(0.0)
             return None
 
-        x_diff = pm_resp.centroid_x - 0.5
-        y_diff = pm_resp.centroid_y - 0.5
+        x_diff = pm_resp.x_position - 0.5 #0.4
+        y_diff = pm_resp.y_position - 0.5 #-0.4
         self.io_node.set_target_twist_sway(3 * x_diff)
         self.io_node.set_target_twist_surge(-3 * y_diff)
         if abs(x_diff) < 0.1 and abs(y_diff) < 0.1:
@@ -283,5 +288,5 @@ class CenterOnPathmarker(TimedState):
         else:
             self.centered_count = 0
         if self.centered_count > 50:
-            return self.handle_aligned()
+            return self.handle_centered()
         return None

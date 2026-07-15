@@ -9,6 +9,7 @@ from typing import Dict, Type, Mapping, Optional, Tuple
 from enum import Enum, auto
 from std_srvs.srv import SetBool
 from dataclasses import dataclass
+from mrobosub_msgs.srv import ObjectPosition, SegObject
 
 
 def angle_error(setpoint: float, state: float) -> float:
@@ -19,10 +20,21 @@ Namespace = Type
 
 
 class ImageTarget(Enum):
-    GATE_BLUE = auto()
-    GATE_RED = auto()
+    GATE_SOS = auto()
+    GATE_TOOLS= auto()
+    GATE_SIDE = auto()
+    GATE_MIDDLE = auto()
+    GATE_BACK = auto()
+    PINGER = auto()
+    OCTAGON = auto()
+    WHITE_POLE = auto()
+    RED_POLE = auto()
+    BINS = auto()
+    PATHMARKER = auto()
 
-
+class SegImageTarget(Enum):
+    PATHMARKER = auto()
+    SANDBAG = auto()
 
 @dataclass
 class Pose:
@@ -69,8 +81,21 @@ class Captain(Node):
         self._left_dropper_pub = self.create_publisher(Int32, "/left_servo/angle", 1)
         self._right_dropper_pub = self.create_publisher(Int32, "/right_servo/angle", 1)
 
-        # Services
-        # TODO: Add services for perception topics when those are created.
+        # Services for perception
+
+        self._object_position_clients: Dict[ImageTarget, rclpy.client.Client] = {}
+        for target in ImageTarget:
+            name = target.name.lower()
+            self._object_position_clients[target] = self.create_client(
+                ObjectPosition, f"/object_position/{name}"
+            )
+
+        self._seg_object_position_clients: Dict[SegImageTarget, rclpy.client.Client] = {}
+        for target in SegImageTarget:
+            name = target.name.lower()
+            self._seg_object_position_clients[target] = self.create_client(
+                SegObject, f"/seg_object/{name}"
+            )
         
         # self._zed_on_srv = self.create_client(SetBool, "/zed/on")
         # attempt_counter = 0
@@ -200,42 +225,42 @@ class Captain(Node):
 
 
     def activate_zed(self) -> bool:
-        # self.req = self._bot_cam_on_srv.Request()
-        # self.req.data = False
+        self.req = self._bot_cam_on_srv.Request()
+        self.req.data = False
 
-        # success = self._call_service(self._bot_cam_on_srv, self.req, "Turning BotCam Off")
+        success = self._call_service(self._bot_cam_on_srv, self.req, "Turning BotCam Off")
 
-        # self.req = self._zed_on_srv.Request()
-        # self.req.data = True
+        self.req = self._zed_on_srv.Request()
+        self.req.data = True
 
-        # success = success and self._call_service(self._zed_on_srv, self.req, "Turning Zed On")
-        # return success
-        return True
+        success = success and self._call_service(self._zed_on_srv, self.req, "Turning Zed On")
+        return success
 
     def activate_bot_cam(self) -> bool:
-        # self.req = self._zed_on_srv.Request()
-        # self.req.data = False
+        self.req = self._zed_on_srv.Request()
+        self.req.data = False
 
-        # success = self._call_service(self._zed_on_srv, self.req, "Turning Zed Off")
+        success = self._call_service(self._zed_on_srv, self.req, "Turning Zed Off")
 
-        # self.req = self._bot_cam_on_srv.Request()
-        # self.req.data = True
+        self.req = self._bot_cam_on_srv.Request()
+        self.req.data = True
 
-        # success = success and self._call_service(self._bot_cam_on_srv, self.req, "Turning BotCam On")
-        # return success
-        return True
+        success = success and self._call_service(self._bot_cam_on_srv, self.req, "Turning BotCam On")
+        return success
 
     def deactivate_cameras(self) -> bool:
-        # self.req = self._zed_on_srv.Request()
-        # self.req.data = False
-        # success = self._call_service(self._zed_on_srv, self.req, "Turning Zed Off")
+        self.req = self._zed_on_srv.Request()
+        self.req.data = False
+        success = self._call_service(self._zed_on_srv, self.req, "Turning Zed Off")
 
-        # self.req = self._bot_cam_on_srv.Request()
-        # self.req.data = False
+        self.req = self._bot_cam_on_srv.Request()
+        self.req.data = False
 
-        # success = success and self._call_service(self._bot_cam_on_srv, self.req, "Turning BotCam Off")
-        # return success
-        return True
+
+        success = success and self._call_service(self._bot_cam_on_srv, self.req, "Turning BotCam Off")
+        return success
+
+
 
     def yaw_callback(self, msg: Float64) -> None:
         self.pose.yaw = msg.data
@@ -251,3 +276,35 @@ class Captain(Node):
 
     def y_callback(self, msg: Float64) -> None:
         self.pose.y = msg.data
+
+    def query_image(self, target: Optional[ImageTarget]) -> ObjectPosition.Response:
+        if target is not None:
+            client = self._object_position_clients[target]
+            if client.wait_for_service(timeout_sec=1.0):
+                request = ObjectPosition.Request()
+                future = client.call_async(request)
+                rclpy.spin_until_future_complete(self, future, timeout_sec=1.0)
+                if future.done() and future.exception() is None:
+                    result = future.result()
+                    if result is not None:
+                        return result
+
+        not_found = ObjectPosition.Response()
+        not_found.found = False
+        return not_found
+
+    def query_seg_image(self, target: Optional[SegImageTarget]) -> SegObject.Response:
+        if target is not None:
+            client = self._seg_object_position_clients[target]
+            if client.wait_for_service(timeout_sec=1.0):
+                request = SegObject.Request()
+                future = client.call_async(request)
+                rclpy.spin_until_future_complete(self, future, timeout_sec=1.0)
+                if future.done() and future.exception() is None:
+                    result = future.result()
+                    if result is not None:
+                        return result
+
+        not_found = SegObject.Response()
+        not_found.found = False
+        return not_found
