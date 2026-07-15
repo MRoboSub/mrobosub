@@ -22,10 +22,13 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     "msg/Pose.msg"
     "msg/Twist.msg"
     "msg/LedState.msg"
+    "msg/SegDetection.msg"
+    "msg/SegDetections.msg"
     "srv/BinCamPos.srv"
     "srv/HsvFilterImage.srv"
     "srv/ObjectPosition.srv"
     "srv/PathmarkerAngle.srv"
+    "srv/SegObject.srv"
     DEPENDENCIES sensor_msgs
 )
 

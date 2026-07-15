@@ -83,35 +83,35 @@ class Captain(Node):
 
         # Services for perception
 
-        self._object_position_clients: Dict[ImageTarget, rclpy.client.Client] = {}
+        self._object_position_clients = {}
         for target in ImageTarget:
             name = target.name.lower()
             self._object_position_clients[target] = self.create_client(
                 ObjectPosition, f"/object_position/{name}"
             )
 
-        self._seg_object_position_clients: Dict[SegImageTarget, rclpy.client.Client] = {}
+        self._seg_object_position_clients = {}
         for target in SegImageTarget:
             name = target.name.lower()
             self._seg_object_position_clients[target] = self.create_client(
                 SegObject, f"/seg_object/{name}"
             )
         
-        # self._zed_on_srv = self.create_client(SetBool, "/zed/on")
-        # attempt_counter = 0
-        # while not self._zed_on_srv.wait_for_service(timeout_sec=1.0) and attempt_counter < 5:
-        #     self.get_logger().info('\"/zed/on\" service not available, waiting again...')
-        #     attempt_counter += 1
-        # if attempt_counter == 5:
-        #     self.get_logger().error('Failed to connect to \"/zed/on\" service')
+        self._zed_on_srv = self.create_client(SetBool, "/zed/on")
+        attempt_counter = 0
+        while not self._zed_on_srv.wait_for_service(timeout_sec=1.0) and attempt_counter < 5:
+            self.get_logger().info('\"/zed/on\" service not available, waiting again...')
+            attempt_counter += 1
+        if attempt_counter == 5:
+            self.get_logger().error('Failed to connect to \"/zed/on\" service')
 
-        # attempt_counter = 0
-        # self._bot_cam_on_srv = self.create_client(SetBool, "/bot_cam/on")
-        # while not self._bot_cam_on_srv.wait_for_service(timeout_sec=1.0) and attempt_counter < 5:
-        #     self.get_logger().info('\"/bot_cam/on\" service not available, waiting again...')
-        #     attempt_counter += 1
-        # if attempt_counter == 5:
-        #     self.get_logger().error('Failed to connect to "/bot_cam/on\" service')
+        attempt_counter = 0
+        self._bot_cam_on_srv = self.create_client(SetBool, "/bot_cam/on")
+        while not self._bot_cam_on_srv.wait_for_service(timeout_sec=1.0) and attempt_counter < 5:
+            self.get_logger().info('\"/bot_cam/on\" service not available, waiting again...')
+            attempt_counter += 1
+        if attempt_counter == 5:
+            self.get_logger().error('Failed to connect to "/bot_cam/on\" service')
 
     def is_yaw_within_threshold(self, threshold: float) -> float:
         return abs(angle_error(self.target_pose.yaw, self.pose.yaw)) <= threshold
@@ -208,7 +208,7 @@ class Captain(Node):
         msg.data = int(angle)
         self._right_dropper_pub.publish(msg)
 
-    def _call_service(self, service: Service, request: SetBool.Request, error_string:str) -> bool:
+    def _call_service(self, service, request, error_string) -> bool:
         success = True
         future = service.call_async(request)
         # TODO: Potentially can add future callbacks to perform this async, but for now like this
@@ -217,7 +217,7 @@ class Captain(Node):
         if not future.done():
             self.get_logger().error(f"{error_string}: Service call timed out")
             success = False
-        exc = future.execption()
+        exc = future.exception()
         if success and exc:
             self.get_logger().error(f"{error_string}: {exc!r}")
             success = False
@@ -225,42 +225,54 @@ class Captain(Node):
 
 
     def activate_zed(self) -> bool:
-        self.req = self._bot_cam_on_srv.Request()
+        self.req = SetBool.Request()
         self.req.data = False
 
         success = self._call_service(self._bot_cam_on_srv, self.req, "Turning BotCam Off")
 
-        self.req = self._zed_on_srv.Request()
+        self.req = SetBool.Request()
         self.req.data = True
 
         success = success and self._call_service(self._zed_on_srv, self.req, "Turning Zed On")
         return success
 
     def activate_bot_cam(self) -> bool:
-        self.req = self._zed_on_srv.Request()
+        self.req = SetBool.Request()
         self.req.data = False
 
         success = self._call_service(self._zed_on_srv, self.req, "Turning Zed Off")
 
-        self.req = self._bot_cam_on_srv.Request()
+        self.req = SetBool.Request()
         self.req.data = True
 
         success = success and self._call_service(self._bot_cam_on_srv, self.req, "Turning BotCam On")
         return success
 
     def deactivate_cameras(self) -> bool:
-        self.req = self._zed_on_srv.Request()
+        self.req = SetBool.Request()
         self.req.data = False
         success = self._call_service(self._zed_on_srv, self.req, "Turning Zed Off")
 
-        self.req = self._bot_cam_on_srv.Request()
+        self.req = SetBool.Request()
         self.req.data = False
-
 
         success = success and self._call_service(self._bot_cam_on_srv, self.req, "Turning BotCam Off")
         return success
 
 
+    def deactivate_zed(self) -> bool:
+        self.req = SetBool.Request()
+        self.req.data = False
+
+        success = self._call_service(self._zed_on_srv, self.req, "Turning Zed Off")
+        return success
+
+    def deactivate_botcam(self) -> bool:
+        self.req = SetBool.Request()
+        self.req.data = False
+
+        success = self._call_service(self._bot_cam_on_srv, self.req, "Turning Botcam Off")
+        return success
 
     def yaw_callback(self, msg: Float64) -> None:
         self.pose.yaw = msg.data

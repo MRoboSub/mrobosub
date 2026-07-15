@@ -1,4 +1,4 @@
-from mrobosub_planning.mrobosub_planning.periodic_io import SegImageTarget
+from mrobosub_planning.periodic_io import SegImageTarget
 from mrobosub_planning.umrsm import State, Outcome
 import rclpy
 import rclpy.node

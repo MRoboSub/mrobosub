@@ -141,7 +141,8 @@ class ESP32_Thruster(Node):
             if msg.valid[i]:
                 self.thruster_outputs[i] = msg.pins[i]
             if msg.pins[i] != 0:
-                self.get_logger().info(f"The motor at index {i} is running at value {msg.pins[i]}")
+                continue
+                # self.get_logger().info(f"The motor at index {i} is running at value {msg.pins[i]}")
 
     def loop(self):
         for i in range(NUM_PINS):

@@ -7,6 +7,7 @@ import mrobosub_planning.common_states as common_states
 import mrobosub_planning.standard_run as standard_run
 import mrobosub_planning.practice_run as practice_run
 import mrobosub_planning.qualifier_run as qualifier_run
+import mrobosub_planning.semifinal_run as semifinal_run
 
 # import prequal_strafe
 import rclpy
@@ -22,6 +23,7 @@ import traceback
 transition_maps: Dict[str, TransitionMap] = {
     # "standard": standard_run.transitions,
     "standard": qualifier_run.transitions,
+    "ml": semifinal_run.transitions,
     # "qualifier": qualifier_run.transitions
     # "heave_test": heave_test.transitions,
 }
