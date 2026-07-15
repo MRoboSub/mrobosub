@@ -20,25 +20,21 @@ Namespace = Type
 
 
 class ImageTarget(Enum):
-    GATE_SURVEY = auto()
-    GATE_REPAIR = auto()
-    GATE_SEARCH = auto()
-    GATE_RESCUE = auto()
-    BIN_SURVEY_REPAIR = auto()
-    BIN_SEARCH_RESCUE = auto()
+    GATE_SOS = auto()
+    GATE_TOOLS= auto()
+    GATE_SIDE = auto()
+    GATE_MIDDLE = auto()
     GATE_BACK = auto()
-    RED_POLE = auto()
-    WHITE_POLE = auto()
+    PINGER = auto()
     OCTAGON = auto()
-    BIN_FAR = auto()
+    WHITE_POLE = auto()
+    RED_POLE = auto()
+    BINS = auto()
+    PATHMARKER = auto()
 
 class SegImageTarget(Enum):
     PATHMARKER = auto()
-    BIN_SURVEY_REPAIR = auto()
-    BIN_SEARCH_RESCUE = auto()
-    RED_POLE = auto()
-    WHITE_POLE = auto()
-    BIN_FAR = auto()
+    SANDBAG = auto()
 
 @dataclass
 class Pose:
@@ -260,8 +256,11 @@ class Captain(Node):
         self.req = self._bot_cam_on_srv.Request()
         self.req.data = False
 
+
         success = success and self._call_service(self._bot_cam_on_srv, self.req, "Turning BotCam Off")
         return success
+
+
 
     def yaw_callback(self, msg: Float64) -> None:
         self.pose.yaw = msg.data

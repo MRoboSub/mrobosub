@@ -9,10 +9,10 @@ class Forward5Seconds(ForwardAndWait):
     class Unreached(Outcome):
         pass
 
-    target_heave: float      = 0.5
+    target_heave: float      = 15
     target_surge_time: float = 5.
     wait_time: float         = 5.
-    surge_speed: float       = 0.1
+    surge_speed: float       = 1.5
 
     def handle_reached(self) -> Outcome:
         return self.Reached()

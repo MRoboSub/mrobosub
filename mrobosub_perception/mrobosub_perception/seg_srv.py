@@ -20,11 +20,7 @@ TIME_THRESHOLD = 10
 
 class SegTargets(Enum):
     PATHMARKER = 0
-    BIN_SURVEY_REPAIR = 1
-    BIN_SEARCH_RESCUE = 2
-    RED_POLE = 3
-    WHITE_POLE = 4
-    BIN_FAR = 5
+    SANDBAG = 1
 
 
 class SegSrvNode(Node):
