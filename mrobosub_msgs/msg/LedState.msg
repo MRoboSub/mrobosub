@@ -1,0 +1,2 @@
+bool charm_state
+bool strange_state

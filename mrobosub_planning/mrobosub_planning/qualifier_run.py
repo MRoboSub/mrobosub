@@ -1,28 +1,71 @@
-from regex import F
-
-from mrobosub_planning.common_states import Start, Submerge, Surface, Stop
-from mrobosub_planning.testing_states import ComeToSurface
+from mrobosub_planning.common_states import Forward10, Start, Submerge, Surface, Stop, ComeUp, Turn180_2, TimeoutFor30, RevertCoinFlip, SlalomStraight, Turn90
+from mrobosub_planning.testing_states import ComeToSurface, Forward10Seconds, Turn180
 from mrobosub_planning.abstract_states import TurnToYaw, ForwardAndWait
 from mrobosub_planning.umrsm import TransitionMap
-Forward5Seconds = ForwardAndWait
-Forward5SecondsBack = ForwardAndWait
+
+Forward10SecondsBack = Forward10Seconds
+# TurnTo90 = Turn90.with_params(target_yaw=90)
+# TurnTo180 = Turn90.with_params(target_yaw=180)
+# TurnTo270 = Turn90.with_params(target_yaw=-90)
+# TurnTo360 = Turn90.with_params(target_yaw=0)
 
 
 transitions: TransitionMap = {
-    Start.Complete: Submerge.with_params(target_heave=0.5),
+    Start.Complete: Submerge,
     
-    Submerge.Submerged: Forward5Seconds.with_params(target_heave=0.5, target_surge_time=5., wait_time=5., surge_speed=0.1),
-    Submerge.TimedOut: Forward5Seconds.with_params(target_heave=0.5, target_surge_time=5., wait_time=5., surge_speed=0.1),
+    Submerge.Submerged: RevertCoinFlip,
+    Submerge.TimedOut: RevertCoinFlip, 
 
-    Forward5Seconds.Reached: TurnToYaw.with_params(target_yaw=180.0, yaw_threshold=5.0, settle_time=1.0, timeout=10.0),
-    Forward5Seconds.Unreached: ComeToSurface,
+    RevertCoinFlip.Reverted: Forward10,
+    RevertCoinFlip.TimedOut: Forward10,
 
-    TurnToYaw.Reached: Forward5SecondsBack.with_params(target_heave=0.5, target_surge_time=5., wait_time=5., surge_speed=0.1),
-    TurnToYaw.TimedOut: ComeToSurface,
+    Forward10.ReachedGate: Turn90,
+    Forward10.TimedOut: Turn90,
 
-    Forward5SecondsBack.Reached: ComeToSurface,
-    Forward5SecondsBack.Unreached: ComeToSurface,
+    # TurnTo90.FinishTurn: TurnTo180,
+    # TurnTo90.TimedOut: TurnTo180,
 
-    ComeToSurface.Surfaced: Stop,
-    ComeToSurface.Failed: Stop,
+    # TurnTo180.FinishTurn: TurnTo270,
+    # TurnTo180.TimedOut: TurnTo270,
+
+    Turn90.FinishTurn: Turn180_2,
+    Turn90.TimedOut: Turn180_2,
+
+    Turn180_2.FinishTurn: SlalomStraight,
+    Turn180_2.TimedOut: SlalomStraight,
+
+    SlalomStraight.ReachedGate: ComeUp,
+    SlalomStraight.TimedOut: ComeUp,
+
+#    Turn180.Reached: Forward10SecondsBack,
+#    Turn180.TimedOut: Forward10SecondsBack,
+
+#    Forward10SecondsBack.Reached: ComeToSurface,
+#    Forward10SecondsBack.Unreached: ComeToSurface,
+
+    ComeUp.ReachedGate: Stop,
+    ComeUp.TimedOut: Stop,
+
+#     Start.Complete: Submerge,
+    
+#     Submerge.Submerged: Turn180_2,
+#     Submerge.TimedOut: Turn180_2,
+
+#     # Forward10.ReachedGate: Turn180_2,
+#     # Forward10.TimedOut: Turn180_2,
+
+#     Turn180_2.ReachedGate: ComeUp,
+#     Turn180_2.TimedOut: ComeUp,
+
+#     # ReturnHome.ReachedGate: ComeUp,
+#     # ReturnHome.TimedOut: ComeUp,
+
+# #    Turn180.Reached: Forward10SecondsBack,
+# #    Turn180.TimedOut: Forward10SecondsBack,
+
+# #    Forward10SecondsBack.Reached: ComeToSurface,
+# #    Forward10SecondsBack.Unreached: ComeToSurface,
+
+#     ComeUp.ReachedGate: Stop,
+#     ComeUp.TimedOut: Stop,
 }

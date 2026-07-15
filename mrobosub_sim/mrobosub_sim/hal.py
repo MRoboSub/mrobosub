@@ -8,7 +8,6 @@ from threading import Thread
 
 import numpy as np
 import rclpy
-from cv_bridge import CvBridge
 from geometry_msgs.msg import Vector3
 from sensor_msgs.msg import Image
 from std_msgs.msg import Float32, Header
@@ -248,7 +247,6 @@ class SimBotcam:
     def __init__(self, hal: "SimHal") -> None:
         self.hal = hal
         self.botcam_pub = self.hal.create_publisher(Image, "/rectified_image", qos_profile=1)
-        self.br = CvBridge()
         self.last_image_time = 0
         self.botcam_on_srv = self.hal.create_service(
             SetBool, "/bot_cam/on", self.handle_on_service
@@ -276,7 +274,6 @@ class SimZed:
         self.zed_crop_pub = self.hal.create_publisher(
             Image, "/zed2/zed_node/rgb/image_rect_color", qos_profile=1
         )
-        self.br = CvBridge()
         self.last_image_time = 0
         self.zed_on_srv = self.hal.create_service(
             SetBool, "/zed/on", self.handle_on_service

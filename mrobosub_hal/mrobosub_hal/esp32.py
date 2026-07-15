@@ -1,18 +1,19 @@
-# in-progress
 import rclpy
 from rcl_interfaces.msg import ParameterDescriptor
 
+from std_srvs.srv import SetBool
+
 from mrobosub_lib import Node
+from mrobosub_msgs.msg import ThrusterCommands
+
+from typing import Optional
 from serial import Serial
 from serial.serialutil import SerialException
-from mrobosub_msgs.msg import ThrusterCommands
-from std_srvs.srv import SetBool
-from typing import Optional
+import sys
 
-
+# Constants
 NUM_PINS = 8
 FREQUENCY = 50
-
 
 class ESP32_Thruster(Node):
     """
@@ -21,8 +22,18 @@ class ESP32_Thruster(Node):
 
     def __init__(self):
         super().__init__("esp32_thruster")
+
+        if len(sys.argv) < 2:
+            raise ValueError("Must give a device id as argument.")
+
+
         self.get_logger().info("Launched esp32_thruster node")
-        self.port = "/dev/ttyACM2" #IMPORTANT: DETERMINE ACTUAL PORT
+        
+        # Params make more sense for parameters that can change dynamically with 
+        # the program running. This is a static argument that should be loaded 
+        # once on start up.
+        self.port = sys.argv[1]
+
         self.thruster_outputs = [0] * NUM_PINS
         self.serial: Serial | None = None
         self.connect()

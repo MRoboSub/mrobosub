@@ -3,13 +3,14 @@ import math
 import numpy as np
 import rclpy
 from std_msgs.msg import Float64, Float32
+from sensor_msgs.msg import FluidPressure
 
-from mrobosub_lib.mrobosub_lib import Node
+from mrobosub_lib import Node
 
 from typing import Optional, Final
 
 from std_srvs.srv import Trigger
-from mrobosub_msgs.msg import Imu
+from sensor_msgs.msg import Imu
 from geometry_msgs.msg import Quaternion as ROSQuaternion
 
 from math import degrees
@@ -104,10 +105,10 @@ class StateEstimation(Node):
         self.pitch_pub = self.create_publisher(Float64, "/pose/pitch", qos_profile=1)
         self.roll_pub = self.create_publisher(Float64, "/pose/roll", qos_profile=1)
         self.create_subscription(
-            Float32, "/depth/raw_depth", self.raw_depth_callback, qos_profile=1
+            Float32, "/depth", self.raw_depth_callback, qos_profile=1
         )
         self.create_subscription(Imu, "/imu", self.imu_callback, qos_profile=1)
-        self.create_service(Trigger, "localization/zero_state", self.handle_reset)
+        self.create_service(Trigger, "/localization/zero_state", self.handle_reset)
 
     def handle_reset(
         self, req: Trigger.Request, res: Trigger.Response
