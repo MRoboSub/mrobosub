@@ -108,7 +108,7 @@ class Turn90(TimedState):
     class TimedOut(Outcome):
         pass
 
-    timeout: float = 10
+    timeout: float = 30
     yaw_threshold: float = 5.
     target_yaw: float = 0
 
@@ -116,7 +116,7 @@ class Turn90(TimedState):
         self.io_node.set_target_pose_heave(TARGET_HEAVE)
         self.io_node.set_target_twist_surge(0)
         # self.io_node.set_target_pose_yaw(self.target_yaw)
-        self.io_node.set_target_twist_yaw(0.4)
+        self.io_node.set_target_twist_yaw(0.8)
         # if self.io_node.is_yaw_within_threshold(self.yaw_threshold):
         #     return self.FinishTurn()
         return None
@@ -132,7 +132,7 @@ class SlalomStraight(TimedState):
     class TimedOut(Outcome):
         pass
 
-    timeout: float = 15
+    timeout: float = 25
 
     def handle_if_not_timedout(self) -> Union[ReachedGate, None]:
         self.io_node.set_target_twist_surge(SURGE_SPEED)
@@ -141,7 +141,48 @@ class SlalomStraight(TimedState):
 
     def handle_once_timedout(self) -> TimedOut:
         return self.TimedOut()
+  
+
+class TurnOctagon(TimedState):
+    class Turned(Outcome):
+        pass
+
+    class TimedOut(Outcome):
+        pass
+
+    timeout: float = 8
+    yaw_threshold: float = 5.
+
+    def handle_if_not_timedout(self) -> Union[Turned, None]:
+        self.io_node.set_target_pose_heave(TARGET_HEAVE)
+        self.io_node.set_target_twist_surge(0)
+        self.io_node.set_target_pose_yaw(-10)
+        if self.io_node.is_yaw_within_threshold(self.yaw_threshold):
+            return self.Turned()
+        return None
+
+    def handle_once_timedout(self) -> TimedOut:
+        return self.TimedOut()  
     
+
+class GoOctagon(TimedState):
+    class Finished(Outcome):
+        pass
+
+    class TimedOut(Outcome):
+        pass
+
+    timeout: float = 20
+
+    def handle_if_not_timedout(self) -> Union[Finished, None]:
+        self.io_node.set_target_pose_heave(TARGET_HEAVE)
+        self.io_node.set_target_twist_surge(SURGE_SPEED)
+        self.io_node.set_target_pose_yaw(-10)
+        return None
+
+    def handle_once_timedout(self) -> TimedOut:
+        return self.TimedOut() 
+
 
 class ComeUp(TimedState):
     class ReachedGate(Outcome):
