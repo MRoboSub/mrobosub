@@ -21,7 +21,7 @@ MODEL_CONFIDENCE = 0.1
 def load_yolo():
     # load model
     path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-    model_path = os.path.join(path, "models/temp2026_seg_best.pt")
+    model_path = os.path.join(path, "models/2026seg.pt")
     print(model_path)
     model = YOLO(model_path)
     return model
