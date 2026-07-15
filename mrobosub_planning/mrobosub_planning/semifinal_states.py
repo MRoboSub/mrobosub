@@ -126,6 +126,7 @@ class FindPathmarker(TimedState):
         super().__init__(prev_outcome, node)
         self.io_node.activate_bot_cam()
         self.num_spotted = 0
+        self.io_node.set_target_pose_yaw(0)
 
     def handle_if_not_timedout(self) -> Union[Outcome, None]:
         self.io_node.set_target_twist_surge(0.3)
@@ -265,4 +266,26 @@ class GoToOctagon (TimedState):
 
     
     def handle_timedout(self) -> Outcome:
+        return self.TimedOut()
+    
+class TurnTurn(TimedState):
+    class FinishTurn(Outcome):
+        pass
+
+    class TimedOut(Outcome):
+        pass
+
+    timeout: float = 30
+    target_yaw: float = 0
+
+    def handle_if_not_timedout(self) -> Union[FinishTurn, None]:
+        self.io_node.set_target_twist_surge(0)
+        # self.io_node.set_target_pose_yaw(self.target_yaw)
+        self.io_node.set_target_twist_yaw(0.8)
+        # if self.io_node.is_yaw_within_threshold(self.yaw_threshold):
+        #     return self.FinishTurn()
+        return None
+
+    def handle_once_timedout(self) -> TimedOut:
+        self.io_node.set_target_pose_yaw(0)
         return self.TimedOut()
