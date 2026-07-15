@@ -5,7 +5,6 @@ from typing import Tuple
 import cv2
 import sys
 
-from cv_bridge import CvBridge
 import rclpy.utilities
 from rclpy.parameter import Parameter
 from mrobosub_msgs.srv import PathmarkerAngle
@@ -15,6 +14,7 @@ from mrobosub_lib import Node, Param
 from rcl_interfaces.msg import ParameterDescriptor
 
 import numpy as np
+from mrobosub_perception.cv_bridge_converter import cv2_to_imgmsg, imgmsg_to_cv2
 
 from mrobosub_perception.hsv_pipeline import HsvPipeline
 class PathmarkerHsv(Node):
@@ -24,8 +24,7 @@ class PathmarkerHsv(Node):
 
         params = [Param('timing_threshold', Parameter.Type.DOUBLE, "A float parameter")]
         self.declare_params(params)
-        
-        self.br = CvBridge()
+
         args_ros = rclpy.utilities.remove_ros_args(sys.argv)
         self.always_run = args_ros[1] != "0" #input 1 for always_run to not have to do service calls always_run:=1
 
@@ -40,7 +39,7 @@ class PathmarkerHsv(Node):
     
     def handle_frame(self, msg):
         if(self.serv.should_run() or self.always_run):
-            bgr_img = self.br.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+            bgr_img = imgmsg_to_cv2(msg, desired_encoding='bgr8')
             pipeline = HsvPipeline(**self._parameters, color_space=cv2.COLOR_RGB2HSV) 
             mask = pipeline.filter_image(bgr_img) 
             detection = pipeline.find_pathmarker_object(mask)
@@ -56,8 +55,8 @@ class PathmarkerHsv(Node):
                 except ValueError as e:
                     pass
 
-            self.mask_pub.publish(self.br.cv2_to_imgmsg(mask, encoding='mono8'))
-            self.annotated_pub.publish(self.br.cv2_to_imgmsg(annotated_img, encoding='bgr8'))
+            self.mask_pub.publish(cv2_to_imgmsg(mask, encoding='mono8'))
+            self.annotated_pub.publish(cv2_to_imgmsg(annotated_img, encoding='bgr8'))
             
             response = PathmarkerAngle.Response()
             if detection is not None:

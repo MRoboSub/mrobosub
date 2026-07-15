@@ -6,32 +6,34 @@ from enum import Enum
 import rclpy
 import numpy as np
 import cv2
-from cv_bridge import CvBridge
 from mrobosub_lib import Node
 
 from std_msgs.msg import Float64
 from sensor_msgs.msg import Image
 from mrobosub_msgs.msg import Detections
 from mrobosub_msgs.srv import ObjectPosition
+from mrobosub_perception.cv_bridge_converter import cv2_to_imgmsg, imgmsg_to_cv2
 
 CONFIDENCE = 0.5
 TIME_THRESHOLD = 10
 
 class Targets(Enum):
-    SHARK = 0
-    SAWFISH = 1
-    BIN_SHARK = 2
-    BIN_SAWFISH = 3
+    GATE_SOS = 0
+    GATE_TOOLS = 1
+    GATE_SIDE = 2
+    GATE_MIDDLE = 3
     GATE_BACK = 4
-    RED_POLE = 5
-    OCTAGON = 6
-    BIN_FAR = 7
+    PINGER = 5
+    OCTAGON= 6
+    WHITE_POLE = 7
+    RED_POLE = 8
+    BINS = 9
+    PATHMARKER = 10
 
 class MlSrvNode(Node):
     def __init__(self):
         super().__init__("ml_srv")
 
-        self.bridge = CvBridge()
         self.recent_positions: List[Optional[ObjectPosition.Response]] = [None] * len(Targets)
         self.last_image = None
 
@@ -59,7 +61,7 @@ class MlSrvNode(Node):
         self.bbox_pub = self.create_publisher(Image, "/ml/annotated", qos_profile=10)
 
     def zed_callback(self, image: Image):
-        self.last_image = self.bridge.imgmsg_to_cv2(image, desired_encoding="rgb8")
+        self.last_image = imgmsg_to_cv2(image, desired_encoding="rgb8")
 
     def detections_callback(self, detections: Detections):
         not_found = ObjectPosition.Response()
@@ -140,7 +142,7 @@ class MlSrvNode(Node):
                 (255, 255, 255),
             )
 
-        msg = self.bridge.cv2_to_imgmsg(image_ocv, encoding="rgb8")
+        msg = cv2_to_imgmsg(image_ocv, encoding="rgb8")
         self.bbox_pub.publish(msg)
 
     def handle_obj_request(self, idx, response: ObjectPosition.Response):

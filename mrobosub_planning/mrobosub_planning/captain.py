@@ -5,6 +5,8 @@ from mrobosub_planning import testing_run
 from mrobosub_planning.umrsm import StateMachine, State, TransitionMap, Outcome
 import mrobosub_planning.common_states as common_states
 import mrobosub_planning.standard_run as standard_run
+import mrobosub_planning.practice_run as practice_run
+import mrobosub_planning.qualifier_run as qualifier_run
 
 # import prequal_strafe
 import rclpy
@@ -18,7 +20,9 @@ import traceback
 
 # maybe change this to something hacky like getting .transitions from the machine name module?
 transition_maps: Dict[str, TransitionMap] = {
-    "standard": standard_run.transitions
+    # "standard": standard_run.transitions,
+    "standard": qualifier_run.transitions,
+    # "qualifier": qualifier_run.transitions
     # "heave_test": heave_test.transitions,
 }
 

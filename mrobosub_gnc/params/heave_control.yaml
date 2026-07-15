@@ -1,8 +1,11 @@
 heave_control:
   ros__parameters:
-    kp: 4.0
+    kp: 0.4
     ki: 0.1
-    kd: 1.0
+    kd: 0.2
+    # kp: 4.0
+    # ki: 0.1
+    # kd: 1.0
     integral_windup_limit: 10.0
-    integral_deadband: 15.0
+    integral_deadband: 2.0
     angular: False

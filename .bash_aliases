@@ -19,6 +19,8 @@ alias stop_motors="ros2 service call /emergency_stop_motors std_srvs/srv/SetBool
 
 alias zero_depth="ros2 service call /depth/zero std_srvs/srv/SetBool \"{data: true}\""
 
+# ros2 service call /localization/zero_state std_srvs/srv/SetBool "{data: true}"
+
 # Quickly start the (default) state machine
 alias captain="ros2 launch mrobosub_planning captain_launch.xml"
 
@@ -41,3 +43,18 @@ alias bringup="ros2 launch mrobosub_bringup bringup_launch.xml"
 # to run motor tests
 alias motor_test="ros2 launch mrobosub_tests motor_test_launch.xml"
 alias motor_test_all="ros2 launch mrobosub_tests motor_test_all_launch.xml"
+
+alias start_tc="ros2 launch mrobosub_hal thruster_controller_launch.xml"
+alias start_esp="ros2 launch mrobosub_hal esp32_launch.xml"
+alias start_mta="ros2 launch mrobosub_tests motor_test_all_launch.xml"
+alias arduino="ros2 launch mrobosub_hal arduino_launch.xml"
+alias localize="ros2 launch mrobosub_localization localization_launch.xml"
+alias start_imu="ros2 launch mrobosub_hal_imu imu_launch.xml"
+alias thruster_mixing="ros2 launch mrobosub_fcu thruster_mixing_launch.xml"
+
+alias start_zed="ros2 launch mrobosub_hal zed_launch.xml"
+alias start_botcam="ros2 launch mrobosub_hal botcam_launch.xml"
+
+alias quartermaster="ros2 launch mrobosub_bringup quartermaster_launch.xml"
+
+# ros2 launch mrobosub_gnc heave_launch.xml

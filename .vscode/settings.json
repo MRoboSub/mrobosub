@@ -24,5 +24,25 @@
         "*.html": "jinja-html",
         "*.xacro": "xml",
         "chrono": "cpp"
-    }
+    },
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#5ce5fe",
+        "activityBar.background": "#5ce5fe",
+        "activityBar.foreground": "#15202b",
+        "activityBar.inactiveForeground": "#15202b99",
+        "activityBarBadge.background": "#fe21dc",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "commandCenter.border": "#15202b99",
+        "sash.hoverBorder": "#5ce5fe",
+        "statusBar.background": "#29ddfe",
+        "statusBar.foreground": "#15202b",
+        "statusBarItem.hoverBackground": "#01cdf3",
+        "statusBarItem.remoteBackground": "#29ddfe",
+        "statusBarItem.remoteForeground": "#15202b",
+        "titleBar.activeBackground": "#29ddfe",
+        "titleBar.activeForeground": "#15202b",
+        "titleBar.inactiveBackground": "#29ddfe99",
+        "titleBar.inactiveForeground": "#15202b99"
+    },
+    "peacock.color": "#29ddfe"
 }
