@@ -1,6 +1,6 @@
 heave_control:
   ros__parameters:
-    kp: 0.3
+    kp: 0.4
     ki: 0.1
     kd: 0.2
     # kp: 4.0

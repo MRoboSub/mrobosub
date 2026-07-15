@@ -1,27 +1,41 @@
-from mrobosub_planning.common_states import Forward10, Start, Submerge, Surface, Stop, ComeUp, ReturnHome, Turn180_2, TimeoutFor30, RevertCoinFlip
+from mrobosub_planning.common_states import Forward10, Start, Submerge, Surface, Stop, ComeUp, Turn180_2, TimeoutFor30, RevertCoinFlip, SlalomStraight, Turn90
 from mrobosub_planning.testing_states import ComeToSurface, Forward10Seconds, Turn180
 from mrobosub_planning.abstract_states import TurnToYaw, ForwardAndWait
 from mrobosub_planning.umrsm import TransitionMap
 
 Forward10SecondsBack = Forward10Seconds
+# TurnTo90 = Turn90.with_params(target_yaw=90)
+# TurnTo180 = Turn90.with_params(target_yaw=180)
+# TurnTo270 = Turn90.with_params(target_yaw=-90)
+# TurnTo360 = Turn90.with_params(target_yaw=0)
+
 
 transitions: TransitionMap = {
     Start.Complete: Submerge,
     
-    Submerge.Submerged: Forward10, #RevertCoinFlip,
-    Submerge.TimedOut: Forward10, #evertCoinFlip, 
+    Submerge.Submerged: RevertCoinFlip,
+    Submerge.TimedOut: RevertCoinFlip, 
 
-    # RevertCoinFlip.Reverted: Forward10,
-    # RevertCoinFlip.TimedOut: Forward10,
+    RevertCoinFlip.Reverted: Forward10,
+    RevertCoinFlip.TimedOut: Forward10,
 
-    Forward10.ReachedGate: Turn180_2,
-    Forward10.TimedOut: Turn180_2,
+    Forward10.ReachedGate: Turn90,
+    Forward10.TimedOut: Turn90,
 
-    Turn180_2.ReachedGate: ReturnHome,
-    Turn180_2.TimedOut: ReturnHome,
+    # TurnTo90.FinishTurn: TurnTo180,
+    # TurnTo90.TimedOut: TurnTo180,
 
-    ReturnHome.ReachedGate: ComeUp,
-    ReturnHome.TimedOut: ComeUp,
+    # TurnTo180.FinishTurn: TurnTo270,
+    # TurnTo180.TimedOut: TurnTo270,
+
+    Turn90.FinishTurn: Turn180_2,
+    Turn90.TimedOut: Turn180_2,
+
+    Turn180_2.FinishTurn: SlalomStraight,
+    Turn180_2.TimedOut: SlalomStraight,
+
+    SlalomStraight.ReachedGate: ComeUp,
+    SlalomStraight.TimedOut: ComeUp,
 
 #    Turn180.Reached: Forward10SecondsBack,
 #    Turn180.TimedOut: Forward10SecondsBack,
