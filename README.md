@@ -116,7 +116,7 @@ Now that everyone is running on a POSIX compatible system (WSL on Windows, MacOS
 2. Now we can finally clone the repository and open it in VSCode
     ```sh
     cd ~
-    git clone -b ros2 git@github.com:MRoboSub/mrobosub.git
+    git clone git@github.com:MRoboSub/mrobosub.git
     cd mrobosub
     code .
     ```
