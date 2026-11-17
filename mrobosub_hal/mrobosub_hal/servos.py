@@ -8,7 +8,7 @@ import math
 from mrobosub_lib import Node
 from std_srvs.srv import SetBool
 
-BAUD_RATE = 9600
+BAUD_RATE = 115200
 CONNECTION_NAME = "/dev/ttyACM1"
 
 class Servo(Node):
@@ -23,7 +23,7 @@ class Servo(Node):
         self.serial = Serial(CONNECTION_NAME, BAUD_RATE, timeout=0.1)
 
         time.sleep(2) # Give some time for the serial connection to be made.
-
+        self.current_angle = 90
         self.send_command("ESTOP:ON")
 
         self.angle_sub = self.create_subscription(
@@ -36,16 +36,24 @@ class Servo(Node):
         self.enable_sub = self.create_subscription(
                     Bool,
                     "/servo/enable",
-                    self.angle_callback,
+                    self.enable_callback,
                     1
         )
 
         self.estop_sub = self.create_subscription(
                     Bool,
                     "/servo/estop",
-                    self.angle_callback,
+                    self.estop_callback,
                     1
         )
+
+        self.change = self.create_subscription(
+                    Float32,
+                    "/servo/change",
+                    self.change_callback,
+                    1
+                )
+
 
         self.get_logger().info("Servo node initialized!")
         
@@ -57,18 +65,34 @@ class Servo(Node):
 
         self.get_logger().info(f"Sent: {command}")
 
+
     # Receive target angle
     def angle_callback(self, msg):
-
         angle = msg.data
-
         if angle < 30 or angle > 160:
             self.get_logger().warn(
-                f"Angle {angle} outside valid range (0-180)"
+                f"Angle {angle} outside valid range (30 - 160)"
+            )
+            return
+        self.current_angle = round(angle)
+        command = f"SET:{self.current_angle}"
+        self.send_command(command)
+        
+
+
+    def change_callback(self, msg):
+        change = round(msg.data)
+        new_angle = self.current_angle + change
+
+        if new_angle < 30 or new_angle > 160:
+            self.get_logger().warn(
+                f"Change rejected: target {new_angle} "
+                f"outside valid range (30 - 160)"
             )
             return
 
-        command = f"SET: {int(round(angle))}"
+        self.current_angle = new_angle
+        command = f"SET:{self.current_angle}"
         self.send_command(command)
 
     
@@ -104,7 +128,6 @@ class Servo(Node):
 def main():
 
     rclpy.init()
-
     node = Servo()
 
     try:
