@@ -2,9 +2,9 @@
 import rclpy
 from sensor_msgs.msg import Image # Image is the message type
 import cv2 # OpenCV library
-from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Images
 from mrobosub_lib import Node
 import os
+from mrobosub_perception.cv_bridge_converter import cv2_to_imgmsg, imgmsg_to_cv2
 
 class PngPub(Node):
     def __init__(self):
@@ -22,12 +22,10 @@ class PngPub(Node):
 
         #cap.set(cv2.CAP_PROP_EXPOSURE, -8)
 
-        # Used to convert between ROS and OpenCV images
-        self.br = CvBridge()
         self.timer = self.create_timer(0.1, self.publish_message) # Go through the loop 10 times per second
 
     def publish_message(self):
-        self.pub.publish(self.br.cv2_to_imgmsg(self.img, encoding='bgr8'))
+        self.pub.publish(cv2_to_imgmsg(self.img, encoding='bgr8'))
 
 def main():
     rclpy.init()

@@ -13,8 +13,11 @@ from std_msgs.msg import Bool
 from std_srvs.srv import SetBool, Trigger
 
 from mrobosub_lib import Node
-from . import constants as const
-from .launch_manager import LaunchManager
+from mrobosub_bringup import constants as const
+from mrobosub_bringup.launch_manager import LaunchManager
+from mrobosub_msgs.msg import LedState
+
+import time
 
 
 class RobotState(Enum):
@@ -72,6 +75,8 @@ class Quartermaster(Node):
             Bool, "/buttons/charm", self.handle_charm_change, 1
         )
 
+        # self.led_states_pub = self.create_publisher(LedState, "/leds", qos_profile)
+
         complete_future = self.get_executor().create_task(lambda: None)
         self.thruster_mixing_srv = self.create_client(
             SetBool, "/thruster_mixing/enable"
@@ -87,14 +92,15 @@ class Quartermaster(Node):
             planning_pkg_path, "launch", "captain_launch.xml"
         )
 
-        self.captain_launcher = LaunchManager(captain_file_path)
+        self.get_logger().info(f"Captain file path: {captain_file_path}")
+        self.captain_launcher = LaunchManager(captain_file_path, self.get_logger())
 
         # Seed initial values.
         self.pub_strange_led(False)
         self.pub_charm_led(False)
         self.pub_on_led(False)
 
-        self.timer = self.create_timer(0.1, self.timer_callback)
+        self.timer = self.create_timer(0.01, self.timer_callback)
 
     def destroy_node(self) -> None:
         if self.captain_launcher:
@@ -149,19 +155,19 @@ class Quartermaster(Node):
 
         if not service_live:
             self.get_logger().error(
-                f"service {client.service_name} server not available"
+                f"service {client.srv_name} server not available"
             )
             return None
 
-        self.get_logger().info(f"service {client.service_name} ready")
+        self.get_logger().info(f"service {client.srv_name} ready")
 
         response: MessageResponse | None = await client.call_async(request)
 
         if response is None:
-            self.get_logger().error(f"service {client.service_name} call failed")
+            self.get_logger().error(f"service {client.srv_name} call failed")
         else:
             self.get_logger().info(
-                f"service {client.service_name} response: success={response.success}, message='{response.message}'"
+                f"service {client.srv_name} response: success={response.success}, message='{response.message}'"
             )
 
         return None
@@ -184,6 +190,7 @@ class Quartermaster(Node):
         if (self.get_clock().now().nanoseconds / 1e9) < self.timeout_time:
             self.hall_effect_triggered.strange = False
             self.hall_effect_triggered.charm = False
+            # self.get_logger().info("debounce")
             return
 
         # We want the LED showing that we have triggered a specific hall effect sensor to turn off
@@ -217,7 +224,6 @@ class Quartermaster(Node):
 
         # On each rising edge of the hall effect, the state machine advances a step.
         if self.current_state == RobotState.AMBIENT:
-            self.get_logger().info("reached state machine")
             # Needed to ensure the service isn't called before the future is returned
             if self.thruster_mixing_future.done():
                 self.thruster_mixing_future = self.get_executor().create_task(
@@ -229,19 +235,34 @@ class Quartermaster(Node):
                     self.call_zero_state_srv()
                 )
 
+            # led_state = LedState()
+            # led_state.charm_state = True
+            # led_state.strange_state = False
+            # self.led_states_pub(led_state)
+            self.get_logger().info("READY state")
             self.current_state = RobotState.READY
 
         elif self.current_state == RobotState.READY:
-            self.get_logger().info("starting state machine")
+            # led_state = LedState()
+            # led_state.charm_state = True
+            # led_state.strange_state = True
+            # self.led_states_pub(led_state)
+            
             self.captain_launcher.start()
+            self.get_logger().info("RUNNING state")
+            self.get_logger().info("CAPTAIN started")
             self.current_state = RobotState.RUNNING
 
         elif self.current_state == RobotState.RUNNING:
-            self.get_logger().info("soft stopping state machine")
             if self.soft_stop_future.done():
                 self.soft_stop_future = self.get_executor().create_task(
                     self.call_soft_stop_srv()
                 )
+            
+            # led_state = LedState()
+            # led_state.charm_state = False
+            # led_state.strange_state = False
+            # self.led_states_pub(led_state)
 
             # TODO: There should probably be some sort of `time.sleep()` here so there is enough time for the soft stop service to be completed.
             #       Or maybe that could be part of the callback for the future?
@@ -252,6 +273,7 @@ class Quartermaster(Node):
                     self.call_thruster_mixing_srv()
                 )
 
+            self.get_logger().info("return to AMBIENT state")
             self.current_state = RobotState.AMBIENT
 
     def get_executor(self) -> Executor:

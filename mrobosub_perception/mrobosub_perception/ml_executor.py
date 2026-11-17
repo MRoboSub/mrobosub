@@ -5,7 +5,6 @@ import time
 
 import torch
 import rclpy
-from cv_bridge import CvBridge
 from rclpy.parameter import Parameter
 from mrobosub_lib import Node, Param
 
@@ -18,7 +17,7 @@ def load_yolo():
     path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
     yolo_path = os.path.join(path, "src/mrobosub_perception/yolov5")
 
-    model_path = os.path.expanduser('~/ros2_ws/src/mrobosub_perception/models/mar2026_best.pt')
+    model_path = os.path.expanduser('~/ros2_ws/src/mrobosub_perception/models/2026detections.pt')
     print(yolo_path)
     print(model_path)
     model = torch.hub.load(
@@ -46,7 +45,6 @@ class MlExecutor(Node):
 
         self.model = load_yolo()
         self.run_until_time = float("inf") if self.run_forever else 0
-        self.bridge = CvBridge()
         self.create_subscription(Image, "/zed2/zed_node/rgb/image_rect_color", self.zed_callback, qos_profile = 1)
         self.create_subscription(Float64, "/ml/run_until", self.run_until_callback, qos_profile=1)
         self.detection_pub = self.create_publisher(Detections, "/ml/detections", qos_profile=1)
@@ -56,7 +54,7 @@ class MlExecutor(Node):
             return
 
         start = time.time()
-        image_ocv = self.bridge.imgmsg_to_cv2(image, desired_encoding="rgb8")
+        image_ocv = imgmsg_to_cv2(image, desired_encoding="rgb8")
 
         # Find any objects in the image
         height, width, channels = image_ocv.shape

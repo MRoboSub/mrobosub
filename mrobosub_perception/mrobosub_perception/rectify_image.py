@@ -4,12 +4,12 @@ import cv2
 import numpy as np
 from typing import Tuple
 
-from cv_bridge import CvBridge
 import rclpy
 from sensor_msgs.msg import Image
 from mrobosub_lib import Node, Param
 
 from rclpy.parameter import Parameter
+from mrobosub_perception.cv_bridge_converter import cv2_to_imgmsg, imgmsg_to_cv2
 
 def crop_to_circle(image: np.ndarray, radius: int) -> np.ndarray:
     # Find the dimensions of the image
@@ -91,7 +91,6 @@ class RectifiedImage(Node):
                   Param('w', Parameter.Type.INTEGER, "image width")]
         self.declare_params(params)
 
-        self.br = CvBridge()
         self.map_x, self.map_y = None, None
         self.shape = None
         
@@ -100,7 +99,7 @@ class RectifiedImage(Node):
 
 
     def handle_frame(self, msg):
-        bgr_img = self.br.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+        bgr_img = imgmsg_to_cv2(msg, desired_encoding='bgr8')
         if self.map_x is None or self.map_y is None:
             # Generate the maps only once, as they are static for the given focal length and image size
             self.h, self.w = bgr_img.shape[:2]
@@ -109,7 +108,7 @@ class RectifiedImage(Node):
         rectified_img = cv2.remap(bgr_img, self.map_x, self.map_y, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
         rectified_img = cv2.rectangle(rectified_img, (self.w // 2 - 100 - 7, self.h // 2 - 100 + 4), (self.w // 2 + 100 - 7, self.h // 2 + 100 + 4), (255, 255, 255, 3))
         #rectified_img = cv2.resize(rectified_img, (640, 480), interpolation=cv2.INTER_LINEAR)
-        self.rectified_pub.publish(self.br.cv2_to_imgmsg(rectified_img, encoding='bgr8'))
+        self.rectified_pub.publish(cv2_to_imgmsg(rectified_img, encoding='bgr8'))
 
 
 def main():

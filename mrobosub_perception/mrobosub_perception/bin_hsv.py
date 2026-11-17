@@ -4,14 +4,13 @@ from typing import Tuple
 import cv2
 import sys
 
-from cv_bridge import CvBridge
 import rclpy
 from rclpy.parameter import Parameter
 from mrobosub_lib import Node, Param
 from mrobosub_msgs.srv import ObjectPosition
 from mrobosub_perception.timed_service import TimedService
 from sensor_msgs.msg import Image
-
+from mrobosub_perception.cv_bridge_converter import cv2_to_imgmsg, imgmsg_to_cv2
 from mrobosub_perception.hsv_pipeline import HsvPipeline
 
 def pixels_to_angles(frame, x_pos: int, y_pos: int, fov_x=110, fov_y=70) -> Tuple[int, int]:
@@ -32,8 +31,6 @@ class BinHsv(Node):
         params = [Param('timing_threshold', Parameter.Type.DOUBLE, "timing threshold")]
         self.declare_params(params)
 
-        self.br = CvBridge()
-
         self.always_run = always_run
 
         self.sub = self.create_subscription(Image, '/rectified_image', self.handle_frame, qos_profile=1)
@@ -44,7 +41,7 @@ class BinHsv(Node):
 
     def handle_frame(self, msg):
         if(self.serv.should_run() or self.always_run):
-            bgr_img = self.br.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+            bgr_img = imgmsg_to_cv2(msg, desired_encoding='bgr8')
             pipeline = HsvPipeline(**self.hsv_params, color_space=cv2.COLOR_BGR2HSV)
             mask, enhanced_img = pipeline.filter_image(bgr_img, return_enhanced=True)
             detection = pipeline.find_circular_object(mask)
@@ -54,9 +51,9 @@ class BinHsv(Node):
             else:
                 annotated_img = bgr_img
 
-            self.mask_pub.publish(self.br.cv2_to_imgmsg(mask, encoding='mono8'))
-            self.enhanced_pub.publish(self.br.cv2_to_imgmsg(enhanced_img, encoding='bgr8'))
-            self.annotated_pub.publish(self.br.cv2_to_imgmsg(annotated_img, encoding='bgr8'))
+            self.mask_pub.publish(cv2_to_imgmsg(mask, encoding='mono8'))
+            self.enhanced_pub.publish(cv2_to_imgmsg(enhanced_img, encoding='bgr8'))
+            self.annotated_pub.publish(cv2_to_imgmsg(annotated_img, encoding='bgr8'))
             
             response = ObjectPosition.Response()
             if detection is not None:

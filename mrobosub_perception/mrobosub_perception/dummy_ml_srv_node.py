@@ -17,15 +17,12 @@ import struct
 import os
 from mrobosub_lib import Node
 from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
 
 # height = 376
 # width = 1344
 # const_unpack = ''
 # for i in range(376*1344*2):
     # const_unpack += 'B'
-
-bridge = CvBridge()
 
 #log("ml_node", "INFO", "Starting")
 #log("ml_node", "DEBUG", 'python version: ' + sys.version)
@@ -38,7 +35,6 @@ TIME_THRESHOLD = 10
 class MLServerNode(Node):
      def __init__(self):
         super().__init__('ml_server')
-        self.br = CvBridge()
         mk_service = lambda name, idx: self.create_service(ObjectPosition, f'object_position/{name}',  lambda msg,_ : handle_obj_request(idx.value, msg))
         abydos_srv = mk_service('abydos',Targets.ABYDOS)
         earth_srv = mk_service('earth',Targets.EARTH)

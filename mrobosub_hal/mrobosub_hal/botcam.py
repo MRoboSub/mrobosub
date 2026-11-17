@@ -1,7 +1,6 @@
 import rclpy
 from sensor_msgs.msg import Image
 import cv2
-from cv_bridge import CvBridge
 import subprocess
 import numpy as np
 
@@ -9,6 +8,7 @@ from mrobosub_lib import Node, Param
 from rclpy.parameter import Parameter
 
 from std_srvs.srv import SetBool
+from mrobosub_hal.cv_bridge_converter_hal import cv2_to_imgmsg, imgmsg_to_cv2
 
 class Botcam(Node):
     """
@@ -41,9 +41,6 @@ class Botcam(Node):
         # Create publishers        
         self.pub = self.create_publisher(Image, "/bot_cam", qos_profile=1)
         self.rectified_pub = self.create_publisher(Image, "/rectified_image", qos_profile=1)
-
-        # Create OpenCV Objects
-        self.br = CvBridge()
 
         # Apply undistortion for fish eye lens 
         self.map_x, self.map_y = self.generate_undistort_maps(self.f, self.w, self.h)
@@ -93,9 +90,9 @@ class Botcam(Node):
         if success:
             # frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
             rectified = self.undistort(frame)
-            self.pub.publish(self.br.cv2_to_imgmsg(frame, encoding="bgr8"))
+            self.pub.publish(cv2_to_imgmsg(frame, encoding="bgr8"))
             resized = cv2.resize(rectified, (self.output_w, self.output_h))
-            self.rectified_pub.publish(self.br.cv2_to_imgmsg(resized, encoding="bgr8"))
+            self.rectified_pub.publish(cv2_to_imgmsg(resized, encoding="bgr8"))
 
     def undistort(self, bgr_img):
         rectified_img = cv2.remap(bgr_img, self.map_x, self.map_y, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)

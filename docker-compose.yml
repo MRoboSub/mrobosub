@@ -1,9 +1,9 @@
 services:
   mrobosub:
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
-    image: mrobosub/mrobosub2
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # image: mrobosub/mrobosub2
     privileged: true
     ports:
       - "10000:10000"

@@ -4,7 +4,6 @@ import os
 import time
 
 import rclpy
-from cv_bridge import CvBridge
 from rclpy.parameter import Parameter
 from mrobosub_lib import Node, Param
 from ultralytics import YOLO
@@ -22,7 +21,7 @@ MODEL_CONFIDENCE = 0.1
 def load_yolo():
     # load model
     path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-    model_path = os.path.join(path, "models/temp2026_seg_best.pt")
+    model_path = os.path.join(path, "models/2026seg.pt")
     print(model_path)
     model = YOLO(model_path)
     return model
@@ -37,7 +36,6 @@ class SegExecutor(Node):
 
         self.model = load_yolo()
         self.run_until_time = float("inf") if self.run_forever else 0
-        self.bridge = CvBridge()
         self.create_subscription(Image, "/rectified_image", self.image_callback, qos_profile=1)
         self.create_subscription(Float64, "/seg/run_until", self.run_until_callback, qos_profile=1)
         self.detection_pub = self.create_publisher(SegDetections, "/seg/detections", qos_profile=1)
@@ -47,7 +45,7 @@ class SegExecutor(Node):
             return
 
         start = time.time()
-        image_ocv = self.bridge.imgmsg_to_cv2(image, desired_encoding="bgr8")
+        image_ocv = imgmsg_to_cv2(image, desired_encoding="bgr8")
 
         # Find any objects in the image
         height, width, channels = image_ocv.shape

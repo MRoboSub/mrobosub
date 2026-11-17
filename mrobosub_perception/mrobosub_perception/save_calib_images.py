@@ -1,7 +1,6 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
 import cv2
 import os
 import threading
@@ -9,7 +8,6 @@ import threading
 class ImageSaverNode(Node):
     def __init__(self):
         super.__init__('image_saver_node', anonymous=True)
-        self.bridge = CvBridge()
         self.image_sub = self.create_subscriber(Image, '/bot_cam', self.image_callback, qos_profile=1)
         self.image_count = 0
         self.save_directory = 'saved_images'
@@ -26,7 +24,7 @@ class ImageSaverNode(Node):
         self.get_logger().info("Received new image")
         try:
             if self.save_flag:
-                cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+                cv_image = imgmsg_to_cv2(data, "bgr8")
                 self.save_image(cv_image)
                 self.save_flag = False
         except Exception as e:

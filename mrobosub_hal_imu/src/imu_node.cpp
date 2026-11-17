@@ -78,14 +78,12 @@ int main(int argc, char **argv)
     InertialSense is([&](InertialSense *is_ptr, p_data_t *data, int port_handle) {
         switch(data->hdr.id) {
             case DID_PIMU: {
-                RCLCPP_INFO(node->get_logger(), "DID_PIMU");
                 pimu_storage.pimu = *reinterpret_cast<pimu_t*>(data->ptr);
                 pimu_storage.has_pimu = true;
                 break;
             }
             case DID_INS_2: {
                 if (!pimu_storage.has_pimu) return; // We want to sync the DID_PIMU and DID_INS_2 messages.
-                RCLCPP_INFO(node->get_logger(), "DID_INS_2");
 
                 auto ins = reinterpret_cast<ins_2_t*>(data->ptr);
 

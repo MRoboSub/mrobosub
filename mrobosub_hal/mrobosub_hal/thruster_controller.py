@@ -43,9 +43,6 @@ class ThrusterController(Node):
 
         self.declare_params(params)
 
-        for i in range(NUM_MOTORS):
-            self.get_logger().info(f"Motor index {i} is {self.thruster_motor_id[i]}")
-
 
     def handle_emergency_stop(
         self, req: SetBool.Request, res: SetBool.Response

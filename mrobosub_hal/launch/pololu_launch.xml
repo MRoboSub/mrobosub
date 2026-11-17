@@ -1,3 +1,0 @@
-<launch>
-    <node pkg="mrobosub_hal" exec="pololu" name="pololu"/>
-</launch>
