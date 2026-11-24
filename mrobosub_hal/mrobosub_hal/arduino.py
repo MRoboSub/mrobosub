@@ -1,7 +1,6 @@
 import rclpy
 from serial import Serial
-from std_msgs.msg import Float32, Bool
-from sensor_msgs.msg import FluidPressure
+from std_msgs.msg import Float64, Bool
 import time
 import struct
 
@@ -23,7 +22,7 @@ class Arduino(Node):
             Bool, "/buttons/strange", qos_profile=1
         )
         self.depth_pub = self.create_publisher(
-            FluidPressure, "/depth", qos_profile=1
+            Float64, "/depth", qos_profile=1
         )
         self.zero_srv = self.create_service(
             SetBool, "/depth/zero", self.zero_srv_callback
@@ -74,7 +73,7 @@ class Arduino(Node):
                 self.strange_pub.publish(Bool(data=(self.strange == b'\x01')))
                 
                 offsetted_pressure = self.depth - self.offset
-                self.depth_pub.publish(FluidPressure(fluid_pressure=offsetted_pressure))
+                self.depth_pub.publish(Float64(data=offsetted_pressure))
 
     def zero_srv_callback(self, req, res):
         self.zero = req.data
